@@ -2,24 +2,49 @@
 import { ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { CartSidebar } from './CartSidebar';
 import { useSearch } from '@/contexts/SearchContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { useCart } from '@/contexts/CartContext';
 
 interface StoreLayoutProps {
   children: ReactNode;
 }
 
 export function StoreLayout({ children }: StoreLayoutProps) {
-  const { searchQuery, setSearchQuery } = useSearch();
+  const { searchQuery, setSearchQuery, clearSearch, isSearching, searchResults } = useSearch();
   const { items: wishlistItems } = useWishlist();
+  const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+  const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Search is handled by the SearchContext
+    if (searchQuery.trim()) {
+      navigate('/store/categories');
+      setShowSearchResults(false);
+    }
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setShowSearchResults(value.length > 0);
+  };
+
+  const handleSearchResultClick = (productId: number) => {
+    navigate(`/store/product/${productId}`);
+    setShowSearchResults(false);
+    setSearchQuery('');
+  };
+
+  const handleClearSearch = () => {
+    clearSearch();
+    setShowSearchResults(false);
   };
 
   return (
@@ -52,29 +77,92 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </nav>
 
             {/* Search Bar */}
-            <div className="hidden lg:flex flex-1 max-w-lg mx-8">
+            <div className="hidden lg:flex flex-1 max-w-lg mx-8 relative">
               <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
                   type="text"
                   placeholder="Search products..."
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white"
+                  onChange={handleSearchInputChange}
+                  onFocus={() => setShowSearchResults(searchQuery.length > 0)}
+                  className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={handleClearSearch}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
               </form>
+
+              {/* Search Results Dropdown */}
+              {showSearchResults && isSearching && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg max-h-96 overflow-y-auto z-50">
+                  {searchResults.length > 0 ? (
+                    <div className="p-2">
+                      <div className="text-xs text-gray-500 px-3 py-2 border-b">
+                        {searchResults.length} results found
+                      </div>
+                      {searchResults.slice(0, 6).map((product) => (
+                        <button
+                          key={product.id}
+                          onClick={() => handleSearchResultClick(product.id)}
+                          className="w-full flex items-center space-x-3 p-3 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                        >
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            className="w-12 h-12 object-cover rounded-lg"
+                          />
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-medium text-sm text-gray-900 truncate">
+                              {product.name}
+                            </h4>
+                            <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                            <p className="text-sm font-medium text-cyan-600">
+                              ${product.price.toFixed(2)}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                      {searchResults.length > 6 && (
+                        <button
+                          onClick={() => {
+                            navigate('/store/categories');
+                            setShowSearchResults(false);
+                          }}
+                          className="w-full p-3 text-center text-cyan-600 hover:bg-gray-50 rounded-lg transition-colors text-sm font-medium"
+                        >
+                          View all {searchResults.length} results
+                        </button>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center text-gray-500">
+                      <Search className="w-8 h-8 mx-auto mb-2 text-gray-300" />
+                      <p>No products found for "{searchQuery}"</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Actions */}
             <div className="flex items-center space-x-2 lg:space-x-4">
-              <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-cyan-50 hover:text-cyan-600 relative">
-                <Heart className="w-5 h-5" />
-                {wishlistItems.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                    {wishlistItems.length}
-                  </span>
-                )}
-              </Button>
+              <Link to="/store/wishlist">
+                <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-cyan-50 hover:text-cyan-600 relative">
+                  <Heart className="w-5 h-5" />
+                  {wishlistItems.length > 0 && (
+                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                      {wishlistItems.length}
+                    </Badge>
+                  )}
+                </Button>
+              </Link>
               <Button variant="ghost" size="sm" className="hover:bg-cyan-50 hover:text-cyan-600">
                 <User className="w-5 h-5" />
               </Button>
@@ -99,9 +187,18 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               type="text"
               placeholder="Search products..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleSearchInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-gray-50 focus:bg-white"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={handleClearSearch}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </form>
         </div>
 
@@ -122,6 +219,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Categories
+              </Link>
+              <Link 
+                to="/store/wishlist" 
+                className="block px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Wishlist ({wishlistItems.length})
               </Link>
               <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium">
                 Deals
@@ -162,6 +266,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               <ul className="space-y-3 text-gray-400">
                 <li><Link to="/store" className="hover:text-white transition-colors">Home</Link></li>
                 <li><Link to="/store/categories" className="hover:text-white transition-colors">Categories</Link></li>
+                <li><Link to="/store/wishlist" className="hover:text-white transition-colors">Wishlist</Link></li>
                 <li><button className="hover:text-white transition-colors">Deals</button></li>
                 <li><button className="hover:text-white transition-colors">New Arrivals</button></li>
               </ul>

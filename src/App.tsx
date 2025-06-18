@@ -21,6 +21,9 @@ import SalesReport from "./pages/SalesReport";
 import StoreManagement from "./pages/StoreManagement";
 import Store from "./pages/store/Store";
 import StoreCategories from "./pages/store/StoreCategories";
+import ProductDetail from "./pages/store/ProductDetail";
+import Wishlist from "./pages/store/Wishlist";
+import Checkout from "./pages/store/Checkout";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

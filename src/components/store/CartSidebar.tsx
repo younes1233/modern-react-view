@@ -5,13 +5,15 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export function CartSidebar() {
   const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const handleCheckout = () => {
-    alert("Checkout functionality would be implemented here!");
+    navigate('/store/checkout');
     setIsOpen(false);
   };
 
@@ -61,13 +63,21 @@ export function CartSidebar() {
                   <img
                     src={item.product.image}
                     alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded-md"
+                    className="w-16 h-16 object-cover rounded-md cursor-pointer"
+                    onClick={() => {
+                      navigate(`/store/product/${item.product.id}`);
+                      setIsOpen(false);
+                    }}
                   />
                   <div className="flex-1">
-                    <h4 className="font-medium text-sm text-gray-900 line-clamp-2">
+                    <h4 className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-cyan-600 transition-colors"
+                        onClick={() => {
+                          navigate(`/store/product/${item.product.id}`);
+                          setIsOpen(false);
+                        }}>
                       {item.product.name}
                     </h4>
-                    <p className="text-sm text-gray-600">${item.product.price}</p>
+                    <p className="text-sm text-gray-600">${item.product.price.toFixed(2)}</p>
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center space-x-2">
                         <Button
@@ -97,6 +107,11 @@ export function CartSidebar() {
                         <X className="w-4 h-4" />
                       </Button>
                     </div>
+                    <div className="text-right mt-1">
+                      <span className="text-sm font-medium text-gray-900">
+                        ${(item.product.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -116,7 +131,7 @@ export function CartSidebar() {
                 className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
                 size="lg"
               >
-                Checkout
+                Proceed to Checkout
               </Button>
               <Button 
                 variant="outline" 
