@@ -1,10 +1,10 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BannerModal } from "./BannerModal";
-import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   AlertDialog,
@@ -17,59 +17,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-
-interface Banner {
-  id: number;
-  title: string;
-  subtitle?: string;
-  image: string;
-  ctaText?: string;
-  ctaLink?: string;
-  position: 'hero' | 'secondary' | 'sidebar';
-  isActive: boolean;
-  order: number;
-}
-
-const initialBanners: Banner[] = [
-  {
-    id: 1,
-    title: "Summer Sale - Up to 50% Off",
-    subtitle: "Shop the best deals of the season",
-    image: "/placeholder.svg",
-    ctaText: "Shop Now",
-    ctaLink: "/store/categories",
-    position: "hero",
-    isActive: true,
-    order: 1
-  },
-  {
-    id: 2,
-    title: "New Electronics Collection",
-    subtitle: "Latest gadgets and devices",
-    image: "/placeholder.svg",
-    ctaText: "Explore",
-    ctaLink: "/store/categories?category=electronics",
-    position: "secondary",
-    isActive: true,
-    order: 2
-  },
-  {
-    id: 3,
-    title: "Free Shipping",
-    subtitle: "On orders over $50",
-    image: "/placeholder.svg",
-    position: "sidebar",
-    isActive: true,
-    order: 3
-  }
-];
+import { 
+  getBanners, 
+  addBanner, 
+  updateBanner, 
+  deleteBanner, 
+  reorderBanners,
+  Banner 
+} from "@/data/storeData";
 
 export function BannerManagement() {
-  const [banners, setBanners] = useState<Banner[]>(initialBanners);
+  const [banners, setBanners] = useState<Banner[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    setBanners(getBanners());
+  }, []);
+
+  const refreshBanners = () => {
+    setBanners(getBanners());
+  };
 
   const handleAddBanner = () => {
     setModalMode('add');
@@ -85,17 +55,12 @@ export function BannerManagement() {
 
   const handleSaveBanner = (bannerData: Omit<Banner, 'id'>) => {
     if (modalMode === 'add') {
-      const newBanner: Banner = {
-        ...bannerData,
-        id: Date.now(),
-      };
-      setBanners(prev => [...prev, newBanner]);
+      addBanner(bannerData);
     } else if (selectedBanner) {
-      setBanners(prev => prev.map(b => 
-        b.id === selectedBanner.id ? { ...selectedBanner, ...bannerData } : b
-      ));
+      updateBanner(selectedBanner.id, bannerData);
     }
     
+    refreshBanners();
     toast({
       title: "Success",
       description: `Banner ${modalMode === 'add' ? 'added' : 'updated'} successfully`
@@ -103,7 +68,8 @@ export function BannerManagement() {
   };
 
   const handleDeleteBanner = (bannerId: number) => {
-    setBanners(prev => prev.filter(b => b.id !== bannerId));
+    deleteBanner(bannerId);
+    refreshBanners();
     toast({
       title: "Success",
       description: "Banner deleted successfully"
@@ -111,13 +77,41 @@ export function BannerManagement() {
   };
 
   const handleToggleActive = (bannerId: number) => {
-    setBanners(prev => prev.map(b => 
-      b.id === bannerId ? { ...b, isActive: !b.isActive } : b
-    ));
-    toast({
-      title: "Success",
-      description: "Banner status updated"
-    });
+    const banner = banners.find(b => b.id === bannerId);
+    if (banner) {
+      updateBanner(bannerId, { isActive: !banner.isActive });
+      refreshBanners();
+      toast({
+        title: "Success",
+        description: "Banner status updated"
+      });
+    }
+  };
+
+  const handleMoveUp = (index: number) => {
+    if (index > 0) {
+      const newBanners = [...banners];
+      [newBanners[index], newBanners[index - 1]] = [newBanners[index - 1], newBanners[index]];
+      reorderBanners(newBanners);
+      refreshBanners();
+      toast({
+        title: "Success",
+        description: "Banner order updated"
+      });
+    }
+  };
+
+  const handleMoveDown = (index: number) => {
+    if (index < banners.length - 1) {
+      const newBanners = [...banners];
+      [newBanners[index], newBanners[index + 1]] = [newBanners[index + 1], newBanners[index]];
+      reorderBanners(newBanners);
+      refreshBanners();
+      toast({
+        title: "Success",
+        description: "Banner order updated"
+      });
+    }
   };
 
   const getPositionBadge = (position: string) => {
@@ -155,16 +149,42 @@ export function BannerManagement() {
             <table className="w-full">
               <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                 <tr className="text-left">
+                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Order</th>
                   <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Banner</th>
                   <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Position</th>
                   <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                  <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Order</th>
                   <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {banners.map((banner) => (
+                {banners.map((banner, index) => (
                   <tr key={banner.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <GripVertical className="w-4 h-4 text-gray-400" />
+                        <div className="flex flex-col gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMoveUp(index)}
+                            disabled={index === 0}
+                            className="h-6 w-6 p-0"
+                          >
+                            <ArrowUp className="w-3 h-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleMoveDown(index)}
+                            disabled={index === banners.length - 1}
+                            className="h-6 w-6 p-0"
+                          >
+                            <ArrowDown className="w-3 h-3" />
+                          </Button>
+                        </div>
+                        <span className="font-medium">{banner.order}</span>
+                      </div>
+                    </td>
                     <td className="p-4">
                       <div className="flex items-center gap-3">
                         <img 
@@ -186,7 +206,6 @@ export function BannerManagement() {
                         {banner.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </td>
-                    <td className="p-4 text-gray-600 dark:text-gray-400">{banner.order}</td>
                     <td className="p-4">
                       <div className="flex gap-1">
                         <Button 

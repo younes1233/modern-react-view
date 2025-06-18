@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,39 +9,22 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { useToast } from "@/hooks/use-toast";
 import { Save, Eye, Grid, List, Star, TrendingUp } from "lucide-react";
-
-interface DisplaySettings {
-  layout: 'grid' | 'list';
-  productsPerPage: number;
-  showPricing: boolean;
-  showRatings: boolean;
-  showStock: boolean;
-  enableQuickView: boolean;
-  featuredSection: boolean;
-  newArrivalsSection: boolean;
-  saleSection: boolean;
-  gridColumns: number;
-}
-
-const initialSettings: DisplaySettings = {
-  layout: 'grid',
-  productsPerPage: 12,
-  showPricing: true,
-  showRatings: true,
-  showStock: true,
-  enableQuickView: true,
-  featuredSection: true,
-  newArrivalsSection: true,
-  saleSection: true,
-  gridColumns: 3
-};
+import { 
+  getDisplaySettings, 
+  updateDisplaySettings,
+  DisplaySettings 
+} from "@/data/storeData";
 
 export function ProductDisplay() {
-  const [settings, setSettings] = useState<DisplaySettings>(initialSettings);
+  const [settings, setSettings] = useState<DisplaySettings>(getDisplaySettings());
   const { toast } = useToast();
 
+  useEffect(() => {
+    setSettings(getDisplaySettings());
+  }, []);
+
   const handleSaveSettings = () => {
-    // Here you would typically save to your backend/state management
+    updateDisplaySettings(settings);
     toast({
       title: "Success",
       description: "Product display settings saved successfully"

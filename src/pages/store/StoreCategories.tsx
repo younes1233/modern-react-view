@@ -1,100 +1,40 @@
-import { useState } from 'react';
+
+import { useState, useEffect } from 'react';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, ShoppingCart, Grid, List } from 'lucide-react';
+import { 
+  getProductsByCategory, 
+  getDisplaySettings,
+  Product,
+  DisplaySettings 
+} from '@/data/storeData';
 
 const StoreCategories = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [products, setProducts] = useState<Product[]>([]);
+  const [displaySettings, setDisplaySettings] = useState<DisplaySettings | null>(null);
+
+  useEffect(() => {
+    setProducts(getProductsByCategory(selectedCategory));
+    setDisplaySettings(getDisplaySettings());
+    if (displaySettings) {
+      setViewMode(displaySettings.layout);
+    }
+  }, [selectedCategory]);
 
   const categories = [
-    { id: 'all', name: 'All Products', count: 156 },
-    { id: 'electronics', name: 'Electronics', count: 45 },
-    { id: 'furniture', name: 'Furniture', count: 32 },
-    { id: 'fashion', name: 'Fashion', count: 28 },
-    { id: 'home', name: 'Home & Tools', count: 51 },
+    { id: 'all', name: 'All Products', count: products.length },
+    { id: 'electronics', name: 'Electronics', count: products.filter(p => p.category === 'electronics').length },
+    { id: 'furniture', name: 'Furniture', count: products.filter(p => p.category === 'furniture').length },
+    { id: 'fashion', name: 'Fashion', count: products.filter(p => p.category === 'fashion').length },
+    { id: 'home', name: 'Home & Tools', count: products.filter(p => p.category === 'home').length },
   ];
 
-  const products = [
-    {
-      id: 1,
-      name: 'Comfortable Ergonomic Office Chair with Lumbar Support Cushion',
-      category: 'furniture',
-      price: 150,
-      originalPrice: 200,
-      image: '/placeholder.svg',
-      rating: 4.5,
-      reviews: 124,
-      discount: 25,
-      inStock: true
-    },
-    {
-      id: 2,
-      name: '3-Tier 3-Cube Heavy-Duty Shelf Storage Metal Shelf Heavy Duty',
-      category: 'furniture',
-      price: 29,
-      originalPrice: 45,
-      image: '/placeholder.svg',
-      rating: 4.3,
-      reviews: 89,
-      discount: 35,
-      inStock: true
-    },
-    {
-      id: 3,
-      name: 'Universal Black Wheel Heavy Duty 4" Universal Bench Wheel Heavy',
-      category: 'home',
-      price: 90,
-      originalPrice: 120,
-      image: '/placeholder.svg',
-      rating: 4.7,
-      reviews: 156,
-      discount: 25,
-      inStock: false
-    },
-    {
-      id: 4,
-      name: 'Samsung 75AU7000 AU 4K UHD TV Smart - 75AU7000 4K for great',
-      category: 'electronics',
-      price: 15,
-      originalPrice: 25,
-      image: '/placeholder.svg',
-      rating: 4.2,
-      reviews: 203,
-      discount: 40,
-      inStock: true
-    },
-    {
-      id: 5,
-      name: 'BAMENE Lion Dog Chew Toy with 50g Soft - BAMENE',
-      category: 'home',
-      price: 60,
-      originalPrice: 80,
-      image: '/placeholder.svg',
-      rating: 4.6,
-      reviews: 78,
-      discount: 25,
-      inStock: true
-    },
-    {
-      id: 6,
-      name: 'Miljan Trampoline WINOL TOTAL Safety Enclosure Safety Trampoline',
-      category: 'home',
-      price: 78,
-      originalPrice: 95,
-      image: '/placeholder.svg',
-      rating: 4.4,
-      reviews: 92,
-      discount: 18,
-      inStock: true
-    },
-  ];
-
-  const filteredProducts = selectedCategory === 'all' 
-    ? products 
-    : products.filter(product => product.category === selectedCategory);
+  const filteredProducts = getProductsByCategory(selectedCategory);
 
   return (
     <StoreLayout>
@@ -164,10 +104,14 @@ const StoreCategories = () => {
             {/* Products Grid */}
             <div className={`grid gap-6 ${
               viewMode === 'grid' 
-                ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' 
+                ? displaySettings?.gridColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                  displaySettings?.gridColumns === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                  displaySettings?.gridColumns === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
+                  displaySettings?.gridColumns === 5 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5' :
+                  'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
                 : 'grid-cols-1'
             }`}>
-              {filteredProducts.map((product) => (
+              {filteredProducts.slice(0, displaySettings?.productsPerPage || 12).map((product) => (
                 <Card key={product.id} className={`group hover:shadow-lg transition-shadow ${
                   viewMode === 'list' ? 'flex flex-row' : ''
                 }`}>
@@ -180,7 +124,7 @@ const StoreCategories = () => {
                           viewMode === 'list' ? 'h-full' : 'h-48'
                         }`}
                       />
-                      {product.discount && (
+                      {product.discount && displaySettings?.showPricing && (
                         <Badge className="absolute top-2 left-2 bg-red-500 text-white">
                           -{product.discount}%
                         </Badge>
@@ -199,23 +143,27 @@ const StoreCategories = () => {
                         {product.name}
                       </h4>
                       
-                      <div className="flex items-center mb-2">
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
-                          ))}
+                      {displaySettings?.showRatings && (
+                        <div className="flex items-center mb-2">
+                          <div className="flex text-yellow-400">
+                            {[...Array(5)].map((_, i) => (
+                              <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                            ))}
+                          </div>
+                          <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
                         </div>
-                        <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
-                      </div>
+                      )}
                       
-                      <div className={`flex items-center justify-between ${viewMode === 'list' ? 'mb-4' : 'mb-3'}`}>
-                        <div>
-                          <span className="text-lg font-bold text-gray-900">${product.price}</span>
-                          {product.originalPrice && (
-                            <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice}</span>
-                          )}
+                      {displaySettings?.showPricing && (
+                        <div className={`flex items-center justify-between ${viewMode === 'list' ? 'mb-4' : 'mb-3'}`}>
+                          <div>
+                            <span className="text-lg font-bold text-gray-900">${product.price}</span>
+                            {product.originalPrice && (
+                              <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice}</span>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      )}
                       
                       <Button 
                         className={`bg-cyan-500 hover:bg-cyan-600 text-white ${
