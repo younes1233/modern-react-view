@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -6,8 +5,10 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Search, Plus, Eye, Mail, Phone } from "lucide-react";
+import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
+import { Plus, Eye, Mail, Phone, Users } from "lucide-react";
+import { exportToExcel } from "@/utils/exportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 // TODO: Replace with API call to fetch customers
 const mockCustomers = [
@@ -18,14 +19,66 @@ const mockCustomers = [
   { id: 5, name: "Tom Brown", email: "tom@example.com", phone: "+1 (555) 654-3210", orders: 0, totalSpent: 0, status: "inactive", joinDate: "2023-12-20" },
 ];
 
-const Customers = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [customers] = useState(mockCustomers);
+const statusOptions = [
+  { value: "active", label: "Active" },
+  { value: "vip", label: "VIP" },
+  { value: "new", label: "New" },
+  { value: "inactive", label: "Inactive" },
+];
 
-  const filteredCustomers = customers.filter(customer =>
-    customer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    customer.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const Customers = () => {
+  const [customers] = useState(mockCustomers);
+  const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers);
+  const { toast } = useToast();
+
+  const handleSearch = (term: string) => {
+    const filtered = customers.filter(customer =>
+      customer.name.toLowerCase().includes(term.toLowerCase()) ||
+      customer.email.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+  };
+
+  const handleStatusFilter = (status: string) => {
+    if (!status) {
+      setFilteredCustomers(customers);
+      return;
+    }
+    const filtered = customers.filter(customer => customer.status === status);
+    setFilteredCustomers(filtered);
+  };
+
+  const handleAmountRangeFilter = (min: number | undefined, max: number | undefined) => {
+    if (min === undefined && max === undefined) {
+      setFilteredCustomers(customers);
+      return;
+    }
+    
+    const filtered = customers.filter(customer => {
+      if (min !== undefined && customer.totalSpent < min) return false;
+      if (max !== undefined && customer.totalSpent > max) return false;
+      return true;
+    });
+    setFilteredCustomers(filtered);
+  };
+
+  const handleExportExcel = () => {
+    const exportData = filteredCustomers.map(customer => ({
+      'Name': customer.name,
+      'Email': customer.email,
+      'Phone': customer.phone,
+      'Orders': customer.orders,
+      'Total Spent': `$${customer.totalSpent.toFixed(2)}`,
+      'Status': customer.status.toUpperCase(),
+      'Join Date': customer.joinDate
+    }));
+    
+    exportToExcel(exportData, 'customers-export', 'Customers');
+    toast({
+      title: "Export Successful",
+      description: "Customers data has been exported to Excel file"
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -60,6 +113,7 @@ const Customers = () => {
               </Button>
             </div>
 
+            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
               <Card>
                 <CardContent className="p-6">
@@ -115,6 +169,21 @@ const Customers = () => {
               </Card>
             </div>
 
+            {/* Advanced Filters */}
+            <AdvancedFilterBar
+              searchPlaceholder="Search customers by name or email..."
+              statusOptions={statusOptions}
+              onSearch={handleSearch}
+              onStatusFilter={handleStatusFilter}
+              onAmountRangeFilter={handleAmountRangeFilter}
+              onExportExcel={handleExportExcel}
+              showStatusFilter
+              showAmountFilter
+              showExcelExport
+              exportLabel="Export"
+            />
+
+            {/* Customers Table */}
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -6,8 +5,10 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Search, Plus, AlertTriangle, Package, TrendingDown, TrendingUp } from "lucide-react";
+import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
+import { Plus, AlertTriangle, Package, TrendingDown, TrendingUp } from "lucide-react";
+import { exportToPDF } from "@/utils/exportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 // TODO: Replace with API call to fetch inventory data
 const mockInventory = [
@@ -18,14 +19,51 @@ const mockInventory = [
   { id: 5, product: "Laptop Stand", sku: "LS-005", currentStock: 0, reorderLevel: 10, status: "out_of_stock", lastRestocked: "2023-12-28", supplier: "OfficePro" },
 ];
 
-const Inventory = () => {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [inventory] = useState(mockInventory);
+const statusOptions = [
+  { value: "in_stock", label: "In Stock" },
+  { value: "low_stock", label: "Low Stock" },
+  { value: "out_of_stock", label: "Out of Stock" },
+];
 
-  const filteredInventory = inventory.filter(item =>
-    item.product.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.sku.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+const Inventory = () => {
+  const [inventory] = useState(mockInventory);
+  const [filteredInventory, setFilteredInventory] = useState(mockInventory);
+  const { toast } = useToast();
+
+  const handleSearch = (term: string) => {
+    const filtered = inventory.filter(item =>
+      item.product.toLowerCase().includes(term.toLowerCase()) ||
+      item.sku.toLowerCase().includes(term.toLowerCase())
+    );
+    setFilteredInventory(filtered);
+  };
+
+  const handleStatusFilter = (status: string) => {
+    if (!status) {
+      setFilteredInventory(inventory);
+      return;
+    }
+    const filtered = inventory.filter(item => item.status === status);
+    setFilteredInventory(filtered);
+  };
+
+  const handleExportPDF = () => {
+    const columns = [
+      { header: 'Product', dataKey: 'product' },
+      { header: 'SKU', dataKey: 'sku' },
+      { header: 'Current Stock', dataKey: 'currentStock' },
+      { header: 'Reorder Level', dataKey: 'reorderLevel' },
+      { header: 'Status', dataKey: 'status' },
+      { header: 'Last Restocked', dataKey: 'lastRestocked' },
+      { header: 'Supplier', dataKey: 'supplier' }
+    ];
+    
+    exportToPDF(filteredInventory, 'inventory-report', 'Inventory Report', columns);
+    toast({
+      title: "Export Successful",
+      description: "Inventory report has been exported to PDF file"
+    });
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -132,6 +170,16 @@ const Inventory = () => {
                 </CardContent>
               </Card>
             )}
+
+            <AdvancedFilterBar
+              searchPlaceholder="Search inventory by product or SKU..."
+              statusOptions={statusOptions}
+              onSearch={handleSearch}
+              onStatusFilter={handleStatusFilter}
+              onExportPDF={handleExportPDF}
+              showStatusFilter
+              showPDFExport
+            />
 
             <Card>
               <CardHeader>

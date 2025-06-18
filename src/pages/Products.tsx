@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -6,10 +5,11 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { FilterBar } from "@/components/FilterBar";
+import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { ProductModal } from "@/components/ProductModal";
 import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { exportToExcel } from "@/utils/exportUtils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -75,6 +75,23 @@ const Products = () => {
     }
     const filtered = products.filter(product => product.category === category);
     setFilteredProducts(filtered);
+  };
+
+  const handleExportExcel = () => {
+    const exportData = filteredProducts.map(product => ({
+      'SKU': product.sku,
+      'Product Name': product.name,
+      'Category': product.category,
+      'Price': `$${product.price}`,
+      'Stock': product.stock,
+      'Status': product.status.replace('_', ' ').toUpperCase()
+    }));
+    
+    exportToExcel(exportData, 'products-export', 'Products');
+    toast({
+      title: "Export Successful",
+      description: "Products data has been exported to Excel file"
+    });
   };
 
   const handleAddProduct = () => {
@@ -207,16 +224,19 @@ const Products = () => {
               </Card>
             </div>
 
-            {/* Filters */}
-            <FilterBar
+            {/* Advanced Filters */}
+            <AdvancedFilterBar
               searchPlaceholder="Search products by name, category, or SKU..."
               statusOptions={statusOptions}
               categoryOptions={categoryOptions}
               onSearch={handleSearch}
               onStatusFilter={handleStatusFilter}
               onCategoryFilter={handleCategoryFilter}
+              onExportExcel={handleExportExcel}
               showStatusFilter
               showCategoryFilter
+              showExcelExport
+              exportLabel="Export"
             />
 
             {/* Products Table */}

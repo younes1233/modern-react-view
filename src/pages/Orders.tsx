@@ -1,13 +1,15 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { FilterBar } from "@/components/FilterBar";
+import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { ActionButtons } from "@/components/ActionButtons";
-import { Package, Truck, Clock, XCircle, DollarSign } from "lucide-react";
+import { Package, Truck, Clock, XCircle, DollarSign, Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { exportToExcel } from "@/utils/exportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 // TODO: Replace with API call to fetch orders
 const mockOrders = [
@@ -29,6 +31,7 @@ const statusOptions = [
 const Orders = () => {
   const [orders] = useState(mockOrders);
   const [filteredOrders, setFilteredOrders] = useState(mockOrders);
+  const { toast } = useToast();
 
   const handleSearch = (term: string) => {
     const filtered = orders.filter(order =>
@@ -46,6 +49,53 @@ const Orders = () => {
     }
     const filtered = orders.filter(order => order.status === status);
     setFilteredOrders(filtered);
+  };
+
+  const handleDateRangeFilter = (startDate: Date | undefined, endDate: Date | undefined) => {
+    if (!startDate && !endDate) {
+      setFilteredOrders(orders);
+      return;
+    }
+    
+    const filtered = orders.filter(order => {
+      const orderDate = new Date(order.date);
+      if (startDate && orderDate < startDate) return false;
+      if (endDate && orderDate > endDate) return false;
+      return true;
+    });
+    setFilteredOrders(filtered);
+  };
+
+  const handleAmountRangeFilter = (min: number | undefined, max: number | undefined) => {
+    if (min === undefined && max === undefined) {
+      setFilteredOrders(orders);
+      return;
+    }
+    
+    const filtered = orders.filter(order => {
+      if (min !== undefined && order.total < min) return false;
+      if (max !== undefined && order.total > max) return false;
+      return true;
+    });
+    setFilteredOrders(filtered);
+  };
+
+  const handleExportExcel = () => {
+    const exportData = filteredOrders.map(order => ({
+      'Order ID': order.id,
+      'Customer': order.customer,
+      'Email': order.email,
+      'Date': order.date,
+      'Items': order.items,
+      'Total': `$${order.total}`,
+      'Status': order.status.replace('_', ' ').toUpperCase()
+    }));
+    
+    exportToExcel(exportData, 'orders-export', 'Orders');
+    toast({
+      title: "Export Successful",
+      description: "Orders data has been exported to Excel file"
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -77,9 +127,15 @@ const Orders = () => {
         <main className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader />
           <div className="flex-1 overflow-auto p-4 lg:p-6 space-y-6">
-            <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Orders</h1>
-              <p className="text-gray-600">Track and manage customer orders</p>
+            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">Orders</h1>
+                <p className="text-gray-600">Track and manage customer orders</p>
+              </div>
+              <Button className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-200">
+                <Plus className="w-4 h-4" />
+                New Order
+              </Button>
             </div>
 
             {/* Stats Cards */}
@@ -133,14 +189,20 @@ const Orders = () => {
               </Card>
             </div>
 
-            {/* Filters */}
-            <FilterBar
+            {/* Advanced Filters */}
+            <AdvancedFilterBar
               searchPlaceholder="Search orders by ID, customer, or email..."
               statusOptions={statusOptions}
               onSearch={handleSearch}
               onStatusFilter={handleStatusFilter}
+              onDateRangeFilter={handleDateRangeFilter}
+              onAmountRangeFilter={handleAmountRangeFilter}
+              onExportExcel={handleExportExcel}
               showStatusFilter
               showDateFilter
+              showAmountFilter
+              showExcelExport
+              exportLabel="Export"
             />
 
             {/* Orders Table */}

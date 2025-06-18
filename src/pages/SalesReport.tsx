@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -7,7 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LineChart, Line } from "recharts";
-import { Calendar, Download, Filter, TrendingUp, DollarSign, ShoppingCart, Users } from "lucide-react";
+import { Calendar, Filter, TrendingUp, DollarSign, ShoppingCart, Users, FileText } from "lucide-react";
+import { exportToPDF } from "@/utils/exportUtils";
+import { useToast } from "@/hooks/use-toast";
 
 // TODO: Replace with API calls to fetch sales report data
 const salesReportData = [
@@ -29,6 +30,23 @@ const topSellingProducts = [
 
 const SalesReport = () => {
   const [dateRange, setDateRange] = useState("last_6_months");
+  const { toast } = useToast();
+
+  const handleExportPDF = () => {
+    const columns = [
+      { header: 'Period', dataKey: 'period' },
+      { header: 'Sales', dataKey: 'sales' },
+      { header: 'Orders', dataKey: 'orders' },
+      { header: 'Customers', dataKey: 'customers' },
+      { header: 'Avg Order Value', dataKey: 'avgOrder' }
+    ];
+    
+    exportToPDF(salesReportData, 'sales-report', 'Sales Report', columns);
+    toast({
+      title: "Export Successful",
+      description: "Sales report has been exported to PDF file"
+    });
+  };
 
   const totalSales = salesReportData.reduce((sum, item) => sum + item.sales, 0);
   const totalOrders = salesReportData.reduce((sum, item) => sum + item.orders, 0);
@@ -56,9 +74,9 @@ const SalesReport = () => {
                   <Filter className="w-4 h-4" />
                   Filter
                 </Button>
-                <Button className="gap-2">
-                  <Download className="w-4 h-4" />
-                  Export
+                <Button onClick={handleExportPDF} className="gap-2 bg-red-600 hover:bg-red-700">
+                  <FileText className="w-4 h-4" />
+                  Export PDF
                 </Button>
               </div>
             </div>
