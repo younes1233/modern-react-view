@@ -26,6 +26,7 @@ export interface Product {
   isOnSale: boolean;
   order: number;
   sku?: string;
+  description?: string;
 }
 
 export interface ProductListing {

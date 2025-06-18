@@ -10,11 +10,11 @@ import { useState } from "react";
 
 interface ProductQuickViewProps {
   product: Product | null;
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewProps) {
+export function ProductQuickView({ product, open, onOpenChange }: ProductQuickViewProps) {
   const { addToCart, isInCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
@@ -39,7 +39,7 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">Product Details</DialogTitle>
@@ -187,9 +187,9 @@ export function ProductQuickView({ product, isOpen, onClose }: ProductQuickViewP
             <div className="pt-4 border-t">
               <h3 className="font-semibold text-gray-900 mb-2">Product Details</h3>
               <p className="text-gray-600 leading-relaxed">
-                This high-quality {product.name.toLowerCase()} is perfect for your needs. 
+                {product.description || `This high-quality ${product.name.toLowerCase()} is perfect for your needs. 
                 Made with premium materials and attention to detail, it offers excellent 
-                value and performance. Customer satisfaction is our priority.
+                value and performance. Customer satisfaction is our priority.`}
               </p>
             </div>
           </div>
