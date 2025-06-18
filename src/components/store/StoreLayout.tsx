@@ -24,6 +24,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [showMobileSearchResults, setShowMobileSearchResults] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     if (searchQuery.trim()) {
       navigate('/store/categories');
       setShowSearchResults(false);
+      setShowMobileSearchResults(false);
     }
   };
 
@@ -42,15 +44,23 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     setShowSearchResults(value.length > 0);
   };
 
+  const handleMobileSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    setShowMobileSearchResults(value.length > 0);
+  };
+
   const handleSearchResultClick = (productId: number) => {
     navigate(`/store/product/${productId}`);
     setShowSearchResults(false);
+    setShowMobileSearchResults(false);
     setSearchQuery('');
   };
 
   const handleClearSearch = () => {
     clearSearch();
     setShowSearchResults(false);
+    setShowMobileSearchResults(false);
   };
 
   const openAuthModal = (mode: 'signin' | 'signup') => {
@@ -252,15 +262,16 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         </div>
 
         {/* Mobile Search */}
-        <div className="lg:hidden px-4 pb-4">
+        <div className="lg:hidden px-4 pb-4 relative">
           <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
               placeholder="Search products..."
               value={searchQuery}
-              onChange={handleSearchInputChange}
-              className="w-full pl-12 pr-4 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              onChange={handleMobileSearchInputChange}
+              onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
+              className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white"
             />
             {searchQuery && (
               <button
@@ -272,6 +283,57 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               </button>
             )}
           </form>
+
+          {/* Mobile Search Results Dropdown */}
+          {showMobileSearchResults && isSearching && (
+            <div className="absolute top-full left-4 right-4 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
+              {searchResults.length > 0 ? (
+                <div className="p-2">
+                  <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
+                    {searchResults.length} results found
+                  </div>
+                  {searchResults.slice(0, 6).map((product) => (
+                    <button
+                      key={product.id}
+                      onClick={() => handleSearchResultClick(product.id)}
+                      className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                    >
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-12 h-12 object-cover rounded-xl shadow-md"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate">
+                          {product.name}
+                        </h4>
+                        <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                        <p className="text-sm font-semibold text-blue-600">
+                          ${product.price.toFixed(2)}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                  {searchResults.length > 6 && (
+                    <button
+                      onClick={() => {
+                        navigate('/store/categories');
+                        setShowMobileSearchResults(false);
+                      }}
+                      className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                    >
+                      View all {searchResults.length} results
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-gray-500">
+                  <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
+                  <p>No products found for "{searchQuery}"</p>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Mobile Menu */}
