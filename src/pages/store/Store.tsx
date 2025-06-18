@@ -15,17 +15,56 @@ const Store = () => {
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
+  // Function to refresh all data
+  const refreshStoreData = () => {
+    console.log("Refreshing store data...");
     setHomeSections(getActiveHomeSections());
     setBanners(getBanners());
     setProductListings(getProductListings());
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    refreshStoreData();
+    
+    // Listen for storage events to detect changes from dashboard
+    const handleStorageChange = () => {
+      console.log("Storage change detected, refreshing store data");
+      refreshStoreData();
+    };
+
+    // Listen for custom events from the dashboard
+    const handleDataUpdate = () => {
+      console.log("Data update event received, refreshing store data");
+      refreshStoreData();
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('storeDataUpdated', handleDataUpdate);
+    
+    // Poll for changes every 2 seconds as a fallback
+    const interval = setInterval(refreshStoreData, 2000);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('storeDataUpdated', handleDataUpdate);
+      clearInterval(interval);
+    };
   }, []);
 
   const renderSection = (section: HomeSection) => {
+    console.log("Rendering section:", section);
+    
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
-      if (!banner || !banner.isActive) return null;
+      console.log("Found banner:", banner);
+      
+      if (!banner || !banner.isActive) {
+        console.log("Banner not found or inactive");
+        return null;
+      }
       
       return (
         <div key={`banner-${section.id}`} className="mb-8 lg:mb-12">
@@ -59,7 +98,12 @@ const Store = () => {
       );
     } else {
       const listing = productListings.find(p => p.id === section.itemId);
-      if (!listing || !listing.isActive) return null;
+      console.log("Found product listing:", listing);
+      
+      if (!listing || !listing.isActive) {
+        console.log("Product listing not found or inactive");
+        return null;
+      }
       
       return (
         <div key={`listing-${section.id}`} className="mb-8 lg:mb-12">
@@ -68,6 +112,8 @@ const Store = () => {
       );
     }
   };
+
+  console.log("Store render - homeSections:", homeSections.length, "banners:", banners.length, "listings:", productListings.length);
 
   return (
     <StoreLayout>
@@ -96,7 +142,18 @@ const Store = () => {
 
         {/* Dynamic Sections */}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-          {homeSections.map(renderSection)}
+          {isLoading ? (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-600"></div>
+              <p className="mt-4 text-gray-600">Loading store content...</p>
+            </div>
+          ) : homeSections.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 text-lg">No sections configured. Please add some content in the Store Management dashboard.</p>
+            </div>
+          ) : (
+            homeSections.map(renderSection)
+          )}
         </div>
       </div>
     </StoreLayout>

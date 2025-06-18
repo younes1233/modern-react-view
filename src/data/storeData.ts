@@ -287,6 +287,12 @@ let displaySettings: DisplaySettings = {
   gridColumns: 3
 };
 
+// Helper function to trigger store updates
+const triggerStoreUpdate = () => {
+  console.log("Triggering store update event");
+  window.dispatchEvent(new CustomEvent('storeDataUpdated'));
+};
+
 // Banner management functions
 export const getBanners = (): Banner[] => {
   return [...banners].sort((a, b) => a.order - b.order);
@@ -302,6 +308,7 @@ export const addBanner = (bannerData: Omit<Banner, 'id'>): Banner => {
     id: Date.now(),
   };
   banners.push(newBanner);
+  triggerStoreUpdate();
   return newBanner;
 };
 
@@ -309,6 +316,7 @@ export const updateBanner = (id: number, bannerData: Partial<Banner>): Banner | 
   const index = banners.findIndex(banner => banner.id === id);
   if (index !== -1) {
     banners[index] = { ...banners[index], ...bannerData };
+    triggerStoreUpdate();
     return banners[index];
   }
   return null;
@@ -318,6 +326,7 @@ export const deleteBanner = (id: number): boolean => {
   const index = banners.findIndex(banner => banner.id === id);
   if (index !== -1) {
     banners.splice(index, 1);
+    triggerStoreUpdate();
     return true;
   }
   return false;
@@ -328,6 +337,7 @@ export const reorderBanners = (reorderedBanners: Banner[]): void => {
     ...banner,
     order: index + 1
   }));
+  triggerStoreUpdate();
 };
 
 // Product management functions
@@ -358,6 +368,7 @@ export const addProduct = (productData: Omit<Product, 'id'>): Product => {
     id: Date.now(),
   };
   products.push(newProduct);
+  triggerStoreUpdate();
   return newProduct;
 };
 
@@ -365,6 +376,7 @@ export const updateProduct = (id: number, productData: Partial<Product>): Produc
   const index = products.findIndex(product => product.id === id);
   if (index !== -1) {
     products[index] = { ...products[index], ...productData };
+    triggerStoreUpdate();
     return products[index];
   }
   return null;
@@ -374,6 +386,7 @@ export const deleteProduct = (id: number): boolean => {
   const index = products.findIndex(product => product.id === id);
   if (index !== -1) {
     products.splice(index, 1);
+    triggerStoreUpdate();
     return true;
   }
   return false;
@@ -384,6 +397,7 @@ export const reorderProducts = (reorderedProducts: Product[]): void => {
     ...product,
     order: index + 1
   }));
+  triggerStoreUpdate();
 };
 
 // Product listing management functions
@@ -401,6 +415,7 @@ export const addProductListing = (listingData: Omit<ProductListing, 'id'>): Prod
     id: Date.now(),
   };
   productListings.push(newListing);
+  triggerStoreUpdate();
   return newListing;
 };
 
@@ -408,6 +423,7 @@ export const updateProductListing = (id: number, listingData: Partial<ProductLis
   const index = productListings.findIndex(listing => listing.id === id);
   if (index !== -1) {
     productListings[index] = { ...productListings[index], ...listingData };
+    triggerStoreUpdate();
     return productListings[index];
   }
   return null;
@@ -419,6 +435,7 @@ export const deleteProductListing = (id: number): boolean => {
     productListings.splice(index, 1);
     // Remove from home sections
     homeSections = homeSections.filter(section => !(section.type === 'productListing' && section.itemId === id));
+    triggerStoreUpdate();
     return true;
   }
   return false;
@@ -429,6 +446,7 @@ export const reorderProductListings = (reorderedListings: ProductListing[]): voi
     ...listing,
     order: index + 1
   }));
+  triggerStoreUpdate();
 };
 
 // Home sections management functions
@@ -446,6 +464,7 @@ export const addHomeSection = (sectionData: Omit<HomeSection, 'id'>): HomeSectio
     id: Date.now(),
   };
   homeSections.push(newSection);
+  triggerStoreUpdate();
   return newSection;
 };
 
@@ -453,6 +472,7 @@ export const updateHomeSection = (id: number, sectionData: Partial<HomeSection>)
   const index = homeSections.findIndex(section => section.id === id);
   if (index !== -1) {
     homeSections[index] = { ...homeSections[index], ...sectionData };
+    triggerStoreUpdate();
     return homeSections[index];
   }
   return null;
@@ -462,6 +482,7 @@ export const deleteHomeSection = (id: number): boolean => {
   const index = homeSections.findIndex(section => section.id === id);
   if (index !== -1) {
     homeSections.splice(index, 1);
+    triggerStoreUpdate();
     return true;
   }
   return false;
@@ -472,6 +493,7 @@ export const reorderHomeSections = (reorderedSections: HomeSection[]): void => {
     ...section,
     order: index + 1
   }));
+  triggerStoreUpdate();
 };
 
 // Helper function to get products for a listing
@@ -508,5 +530,6 @@ export const getDisplaySettings = (): DisplaySettings => {
 
 export const updateDisplaySettings = (settings: Partial<DisplaySettings>): DisplaySettings => {
   displaySettings = { ...displaySettings, ...settings };
+  triggerStoreUpdate();
   return displaySettings;
 };

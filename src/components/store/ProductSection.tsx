@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from "react";
 import { ProductListing, getProductsForListing } from "@/data/storeData";
 import { ProductCard } from "./ProductCard";
 
@@ -7,9 +8,32 @@ interface ProductSectionProps {
 }
 
 export function ProductSection({ listing }: ProductSectionProps) {
-  const products = getProductsForListing(listing);
+  const [products, setProducts] = useState(() => getProductsForListing(listing));
+
+  useEffect(() => {
+    const refreshProducts = () => {
+      console.log("Refreshing products for listing:", listing.title);
+      setProducts(getProductsForListing(listing));
+    };
+
+    refreshProducts();
+
+    // Listen for data updates
+    const handleDataUpdate = () => {
+      refreshProducts();
+    };
+
+    window.addEventListener('storeDataUpdated', handleDataUpdate);
+
+    return () => {
+      window.removeEventListener('storeDataUpdated', handleDataUpdate);
+    };
+  }, [listing]);
+
+  console.log(`ProductSection for "${listing.title}" has ${products.length} products`);
 
   if (!listing.isActive || products.length === 0) {
+    console.log(`ProductSection "${listing.title}" not showing: active=${listing.isActive}, products=${products.length}`);
     return null;
   }
 
