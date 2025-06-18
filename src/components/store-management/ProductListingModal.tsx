@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
-import { ProductListing } from "@/data/storeData";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ProductListing, getProducts } from "@/data/storeData";
 
 interface ProductListingModalProps {
   isOpen: boolean;
@@ -31,6 +32,8 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     isActive: true,
     order: 1
   });
+
+  const products = getProducts();
 
   useEffect(() => {
     if (mode === 'edit' && listing) {
@@ -75,6 +78,20 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleProductSelection = (productId: number, checked: boolean) => {
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        productIds: [...(prev.productIds || []), productId]
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        productIds: (prev.productIds || []).filter(id => id !== productId)
+      }));
+    }
+  };
+
   const categories = [
     { value: 'all', label: 'All Products' },
     { value: 'electronics', label: 'Electronics' },
@@ -83,9 +100,18 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     { value: 'home', label: 'Home & Tools' }
   ];
 
+  const getFilteredProducts = () => {
+    if (formData.type === 'category' && formData.categoryFilter) {
+      return products.filter(product => 
+        formData.categoryFilter === 'all' ? true : product.category === formData.categoryFilter
+      );
+    }
+    return products;
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === 'add' ? 'Add Product Listing' : 'Edit Product Listing'}
@@ -147,6 +173,36 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                   ))}
                 </SelectContent>
               </Select>
+            </div>
+          )}
+
+          {formData.type === 'custom' && (
+            <div className="space-y-4">
+              <Label>Select Products</Label>
+              <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
+                <div className="grid grid-cols-1 gap-3">
+                  {getFilteredProducts().map((product) => (
+                    <div key={product.id} className="flex items-center space-x-3 p-2 border rounded hover:bg-gray-50">
+                      <Checkbox
+                        checked={(formData.productIds || []).includes(product.id)}
+                        onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
+                      />
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="w-12 h-12 object-cover rounded"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium text-sm">{product.name}</p>
+                        <p className="text-sm text-gray-500">${product.price}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500">
+                Selected: {formData.productIds?.length || 0} products
+              </p>
             </div>
           )}
 

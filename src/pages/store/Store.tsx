@@ -1,253 +1,84 @@
 
-import { useState, useEffect } from 'react';
-import { StoreLayout } from '@/components/store/StoreLayout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import { Star, ShoppingCart } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { StoreLayout } from "@/components/store/StoreLayout";
+import { ProductSection } from "@/components/store/ProductSection";
 import { 
-  getActiveHomeSections,
-  getBanners,
+  getActiveHomeSections, 
+  getBanners, 
   getProductListings,
-  getDisplaySettings,
-  getProductsForListing,
   HomeSection,
   Banner,
-  ProductListing,
-  Product,
-  DisplaySettings 
-} from '@/data/storeData';
+  ProductListing
+} from "@/data/storeData";
 
 const Store = () => {
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
-  const [displaySettings, setDisplaySettings] = useState<DisplaySettings | null>(null);
 
   useEffect(() => {
     setHomeSections(getActiveHomeSections());
     setBanners(getBanners());
     setProductListings(getProductListings());
-    setDisplaySettings(getDisplaySettings());
   }, []);
 
-  const getSectionContent = (section: HomeSection) => {
+  const renderSection = (section: HomeSection) => {
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
       if (!banner || !banner.isActive) return null;
-
+      
       return (
-        <section key={`banner-${section.id}`} className="relative bg-gradient-to-r from-cyan-400 to-cyan-600 text-white py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="relative">
-              <img 
-                src={banner.image} 
-                alt={banner.title} 
-                className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl"
-              />
-              <div className="absolute bottom-4 right-4 bg-white text-gray-900 px-6 py-3 rounded-lg shadow-lg">
-                <div className="text-xl font-bold">{banner.title}</div>
+        <div key={`banner-${section.id}`} className="mb-8">
+          <div className="relative h-64 lg:h-96 rounded-lg overflow-hidden">
+            <img
+              src={banner.image}
+              alt={banner.title}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
+              <div className="text-center text-white">
+                <h2 className="text-3xl lg:text-5xl font-bold mb-4">{banner.title}</h2>
                 {banner.subtitle && (
-                  <div className="text-sm">{banner.subtitle}</div>
+                  <p className="text-xl lg:text-2xl mb-6">{banner.subtitle}</p>
                 )}
                 {banner.ctaText && (
-                  <Button className="mt-2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-semibold transition-colors">
                     {banner.ctaText}
-                  </Button>
+                  </button>
                 )}
               </div>
             </div>
           </div>
-        </section>
+        </div>
       );
     } else {
-      const listing = productListings.find(l => l.id === section.itemId);
-      if (!listing || !listing.isActive || !displaySettings) return null;
-
-      const products = getProductsForListing(listing);
-      if (products.length === 0) return null;
-
+      const listing = productListings.find(p => p.id === section.itemId);
+      if (!listing || !listing.isActive) return null;
+      
       return (
-        <section key={`listing-${section.id}`} className="py-16 bg-gray-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {listing.showTitle && (
-              <div className="text-center mb-12">
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">{listing.title}</h2>
-                {listing.subtitle && (
-                  <p className="text-gray-600">{listing.subtitle}</p>
-                )}
-              </div>
-            )}
-            
-            <div className={`grid gap-6 ${
-              displaySettings.gridColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
-              displaySettings.gridColumns === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
-              displaySettings.gridColumns === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
-              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
-            }`}>
-              {products.map((product) => (
-                <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-                  <CardContent className="p-4">
-                    <div className="relative mb-4">
-                      <img 
-                        src={product.image} 
-                        alt={product.name}
-                        className="w-full h-48 object-cover rounded-lg"
-                      />
-                      {product.discount && displaySettings.showPricing && (
-                        <Badge className="absolute top-2 left-2 bg-red-500 text-white">
-                          -{product.discount}%
-                        </Badge>
-                      )}
-                    </div>
-                    
-                    <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">{product.name}</h4>
-                    
-                    {displaySettings.showRatings && (
-                      <div className="flex items-center mb-2">
-                        <div className="flex text-yellow-400">
-                          {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
-                          ))}
-                        </div>
-                        <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
-                      </div>
-                    )}
-                    
-                    {displaySettings.showPricing && (
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <span className="text-lg font-bold text-gray-900">${product.price}</span>
-                          {product.originalPrice && (
-                            <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice}</span>
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      className="w-full bg-cyan-500 hover:bg-cyan-600 text-white" 
-                      size="sm"
-                      disabled={!product.inStock}
-                    >
-                      <ShoppingCart className="w-4 h-4 mr-2" />
-                      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
+        <div key={`listing-${section.id}`} className="mb-8">
+          <ProductSection listing={listing} />
+        </div>
       );
     }
   };
 
-  const heroCategories = [
-    { name: 'FACEBOOK', image: '/placeholder.svg' },
-    { name: 'INSTAGRAM', image: '/placeholder.svg' },
-    { name: 'TIKTOK', image: '/placeholder.svg' },
-    { name: 'FACEBOOK', image: '/placeholder.svg' },
-    { name: 'INSTAGRAM', image: '/placeholder.svg' },
-    { name: 'TIKTOK', image: '/placeholder.svg' },
-  ];
-
-  const categories = [
-    { id: 1, name: 'Electronics', image: '/placeholder.svg', icon: '📱' },
-    { id: 2, name: 'Furniture', image: '/placeholder.svg', icon: '🪑' },
-    { id: 3, name: 'Fashion', image: '/placeholder.svg', icon: '👕' },
-    { id: 4, name: 'Home & Tools', image: '/placeholder.svg', icon: '🔧' },
-    { id: 5, name: 'Honey', image: '/placeholder.svg', icon: '🍯' },
-    { id: 6, name: 'Home Tools', image: '/placeholder.svg', icon: '🏠' },
-  ];
-
-  const membershipTiers = [
-    { name: 'BRONZE', price: 'Free', features: ['Basic', 'Support', 'Free Shipping'], color: 'orange' },
-    { name: 'SILVER', price: '$19', features: ['Premium', 'Support', 'Free Returns'], color: 'gray' },
-    { name: 'GOLD', price: '$39', features: ['Premium+', 'Priority', 'Exclusive Deals'], color: 'yellow' },
-    { name: 'PLATINO', price: '$59', features: ['VIP', 'Concierge', 'Early Access'], color: 'blue' },
-    { name: 'DIAMANTE', price: '$99', features: ['Elite', 'Personal', 'Custom Service'], color: 'purple' },
-  ];
-
   return (
     <StoreLayout>
-      {/* Hero Section with Categories */}
-      <section className="relative bg-gradient-to-r from-cyan-400 to-cyan-600 text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <div className="flex justify-center space-x-8 mb-8 overflow-x-auto">
-              {heroCategories.map((category, index) => (
-                <div key={index} className="flex-shrink-0 text-center">
-                  <div className="w-16 h-16 bg-white/20 rounded-lg flex items-center justify-center mb-2">
-                    <span className="text-lg font-bold">{category.name.slice(0, 2)}</span>
-                  </div>
-                  <span className="text-sm">{category.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-4">
+            Welcome to Our Store
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">
+            Discover amazing products at unbeatable prices
+          </p>
         </div>
-      </section>
 
-      {/* Dynamic Sections */}
-      {homeSections.map((section) => getSectionContent(section))}
-
-      {/* Shop by Category */}
-      <section className="py-16 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">SHOP BY CATEGORY</h2>
-          
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
-            {categories.map((category) => (
-              <Card key={category.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
-                <CardContent className="p-6 text-center">
-                  <div className="w-16 h-16 bg-gradient-to-br from-cyan-100 to-cyan-200 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                    <span className="text-2xl">{category.icon}</span>
-                  </div>
-                  <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Membership Plans */}
-      <section className="py-16 bg-cyan-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            {membershipTiers.map((tier) => (
-              <Card key={tier.name} className="text-center hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className={`w-12 h-12 mx-auto mb-4 rounded-full flex items-center justify-center ${
-                    tier.color === 'orange' ? 'bg-orange-500' :
-                    tier.color === 'gray' ? 'bg-gray-500' :
-                    tier.color === 'yellow' ? 'bg-yellow-500' :
-                    tier.color === 'blue' ? 'bg-blue-500' : 'bg-purple-500'
-                  }`}>
-                    <Star className="w-6 h-6 text-white" />
-                  </div>
-                  <h3 className="text-xl font-bold mb-2">{tier.name}</h3>
-                  <div className="text-2xl font-bold text-cyan-600 mb-4">{tier.price}</div>
-                  <div className="space-y-2 mb-6">
-                    {tier.features.map((feature, index) => (
-                      <div key={index} className="text-sm text-gray-600">{feature}</div>
-                    ))}
-                  </div>
-                  <Button className={`w-full ${
-                    tier.color === 'orange' ? 'bg-orange-500 hover:bg-orange-600' :
-                    tier.color === 'gray' ? 'bg-gray-500 hover:bg-gray-600' :
-                    tier.color === 'yellow' ? 'bg-yellow-500 hover:bg-yellow-600' :
-                    tier.color === 'blue' ? 'bg-blue-500 hover:bg-blue-600' : 'bg-purple-500 hover:bg-purple-600'
-                  } text-white`}>
-                    Choose Plan
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </section>
+        {/* Dynamic Sections */}
+        {homeSections.map(renderSection)}
+      </div>
     </StoreLayout>
   );
 };
