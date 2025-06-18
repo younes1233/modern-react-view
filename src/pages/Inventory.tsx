@@ -58,11 +58,20 @@ const Inventory = () => {
       { header: 'Supplier', dataKey: 'supplier' }
     ];
     
-    exportToPDF(filteredInventory, 'inventory-report', 'Inventory Report', columns);
-    toast({
-      title: "Export Successful",
-      description: "Inventory report has been exported to PDF file"
-    });
+    try {
+      exportToPDF(filteredInventory, 'inventory-report', 'Inventory Report', columns);
+      toast({
+        title: "Export Successful",
+        description: "Inventory report has been exported to PDF file"
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting the inventory report",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -84,15 +93,15 @@ const Inventory = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
         <AppSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader />
           <div className="flex-1 overflow-auto p-6 space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Inventory</h1>
-                <p className="text-gray-600">Monitor stock levels and manage inventory</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Inventory</h1>
+                <p className="text-gray-600 dark:text-gray-300">Monitor stock levels and manage inventory</p>
               </div>
               <Button className="gap-2">
                 <Plus className="w-4 h-4" />
@@ -101,54 +110,54 @@ const Inventory = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-blue-50">
-                      <Package className="w-6 h-6 text-blue-600" />
+                    <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20">
+                      <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Total Items</p>
-                      <p className="text-2xl font-bold">143</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Total Items</p>
+                      <p className="text-2xl font-bold dark:text-white">143</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-yellow-50">
-                      <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                    <div className="p-3 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+                      <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Low Stock</p>
-                      <p className="text-2xl font-bold">{lowStockItems}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Low Stock</p>
+                      <p className="text-2xl font-bold dark:text-white">{lowStockItems}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-red-50">
-                      <TrendingDown className="w-6 h-6 text-red-600" />
+                    <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20">
+                      <TrendingDown className="w-6 h-6 text-red-600 dark:text-red-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Out of Stock</p>
-                      <p className="text-2xl font-bold">{outOfStockItems}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Out of Stock</p>
+                      <p className="text-2xl font-bold dark:text-white">{outOfStockItems}</p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
-                    <div className="p-3 rounded-lg bg-green-50">
-                      <TrendingUp className="w-6 h-6 text-green-600" />
+                    <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                      <TrendingUp className="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Inventory Value</p>
-                      <p className="text-2xl font-bold">${totalValue.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Inventory Value</p>
+                      <p className="text-2xl font-bold dark:text-white">${totalValue.toLocaleString()}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -156,13 +165,13 @@ const Inventory = () => {
             </div>
 
             {(lowStockItems > 0 || outOfStockItems > 0) && (
-              <Card className="border-yellow-200 bg-yellow-50">
+              <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-700 dark:bg-yellow-900/20">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3">
-                    <AlertTriangle className="w-6 h-6 text-yellow-600" />
+                    <AlertTriangle className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
                     <div>
-                      <h3 className="font-semibold text-yellow-800">Inventory Alerts</h3>
-                      <p className="text-yellow-700">
+                      <h3 className="font-semibold text-yellow-800 dark:text-yellow-300">Inventory Alerts</h3>
+                      <p className="text-yellow-700 dark:text-yellow-400">
                         You have {lowStockItems} items with low stock and {outOfStockItems} items out of stock that need attention.
                       </p>
                     </div>
@@ -181,40 +190,40 @@ const Inventory = () => {
               showPDFExport
             />
 
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardHeader>
-                <CardTitle>Inventory Overview</CardTitle>
+                <CardTitle className="dark:text-white">Inventory Overview</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="border-b">
+                    <thead className="border-b dark:border-gray-600">
                       <tr className="text-left">
-                        <th className="pb-3 font-semibold">Product</th>
-                        <th className="pb-3 font-semibold">SKU</th>
-                        <th className="pb-3 font-semibold">Current Stock</th>
-                        <th className="pb-3 font-semibold">Reorder Level</th>
-                        <th className="pb-3 font-semibold">Status</th>
-                        <th className="pb-3 font-semibold">Last Restocked</th>
-                        <th className="pb-3 font-semibold">Supplier</th>
+                        <th className="pb-3 font-semibold dark:text-white">Product</th>
+                        <th className="pb-3 font-semibold dark:text-white">SKU</th>
+                        <th className="pb-3 font-semibold dark:text-white">Current Stock</th>
+                        <th className="pb-3 font-semibold dark:text-white">Reorder Level</th>
+                        <th className="pb-3 font-semibold dark:text-white">Status</th>
+                        <th className="pb-3 font-semibold dark:text-white">Last Restocked</th>
+                        <th className="pb-3 font-semibold dark:text-white">Supplier</th>
                       </tr>
                     </thead>
                     <tbody>
                       {filteredInventory.map((item) => (
-                        <tr key={item.id} className="border-b hover:bg-gray-50">
-                          <td className="py-4 font-medium">{item.product}</td>
-                          <td className="py-4 text-gray-600">{item.sku}</td>
+                        <tr key={item.id} className="border-b hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700">
+                          <td className="py-4 font-medium dark:text-white">{item.product}</td>
+                          <td className="py-4 text-gray-600 dark:text-gray-300">{item.sku}</td>
                           <td className="py-4">
                             <span className={`font-medium ${
-                              item.currentStock <= item.reorderLevel ? 'text-red-600' : 'text-gray-900'
+                              item.currentStock <= item.reorderLevel ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'
                             }`}>
                               {item.currentStock}
                             </span>
                           </td>
-                          <td className="py-4 text-gray-600">{item.reorderLevel}</td>
+                          <td className="py-4 text-gray-600 dark:text-gray-300">{item.reorderLevel}</td>
                           <td className="py-4">{getStatusBadge(item.status)}</td>
-                          <td className="py-4 text-gray-600">{item.lastRestocked}</td>
-                          <td className="py-4 text-gray-600">{item.supplier}</td>
+                          <td className="py-4 text-gray-600 dark:text-gray-300">{item.lastRestocked}</td>
+                          <td className="py-4 text-gray-600 dark:text-gray-300">{item.supplier}</td>
                         </tr>
                       ))}
                     </tbody>
