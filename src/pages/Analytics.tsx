@@ -1,6 +1,7 @@
+import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import { DashboardHeader } from "@/components/DashboardHeader";
+import { AppSidebar } from "@/components/dashboard/AppSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { SalesChart } from "@/components/SalesChart";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, PieChart, Pie, Cell, AreaChart, Area } from "recharts";

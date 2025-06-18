@@ -1,7 +1,6 @@
-
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import { DashboardHeader } from "@/components/DashboardHeader";
+import { AppSidebar } from "@/components/dashboard/AppSidebar";
+import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { MetricCards } from "@/components/MetricCards";
 import { SalesChart } from "@/components/SalesChart";
 import { TopProducts } from "@/components/TopProducts";
