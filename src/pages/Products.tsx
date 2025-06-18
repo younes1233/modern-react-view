@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { ProductModal } from "@/components/ProductModal";
-import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye } from "lucide-react";
+import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye, Star, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { exportToExcel } from "@/utils/exportUtils";
 import {
@@ -22,13 +22,78 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// TODO: Replace with API call to fetch products
-const initialMockProducts = [
-  { id: 1, name: "Wireless Headphones", category: "Electronics", price: 89.99, stock: 45, status: "active", image: "/placeholder.svg", sku: "WH001" },
-  { id: 2, name: "Smart Watch", category: "Electronics", price: 199.99, stock: 23, status: "active", image: "/placeholder.svg", sku: "SW002" },
-  { id: 3, name: "Bluetooth Speaker", category: "Electronics", price: 59.99, stock: 12, status: "low_stock", image: "/placeholder.svg", sku: "BS003" },
-  { id: 4, name: "Phone Case", category: "Accessories", price: 24.99, stock: 67, status: "active", image: "/placeholder.svg", sku: "PC004" },
-  { id: 5, name: "Laptop Stand", category: "Accessories", price: 39.99, stock: 0, status: "out_of_stock", image: "/placeholder.svg", sku: "LS005" },
+// Enhanced product interface
+interface Product {
+  id: number;
+  name: string;
+  slug: string;
+  category: string;
+  price: number;
+  stock: number;
+  status: string;
+  image: string;
+  sku: string;
+  description?: string;
+  thumbnails: Array<{ id: number; url: string; alt: string }>;
+  variations: Array<{ id: number; type: string; value: string; priceAdjustment?: number; inStock: boolean }>;
+  rating: number;
+  isFeatured: boolean;
+  isNewArrival: boolean;
+  inStock: boolean;
+}
+
+// Updated mock products with new structure
+const initialMockProducts: Product[] = [
+  { 
+    id: 1, 
+    name: "Wireless Headphones", 
+    slug: "wireless-headphones",
+    category: "Electronics", 
+    price: 89.99, 
+    stock: 45, 
+    status: "active", 
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=300&h=300&fit=crop", 
+    sku: "WH001",
+    description: "High-quality wireless headphones with noise cancellation",
+    thumbnails: [
+      { id: 1, url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=150&h=150&fit=crop", alt: "Side view" },
+      { id: 2, url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=150&h=150&fit=crop", alt: "Top view" }
+    ],
+    variations: [
+      { id: 1, type: "color", value: "Black", priceAdjustment: 0, inStock: true },
+      { id: 2, type: "color", value: "White", priceAdjustment: 5, inStock: true }
+    ],
+    rating: 4.5,
+    isFeatured: true,
+    isNewArrival: false,
+    inStock: true
+  },
+  { 
+    id: 2, 
+    name: "Smart Watch", 
+    slug: "smart-watch",
+    category: "Electronics", 
+    price: 199.99, 
+    stock: 23, 
+    status: "active", 
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&h=300&fit=crop", 
+    sku: "SW002",
+    description: "Advanced smartwatch with health monitoring",
+    thumbnails: [
+      { id: 3, url: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=150&h=150&fit=crop", alt: "Front view" }
+    ],
+    variations: [
+      { id: 3, type: "size", value: "38mm", priceAdjustment: 0, inStock: true },
+      { id: 4, type: "size", value: "42mm", priceAdjustment: 50, inStock: true },
+      { id: 5, type: "color", value: "Silver", priceAdjustment: 0, inStock: true },
+      { id: 6, type: "color", value: "Gold", priceAdjustment: 100, inStock: false }
+    ],
+    rating: 4.8,
+    isFeatured: false,
+    isNewArrival: true,
+    inStock: true
+  },
+  // ... keep existing code (other mock products with similar structure)
 ];
 
 const statusOptions = [
@@ -40,14 +105,18 @@ const statusOptions = [
 const categoryOptions = [
   { value: "Electronics", label: "Electronics" },
   { value: "Accessories", label: "Accessories" },
+  { value: "Clothing", label: "Clothing" },
+  { value: "Home", label: "Home" },
+  { value: "Sports", label: "Sports" },
+  { value: "Books", label: "Books" },
 ];
 
 const Products = () => {
-  const [products, setProducts] = useState(initialMockProducts);
-  const [filteredProducts, setFilteredProducts] = useState(initialMockProducts);
+  const [products, setProducts] = useState<Product[]>(initialMockProducts);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>(initialMockProducts);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [selectedProduct, setSelectedProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const { toast } = useToast();
 
   const handleSearch = (term: string) => {
@@ -100,18 +169,17 @@ const Products = () => {
     setIsModalOpen(true);
   };
 
-  const handleEditProduct = (product: any) => {
+  const handleEditProduct = (product: Product) => {
     setModalMode('edit');
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
 
-  const handleSaveProduct = (productData: any) => {
+  const handleSaveProduct = (productData: Product) => {
     if (modalMode === 'add') {
       const newProduct = {
         ...productData,
         id: Date.now(),
-        image: "/placeholder.svg"
       };
       const updatedProducts = [...products, newProduct];
       setProducts(updatedProducts);
@@ -146,6 +214,15 @@ const Products = () => {
       default:
         return <Badge variant="secondary">Unknown</Badge>;
     }
+  };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }, (_, i) => (
+      <Star
+        key={i}
+        className={`w-3 h-3 ${i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+      />
+    ));
   };
 
   const activeProducts = products.filter(p => p.status === "active").length;
@@ -239,7 +316,7 @@ const Products = () => {
               exportLabel="Export"
             />
 
-            {/* Products Table */}
+            {/* Enhanced Products Table */}
             <Card className="shadow-lg border-0">
               <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b">
                 <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
@@ -256,6 +333,7 @@ const Products = () => {
                         <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Category</th>
                         <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Price</th>
                         <th className="p-4 font-semibold text-gray-700 dark:text-gray-300 hidden sm:table-cell">Stock</th>
+                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Rating</th>
                         <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
                         <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                       </tr>
@@ -265,14 +343,29 @@ const Products = () => {
                         <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <img 
-                                src={product.image} 
-                                alt={product.name} 
-                                className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
-                              />
+                              <div className="relative">
+                                <img 
+                                  src={product.image} 
+                                  alt={product.name} 
+                                  className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
+                                />
+                                {product.thumbnails.length > 0 && (
+                                  <Badge variant="secondary" className="absolute -top-1 -right-1 text-xs px-1">
+                                    <Image className="w-3 h-3" />
+                                    {product.thumbnails.length + 1}
+                                  </Badge>
+                                )}
+                              </div>
                               <div>
-                                <span className="font-medium text-gray-900 dark:text-gray-100">{product.name}</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="font-medium text-gray-900 dark:text-gray-100">{product.name}</span>
+                                  {product.isFeatured && <Badge className="bg-blue-100 text-blue-800 text-xs">Featured</Badge>}
+                                  {product.isNewArrival && <Badge className="bg-green-100 text-green-800 text-xs">New</Badge>}
+                                </div>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 lg:hidden">SKU: {product.sku}</p>
+                                {product.variations.length > 0 && (
+                                  <p className="text-xs text-gray-400">{product.variations.length} variations</p>
+                                )}
                               </div>
                             </div>
                           </td>
@@ -280,6 +373,12 @@ const Products = () => {
                           <td className="p-4 text-gray-600 dark:text-gray-400">{product.category}</td>
                           <td className="p-4 font-semibold text-gray-900 dark:text-gray-100">${product.price}</td>
                           <td className="p-4 text-gray-600 dark:text-gray-400 hidden sm:table-cell">{product.stock}</td>
+                          <td className="p-4">
+                            <div className="flex items-center space-x-1">
+                              {renderStars(product.rating)}
+                              <span className="text-xs text-gray-500 ml-1">({product.rating})</span>
+                            </div>
+                          </td>
                           <td className="p-4">{getStatusBadge(product.status)}</td>
                           <td className="p-4">
                             <div className="flex gap-1">
