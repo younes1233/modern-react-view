@@ -1,3 +1,20 @@
+export interface ProductVariation {
+  id: string;
+  name: string;
+  type: 'color' | 'size' | 'material' | 'style';
+  value: string;
+  priceAdjustment?: number;
+  image?: string;
+  inStock: boolean;
+}
+
+export interface ProductThumbnail {
+  id: string;
+  url: string;
+  alt: string;
+  isPrimary: boolean;
+}
+
 export interface Banner {
   id: number;
   title: string;
@@ -13,10 +30,13 @@ export interface Banner {
 export interface Product {
   id: number;
   name: string;
+  slug: string;
   category: string;
   price: number;
   originalPrice?: number;
   image: string;
+  thumbnails: ProductThumbnail[];
+  variations: ProductVariation[];
   rating: number;
   reviews: number;
   discount?: number;
@@ -104,10 +124,22 @@ let products: Product[] = [
   {
     id: 1,
     name: 'Comfortable Ergonomic Office Chair with Lumbar Support Cushion',
+    slug: 'ergonomic-office-chair-lumbar-support',
     category: 'furniture',
     price: 150,
     originalPrice: 200,
     image: '/placeholder.svg',
+    thumbnails: [
+      { id: '1-1', url: '/placeholder.svg', alt: 'Office Chair Front View', isPrimary: true },
+      { id: '1-2', url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400', alt: 'Office Chair Side View', isPrimary: false },
+      { id: '1-3', url: 'https://images.unsplash.com/photo-1581539250439-c96689b516dd?w=400', alt: 'Office Chair Back View', isPrimary: false },
+      { id: '1-4', url: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=400', alt: 'Office Chair Detail', isPrimary: false }
+    ],
+    variations: [
+      { id: 'chair-color-black', name: 'Color', type: 'color', value: 'Black', inStock: true },
+      { id: 'chair-color-gray', name: 'Color', type: 'color', value: 'Gray', priceAdjustment: 10, inStock: true },
+      { id: 'chair-color-white', name: 'Color', type: 'color', value: 'White', priceAdjustment: 15, inStock: false }
+    ],
     rating: 4.5,
     reviews: 124,
     discount: 25,
@@ -121,10 +153,21 @@ let products: Product[] = [
   {
     id: 2,
     name: '3-Tier 3-Cube Heavy-Duty Shelf Storage Metal Shelf Heavy Duty',
+    slug: '3-tier-heavy-duty-metal-shelf',
     category: 'furniture',
     price: 29,
     originalPrice: 45,
     image: '/placeholder.svg',
+    thumbnails: [
+      { id: '2-1', url: '/placeholder.svg', alt: 'Metal Shelf Main', isPrimary: true },
+      { id: '2-2', url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400', alt: 'Metal Shelf Assembly', isPrimary: false },
+      { id: '2-3', url: 'https://images.unsplash.com/photo-1581539250439-c96689b516dd?w=400', alt: 'Metal Shelf Usage', isPrimary: false }
+    ],
+    variations: [
+      { id: 'shelf-size-small', name: 'Size', type: 'size', value: 'Small (2-Tier)', priceAdjustment: -10, inStock: true },
+      { id: 'shelf-size-medium', name: 'Size', type: 'size', value: 'Medium (3-Tier)', inStock: true },
+      { id: 'shelf-size-large', name: 'Size', type: 'size', value: 'Large (4-Tier)', priceAdjustment: 20, inStock: true }
+    ],
     rating: 4.3,
     reviews: 89,
     discount: 35,
@@ -138,10 +181,20 @@ let products: Product[] = [
   {
     id: 3,
     name: 'Universal Black Wheel Heavy Duty 4" Universal Bench Wheel Heavy',
+    slug: 'universal-heavy-duty-bench-wheel',
     category: 'home',
     price: 90,
     originalPrice: 120,
     image: '/placeholder.svg',
+    thumbnails: [
+      { id: '3-1', url: '/placeholder.svg', alt: 'Bench Wheel Main', isPrimary: true },
+      { id: '3-2', url: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=400', alt: 'Bench Wheel Detail', isPrimary: false }
+    ],
+    variations: [
+      { id: 'wheel-size-4', name: 'Size', type: 'size', value: '4 inch', inStock: false },
+      { id: 'wheel-size-5', name: 'Size', type: 'size', value: '5 inch', priceAdjustment: 15, inStock: true },
+      { id: 'wheel-size-6', name: 'Size', type: 'size', value: '6 inch', priceAdjustment: 30, inStock: true }
+    ],
     rating: 4.7,
     reviews: 156,
     discount: 25,
@@ -155,10 +208,21 @@ let products: Product[] = [
   {
     id: 4,
     name: 'Samsung 75AU7000 AU 4K UHD TV Smart - 75AU7000 4K for great',
+    slug: 'samsung-75au7000-4k-uhd-smart-tv',
     category: 'electronics',
     price: 15,
     originalPrice: 25,
     image: '/placeholder.svg',
+    thumbnails: [
+      { id: '4-1', url: '/placeholder.svg', alt: 'Samsung TV Main', isPrimary: true },
+      { id: '4-2', url: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=400', alt: 'Samsung TV Side', isPrimary: false },
+      { id: '4-3', url: 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400', alt: 'Samsung TV Remote', isPrimary: false }
+    ],
+    variations: [
+      { id: 'tv-size-65', name: 'Screen Size', type: 'size', value: '65 inch', priceAdjustment: -200, inStock: true },
+      { id: 'tv-size-75', name: 'Screen Size', type: 'size', value: '75 inch', inStock: true },
+      { id: 'tv-size-85', name: 'Screen Size', type: 'size', value: '85 inch', priceAdjustment: 300, inStock: true }
+    ],
     rating: 4.2,
     reviews: 203,
     discount: 40,
@@ -172,10 +236,21 @@ let products: Product[] = [
   {
     id: 5,
     name: 'BAMENE Lion Dog Chew Toy with 50g Soft - BAMENE',
+    slug: 'bamene-lion-dog-chew-toy',
     category: 'home',
     price: 60,
     originalPrice: 80,
     image: '/placeholder.svg',
+    thumbnails: [
+      { id: '5-1', url: '/placeholder.svg', alt: 'Dog Toy Main', isPrimary: true },
+      { id: '5-2', url: 'https://images.unsplash.com/photo-1582562124811-c09040d0a901?w=400', alt: 'Dog with Toy', isPrimary: false }
+    ],
+    variations: [
+      { id: 'toy-color-brown', name: 'Color', type: 'color', value: 'Brown', inStock: true },
+      { id: 'toy-color-gray', name: 'Color', type: 'color', value: 'Gray', inStock: true },
+      { id: 'toy-size-small', name: 'Size', type: 'size', value: 'Small', priceAdjustment: -10, inStock: true },
+      { id: 'toy-size-large', name: 'Size', type: 'size', value: 'Large', priceAdjustment: 10, inStock: true }
+    ],
     rating: 4.6,
     reviews: 78,
     discount: 25,
@@ -189,10 +264,20 @@ let products: Product[] = [
   {
     id: 6,
     name: 'Miljan Trampoline WINOL TOTAL Safety Enclosure Safety Trampoline',
+    slug: 'miljan-safety-trampoline-enclosure',
     category: 'home',
     price: 78,
     originalPrice: 95,
     image: '/placeholder.svg',
+    thumbnails: [
+      { id: '6-1', url: '/placeholder.svg', alt: 'Trampoline Main', isPrimary: true },
+      { id: '6-2', url: 'https://images.unsplash.com/photo-1500673922987-e212871fec22?w=400', alt: 'Trampoline Setup', isPrimary: false }
+    ],
+    variations: [
+      { id: 'tramp-size-8ft', name: 'Size', type: 'size', value: '8 ft', priceAdjustment: -20, inStock: true },
+      { id: 'tramp-size-10ft', name: 'Size', type: 'size', value: '10 ft', inStock: true },
+      { id: 'tramp-size-12ft', name: 'Size', type: 'size', value: '12 ft', priceAdjustment: 40, inStock: true }
+    ],
     rating: 4.4,
     reviews: 92,
     discount: 18,
@@ -202,7 +287,7 @@ let products: Product[] = [
     isOnSale: false,
     order: 6,
     sku: 'TRAMP-006'
-  },
+  }
 ];
 
 // Initial product listings data
@@ -540,4 +625,22 @@ export const updateDisplaySettings = (settings: Partial<DisplaySettings>): Displ
   displaySettings = { ...displaySettings, ...settings };
   triggerStoreUpdate();
   return displaySettings;
+};
+
+// Helper function to get product by slug
+export const getProductBySlug = (slug: string): Product | null => {
+  return products.find(product => product.slug === slug) || null;
+};
+
+// Function to calculate price with variation adjustments
+export const calculateVariationPrice = (basePrice: number, selectedVariations: ProductVariation[]): number => {
+  const adjustment = selectedVariations.reduce((total, variation) => {
+    return total + (variation.priceAdjustment || 0);
+  }, 0);
+  return basePrice + adjustment;
+};
+
+// Function to check if variation combination is in stock
+export const isVariationCombinationInStock = (variations: ProductVariation[]): boolean => {
+  return variations.every(variation => variation.inStock);
 };

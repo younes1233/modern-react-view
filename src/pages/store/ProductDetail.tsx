@@ -6,11 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { getProducts, Product } from '@/data/storeData';
-import { toast } from '@/components/ui/sonner';
+import { getProducts, getProductBySlug, Product, ProductVariation, calculateVariationPrice } from '@/data/storeData';
+import { ProductVariations } from '@/components/store/ProductVariations';
+import { ImageZoom } from '@/components/store/ImageZoom';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -18,14 +19,20 @@ const ProductDetail = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariations, setSelectedVariations] = useState<ProductVariation[]>([]);
+  const [showImageZoom, setShowImageZoom] = useState(false);
   const { addToCart, isInCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
     if (id) {
-      const products = getProducts();
-      const foundProduct = products.find(p => p.id === parseInt(id));
-      setProduct(foundProduct || null);
+      // Try to find by slug first, then by ID
+      let foundProduct = getProductBySlug(id);
+      if (!foundProduct) {
+        const products = getProducts();
+        foundProduct = products.find(p => p.id === parseInt(id)) || null;
+      }
+      setProduct(foundProduct);
     }
   }, [id]);
 
@@ -45,6 +52,12 @@ const ProductDetail = () => {
     );
   }
 
+  const currentPrice = calculateVariationPrice(product.price, selectedVariations);
+  const allImages = [
+    { url: product.image, alt: product.name },
+    ...product.thumbnails.map(thumb => ({ url: thumb.url, alt: thumb.alt }))
+  ];
+
   const handleAddToCart = () => {
     addToCart(product, quantity);
   };
@@ -55,6 +68,10 @@ const ProductDetail = () => {
     } else {
       addToWishlist(product);
     }
+  };
+
+  const handleVariationChange = (variations: ProductVariation[]) => {
+    setSelectedVariations(variations);
   };
 
   const renderStars = (rating: number) => {
@@ -87,13 +104,44 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
-            <div className="aspect-square rounded-lg overflow-hidden bg-gray-100">
+            <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
               <img
-                src={product.image}
-                alt={product.name}
+                src={allImages[selectedImage]?.url}
+                alt={allImages[selectedImage]?.alt}
                 className="w-full h-full object-cover"
               />
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => setShowImageZoom(true)}
+                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+              >
+                <ZoomIn className="w-4 h-4" />
+              </Button>
             </div>
+            
+            {/* Thumbnail Navigation */}
+            {allImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-2">
+                {allImages.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImage(index)}
+                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
+                      index === selectedImage
+                        ? 'border-cyan-500'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <img
+                      src={image.url}
+                      alt={image.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -119,7 +167,12 @@ const ProductDetail = () => {
 
               {/* Price */}
               <div className="text-3xl font-bold text-gray-900 mb-6">
-                ${product.price.toFixed(2)}
+                ${currentPrice.toFixed(2)}
+                {currentPrice !== product.price && (
+                  <span className="text-lg text-gray-500 line-through ml-2">
+                    ${product.price.toFixed(2)}
+                  </span>
+                )}
               </div>
 
               {/* Stock Status */}
@@ -130,6 +183,17 @@ const ProductDetail = () => {
                   <Badge variant="destructive">Out of Stock</Badge>
                 )}
               </div>
+
+              {/* Product Variations */}
+              {product.variations.length > 0 && (
+                <div className="mb-6">
+                  <ProductVariations
+                    variations={product.variations}
+                    basePrice={product.price}
+                    onVariationChange={handleVariationChange}
+                  />
+                </div>
+              )}
 
               {/* Quantity Selector */}
               <div className="flex items-center space-x-4 mb-6">
@@ -228,6 +292,14 @@ const ProductDetail = () => {
                       <span className="font-medium text-gray-900">Category:</span>
                       <span className="text-gray-600 capitalize">{product.category}</span>
                     </div>
+                    {product.variations.length > 0 && (
+                      <div className="space-y-2">
+                        <span className="font-medium text-gray-900">Available Options:</span>
+                        <span className="text-gray-600">
+                          {Array.from(new Set(product.variations.map(v => v.type))).join(', ')}
+                        </span>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <span className="font-medium text-gray-900">Weight:</span>
                       <span className="text-gray-600">2.5 lbs</span>
@@ -282,6 +354,14 @@ const ProductDetail = () => {
             </TabsContent>
           </Tabs>
         </div>
+
+        <ImageZoom
+          images={allImages}
+          selectedIndex={selectedImage}
+          open={showImageZoom}
+          onOpenChange={setShowImageZoom}
+          onImageChange={setSelectedImage}
+        />
       </div>
     </StoreLayout>
   );
