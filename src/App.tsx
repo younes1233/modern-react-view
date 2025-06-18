@@ -15,6 +15,7 @@ import Categories from "./pages/Categories";
 import Inventory from "./pages/Inventory";
 import Analytics from "./pages/Analytics";
 import SalesReport from "./pages/SalesReport";
+import StoreManagement from "./pages/StoreManagement";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 import Store from "./pages/store/Store";
@@ -64,6 +65,11 @@ function AppRoutes() {
       <Route path="/inventory" element={
         <ProtectedRoute>
           <Inventory />
+        </ProtectedRoute>
+      } />
+      <Route path="/store-management" element={
+        <ProtectedRoute>
+          <StoreManagement />
         </ProtectedRoute>
       } />
       <Route path="/analytics" element={

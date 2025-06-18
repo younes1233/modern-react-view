@@ -1,16 +1,17 @@
 
-import { 
-  BarChart3, 
-  ShoppingBag, 
-  Users, 
-  Package, 
-  ShoppingCart, 
-  FolderTree, 
-  Archive,
+import {
+  BarChart3,
+  Home,
+  Package,
+  ShoppingCart,
+  Users,
+  Settings,
   FileText,
-  Settings
-} from "lucide-react";
-import { useLocation } from "react-router-dom";
+  TrendingUp,
+  Package2,
+  Store,
+} from "lucide-react"
+
 import {
   Sidebar,
   SidebarContent,
@@ -20,108 +21,85 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-} from "@/components/ui/sidebar";
+} from "@/components/ui/sidebar"
+import { Link, useLocation } from "react-router-dom"
 
-const mainMenuItems = [
-  { title: "Dashboard", url: "/", icon: BarChart3 },
-  { title: "Products", url: "/products", icon: Package },
-  { title: "Orders", url: "/orders", icon: ShoppingCart },
-  { title: "Customers", url: "/customers", icon: Users },
-  { title: "Categories", url: "/categories", icon: FolderTree },
-  { title: "Inventory", url: "/inventory", icon: Archive },
-  { title: "Analytics", url: "/analytics", icon: BarChart3 },
-];
-
-const reportsItems = [
-  { title: "Sales Report", url: "/sales-report", icon: FileText },
-];
+// Menu items.
+const items = [
+  {
+    title: "Dashboard",
+    url: "/",
+    icon: Home,
+  },
+  {
+    title: "Products",
+    url: "/products",
+    icon: Package,
+  },
+  {
+    title: "Orders",
+    url: "/orders",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Customers",
+    url: "/customers",
+    icon: Users,
+  },
+  {
+    title: "Categories",
+    url: "/categories",
+    icon: Settings,
+  },
+  {
+    title: "Inventory",
+    url: "/inventory",
+    icon: Package2,
+  },
+  {
+    title: "Store Management",
+    url: "/store-management",
+    icon: Store,
+  },
+  {
+    title: "Analytics",
+    url: "/analytics",
+    icon: BarChart3,
+  },
+  {
+    title: "Sales Report",
+    url: "/sales-report",
+    icon: FileText,
+  },
+]
 
 export function AppSidebar() {
-  const location = useLocation();
-
-  const isActive = (url: string) => {
-    if (url === "/") {
-      return location.pathname === "/";
-    }
-    return location.pathname.startsWith(url);
-  };
+  const location = useLocation()
 
   return (
-    <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="p-6 border-b border-gray-200">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-            <ShoppingBag className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h2 className="font-bold text-gray-900">Ecommerce Pro</h2>
-            <p className="text-sm text-gray-500">Dashboard</p>
-          </div>
-        </div>
-      </SidebarHeader>
-      
-      <SidebarContent className="p-4">
+    <Sidebar>
+      <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-gray-500 font-medium mb-2">Main Menu</SidebarGroupLabel>
+          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    className={`w-full justify-start gap-3 px-3 py-2 rounded-lg transition-all hover:bg-blue-50 hover:text-blue-600 ${
-                      isActive(item.url) ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'text-gray-700'
-                    }`}
-                  >
-                    <a href={item.url}>
-                      <item.icon className="w-5 h-5" />
-                      <span className="font-medium">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-gray-500 font-medium mb-2">Reports</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {reportsItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton 
-                    asChild 
-                    className={`w-full justify-start gap-3 px-3 py-2 rounded-lg transition-all hover:bg-blue-50 hover:text-blue-600 ${
-                      isActive(item.url) ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'text-gray-700'
-                    }`}
-                  >
-                    <a href={item.url}>
-                      <item.icon className="w-5 h-5" />
-                      <span className="font-medium">{item.title}</span>
-                    </a>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {items.map((item) => {
+                const isActive = location.pathname === item.url
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isActive}>
+                      <Link to={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-4 border-t border-gray-200">
-        <div className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
-          <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
-            <span className="text-sm font-medium text-gray-600">AU</span>
-          </div>
-          <div className="flex-1">
-            <p className="text-sm font-medium text-gray-900">Admin User</p>
-            <p className="text-xs text-gray-500">admin@example.com</p>
-          </div>
-          <Settings className="w-4 h-4 text-gray-400" />
-        </div>
-      </SidebarFooter>
     </Sidebar>
-  );
+  )
 }
