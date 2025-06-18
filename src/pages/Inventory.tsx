@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -59,7 +60,14 @@ const Inventory = () => {
     ];
     
     try {
-      exportToPDF(filteredInventory, 'inventory-report', 'Inventory Report', columns);
+      // Ensure data is properly formatted
+      const dataToExport = filteredInventory.map(item => ({
+        ...item,
+        currentStock: item.currentStock.toString(),
+        reorderLevel: item.reorderLevel.toString()
+      }));
+      
+      exportToPDF(dataToExport, 'inventory-report', 'Inventory Report', columns);
       toast({
         title: "Export Successful",
         description: "Inventory report has been exported to PDF file"
@@ -77,13 +85,13 @@ const Inventory = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "in_stock":
-        return <Badge className="bg-green-100 text-green-800">In Stock</Badge>;
+        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">In Stock</Badge>;
       case "low_stock":
-        return <Badge className="bg-yellow-100 text-yellow-800">Low Stock</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">Low Stock</Badge>;
       case "out_of_stock":
-        return <Badge variant="destructive">Out of Stock</Badge>;
+        return <Badge variant="destructive" className="dark:bg-red-900/20 dark:text-red-400">Out of Stock</Badge>;
       default:
-        return <Badge>Unknown</Badge>;
+        return <Badge className="dark:bg-gray-700 dark:text-gray-300">Unknown</Badge>;
     }
   };
 

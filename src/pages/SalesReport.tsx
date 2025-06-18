@@ -41,11 +41,29 @@ const SalesReport = () => {
       { header: 'Avg Order Value', dataKey: 'avgOrder' }
     ];
     
-    exportToPDF(salesReportData, 'sales-report', 'Sales Report', columns);
-    toast({
-      title: "Export Successful",
-      description: "Sales report has been exported to PDF file"
-    });
+    try {
+      // Format data for PDF export
+      const dataToExport = salesReportData.map(item => ({
+        ...item,
+        sales: item.sales.toString(),
+        orders: item.orders.toString(),
+        customers: item.customers.toString(),
+        avgOrder: item.avgOrder.toString()
+      }));
+      
+      exportToPDF(dataToExport, 'sales-report', 'Sales Report', columns);
+      toast({
+        title: "Export Successful",
+        description: "Sales report has been exported to PDF file"
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting the sales report",
+        variant: "destructive"
+      });
+    }
   };
 
   const totalSales = salesReportData.reduce((sum, item) => sum + item.sales, 0);
@@ -55,15 +73,15 @@ const SalesReport = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
         <AppSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader />
           <div className="flex-1 overflow-auto p-6 space-y-6">
             <div className="flex justify-between items-center">
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Sales Report</h1>
-                <p className="text-gray-600">Detailed analysis of your sales performance</p>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Sales Report</h1>
+                <p className="text-gray-600 dark:text-gray-300">Detailed analysis of your sales performance</p>
               </div>
               <div className="flex gap-3">
                 <Button variant="outline" className="gap-2">
@@ -82,19 +100,19 @@ const SalesReport = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              <Card>
+              <Card className="dark:bg-gray-800 dark:border-gray-700">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-gray-600">Total Sales</p>
-                      <p className="text-2xl font-bold">${totalSales.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">Total Sales</p>
+                      <p className="text-2xl font-bold dark:text-white">${totalSales.toLocaleString()}</p>
                       <div className="flex items-center gap-1 mt-1">
                         <TrendingUp className="w-4 h-4 text-green-500" />
-                        <span className="text-sm text-green-600">+15.2%</span>
+                        <span className="text-sm text-green-600 dark:text-green-400">+15.2%</span>
                       </div>
                     </div>
-                    <div className="p-3 rounded-lg bg-green-50">
-                      <DollarSign className="w-6 h-6 text-green-600" />
+                    <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20">
+                      <DollarSign className="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
                   </div>
                 </CardContent>
