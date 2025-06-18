@@ -35,8 +35,8 @@ export function FilterBar({
   showCategoryFilter = false,
 }: FilterBarProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [selectedCategory, setSelectedCategory] = useState("all");
   const [selectedDate, setSelectedDate] = useState<Date>();
   const [activeFilters, setActiveFilters] = useState<string[]>([]);
 
@@ -47,35 +47,39 @@ export function FilterBar({
 
   const handleStatusFilter = (status: string) => {
     setSelectedStatus(status);
-    onStatusFilter?.(status);
-    if (status && !activeFilters.includes(`status:${status}`)) {
-      setActiveFilters([...activeFilters, `status:${status}`]);
+    onStatusFilter?.(status === "all" ? "" : status);
+    if (status !== "all" && !activeFilters.includes(`status:${status}`)) {
+      setActiveFilters([...activeFilters.filter(f => !f.startsWith('status:')), `status:${status}`]);
+    } else if (status === "all") {
+      setActiveFilters(activeFilters.filter(f => !f.startsWith('status:')));
     }
   };
 
   const handleCategoryFilter = (category: string) => {
     setSelectedCategory(category);
-    onCategoryFilter?.(category);
-    if (category && !activeFilters.includes(`category:${category}`)) {
-      setActiveFilters([...activeFilters, `category:${category}`]);
+    onCategoryFilter?.(category === "all" ? "" : category);
+    if (category !== "all" && !activeFilters.includes(`category:${category}`)) {
+      setActiveFilters([...activeFilters.filter(f => !f.startsWith('category:')), `category:${category}`]);
+    } else if (category === "all") {
+      setActiveFilters(activeFilters.filter(f => !f.startsWith('category:')));
     }
   };
 
   const removeFilter = (filter: string) => {
     setActiveFilters(activeFilters.filter(f => f !== filter));
     if (filter.startsWith('status:')) {
-      setSelectedStatus('');
+      setSelectedStatus('all');
       onStatusFilter?.('');
     } else if (filter.startsWith('category:')) {
-      setSelectedCategory('');
+      setSelectedCategory('all');
       onCategoryFilter?.('');
     }
   };
 
   const clearAllFilters = () => {
     setActiveFilters([]);
-    setSelectedStatus('');
-    setSelectedCategory('');
+    setSelectedStatus('all');
+    setSelectedCategory('all');
     setSelectedDate(undefined);
     setSearchTerm('');
     onSearch?.('');
@@ -104,7 +108,7 @@ export function FilterBar({
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Status</SelectItem>
+                <SelectItem value="all">All Status</SelectItem>
                 {statusOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -120,7 +124,7 @@ export function FilterBar({
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value="all">All Categories</SelectItem>
                 {categoryOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
