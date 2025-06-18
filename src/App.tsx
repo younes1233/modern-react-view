@@ -42,6 +42,9 @@ const App = () => (
                   <Route path="/login" element={<Login />} />
                   <Route path="/store" element={<Store />} />
                   <Route path="/store/categories" element={<StoreCategories />} />
+                  <Route path="/store/product/:id" element={<ProductDetail />} />
+                  <Route path="/store/wishlist" element={<Wishlist />} />
+                  <Route path="/store/checkout" element={<Checkout />} />
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Index />

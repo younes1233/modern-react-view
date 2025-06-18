@@ -3,12 +3,15 @@ import { ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X, LogOut } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CartSidebar } from './CartSidebar';
+import { AuthModal } from '../auth/AuthModal';
 import { useSearch } from '@/contexts/SearchContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface StoreLayoutProps {
   children: ReactNode;
@@ -18,8 +21,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const { searchQuery, setSearchQuery, clearSearch, isSearching, searchResults } = useSearch();
   const { items: wishlistItems } = useWishlist();
   const { getTotalItems } = useCart();
+  const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
 
   const handleSearch = (e: React.FormEvent) => {
@@ -45,6 +51,16 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const handleClearSearch = () => {
     clearSearch();
     setShowSearchResults(false);
+  };
+
+  const openAuthModal = (mode: 'signin' | 'signup') => {
+    setAuthMode(mode);
+    setAuthModalOpen(true);
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/store');
   };
 
   return (
@@ -163,9 +179,51 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   )}
                 </Button>
               </Link>
-              <Button variant="ghost" size="sm" className="hover:bg-cyan-50 hover:text-cyan-600">
-                <User className="w-5 h-5" />
-              </Button>
+              
+              {/* User Menu */}
+              {user ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="hover:bg-cyan-50 hover:text-cyan-600">
+                      <User className="w-5 h-5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56" align="end">
+                    <div className="space-y-4">
+                      <div className="border-b pb-3">
+                        <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-600">{user.email}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Link to="/store/wishlist" className="block w-full text-left">
+                          <Button variant="ghost" className="w-full justify-start">
+                            <Heart className="w-4 h-4 mr-2" />
+                            My Wishlist
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          onClick={handleLogout}
+                          className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <LogOut className="w-4 h-4 mr-2" />
+                          Sign Out
+                        </Button>
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="hover:bg-cyan-50 hover:text-cyan-600"
+                  onClick={() => openAuthModal('signin')}
+                >
+                  <User className="w-5 h-5" />
+                </Button>
+              )}
+              
               <CartSidebar />
               <Button 
                 className="md:hidden" 
@@ -227,6 +285,28 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               >
                 Wishlist ({wishlistItems.length})
               </Link>
+              {!user && (
+                <>
+                  <button 
+                    className="block w-full text-left px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                    onClick={() => {
+                      openAuthModal('signin');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Sign In
+                  </button>
+                  <button 
+                    className="block w-full text-left px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                    onClick={() => {
+                      openAuthModal('signup');
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Sign Up
+                  </button>
+                </>
+              )}
               <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium">
                 Deals
               </button>
@@ -290,6 +370,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
         </div>
       </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        open={authModalOpen} 
+        onOpenChange={setAuthModalOpen} 
+        defaultMode={authMode}
+      />
     </div>
   );
 }

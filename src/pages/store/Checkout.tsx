@@ -9,16 +9,22 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Truck, Shield, ArrowLeft } from 'lucide-react';
+import { CreditCard, Truck, Shield, ArrowLeft, Lock } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 const Checkout = () => {
   const { items, getTotalPrice, clearCart } = useCart();
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const [formData, setFormData] = useState({
-    email: '',
+    email: user?.email || '',
     firstName: '',
     lastName: '',
     company: '',
@@ -36,8 +42,11 @@ const Checkout = () => {
     cvv: '',
     nameOnCard: '',
     saveInfo: false,
-    newsletter: false
+    newsletter: false,
+    agreeToTerms: false
   });
+
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const shippingCost = formData.shippingMethod === 'express' ? 15 : formData.shippingMethod === 'overnight' ? 25 : 5;
   const tax = getTotalPrice() * 0.08; // 8% tax
@@ -45,27 +54,133 @@ const Checkout = () => {
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    // Required fields
+    if (!formData.email) newErrors.email = 'Email is required';
+    if (!formData.firstName) newErrors.firstName = 'First name is required';
+    if (!formData.lastName) newErrors.lastName = 'Last name is required';
+    if (!formData.address1) newErrors.address1 = 'Address is required';
+    if (!formData.city) newErrors.city = 'City is required';
+    if (!formData.state) newErrors.state = 'State is required';
+    if (!formData.zipCode) newErrors.zipCode = 'ZIP code is required';
+
+    // Email validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    // Payment validation
+    if (formData.paymentMethod === 'card') {
+      if (!formData.cardNumber) newErrors.cardNumber = 'Card number is required';
+      if (!formData.expiryDate) newErrors.expiryDate = 'Expiry date is required';
+      if (!formData.cvv) newErrors.cvv = 'CVV is required';
+      if (!formData.nameOnCard) newErrors.nameOnCard = 'Name on card is required';
+
+      // Card number validation (basic)
+      if (formData.cardNumber && formData.cardNumber.replace(/\s/g, '').length < 13) {
+        newErrors.cardNumber = 'Please enter a valid card number';
+      }
+
+      // CVV validation
+      if (formData.cvv && (formData.cvv.length < 3 || formData.cvv.length > 4)) {
+        newErrors.cvv = 'CVV must be 3 or 4 digits';
+      }
+
+      // Expiry date validation (MM/YY format)
+      if (formData.expiryDate && !/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(formData.expiryDate)) {
+        newErrors.expiryDate = 'Please enter a valid expiry date (MM/YY)';
+      }
+    }
+
+    // Terms agreement
+    if (!formData.agreeToTerms) {
+      newErrors.agreeToTerms = 'Please agree to the terms and conditions';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
-    if (!formData.email || !formData.firstName || !formData.lastName || !formData.address1 || !formData.city) {
-      toast.error('Please fill in all required fields');
+    if (!validateForm()) {
+      toast.error('Please fix the errors and try again');
       return;
     }
 
-    if (formData.paymentMethod === 'card' && (!formData.cardNumber || !formData.expiryDate || !formData.cvv)) {
-      toast.error('Please complete payment information');
-      return;
-    }
+    setIsProcessing(true);
 
-    // Simulate order processing
-    toast.success('Order placed successfully! You will receive a confirmation email shortly.');
-    clearCart();
-    navigate('/store');
+    try {
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Random chance of payment failure for demo
+      if (Math.random() > 0.9) {
+        throw new Error('Payment failed');
+      }
+
+      toast.success('Order placed successfully! You will receive a confirmation email shortly.');
+      clearCart();
+      navigate('/store');
+    } catch (error) {
+      toast.error('Payment failed. Please try again or use a different payment method.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
+
+  // Format card number input
+  const handleCardNumberChange = (value: string) => {
+    const formatted = value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
+    handleInputChange('cardNumber', formatted);
+  };
+
+  // Format expiry date input
+  const handleExpiryDateChange = (value: string) => {
+    const formatted = value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2');
+    handleInputChange('expiryDate', formatted);
+  };
+
+  if (!user) {
+    return (
+      <StoreLayout>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-16">
+            <Lock className="w-24 h-24 text-gray-300 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">Sign In Required</h1>
+            <p className="text-gray-600 mb-8 max-w-md mx-auto">
+              Please sign in to proceed with checkout and complete your order.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button 
+                onClick={() => setAuthModalOpen(true)}
+                className="bg-cyan-600 hover:bg-cyan-700"
+              >
+                Sign In
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/store')}>
+                Continue Shopping
+              </Button>
+            </div>
+          </div>
+          <AuthModal 
+            open={authModalOpen} 
+            onOpenChange={setAuthModalOpen} 
+            defaultMode="signin"
+          />
+        </div>
+      </StoreLayout>
+    );
+  }
 
   if (items.length === 0) {
     return (
@@ -109,8 +224,10 @@ const Checkout = () => {
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
                     placeholder="your@email.com"
+                    className={errors.email ? 'border-red-500' : ''}
                     required
                   />
+                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
                 </div>
                 <div className="flex items-center space-x-2">
                   <Checkbox
@@ -138,8 +255,10 @@ const Checkout = () => {
                       id="firstName"
                       value={formData.firstName}
                       onChange={(e) => handleInputChange('firstName', e.target.value)}
+                      className={errors.firstName ? 'border-red-500' : ''}
                       required
                     />
+                    {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
                   </div>
                   <div>
                     <Label htmlFor="lastName">Last Name *</Label>
@@ -147,8 +266,10 @@ const Checkout = () => {
                       id="lastName"
                       value={formData.lastName}
                       onChange={(e) => handleInputChange('lastName', e.target.value)}
+                      className={errors.lastName ? 'border-red-500' : ''}
                       required
                     />
+                    {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
                   </div>
                 </div>
                 
@@ -168,8 +289,10 @@ const Checkout = () => {
                     value={formData.address1}
                     onChange={(e) => handleInputChange('address1', e.target.value)}
                     placeholder="Street address"
+                    className={errors.address1 ? 'border-red-500' : ''}
                     required
                   />
+                  {errors.address1 && <p className="text-red-500 text-sm mt-1">{errors.address1}</p>}
                 </div>
                 
                 <div>
@@ -188,22 +311,71 @@ const Checkout = () => {
                       id="city"
                       value={formData.city}
                       onChange={(e) => handleInputChange('city', e.target.value)}
+                      className={errors.city ? 'border-red-500' : ''}
                       required
                     />
+                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
                   </div>
                   <div>
                     <Label htmlFor="state">State *</Label>
                     <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                      <SelectTrigger>
+                      <SelectTrigger className={errors.state ? 'border-red-500' : ''}>
                         <SelectValue placeholder="Select state" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="ca">California</SelectItem>
-                        <SelectItem value="ny">New York</SelectItem>
-                        <SelectItem value="tx">Texas</SelectItem>
-                        <SelectItem value="fl">Florida</SelectItem>
+                        <SelectItem value="AL">Alabama</SelectItem>
+                        <SelectItem value="AK">Alaska</SelectItem>
+                        <SelectItem value="AZ">Arizona</SelectItem>
+                        <SelectItem value="AR">Arkansas</SelectItem>
+                        <SelectItem value="CA">California</SelectItem>
+                        <SelectItem value="CO">Colorado</SelectItem>
+                        <SelectItem value="CT">Connecticut</SelectItem>
+                        <SelectItem value="DE">Delaware</SelectItem>
+                        <SelectItem value="FL">Florida</SelectItem>
+                        <SelectItem value="GA">Georgia</SelectItem>
+                        <SelectItem value="HI">Hawaii</SelectItem>
+                        <SelectItem value="ID">Idaho</SelectItem>
+                        <SelectItem value="IL">Illinois</SelectItem>
+                        <SelectItem value="IN">Indiana</SelectItem>
+                        <SelectItem value="IA">Iowa</SelectItem>
+                        <SelectItem value="KS">Kansas</SelectItem>
+                        <SelectItem value="KY">Kentucky</SelectItem>
+                        <SelectItem value="LA">Louisiana</SelectItem>
+                        <SelectItem value="ME">Maine</SelectItem>
+                        <SelectItem value="MD">Maryland</SelectItem>
+                        <SelectItem value="MA">Massachusetts</SelectItem>
+                        <SelectItem value="MI">Michigan</SelectItem>
+                        <SelectItem value="MN">Minnesota</SelectItem>
+                        <SelectItem value="MS">Mississippi</SelectItem>
+                        <SelectItem value="MO">Missouri</SelectItem>
+                        <SelectItem value="MT">Montana</SelectItem>
+                        <SelectItem value="NE">Nebraska</SelectItem>
+                        <SelectItem value="NV">Nevada</SelectItem>
+                        <SelectItem value="NH">New Hampshire</SelectItem>
+                        <SelectItem value="NJ">New Jersey</SelectItem>
+                        <SelectItem value="NM">New Mexico</SelectItem>
+                        <SelectItem value="NY">New York</SelectItem>
+                        <SelectItem value="NC">North Carolina</SelectItem>
+                        <SelectItem value="ND">North Dakota</SelectItem>
+                        <SelectItem value="OH">Ohio</SelectItem>
+                        <SelectItem value="OK">Oklahoma</SelectItem>
+                        <SelectItem value="OR">Oregon</SelectItem>
+                        <SelectItem value="PA">Pennsylvania</SelectItem>
+                        <SelectItem value="RI">Rhode Island</SelectItem>
+                        <SelectItem value="SC">South Carolina</SelectItem>
+                        <SelectItem value="SD">South Dakota</SelectItem>
+                        <SelectItem value="TN">Tennessee</SelectItem>
+                        <SelectItem value="TX">Texas</SelectItem>
+                        <SelectItem value="UT">Utah</SelectItem>
+                        <SelectItem value="VT">Vermont</SelectItem>
+                        <SelectItem value="VA">Virginia</SelectItem>
+                        <SelectItem value="WA">Washington</SelectItem>
+                        <SelectItem value="WV">West Virginia</SelectItem>
+                        <SelectItem value="WI">Wisconsin</SelectItem>
+                        <SelectItem value="WY">Wyoming</SelectItem>
                       </SelectContent>
                     </Select>
+                    {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
                   </div>
                   <div>
                     <Label htmlFor="zipCode">ZIP Code *</Label>
@@ -211,8 +383,10 @@ const Checkout = () => {
                       id="zipCode"
                       value={formData.zipCode}
                       onChange={(e) => handleInputChange('zipCode', e.target.value)}
+                      className={errors.zipCode ? 'border-red-500' : ''}
                       required
                     />
+                    {errors.zipCode && <p className="text-red-500 text-sm mt-1">{errors.zipCode}</p>}
                   </div>
                 </div>
                 
@@ -296,10 +470,13 @@ const Checkout = () => {
                       <Input
                         id="cardNumber"
                         value={formData.cardNumber}
-                        onChange={(e) => handleInputChange('cardNumber', e.target.value)}
+                        onChange={(e) => handleCardNumberChange(e.target.value)}
                         placeholder="1234 5678 9012 3456"
+                        maxLength={19}
+                        className={errors.cardNumber ? 'border-red-500' : ''}
                         required
                       />
+                      {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
                     </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div>
@@ -307,20 +484,26 @@ const Checkout = () => {
                         <Input
                           id="expiryDate"
                           value={formData.expiryDate}
-                          onChange={(e) => handleInputChange('expiryDate', e.target.value)}
+                          onChange={(e) => handleExpiryDateChange(e.target.value)}
                           placeholder="MM/YY"
+                          maxLength={5}
+                          className={errors.expiryDate ? 'border-red-500' : ''}
                           required
                         />
+                        {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
                       </div>
                       <div>
                         <Label htmlFor="cvv">CVV *</Label>
                         <Input
                           id="cvv"
                           value={formData.cvv}
-                          onChange={(e) => handleInputChange('cvv', e.target.value)}
+                          onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
                           placeholder="123"
+                          maxLength={4}
+                          className={errors.cvv ? 'border-red-500' : ''}
                           required
                         />
+                        {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
                       </div>
                     </div>
                     <div>
@@ -329,21 +512,45 @@ const Checkout = () => {
                         id="nameOnCard"
                         value={formData.nameOnCard}
                         onChange={(e) => handleInputChange('nameOnCard', e.target.value)}
+                        className={errors.nameOnCard ? 'border-red-500' : ''}
                         required
                       />
+                      {errors.nameOnCard && <p className="text-red-500 text-sm mt-1">{errors.nameOnCard}</p>}
                     </div>
                   </div>
                 )}
 
-                <div className="flex items-center space-x-2 pt-4">
-                  <Checkbox
-                    id="saveInfo"
-                    checked={formData.saveInfo}
-                    onCheckedChange={(checked) => handleInputChange('saveInfo', checked)}
-                  />
-                  <Label htmlFor="saveInfo" className="text-sm">
-                    Save this information for next time
-                  </Label>
+                <div className="space-y-3 pt-4">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="saveInfo"
+                      checked={formData.saveInfo}
+                      onCheckedChange={(checked) => handleInputChange('saveInfo', checked)}
+                    />
+                    <Label htmlFor="saveInfo" className="text-sm">
+                      Save this information for next time
+                    </Label>
+                  </div>
+                  
+                  <div className="flex items-start space-x-2">
+                    <Checkbox
+                      id="agreeToTerms"
+                      checked={formData.agreeToTerms}
+                      onCheckedChange={(checked) => handleInputChange('agreeToTerms', checked)}
+                      className={errors.agreeToTerms ? 'border-red-500' : ''}
+                    />
+                    <Label htmlFor="agreeToTerms" className="text-sm leading-relaxed">
+                      I agree to the{' '}
+                      <button type="button" className="text-cyan-600 hover:underline">
+                        Terms of Service
+                      </button>
+                      {' '}and{' '}
+                      <button type="button" className="text-cyan-600 hover:underline">
+                        Privacy Policy
+                      </button>
+                    </Label>
+                  </div>
+                  {errors.agreeToTerms && <p className="text-red-500 text-sm mt-1">{errors.agreeToTerms}</p>}
                 </div>
               </CardContent>
             </Card>
@@ -357,7 +564,7 @@ const Checkout = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 {/* Cart Items */}
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-60 overflow-y-auto">
                   {items.map((item) => (
                     <div key={item.product.id} className="flex items-center space-x-3">
                       <div className="relative">
@@ -402,8 +609,13 @@ const Checkout = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700" size="lg">
-                  Complete Order
+                <Button 
+                  type="submit" 
+                  className="w-full bg-cyan-600 hover:bg-cyan-700" 
+                  size="lg"
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? 'Processing...' : 'Complete Order'}
                 </Button>
 
                 {/* Security Notice */}
