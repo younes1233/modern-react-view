@@ -17,6 +17,8 @@ import Analytics from "./pages/Analytics";
 import SalesReport from "./pages/SalesReport";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import Store from "./pages/Store";
+import StoreCategories from "./pages/StoreCategories";
 
 const queryClient = new QueryClient();
 
@@ -25,6 +27,11 @@ function AppRoutes() {
 
   return (
     <Routes>
+      {/* Store Routes (Public) */}
+      <Route path="/store" element={<Store />} />
+      <Route path="/store/categories" element={<StoreCategories />} />
+      
+      {/* Admin Routes */}
       <Route 
         path="/login" 
         element={user ? <Navigate to="/" replace /> : <Login />} 

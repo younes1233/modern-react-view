@@ -3,7 +3,8 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,6 +22,12 @@ export function DashboardHeader() {
       <SidebarTrigger className="-ml-1" />
       <div className="flex-1" />
       <div className="flex items-center gap-2">
+        <Button asChild variant="outline" className="gap-2">
+          <Link to="/store" target="_blank">
+            <ExternalLink className="h-4 w-4" />
+            View Store
+          </Link>
+        </Button>
         <ThemeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
