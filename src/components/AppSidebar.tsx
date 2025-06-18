@@ -10,6 +10,7 @@ import {
   FileText,
   Settings
 } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -24,20 +25,29 @@ import {
 } from "@/components/ui/sidebar";
 
 const mainMenuItems = [
-  { title: "Dashboard", url: "#", icon: BarChart3, active: true },
-  { title: "Products", url: "#", icon: Package },
-  { title: "Orders", url: "#", icon: ShoppingCart },
-  { title: "Customers", url: "#", icon: Users },
-  { title: "Categories", url: "#", icon: FolderTree },
-  { title: "Inventory", url: "#", icon: Archive },
-  { title: "Analytics", url: "#", icon: BarChart3 },
+  { title: "Dashboard", url: "/", icon: BarChart3 },
+  { title: "Products", url: "/products", icon: Package },
+  { title: "Orders", url: "/orders", icon: ShoppingCart },
+  { title: "Customers", url: "/customers", icon: Users },
+  { title: "Categories", url: "/categories", icon: FolderTree },
+  { title: "Inventory", url: "/inventory", icon: Archive },
+  { title: "Analytics", url: "/analytics", icon: BarChart3 },
 ];
 
 const reportsItems = [
-  { title: "Sales Report", url: "#", icon: FileText },
+  { title: "Sales Report", url: "/sales-report", icon: FileText },
 ];
 
 export function AppSidebar() {
+  const location = useLocation();
+
+  const isActive = (url: string) => {
+    if (url === "/") {
+      return location.pathname === "/";
+    }
+    return location.pathname.startsWith(url);
+  };
+
   return (
     <Sidebar className="border-r border-gray-200">
       <SidebarHeader className="p-6 border-b border-gray-200">
@@ -62,7 +72,7 @@ export function AppSidebar() {
                   <SidebarMenuButton 
                     asChild 
                     className={`w-full justify-start gap-3 px-3 py-2 rounded-lg transition-all hover:bg-blue-50 hover:text-blue-600 ${
-                      item.active ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'text-gray-700'
+                      isActive(item.url) ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'text-gray-700'
                     }`}
                   >
                     <a href={item.url}>
@@ -84,7 +94,9 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton 
                     asChild 
-                    className="w-full justify-start gap-3 px-3 py-2 rounded-lg transition-all hover:bg-blue-50 hover:text-blue-600 text-gray-700"
+                    className={`w-full justify-start gap-3 px-3 py-2 rounded-lg transition-all hover:bg-blue-50 hover:text-blue-600 ${
+                      isActive(item.url) ? 'bg-blue-600 text-white hover:bg-blue-700 hover:text-white' : 'text-gray-700'
+                    }`}
                   >
                     <a href={item.url}>
                       <item.icon className="w-5 h-5" />
