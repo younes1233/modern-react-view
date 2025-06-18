@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Search } from "lucide-react";
 import { ProductListing, getProducts } from "@/data/storeData";
 
 interface ProductListingModalProps {
@@ -32,6 +33,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     isActive: true,
     order: 1
   });
+  const [searchTerm, setSearchTerm] = useState('');
 
   const products = getProducts();
 
@@ -63,6 +65,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
         order: 1
       });
     }
+    setSearchTerm('');
   }, [mode, listing, isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -101,12 +104,25 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   ];
 
   const getFilteredProducts = () => {
+    let filteredProducts = products;
+    
+    // Filter by category if applicable
     if (formData.type === 'category' && formData.categoryFilter) {
-      return products.filter(product => 
+      filteredProducts = products.filter(product => 
         formData.categoryFilter === 'all' ? true : product.category === formData.categoryFilter
       );
     }
-    return products;
+    
+    // Filter by search term
+    if (searchTerm.trim()) {
+      filteredProducts = filteredProducts.filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+    
+    return filteredProducts;
   };
 
   return (
@@ -179,6 +195,17 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
           {formData.type === 'custom' && (
             <div className="space-y-4">
               <Label>Select Products</Label>
+              
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search products by name, category, or SKU..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              
               <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
                 <div className="grid grid-cols-1 gap-3">
                   {getFilteredProducts().map((product) => (
@@ -195,9 +222,17 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                       <div className="flex-1">
                         <p className="font-medium text-sm">{product.name}</p>
                         <p className="text-sm text-gray-500">${product.price}</p>
+                        {product.sku && (
+                          <p className="text-xs text-gray-400">SKU: {product.sku}</p>
+                        )}
                       </div>
                     </div>
                   ))}
+                  {getFilteredProducts().length === 0 && (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No products found matching your search.</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <p className="text-sm text-gray-500">
