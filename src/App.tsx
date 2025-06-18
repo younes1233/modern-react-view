@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +24,7 @@ import StoreCategories from "./pages/store/StoreCategories";
 import ProductDetail from "./pages/store/ProductDetail";
 import Wishlist from "./pages/store/Wishlist";
 import Checkout from "./pages/store/Checkout";
+import StoreReturns from "./pages/store/Returns";
 import NotFound from "./pages/NotFound";
 import Returns from "./pages/Returns";
 
@@ -45,6 +47,7 @@ const App = () => (
                   <Route path="/store/product/:id" element={<ProductDetail />} />
                   <Route path="/store/wishlist" element={<Wishlist />} />
                   <Route path="/store/checkout" element={<Checkout />} />
+                  <Route path="/store/returns" element={<StoreReturns />} />
                   <Route path="/" element={
                     <ProtectedRoute>
                       <Index />
