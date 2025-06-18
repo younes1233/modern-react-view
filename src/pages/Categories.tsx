@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -17,7 +16,7 @@ import {
   ChevronDown, 
   ChevronRight, 
   Grid, 
-  Tree, 
+  Trees, 
   Filter,
   Download,
   Star,
@@ -331,7 +330,7 @@ const Categories = () => {
                   onClick={() => setViewMode("tree")}
                   className="gap-2"
                 >
-                  <Tree className="w-4 h-4" />
+                  <Trees className="w-4 h-4" />
                   Tree
                 </Button>
                 <Button
