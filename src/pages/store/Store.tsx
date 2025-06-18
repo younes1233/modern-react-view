@@ -2,6 +2,9 @@
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductSection } from "@/components/store/ProductSection";
+import { Button } from "@/components/ui/button";
+import { useSearch } from "@/contexts/SearchContext";
+import { Link } from "react-router-dom";
 import { 
   getActiveHomeSections, 
   getBanners, 
@@ -16,6 +19,7 @@ const Store = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { setSearchQuery, setSelectedCategory } = useSearch();
 
   // Function to refresh all data
   const refreshStoreData = () => {
@@ -43,6 +47,14 @@ const Store = () => {
     };
   }, []);
 
+  const handleShopNow = () => {
+    window.scrollTo({ top: window.innerHeight, behavior: 'smooth' });
+  };
+
+  const handleCategoryClick = (category: string) => {
+    setSelectedCategory(category);
+  };
+
   const renderSection = (section: HomeSection) => {
     console.log("Rendering section:", section);
     
@@ -57,27 +69,38 @@ const Store = () => {
       
       return (
         <div key={`banner-${section.id}`} className="mb-8 lg:mb-12">
-          <div className="relative h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden shadow-lg">
+          <div className="relative h-64 md:h-80 lg:h-96 rounded-xl overflow-hidden shadow-lg group">
             <img
               src={banner.image}
               alt={banner.title}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent flex items-center">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="max-w-2xl text-white">
-                  <h2 className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-4 leading-tight">
+                  <h2 className="text-2xl sm:text-3xl lg:text-5xl font-bold mb-4 leading-tight animate-fade-in">
                     {banner.title}
                   </h2>
                   {banner.subtitle && (
-                    <p className="text-lg sm:text-xl lg:text-2xl mb-6 opacity-90">
+                    <p className="text-lg sm:text-xl lg:text-2xl mb-6 opacity-90 animate-fade-in">
                       {banner.subtitle}
                     </p>
                   )}
                   {banner.ctaText && (
-                    <button className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
+                    <Button 
+                      onClick={() => {
+                        if (banner.ctaLink?.includes('categories')) {
+                          if (banner.ctaLink.includes('category=')) {
+                            const category = banner.ctaLink.split('category=')[1];
+                            handleCategoryClick(category);
+                          }
+                        }
+                        handleShopNow();
+                      }}
+                      className="bg-cyan-600 hover:bg-cyan-700 text-white px-6 sm:px-8 py-3 sm:py-4 rounded-lg text-base sm:text-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl animate-fade-in"
+                    >
                       {banner.ctaText}
-                    </button>
+                    </Button>
                   )}
                 </div>
               </div>
@@ -111,19 +134,27 @@ const Store = () => {
         <div className="bg-white shadow-sm">
           <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12 lg:py-20">
             <div className="text-center max-w-4xl mx-auto">
-              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 lg:mb-6 leading-tight">
+              <h1 className="text-3xl sm:text-4xl lg:text-6xl font-bold text-gray-900 mb-4 lg:mb-6 leading-tight animate-fade-in">
                 Welcome to Our Store
               </h1>
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-8 lg:mb-12 leading-relaxed">
+              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-8 lg:mb-12 leading-relaxed animate-fade-in">
                 Discover amazing products at unbeatable prices
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button className="bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg">
+              <div className="flex flex-col sm:flex-row gap-4 justify-center animate-fade-in">
+                <Button 
+                  onClick={handleShopNow}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white px-8 py-3 rounded-lg font-semibold transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                >
                   Shop Now
-                </button>
-                <button className="border-2 border-gray-300 hover:border-cyan-600 text-gray-700 hover:text-cyan-600 px-8 py-3 rounded-lg font-semibold transition-all duration-300">
-                  Learn More
-                </button>
+                </Button>
+                <Link to="/store/categories">
+                  <Button 
+                    variant="outline"
+                    className="border-2 border-gray-300 hover:border-cyan-600 text-gray-700 hover:text-cyan-600 px-8 py-3 rounded-lg font-semibold transition-all duration-300"
+                  >
+                    Browse Categories
+                  </Button>
+                </Link>
               </div>
             </div>
           </div>
@@ -139,6 +170,11 @@ const Store = () => {
           ) : homeSections.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-600 text-lg">No sections configured. Please add some content in the Store Management dashboard.</p>
+              <Link to="/store-management">
+                <Button className="mt-4 bg-cyan-600 hover:bg-cyan-700">
+                  Manage Store
+                </Button>
+              </Link>
             </div>
           ) : (
             homeSections.map(renderSection)

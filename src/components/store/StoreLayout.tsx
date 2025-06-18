@@ -1,14 +1,27 @@
 
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { CartSidebar } from './CartSidebar';
+import { useSearch } from '@/contexts/SearchContext';
+import { useWishlist } from '@/contexts/WishlistContext';
 
 interface StoreLayoutProps {
   children: ReactNode;
 }
 
 export function StoreLayout({ children }: StoreLayoutProps) {
+  const { searchQuery, setSearchQuery } = useSearch();
+  const { items: wishlistItems } = useWishlist();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // Search is handled by the SearchContext
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -30,41 +43,48 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               <Link to="/store/categories" className="text-gray-700 hover:text-cyan-600 transition-colors font-medium">
                 Categories
               </Link>
-              <a href="#" className="text-gray-700 hover:text-cyan-600 transition-colors font-medium">
+              <button className="text-gray-700 hover:text-cyan-600 transition-colors font-medium">
                 Deals
-              </a>
-              <a href="#" className="text-gray-700 hover:text-cyan-600 transition-colors font-medium">
+              </button>
+              <button className="text-gray-700 hover:text-cyan-600 transition-colors font-medium">
                 About
-              </a>
+              </button>
             </nav>
 
             {/* Search Bar */}
             <div className="hidden lg:flex flex-1 max-w-lg mx-8">
-              <div className="relative w-full">
+              <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                <input
+                <Input
                   type="text"
                   placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all duration-300 bg-gray-50 focus:bg-white"
                 />
-              </div>
+              </form>
             </div>
 
             {/* Actions */}
             <div className="flex items-center space-x-2 lg:space-x-4">
-              <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-cyan-50 hover:text-cyan-600">
+              <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-cyan-50 hover:text-cyan-600 relative">
                 <Heart className="w-5 h-5" />
+                {wishlistItems.length > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+                    {wishlistItems.length}
+                  </span>
+                )}
               </Button>
               <Button variant="ghost" size="sm" className="hover:bg-cyan-50 hover:text-cyan-600">
                 <User className="w-5 h-5" />
               </Button>
-              <Button variant="ghost" size="sm" className="relative hover:bg-cyan-50 hover:text-cyan-600">
-                <ShoppingCart className="w-5 h-5" />
-                <span className="absolute -top-2 -right-2 bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
-                  0
-                </span>
-              </Button>
-              <Button className="md:hidden" variant="ghost" size="sm">
+              <CartSidebar />
+              <Button 
+                className="md:hidden" 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
                 <Menu className="w-5 h-5" />
               </Button>
             </div>
@@ -73,15 +93,45 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
         {/* Mobile Search */}
         <div className="lg:hidden px-4 pb-4">
-          <div className="relative">
+          <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
+            <Input
               type="text"
               placeholder="Search products..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent bg-gray-50 focus:bg-white"
             />
-          </div>
+          </form>
         </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden border-t bg-white">
+            <div className="px-4 py-2 space-y-1">
+              <Link 
+                to="/store" 
+                className="block px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Home
+              </Link>
+              <Link 
+                to="/store/categories" 
+                className="block px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Categories
+              </Link>
+              <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium">
+                Deals
+              </button>
+              <button className="block w-full text-left px-3 py-2 text-gray-700 hover:text-cyan-600 hover:bg-gray-50 rounded-md transition-colors font-medium">
+                About
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Main Content */}
@@ -112,25 +162,25 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               <ul className="space-y-3 text-gray-400">
                 <li><Link to="/store" className="hover:text-white transition-colors">Home</Link></li>
                 <li><Link to="/store/categories" className="hover:text-white transition-colors">Categories</Link></li>
-                <li><a href="#" className="hover:text-white transition-colors">Deals</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">New Arrivals</a></li>
+                <li><button className="hover:text-white transition-colors">Deals</button></li>
+                <li><button className="hover:text-white transition-colors">New Arrivals</button></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-6 text-lg">Customer Service</h4>
               <ul className="space-y-3 text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Contact Us</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">FAQ</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Shipping Info</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Returns</a></li>
+                <li><button className="hover:text-white transition-colors">Contact Us</button></li>
+                <li><button className="hover:text-white transition-colors">FAQ</button></li>
+                <li><button className="hover:text-white transition-colors">Shipping Info</button></li>
+                <li><button className="hover:text-white transition-colors">Returns</button></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col lg:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-center lg:text-left">&copy; 2024 Store. All rights reserved.</p>
             <div className="flex space-x-6">
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</a>
-              <a href="#" className="text-gray-400 hover:text-white transition-colors">Terms of Service</a>
+              <button className="text-gray-400 hover:text-white transition-colors">Privacy Policy</button>
+              <button className="text-gray-400 hover:text-white transition-colors">Terms of Service</button>
             </div>
           </div>
         </div>
