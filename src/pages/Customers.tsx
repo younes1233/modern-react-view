@@ -9,6 +9,8 @@ import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { Plus, Eye, Mail, Phone, Users } from "lucide-react";
 import { exportToExcel } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 
 // TODO: Replace with API call to fetch customers
 const mockCustomers = [
@@ -30,6 +32,7 @@ const Customers = () => {
   const [customers] = useState(mockCustomers);
   const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers);
   const { toast } = useToast();
+    const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearch = (term: string) => {
     const filtered = customers.filter(customer =>
