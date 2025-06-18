@@ -1,4 +1,3 @@
-
 export interface Banner {
   id: number;
   title: string;
@@ -26,6 +25,28 @@ export interface Product {
   isNewArrival: boolean;
   isOnSale: boolean;
   order: number;
+}
+
+export interface ProductListing {
+  id: number;
+  title: string;
+  subtitle?: string;
+  type: 'featured' | 'newArrivals' | 'sale' | 'category' | 'custom';
+  categoryFilter?: string;
+  productIds?: number[];
+  maxProducts: number;
+  layout: 'grid' | 'slider';
+  showTitle: boolean;
+  isActive: boolean;
+  order: number;
+}
+
+export interface HomeSection {
+  id: number;
+  type: 'banner' | 'productListing';
+  itemId: number;
+  order: number;
+  isActive: boolean;
 }
 
 export interface DisplaySettings {
@@ -176,6 +197,82 @@ let products: Product[] = [
   },
 ];
 
+// Initial product listings data
+let productListings: ProductListing[] = [
+  {
+    id: 1,
+    title: "Featured Products",
+    subtitle: "Our top picks for you",
+    type: "featured",
+    maxProducts: 8,
+    layout: "grid",
+    showTitle: true,
+    isActive: true,
+    order: 1
+  },
+  {
+    id: 2,
+    title: "New Arrivals",
+    subtitle: "Latest additions to our store",
+    type: "newArrivals",
+    maxProducts: 6,
+    layout: "grid",
+    showTitle: true,
+    isActive: true,
+    order: 2
+  },
+  {
+    id: 3,
+    title: "Sale Items",
+    subtitle: "Don't miss these deals",
+    type: "sale",
+    maxProducts: 10,
+    layout: "grid",
+    showTitle: true,
+    isActive: true,
+    order: 3
+  }
+];
+
+// Home page sections order
+let homeSections: HomeSection[] = [
+  {
+    id: 1,
+    type: 'banner',
+    itemId: 1, // Hero banner
+    order: 1,
+    isActive: true
+  },
+  {
+    id: 2,
+    type: 'productListing',
+    itemId: 1, // Featured products
+    order: 2,
+    isActive: true
+  },
+  {
+    id: 3,
+    type: 'banner',
+    itemId: 2, // Secondary banner
+    order: 3,
+    isActive: true
+  },
+  {
+    id: 4,
+    type: 'productListing',
+    itemId: 2, // New arrivals
+    order: 4,
+    isActive: true
+  },
+  {
+    id: 5,
+    type: 'productListing',
+    itemId: 3, // Sale items
+    order: 5,
+    isActive: true
+  }
+];
+
 // Initial display settings
 let displaySettings: DisplaySettings = {
   layout: 'grid',
@@ -287,6 +384,121 @@ export const reorderProducts = (reorderedProducts: Product[]): void => {
     ...product,
     order: index + 1
   }));
+};
+
+// Product listing management functions
+export const getProductListings = (): ProductListing[] => {
+  return [...productListings].sort((a, b) => a.order - b.order);
+};
+
+export const getActiveProductListings = (): ProductListing[] => {
+  return getProductListings().filter(listing => listing.isActive);
+};
+
+export const addProductListing = (listingData: Omit<ProductListing, 'id'>): ProductListing => {
+  const newListing: ProductListing = {
+    ...listingData,
+    id: Date.now(),
+  };
+  productListings.push(newListing);
+  return newListing;
+};
+
+export const updateProductListing = (id: number, listingData: Partial<ProductListing>): ProductListing | null => {
+  const index = productListings.findIndex(listing => listing.id === id);
+  if (index !== -1) {
+    productListings[index] = { ...productListings[index], ...listingData };
+    return productListings[index];
+  }
+  return null;
+};
+
+export const deleteProductListing = (id: number): boolean => {
+  const index = productListings.findIndex(listing => listing.id === id);
+  if (index !== -1) {
+    productListings.splice(index, 1);
+    // Remove from home sections
+    homeSections = homeSections.filter(section => !(section.type === 'productListing' && section.itemId === id));
+    return true;
+  }
+  return false;
+};
+
+export const reorderProductListings = (reorderedListings: ProductListing[]): void => {
+  productListings = reorderedListings.map((listing, index) => ({
+    ...listing,
+    order: index + 1
+  }));
+};
+
+// Home sections management functions
+export const getHomeSections = (): HomeSection[] => {
+  return [...homeSections].sort((a, b) => a.order - b.order);
+};
+
+export const getActiveHomeSections = (): HomeSection[] => {
+  return getHomeSections().filter(section => section.isActive);
+};
+
+export const addHomeSection = (sectionData: Omit<HomeSection, 'id'>): HomeSection => {
+  const newSection: HomeSection = {
+    ...sectionData,
+    id: Date.now(),
+  };
+  homeSections.push(newSection);
+  return newSection;
+};
+
+export const updateHomeSection = (id: number, sectionData: Partial<HomeSection>): HomeSection | null => {
+  const index = homeSections.findIndex(section => section.id === id);
+  if (index !== -1) {
+    homeSections[index] = { ...homeSections[index], ...sectionData };
+    return homeSections[index];
+  }
+  return null;
+};
+
+export const deleteHomeSection = (id: number): boolean => {
+  const index = homeSections.findIndex(section => section.id === id);
+  if (index !== -1) {
+    homeSections.splice(index, 1);
+    return true;
+  }
+  return false;
+};
+
+export const reorderHomeSections = (reorderedSections: HomeSection[]): void => {
+  homeSections = reorderedSections.map((section, index) => ({
+    ...section,
+    order: index + 1
+  }));
+};
+
+// Helper function to get products for a listing
+export const getProductsForListing = (listing: ProductListing): Product[] => {
+  let filteredProducts: Product[] = [];
+  
+  switch (listing.type) {
+    case 'featured':
+      filteredProducts = getFeaturedProducts();
+      break;
+    case 'newArrivals':
+      filteredProducts = getNewArrivals();
+      break;
+    case 'sale':
+      filteredProducts = getSaleProducts();
+      break;
+    case 'category':
+      filteredProducts = listing.categoryFilter ? getProductsByCategory(listing.categoryFilter) : [];
+      break;
+    case 'custom':
+      filteredProducts = listing.productIds ? products.filter(p => listing.productIds!.includes(p.id)) : [];
+      break;
+    default:
+      filteredProducts = [];
+  }
+  
+  return filteredProducts.slice(0, listing.maxProducts);
 };
 
 // Display settings functions

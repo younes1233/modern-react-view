@@ -6,24 +6,142 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Star, ShoppingCart } from 'lucide-react';
 import { 
-  getActiveBanners, 
-  getFeaturedProducts, 
+  getActiveHomeSections,
+  getBanners,
+  getProductListings,
   getDisplaySettings,
+  getProductsForListing,
+  HomeSection,
   Banner,
+  ProductListing,
   Product,
   DisplaySettings 
 } from '@/data/storeData';
 
 const Store = () => {
+  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([]);
+  const [productListings, setProductListings] = useState<ProductListing[]>([]);
   const [displaySettings, setDisplaySettings] = useState<DisplaySettings | null>(null);
 
   useEffect(() => {
-    setBanners(getActiveBanners());
-    setFeaturedProducts(getFeaturedProducts());
+    setHomeSections(getActiveHomeSections());
+    setBanners(getBanners());
+    setProductListings(getProductListings());
     setDisplaySettings(getDisplaySettings());
   }, []);
+
+  const getSectionContent = (section: HomeSection) => {
+    if (section.type === 'banner') {
+      const banner = banners.find(b => b.id === section.itemId);
+      if (!banner || !banner.isActive) return null;
+
+      return (
+        <section key={`banner-${section.id}`} className="relative bg-gradient-to-r from-cyan-400 to-cyan-600 text-white py-16">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="relative">
+              <img 
+                src={banner.image} 
+                alt={banner.title} 
+                className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl"
+              />
+              <div className="absolute bottom-4 right-4 bg-white text-gray-900 px-6 py-3 rounded-lg shadow-lg">
+                <div className="text-xl font-bold">{banner.title}</div>
+                {banner.subtitle && (
+                  <div className="text-sm">{banner.subtitle}</div>
+                )}
+                {banner.ctaText && (
+                  <Button className="mt-2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
+                    {banner.ctaText}
+                  </Button>
+                )}
+              </div>
+            </div>
+          </div>
+        </section>
+      );
+    } else {
+      const listing = productListings.find(l => l.id === section.itemId);
+      if (!listing || !listing.isActive || !displaySettings) return null;
+
+      const products = getProductsForListing(listing);
+      if (products.length === 0) return null;
+
+      return (
+        <section key={`listing-${section.id}`} className="py-16 bg-gray-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            {listing.showTitle && (
+              <div className="text-center mb-12">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">{listing.title}</h2>
+                {listing.subtitle && (
+                  <p className="text-gray-600">{listing.subtitle}</p>
+                )}
+              </div>
+            )}
+            
+            <div className={`grid gap-6 ${
+              displaySettings.gridColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+              displaySettings.gridColumns === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+              displaySettings.gridColumns === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
+              'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
+            }`}>
+              {products.map((product) => (
+                <Card key={product.id} className="group hover:shadow-lg transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="relative mb-4">
+                      <img 
+                        src={product.image} 
+                        alt={product.name}
+                        className="w-full h-48 object-cover rounded-lg"
+                      />
+                      {product.discount && displaySettings.showPricing && (
+                        <Badge className="absolute top-2 left-2 bg-red-500 text-white">
+                          -{product.discount}%
+                        </Badge>
+                      )}
+                    </div>
+                    
+                    <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">{product.name}</h4>
+                    
+                    {displaySettings.showRatings && (
+                      <div className="flex items-center mb-2">
+                        <div className="flex text-yellow-400">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
+                          ))}
+                        </div>
+                        <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
+                      </div>
+                    )}
+                    
+                    {displaySettings.showPricing && (
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <span className="text-lg font-bold text-gray-900">${product.price}</span>
+                          {product.originalPrice && (
+                            <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice}</span>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    <Button 
+                      className="w-full bg-cyan-500 hover:bg-cyan-600 text-white" 
+                      size="sm"
+                      disabled={!product.inStock}
+                    >
+                      <ShoppingCart className="w-4 h-4 mr-2" />
+                      {product.inStock ? 'Add to Cart' : 'Out of Stock'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+      );
+    }
+  };
 
   const heroCategories = [
     { name: 'FACEBOOK', image: '/placeholder.svg' },
@@ -51,12 +169,9 @@ const Store = () => {
     { name: 'DIAMANTE', price: '$99', features: ['Elite', 'Personal', 'Custom Service'], color: 'purple' },
   ];
 
-  // Get hero banner
-  const heroBanner = banners.find(banner => banner.position === 'hero');
-
   return (
     <StoreLayout>
-      {/* Hero Section */}
+      {/* Hero Section with Categories */}
       <section className="relative bg-gradient-to-r from-cyan-400 to-cyan-600 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
@@ -71,44 +186,18 @@ const Store = () => {
               ))}
             </div>
           </div>
-          
-          <div className="relative">
-            {heroBanner ? (
-              <div className="relative">
-                <img 
-                  src={heroBanner.image} 
-                  alt={heroBanner.title} 
-                  className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl"
-                />
-                <div className="absolute bottom-4 right-4 bg-white text-gray-900 px-6 py-3 rounded-lg shadow-lg">
-                  <div className="text-xl font-bold">{heroBanner.title}</div>
-                  {heroBanner.subtitle && (
-                    <div className="text-sm">{heroBanner.subtitle}</div>
-                  )}
-                  {heroBanner.ctaText && (
-                    <Button className="mt-2 bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
-                      {heroBanner.ctaText}
-                    </Button>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <img 
-                src="/placeholder.svg" 
-                alt="Featured Products" 
-                className="w-full max-w-4xl mx-auto rounded-lg shadow-2xl"
-              />
-            )}
-          </div>
         </div>
       </section>
+
+      {/* Dynamic Sections */}
+      {homeSections.map((section) => getSectionContent(section))}
 
       {/* Shop by Category */}
       <section className="py-16 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">SHOP BY CATEGORY</h2>
           
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6 mb-12">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {categories.map((category) => (
               <Card key={category.id} className="group cursor-pointer hover:shadow-lg transition-shadow">
                 <CardContent className="p-6 text-center">
@@ -120,71 +209,6 @@ const Store = () => {
               </Card>
             ))}
           </div>
-
-          {/* Featured Products Section */}
-          {displaySettings?.featuredSection && featuredProducts.length > 0 && (
-            <div className="bg-gradient-to-r from-cyan-100 to-cyan-200 rounded-lg p-8">
-              <h3 className="text-2xl font-bold text-cyan-800 mb-6">Featured Products</h3>
-              <div className={`grid gap-6 ${
-                displaySettings.gridColumns === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                displaySettings.gridColumns === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
-                displaySettings.gridColumns === 4 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' :
-                'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'
-              }`}>
-                {featuredProducts.slice(0, displaySettings.gridColumns * 2).map((product) => (
-                  <Card key={product.id} className="group hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="relative mb-4">
-                        <img 
-                          src={product.image} 
-                          alt={product.name}
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                        {product.discount && displaySettings.showPricing && (
-                          <Badge className="absolute top-2 left-2 bg-red-500 text-white">
-                            -{product.discount}%
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <h4 className="font-medium text-sm text-gray-900 mb-2 line-clamp-2">{product.name}</h4>
-                      
-                      {displaySettings.showRatings && (
-                        <div className="flex items-center mb-2">
-                          <div className="flex text-yellow-400">
-                            {[...Array(5)].map((_, i) => (
-                              <Star key={i} className={`w-4 h-4 ${i < Math.floor(product.rating) ? 'fill-current' : ''}`} />
-                            ))}
-                          </div>
-                          <span className="text-sm text-gray-500 ml-1">({product.reviews})</span>
-                        </div>
-                      )}
-                      
-                      {displaySettings.showPricing && (
-                        <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <span className="text-lg font-bold text-gray-900">${product.price}</span>
-                            {product.originalPrice && (
-                              <span className="text-sm text-gray-500 line-through ml-2">${product.originalPrice}</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <Button 
-                        className="w-full bg-cyan-500 hover:bg-cyan-600 text-white" 
-                        size="sm"
-                        disabled={!product.inStock}
-                      >
-                        <ShoppingCart className="w-4 h-4 mr-2" />
-                        {product.inStock ? 'Add to Cart' : 'Out of Stock'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </section>
 

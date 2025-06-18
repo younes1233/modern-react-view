@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -8,6 +7,8 @@ import { BannerManagement } from "@/components/store-management/BannerManagement
 import { ProductDisplay } from "@/components/store-management/ProductDisplay";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Image, Package, Palette } from "lucide-react";
+import { LayoutManagement } from "@/components/store-management/LayoutManagement";
+import { ProductListingManagement } from "@/components/store-management/ProductListingManagement";
 
 const StoreManagement = () => {
   return (
@@ -79,23 +80,39 @@ const StoreManagement = () => {
             </div>
 
             {/* Management Tabs */}
-            <Tabs defaultValue="banners" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-2 lg:w-auto lg:grid-cols-2">
+            <Tabs defaultValue="layout" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+                <TabsTrigger value="layout" className="flex items-center gap-2">
+                  <Store className="w-4 h-4" />
+                  Layout
+                </TabsTrigger>
                 <TabsTrigger value="banners" className="flex items-center gap-2">
                   <Image className="w-4 h-4" />
-                  Banner Management
+                  Banners
                 </TabsTrigger>
-                <TabsTrigger value="products" className="flex items-center gap-2">
+                <TabsTrigger value="listings" className="flex items-center gap-2">
                   <Package className="w-4 h-4" />
-                  Product Display
+                  Product Listings
+                </TabsTrigger>
+                <TabsTrigger value="display" className="flex items-center gap-2">
+                  <Palette className="w-4 h-4" />
+                  Display
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="layout">
+                <LayoutManagement />
+              </TabsContent>
 
               <TabsContent value="banners">
                 <BannerManagement />
               </TabsContent>
 
-              <TabsContent value="products">
+              <TabsContent value="listings">
+                <ProductListingManagement />
+              </TabsContent>
+
+              <TabsContent value="display">
                 <ProductDisplay />
               </TabsContent>
             </Tabs>
