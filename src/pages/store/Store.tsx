@@ -29,28 +29,17 @@ const Store = () => {
   useEffect(() => {
     refreshStoreData();
     
-    // Listen for storage events to detect changes from dashboard
-    const handleStorageChange = () => {
-      console.log("Storage change detected, refreshing store data");
-      refreshStoreData();
-    };
-
     // Listen for custom events from the dashboard
     const handleDataUpdate = () => {
       console.log("Data update event received, refreshing store data");
       refreshStoreData();
     };
 
-    window.addEventListener('storage', handleStorageChange);
     window.addEventListener('storeDataUpdated', handleDataUpdate);
     
-    // Poll for changes every 2 seconds as a fallback
-    const interval = setInterval(refreshStoreData, 2000);
-
+    // Cleanup
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('storeDataUpdated', handleDataUpdate);
-      clearInterval(interval);
     };
   }, []);
 
