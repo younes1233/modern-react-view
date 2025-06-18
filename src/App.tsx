@@ -17,8 +17,8 @@ import Analytics from "./pages/Analytics";
 import SalesReport from "./pages/SalesReport";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-import Store from "./pages/Store";
-import StoreCategories from "./pages/StoreCategories";
+import Store from "./pages/store/Store";
+import StoreCategories from "./pages/store/StoreCategories";
 
 const queryClient = new QueryClient();
 

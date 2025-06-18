@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { Card, CardContent } from '@/components/ui/card';
