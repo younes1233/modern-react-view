@@ -1,3 +1,4 @@
+
 export interface Product {
   id: number;
   name: string;
@@ -36,6 +37,47 @@ export interface DisplaySettings {
   layout: 'grid' | 'list';
   gridColumns: number;
   productsPerPage: number;
+  showPricing: boolean;
+  showRatings: boolean;
+  showStock: boolean;
+  enableQuickView: boolean;
+  featuredSection: boolean;
+  newArrivalsSection: boolean;
+  saleSection: boolean;
+}
+
+export interface Banner {
+  id: number;
+  title: string;
+  subtitle?: string;
+  image: string;
+  ctaText?: string;
+  ctaLink?: string;
+  position: 'hero' | 'secondary' | 'sidebar';
+  isActive: boolean;
+  order: number;
+}
+
+export interface ProductListing {
+  id: number;
+  title: string;
+  subtitle?: string;
+  type: 'featured' | 'newArrivals' | 'sale' | 'category' | 'custom';
+  categoryFilter?: string;
+  productIds?: number[];
+  maxProducts: number;
+  layout: 'grid' | 'slider';
+  showTitle: boolean;
+  isActive: boolean;
+  order: number;
+}
+
+export interface HomeSection {
+  id: number;
+  type: 'banner' | 'productListing';
+  itemId: number;
+  order: number;
+  isActive: boolean;
 }
 
 // Function to calculate the price based on selected variations
@@ -329,12 +371,95 @@ const sampleProducts: Product[] = [
   }
 ];
 
+// Sample data for store management
+let sampleBanners: Banner[] = [
+  {
+    id: 1,
+    title: "Winter Sale 2024",
+    subtitle: "Up to 50% off on selected items",
+    image: "https://images.unsplash.com/photo-1607083206325-caf1edba7a0f?w=1200&h=400&fit=crop",
+    ctaText: "Shop Now",
+    ctaLink: "/store/categories?category=sale",
+    position: "hero",
+    isActive: true,
+    order: 1
+  },
+  {
+    id: 2,
+    title: "New Electronics Collection",
+    subtitle: "Discover the latest tech gadgets",
+    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=1200&h=400&fit=crop",
+    ctaText: "Explore",
+    ctaLink: "/store/categories?category=electronics",
+    position: "secondary",
+    isActive: true,
+    order: 2
+  }
+];
+
+let sampleProductListings: ProductListing[] = [
+  {
+    id: 1,
+    title: "Featured Products",
+    subtitle: "Hand-picked items just for you",
+    type: "featured",
+    maxProducts: 8,
+    layout: "grid",
+    showTitle: true,
+    isActive: true,
+    order: 1
+  },
+  {
+    id: 2,
+    title: "New Arrivals",
+    subtitle: "Latest products in our store",
+    type: "newArrivals",
+    maxProducts: 6,
+    layout: "slider",
+    showTitle: true,
+    isActive: true,
+    order: 2
+  },
+  {
+    id: 3,
+    title: "Sale Items",
+    subtitle: "Great deals you don't want to miss",
+    type: "sale",
+    maxProducts: 4,
+    layout: "grid",
+    showTitle: true,
+    isActive: true,
+    order: 3
+  }
+];
+
+let sampleHomeSections: HomeSection[] = [
+  { id: 1, type: "banner", itemId: 1, order: 1, isActive: true },
+  { id: 2, type: "productListing", itemId: 1, order: 2, isActive: true },
+  { id: 3, type: "banner", itemId: 2, order: 3, isActive: true },
+  { id: 4, type: "productListing", itemId: 2, order: 4, isActive: true },
+  { id: 5, type: "productListing", itemId: 3, order: 5, isActive: true }
+];
+
 const sampleDisplaySettings: DisplaySettings = {
   layout: 'grid',
   gridColumns: 3,
   productsPerPage: 12,
+  showPricing: true,
+  showRatings: true,
+  showStock: true,
+  enableQuickView: true,
+  featuredSection: true,
+  newArrivalsSection: true,
+  saleSection: true,
 };
 
+// Helper function to emit data update events
+const emitDataUpdate = () => {
+  window.dispatchEvent(new CustomEvent('storeDataUpdated'));
+};
+
+// Product functions
 export const getProducts = (): Product[] => {
   return sampleProducts;
 };
@@ -359,6 +484,136 @@ export const getProductsOnSale = (): Product[] => {
   return sampleProducts.filter(product => product.isOnSale);
 };
 
+// Display settings functions
 export const getDisplaySettings = (): DisplaySettings => {
   return sampleDisplaySettings;
+};
+
+export const updateDisplaySettings = (newSettings: Partial<DisplaySettings>): void => {
+  Object.assign(sampleDisplaySettings, newSettings);
+  emitDataUpdate();
+};
+
+// Banner functions
+export const getBanners = (): Banner[] => {
+  return sampleBanners.sort((a, b) => a.order - b.order);
+};
+
+export const addBanner = (bannerData: Omit<Banner, 'id'>): Banner => {
+  const newId = Math.max(...sampleBanners.map(b => b.id), 0) + 1;
+  const newBanner = { ...bannerData, id: newId };
+  sampleBanners.push(newBanner);
+  emitDataUpdate();
+  return newBanner;
+};
+
+export const updateBanner = (id: number, updates: Partial<Banner>): void => {
+  const index = sampleBanners.findIndex(b => b.id === id);
+  if (index !== -1) {
+    sampleBanners[index] = { ...sampleBanners[index], ...updates };
+    emitDataUpdate();
+  }
+};
+
+export const deleteBanner = (id: number): void => {
+  sampleBanners = sampleBanners.filter(b => b.id !== id);
+  emitDataUpdate();
+};
+
+export const reorderBanners = (newOrder: Banner[]): void => {
+  sampleBanners = newOrder.map((banner, index) => ({ ...banner, order: index + 1 }));
+  emitDataUpdate();
+};
+
+// Product listing functions
+export const getProductListings = (): ProductListing[] => {
+  return sampleProductListings.sort((a, b) => a.order - b.order);
+};
+
+export const addProductListing = (listingData: Omit<ProductListing, 'id'>): ProductListing => {
+  const newId = Math.max(...sampleProductListings.map(l => l.id), 0) + 1;
+  const newListing = { ...listingData, id: newId };
+  sampleProductListings.push(newListing);
+  emitDataUpdate();
+  return newListing;
+};
+
+export const updateProductListing = (id: number, updates: Partial<ProductListing>): void => {
+  const index = sampleProductListings.findIndex(l => l.id === id);
+  if (index !== -1) {
+    sampleProductListings[index] = { ...sampleProductListings[index], ...updates };
+    emitDataUpdate();
+  }
+};
+
+export const deleteProductListing = (id: number): void => {
+  sampleProductListings = sampleProductListings.filter(l => l.id !== id);
+  emitDataUpdate();
+};
+
+export const getProductsForListing = (listing: ProductListing): Product[] => {
+  let products: Product[] = [];
+  
+  switch (listing.type) {
+    case 'featured':
+      products = getFeaturedProducts();
+      break;
+    case 'newArrivals':
+      products = getNewArrivals();
+      break;
+    case 'sale':
+      products = getProductsOnSale();
+      break;
+    case 'category':
+      if (listing.categoryFilter && listing.categoryFilter !== 'all') {
+        products = sampleProducts.filter(p => p.category === listing.categoryFilter);
+      } else {
+        products = sampleProducts;
+      }
+      break;
+    case 'custom':
+      if (listing.productIds) {
+        products = sampleProducts.filter(p => listing.productIds!.includes(p.id));
+      }
+      break;
+    default:
+      products = [];
+  }
+  
+  return products.slice(0, listing.maxProducts);
+};
+
+// Home section functions
+export const getHomeSections = (): HomeSection[] => {
+  return sampleHomeSections.sort((a, b) => a.order - b.order);
+};
+
+export const getActiveHomeSections = (): HomeSection[] => {
+  return sampleHomeSections.filter(s => s.isActive).sort((a, b) => a.order - b.order);
+};
+
+export const addHomeSection = (sectionData: Omit<HomeSection, 'id'>): HomeSection => {
+  const newId = Math.max(...sampleHomeSections.map(s => s.id), 0) + 1;
+  const newSection = { ...sectionData, id: newId };
+  sampleHomeSections.push(newSection);
+  emitDataUpdate();
+  return newSection;
+};
+
+export const updateHomeSection = (id: number, updates: Partial<HomeSection>): void => {
+  const index = sampleHomeSections.findIndex(s => s.id === id);
+  if (index !== -1) {
+    sampleHomeSections[index] = { ...sampleHomeSections[index], ...updates };
+    emitDataUpdate();
+  }
+};
+
+export const deleteHomeSection = (id: number): void => {
+  sampleHomeSections = sampleHomeSections.filter(s => s.id !== id);
+  emitDataUpdate();
+};
+
+export const reorderHomeSections = (newOrder: HomeSection[]): void => {
+  sampleHomeSections = newOrder.map((section, index) => ({ ...section, order: index + 1 }));
+  emitDataUpdate();
 };

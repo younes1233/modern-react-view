@@ -54,18 +54,18 @@ export function ProductVariations({ variations, basePrice, onVariationChange }: 
                   <button
                     key={variation.id}
                     onClick={() => handleVariationSelect(variation)}
-                    disabled={!variation.inStock}
+                    disabled={variation.stock === 0}
                     className={`relative w-12 h-12 rounded-full border-2 transition-all ${
                       selectedForType?.id === variation.id
                         ? 'border-cyan-500 ring-2 ring-cyan-200'
                         : 'border-gray-300 hover:border-gray-400'
-                    } ${!variation.inStock ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                    } ${variation.stock === 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                     style={{
                       backgroundColor: variation.value.toLowerCase(),
                     }}
-                    title={`${variation.value}${variation.priceAdjustment ? ` (+$${variation.priceAdjustment})` : ''}`}
+                    title={`${variation.value}${variation.priceModifier ? ` (+$${variation.priceModifier})` : ''}`}
                   >
-                    {!variation.inStock && (
+                    {variation.stock === 0 && (
                       <div className="absolute inset-0 flex items-center justify-center">
                         <div className="w-full h-0.5 bg-red-500 rotate-45"></div>
                       </div>
@@ -80,7 +80,7 @@ export function ProductVariations({ variations, basePrice, onVariationChange }: 
                     key={variation.id}
                     variant={selectedForType?.id === variation.id ? "default" : "outline"}
                     onClick={() => handleVariationSelect(variation)}
-                    disabled={!variation.inStock}
+                    disabled={variation.stock === 0}
                     className={`relative ${
                       selectedForType?.id === variation.id
                         ? 'bg-cyan-600 hover:bg-cyan-700'
@@ -88,12 +88,12 @@ export function ProductVariations({ variations, basePrice, onVariationChange }: 
                     }`}
                   >
                     {variation.value}
-                    {variation.priceAdjustment !== undefined && variation.priceAdjustment !== 0 && (
+                    {variation.priceModifier !== undefined && variation.priceModifier !== 0 && (
                       <span className="ml-1 text-xs">
-                        ({variation.priceAdjustment > 0 ? '+' : ''}${variation.priceAdjustment})
+                        ({variation.priceModifier > 0 ? '+' : ''}${variation.priceModifier})
                       </span>
                     )}
-                    {!variation.inStock && (
+                    {variation.stock === 0 && (
                       <Badge variant="destructive" className="absolute -top-2 -right-2 text-xs px-1 py-0">
                         Out
                       </Badge>
