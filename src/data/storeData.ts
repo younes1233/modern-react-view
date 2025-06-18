@@ -25,6 +25,7 @@ export interface Product {
   isNewArrival: boolean;
   isOnSale: boolean;
   order: number;
+  sku?: string;
 }
 
 export interface ProductListing {
@@ -113,7 +114,8 @@ let products: Product[] = [
     isFeatured: true,
     isNewArrival: false,
     isOnSale: true,
-    order: 1
+    order: 1,
+    sku: 'CHAIR-001'
   },
   {
     id: 2,
@@ -129,7 +131,8 @@ let products: Product[] = [
     isFeatured: true,
     isNewArrival: false,
     isOnSale: true,
-    order: 2
+    order: 2,
+    sku: 'SHELF-002'
   },
   {
     id: 3,
@@ -145,7 +148,8 @@ let products: Product[] = [
     isFeatured: true,
     isNewArrival: true,
     isOnSale: true,
-    order: 3
+    order: 3,
+    sku: 'WHEEL-003'
   },
   {
     id: 4,
@@ -161,7 +165,8 @@ let products: Product[] = [
     isFeatured: false,
     isNewArrival: true,
     isOnSale: true,
-    order: 4
+    order: 4,
+    sku: 'TV-004'
   },
   {
     id: 5,
@@ -177,7 +182,8 @@ let products: Product[] = [
     isFeatured: false,
     isNewArrival: true,
     isOnSale: true,
-    order: 5
+    order: 5,
+    sku: 'TOY-005'
   },
   {
     id: 6,
@@ -193,7 +199,8 @@ let products: Product[] = [
     isFeatured: false,
     isNewArrival: false,
     isOnSale: false,
-    order: 6
+    order: 6,
+    sku: 'TRAMP-006'
   },
 ];
 
