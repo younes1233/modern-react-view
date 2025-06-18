@@ -10,6 +10,8 @@ import {
   TrendingUp,
   Package2,
   Store,
+  RotateCcw,
+  ChevronRight,
 } from "lucide-react"
 
 import {
@@ -21,85 +23,185 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarHeader,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
 import { Link, useLocation } from "react-router-dom"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
 
-// Menu items.
-const items = [
+// Menu items organized by category
+const mainItems = [
   {
     title: "Dashboard",
     url: "/",
     icon: Home,
+    description: "Overview & analytics"
   },
+]
+
+const catalogItems = [
   {
     title: "Products",
     url: "/products",
     icon: Package,
-  },
-  {
-    title: "Orders",
-    url: "/orders",
-    icon: ShoppingCart,
-  },
-  {
-    title: "Customers",
-    url: "/customers",
-    icon: Users,
+    description: "Manage inventory"
   },
   {
     title: "Categories",
     url: "/categories",
     icon: Settings,
+    description: "Product categories"
   },
   {
     title: "Inventory",
     url: "/inventory",
     icon: Package2,
+    description: "Stock management"
   },
+]
+
+const businessItems = [
+  {
+    title: "Orders",
+    url: "/orders",
+    icon: ShoppingCart,
+    description: "Order management",
+    badge: "12"
+  },
+  {
+    title: "Returns",
+    url: "/returns",
+    icon: RotateCcw,
+    description: "Return requests",
+    badge: "3"
+  },
+  {
+    title: "Customers",
+    url: "/customers",
+    icon: Users,
+    description: "Customer database"
+  },
+]
+
+const storeItems = [
   {
     title: "Store Management",
     url: "/store-management",
     icon: Store,
+    description: "Store settings"
   },
+]
+
+const analyticsItems = [
   {
     title: "Analytics",
     url: "/analytics",
     icon: BarChart3,
+    description: "Performance metrics"
   },
   {
     title: "Sales Report",
     url: "/sales-report",
     icon: FileText,
+    description: "Revenue insights"
   },
 ]
 
 export function AppSidebar() {
   const location = useLocation()
 
+  const renderMenuGroup = (items: any[], title: string) => (
+    <SidebarGroup>
+      <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+        {title}
+      </SidebarGroupLabel>
+      <SidebarGroupContent>
+        <SidebarMenu>
+          {items.map((item) => {
+            const isActive = location.pathname === item.url
+            return (
+              <SidebarMenuItem key={item.title}>
+                <SidebarMenuButton 
+                  asChild 
+                  isActive={isActive}
+                  className={`
+                    group relative h-11 rounded-lg transition-all duration-200 ease-in-out
+                    ${isActive 
+                      ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 shadow-sm border border-blue-200' 
+                      : 'hover:bg-gray-50 hover:shadow-sm text-gray-700'
+                    }
+                  `}
+                >
+                  <Link to={item.url} className="flex items-center w-full">
+                    <div className={`
+                      flex items-center justify-center w-8 h-8 rounded-md mr-3 transition-colors
+                      ${isActive 
+                        ? 'bg-blue-100 text-blue-600' 
+                        : 'bg-gray-100 text-gray-500 group-hover:bg-gray-200'
+                      }
+                    `}>
+                      <item.icon className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-sm truncate">{item.title}</span>
+                        {item.badge && (
+                          <Badge 
+                            variant="secondary" 
+                            className="ml-2 bg-red-100 text-red-700 text-xs px-1.5 py-0.5 h-5"
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                        {isActive && (
+                          <ChevronRight className="w-4 h-4 text-blue-600 ml-1" />
+                        )}
+                      </div>
+                      <p className="text-xs text-gray-500 truncate mt-0.5">{item.description}</p>
+                    </div>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )
+          })}
+        </SidebarMenu>
+      </SidebarGroupContent>
+    </SidebarGroup>
+  )
+
   return (
-    <Sidebar>
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupLabel>Dashboard</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {items.map((item) => {
-                const isActive = location.pathname === item.url
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild isActive={isActive}>
-                      <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+    <Sidebar className="border-r border-gray-200 bg-white">
+      <SidebarHeader className="p-6 border-b border-gray-100">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+            <Store className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">StoreHub</h2>
+            <p className="text-xs text-gray-500">Admin Dashboard</p>
+          </div>
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="px-4 py-4 space-y-6">
+        {renderMenuGroup(mainItems, "Overview")}
+        <Separator className="my-4" />
+        {renderMenuGroup(catalogItems, "Catalog")}
+        <Separator className="my-4" />
+        {renderMenuGroup(businessItems, "Business")}
+        <Separator className="my-4" />
+        {renderMenuGroup(storeItems, "Store")}
+        <Separator className="my-4" />
+        {renderMenuGroup(analyticsItems, "Analytics")}
       </SidebarContent>
+
+      <SidebarFooter className="p-4 border-t border-gray-100">
+        <div className="text-xs text-gray-500 text-center">
+          <p>© 2024 StoreHub</p>
+          <p>Version 1.0.0</p>
+        </div>
+      </SidebarFooter>
     </Sidebar>
   )
 }
