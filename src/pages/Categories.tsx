@@ -160,7 +160,17 @@ const Categories = () => {
   const handleAddSubcategory = (parentId: number) => {
     setModalMode('add');
     const parentCategory = flattenCategories(categories).find(cat => cat.id === parentId);
-    setSelectedCategory({ ...parentCategory, parentId } as Category);
+    if (parentCategory) {
+      setSelectedCategory({ 
+        ...parentCategory,
+        parentId,
+        name: '',
+        description: '',
+        products: 0,
+        revenue: 0,
+        level: parentCategory.level + 1
+      } as Category);
+    }
     setIsAddDialogOpen(true);
   };
 
@@ -175,16 +185,46 @@ const Categories = () => {
       const newCategory = {
         ...categoryData,
         id: Date.now(),
-        level: categoryData.parentId ? 1 : 0,
+        level: categoryData.parentId ? selectedCategory?.level || 1 : 0,
         products: 0,
         revenue: 0,
         created: new Date().toISOString().split('T')[0]
       };
-      setCategories(prev => [...prev, newCategory]);
+
+      if (categoryData.parentId) {
+        // Add as subcategory
+        const addToParent = (cats: Category[]): Category[] => {
+          return cats.map(cat => {
+            if (cat.id === categoryData.parentId) {
+              return {
+                ...cat,
+                children: [...(cat.children || []), newCategory]
+              };
+            }
+            if (cat.children) {
+              return { ...cat, children: addToParent(cat.children) };
+            }
+            return cat;
+          });
+        };
+        setCategories(addToParent(categories));
+      } else {
+        // Add as root category
+        setCategories(prev => [...prev, newCategory]);
+      }
     } else if (selectedCategory) {
-      setCategories(prev => prev.map(cat => 
-        cat.id === selectedCategory.id ? { ...cat, ...categoryData } : cat
-      ));
+      const updateCategories = (cats: Category[]): Category[] => {
+        return cats.map(cat => {
+          if (cat.id === selectedCategory.id) {
+            return { ...cat, ...categoryData };
+          }
+          if (cat.children) {
+            return { ...cat, children: updateCategories(cat.children) };
+          }
+          return cat;
+        });
+      };
+      setCategories(updateCategories(categories));
     }
   };
 
@@ -270,6 +310,7 @@ const Categories = () => {
               <Button
                 variant="ghost"
                 size="sm"
+                onClick={() => handleEditCategory(category)}
                 className="text-gray-600 hover:text-gray-700"
               >
                 <Edit className="w-4 h-4" />
@@ -452,22 +493,7 @@ const Categories = () => {
               <CardContent className="p-0">
                 {viewMode === "tree" ? (
                   <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {filteredCategories.map(category => (
-                      <div key={category.id}>
-                        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                          <div className="flex items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditCategory(category)}
-                              className="text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                    {filteredCategories.map(category => renderCategoryRow(category))}
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
-import { Plus, AlertTriangle, Package, TrendingDown, TrendingUp } from "lucide-react";
+import { StockModal } from "@/components/StockModal";
+import { Plus, AlertTriangle, Package, TrendingDown, TrendingUp, Settings } from "lucide-react";
 import { exportToPDF } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
 
@@ -26,8 +27,10 @@ const statusOptions = [
 ];
 
 const Inventory = () => {
-  const [inventory] = useState(mockInventory);
+  const [inventory, setInventory] = useState(mockInventory);
   const [filteredInventory, setFilteredInventory] = useState(mockInventory);
+  const [isStockModalOpen, setIsStockModalOpen] = useState(false);
+  const [stockModalMode, setStockModalMode] = useState<'add' | 'adjust'>('add');
   const { toast } = useToast();
 
   const handleSearch = (term: string) => {
@@ -45,6 +48,62 @@ const Inventory = () => {
     }
     const filtered = inventory.filter(item => item.status === status);
     setFilteredInventory(filtered);
+  };
+
+  const handleAddStock = () => {
+    setStockModalMode('add');
+    setIsStockModalOpen(true);
+  };
+
+  const handleAdjustStock = () => {
+    setStockModalMode('adjust');
+    setIsStockModalOpen(true);
+  };
+
+  const handleStockSave = (stockData: any) => {
+    console.log('Stock operation:', stockData);
+    
+    // Update inventory based on stock operation
+    setInventory(prev => prev.map(item => {
+      if (item.sku === stockData.productId) {
+        const newStock = stockData.type === 'add' 
+          ? item.currentStock + stockData.quantity
+          : stockData.quantity; // For adjust, assume it's setting to new value
+        
+        let newStatus = 'in_stock';
+        if (newStock === 0) newStatus = 'out_of_stock';
+        else if (newStock <= item.reorderLevel) newStatus = 'low_stock';
+        
+        return {
+          ...item,
+          currentStock: newStock,
+          status: newStatus,
+          lastRestocked: new Date().toISOString().split('T')[0]
+        };
+      }
+      return item;
+    }));
+
+    // Update filtered inventory as well
+    setFilteredInventory(prev => prev.map(item => {
+      if (item.sku === stockData.productId) {
+        const newStock = stockData.type === 'add' 
+          ? item.currentStock + stockData.quantity
+          : stockData.quantity;
+        
+        let newStatus = 'in_stock';
+        if (newStock === 0) newStatus = 'out_of_stock';
+        else if (newStock <= item.reorderLevel) newStatus = 'low_stock';
+        
+        return {
+          ...item,
+          currentStock: newStock,
+          status: newStatus,
+          lastRestocked: new Date().toISOString().split('T')[0]
+        };
+      }
+      return item;
+    }));
   };
 
   const handleExportPDF = () => {
@@ -110,10 +169,16 @@ const Inventory = () => {
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Inventory</h1>
                 <p className="text-gray-600 dark:text-gray-300">Monitor stock levels and manage inventory</p>
               </div>
-              <Button className="gap-2">
-                <Plus className="w-4 h-4" />
-                Add Stock
-              </Button>
+              <div className="flex gap-2">
+                <Button onClick={handleAddStock} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Stock
+                </Button>
+                <Button onClick={handleAdjustStock} variant="outline" className="gap-2">
+                  <Settings className="w-4 h-4" />
+                  Adjust Stock
+                </Button>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -241,6 +306,14 @@ const Inventory = () => {
           </div>
         </main>
       </div>
+
+      <StockModal
+        isOpen={isStockModalOpen}
+        onClose={() => setIsStockModalOpen(false)}
+        onSave={handleStockSave}
+        mode={stockModalMode}
+        products={inventory.map(item => ({ id: item.sku, name: item.product }))}
+      />
     </SidebarProvider>
   );
 };
