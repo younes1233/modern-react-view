@@ -1,4 +1,3 @@
-
 export interface Product {
   id: number;
   name: string;
@@ -78,6 +77,27 @@ export interface HomeSection {
   itemId: number;
   order: number;
   isActive: boolean;
+}
+
+export interface HeroSection {
+  id: number;
+  title: string;
+  subtitle: string;
+  backgroundImage: string;
+  ctaText: string;
+  ctaLink: string;
+  isActive: boolean;
+}
+
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  image: string;
+  icon: string;
+  productCount: number;
+  isActive: boolean;
+  order: number;
 }
 
 // Function to calculate the price based on selected variations
@@ -371,6 +391,91 @@ const sampleProducts: Product[] = [
   }
 ];
 
+// Sample hero section data
+let sampleHeroSection: HeroSection = {
+  id: 1,
+  title: "Welcome to Our Store",
+  subtitle: "Discover amazing products at unbeatable prices with fast shipping and exceptional customer service",
+  backgroundImage: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop",
+  ctaText: "Shop Now",
+  ctaLink: "/store/categories",
+  isActive: true
+};
+
+// Sample categories data
+let sampleCategories: Category[] = [
+  {
+    id: 1,
+    name: "Shoes",
+    slug: "shoes",
+    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=300&h=300&fit=crop",
+    icon: "👟",
+    productCount: 45,
+    isActive: true,
+    order: 1
+  },
+  {
+    id: 2,
+    name: "Electronics",
+    slug: "electronics",
+    image: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=300&h=300&fit=crop",
+    icon: "💻",
+    productCount: 128,
+    isActive: true,
+    order: 2
+  },
+  {
+    id: 3,
+    name: "Furniture",
+    slug: "furniture",
+    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=300&h=300&fit=crop",
+    icon: "🪑",
+    productCount: 67,
+    isActive: true,
+    order: 3
+  },
+  {
+    id: 4,
+    name: "Fashion",
+    slug: "fashion",
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=300&h=300&fit=crop",
+    icon: "👔",
+    productCount: 89,
+    isActive: true,
+    order: 4
+  },
+  {
+    id: 5,
+    name: "Home & Kitchen",
+    slug: "home",
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=300&h=300&fit=crop",
+    icon: "🏠",
+    productCount: 156,
+    isActive: true,
+    order: 5
+  },
+  {
+    id: 6,
+    name: "Beauty",
+    slug: "beauty",
+    image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=300&h=300&fit=crop",
+    icon: "💄",
+    productCount: 73,
+    isActive: true,
+    order: 6
+  },
+  {
+    id: 7,
+    name: "Sports",
+    slug: "sports",
+    image: "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=300&h=300&fit=crop",
+    icon: "⚽",
+    productCount: 92,
+    isActive: true,
+    order: 7
+  }
+];
+
 // Sample data for store management
 let sampleBanners: Banner[] = [
   {
@@ -615,5 +720,50 @@ export const deleteHomeSection = (id: number): void => {
 
 export const reorderHomeSections = (newOrder: HomeSection[]): void => {
   sampleHomeSections = newOrder.map((section, index) => ({ ...section, order: index + 1 }));
+  emitDataUpdate();
+};
+
+// Hero section functions
+export const getHeroSection = (): HeroSection => {
+  return sampleHeroSection;
+};
+
+export const updateHeroSection = (updates: Partial<HeroSection>): void => {
+  sampleHeroSection = { ...sampleHeroSection, ...updates };
+  emitDataUpdate();
+};
+
+// Category functions
+export const getCategories = (): Category[] => {
+  return sampleCategories.filter(c => c.isActive).sort((a, b) => a.order - b.order);
+};
+
+export const getAllCategories = (): Category[] => {
+  return sampleCategories.sort((a, b) => a.order - b.order);
+};
+
+export const addCategory = (categoryData: Omit<Category, 'id'>): Category => {
+  const newId = Math.max(...sampleCategories.map(c => c.id), 0) + 1;
+  const newCategory = { ...categoryData, id: newId };
+  sampleCategories.push(newCategory);
+  emitDataUpdate();
+  return newCategory;
+};
+
+export const updateCategory = (id: number, updates: Partial<Category>): void => {
+  const index = sampleCategories.findIndex(c => c.id === id);
+  if (index !== -1) {
+    sampleCategories[index] = { ...sampleCategories[index], ...updates };
+    emitDataUpdate();
+  }
+};
+
+export const deleteCategory = (id: number): void => {
+  sampleCategories = sampleCategories.filter(c => c.id !== id);
+  emitDataUpdate();
+};
+
+export const reorderCategories = (newOrder: Category[]): void => {
+  sampleCategories = newOrder.map((category, index) => ({ ...category, order: index + 1 }));
   emitDataUpdate();
 };

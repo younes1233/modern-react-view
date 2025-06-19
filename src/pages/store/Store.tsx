@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductSection } from "@/components/store/ProductSection";
+import { ShopByCategory } from "@/components/store/ShopByCategory";
 import { Button } from "@/components/ui/button";
 import { useSearch } from "@/contexts/SearchContext";
 import { Link } from "react-router-dom";
@@ -9,15 +10,18 @@ import {
   getActiveHomeSections, 
   getBanners, 
   getProductListings,
+  getHeroSection,
   HomeSection,
   Banner,
-  ProductListing
+  ProductListing,
+  HeroSection
 } from "@/data/storeData";
 
 const Store = () => {
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
+  const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { setSearchQuery, setSelectedCategory } = useSearch();
 
@@ -27,6 +31,7 @@ const Store = () => {
     setHomeSections(getActiveHomeSections());
     setBanners(getBanners());
     setProductListings(getProductListings());
+    setHeroSection(getHeroSection());
     setIsLoading(false);
   };
 
@@ -131,34 +136,48 @@ const Store = () => {
     <StoreLayout>
       <div className="min-h-screen">
         {/* Hero Section */}
-        <div className="bg-white/80 backdrop-blur-sm shadow-lg">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <div className="text-center max-w-5xl mx-auto">
-              <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-6 lg:mb-8 leading-tight animate-fade-in">
-                Welcome to Our Store
-              </h1>
-              <p className="text-lg sm:text-xl lg:text-2xl text-gray-600 mb-10 lg:mb-16 leading-relaxed animate-fade-in max-w-3xl mx-auto">
-                Discover amazing products at unbeatable prices with fast shipping and exceptional customer service
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center animate-fade-in">
-                <Button 
-                  onClick={handleShopNow}
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
-                >
-                  Shop Now
-                </Button>
-                <Link to="/store/categories">
-                  <Button 
-                    variant="outline"
-                    className="border-2 border-gray-300 hover:border-blue-600 text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
-                  >
-                    Browse Categories
-                  </Button>
-                </Link>
+        {heroSection && heroSection.isActive && (
+          <div className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
+            <img
+              src={heroSection.backgroundImage}
+              alt="Hero Background"
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
+              <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="max-w-4xl text-white">
+                  <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 lg:mb-8 leading-tight animate-fade-in">
+                    {heroSection.title}
+                  </h1>
+                  <p className="text-lg sm:text-xl lg:text-2xl mb-10 lg:mb-16 leading-relaxed animate-fade-in max-w-3xl">
+                    {heroSection.subtitle}
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-fade-in">
+                    <Link to={heroSection.ctaLink}>
+                      <Button 
+                        onClick={handleShopNow}
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
+                      >
+                        {heroSection.ctaText}
+                      </Button>
+                    </Link>
+                    <Link to="/store/categories">
+                      <Button 
+                        variant="outline"
+                        className="border-2 border-white/30 hover:border-white text-white hover:text-gray-900 hover:bg-white/90 backdrop-blur-sm px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      >
+                        Browse Categories
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        )}
+
+        {/* Shop by Category Section */}
+        <ShopByCategory />
 
         {/* Dynamic Sections */}
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-16">

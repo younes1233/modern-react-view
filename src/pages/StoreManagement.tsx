@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -5,8 +6,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BannerManagement } from "@/components/store-management/BannerManagement";
 import { ProductDisplay } from "@/components/store-management/ProductDisplay";
+import { HeroManagement } from "@/components/store-management/HeroManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Image, Package, Palette } from "lucide-react";
+import { Store, Image, Package, Palette, Zap, Grid3X3 } from "lucide-react";
 import { LayoutManagement } from "@/components/store-management/LayoutManagement";
 import { ProductListingManagement } from "@/components/store-management/ProductListingManagement";
 
@@ -59,9 +61,9 @@ const StoreManagement = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-purple-600 dark:text-purple-400">Categories</p>
-                      <p className="text-2xl lg:text-3xl font-bold text-purple-900 dark:text-purple-100">8</p>
+                      <p className="text-2xl lg:text-3xl font-bold text-purple-900 dark:text-purple-100">7</p>
                     </div>
-                    <Palette className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                    <Grid3X3 className="w-8 h-8 text-purple-600 dark:text-purple-400" />
                   </div>
                 </CardContent>
               </Card>
@@ -70,18 +72,22 @@ const StoreManagement = () => {
                 <CardContent className="p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Active Promotions</p>
-                      <p className="text-2xl lg:text-3xl font-bold text-amber-900 dark:text-amber-100">5</p>
+                      <p className="text-sm font-medium text-amber-600 dark:text-amber-400">Hero Section</p>
+                      <p className="text-2xl lg:text-3xl font-bold text-amber-900 dark:text-amber-100">Active</p>
                     </div>
-                    <Store className="w-8 h-8 text-amber-600 dark:text-amber-400" />
+                    <Zap className="w-8 h-8 text-amber-600 dark:text-amber-400" />
                   </div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Management Tabs */}
-            <Tabs defaultValue="layout" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:grid-cols-4">
+            <Tabs defaultValue="hero" className="space-y-6">
+              <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
+                <TabsTrigger value="hero" className="flex items-center gap-2">
+                  <Zap className="w-4 h-4" />
+                  Hero
+                </TabsTrigger>
                 <TabsTrigger value="layout" className="flex items-center gap-2">
                   <Store className="w-4 h-4" />
                   Layout
@@ -99,6 +105,10 @@ const StoreManagement = () => {
                   Display
                 </TabsTrigger>
               </TabsList>
+
+              <TabsContent value="hero">
+                <HeroManagement />
+              </TabsContent>
 
               <TabsContent value="layout">
                 <LayoutManagement />
