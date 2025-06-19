@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -264,6 +263,19 @@ const Coupons = () => {
       case 'free_shipping': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
       case 'buy_x_get_y': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
+    }
+  };
+
+  const getPackageDiscountDisplay = (packageDiscount: any) => {
+    switch (packageDiscount.discountType) {
+      case 'percentage':
+        return `${packageDiscount.discountValue}%`;
+      case 'fixed':
+        return `$${packageDiscount.discountValue}`;
+      case 'buy_x_get_y':
+        return `Get ${packageDiscount.discountValue} Free`;
+      default:
+        return `${packageDiscount.discountValue}% off`;
     }
   };
 
@@ -702,10 +714,7 @@ const Coupons = () => {
                               </Badge>
                             </TableCell>
                             <TableCell>
-                              {packageDiscount.discountType === 'percentage' ? `${packageDiscount.discountValue}%` :
-                               packageDiscount.discountType === 'fixed' ? `$${packageDiscount.discountValue}` :
-                               packageDiscount.discountType === 'buy_x_get_y' ? `Get ${packageDiscount.discountValue} Free` :
-                               `${packageDiscount.discountValue}% off`}
+                              {getPackageDiscountDisplay(packageDiscount)}
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">
