@@ -3,7 +3,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
-import { LogOut, User, ExternalLink } from "lucide-react";
+import { LogOut, User, ExternalLink, Settings, Upload, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
   DropdownMenu,
@@ -18,28 +18,65 @@ export function DashboardHeader() {
   const { user, logout } = useAuth();
 
   return (
-    <header className="flex h-16 shrink-0 items-center gap-4 border-b px-4">
+    <header className="flex h-16 shrink-0 items-center gap-4 border-b px-4 bg-white dark:bg-gray-900">
       <SidebarTrigger className="-ml-1" />
       <div className="flex-1" />
-      <div className="flex items-center gap-2">
-        <Button asChild variant="outline" className="gap-2">
+      <div className="flex items-center gap-3">
+        <Button asChild variant="outline" size="sm" className="gap-2 text-sm">
           <Link to="/store" target="_blank">
             <ExternalLink className="h-4 w-4" />
             View Store
           </Link>
         </Button>
+        
         <ThemeToggle />
+        
+        {/* Settings Button */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="gap-2">
-              <User className="h-4 w-4" />
-              {user?.name || 'User'}
+            <Button variant="outline" size="sm" className="gap-2">
+              <Settings className="h-4 w-4" />
+              Settings
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>Application Settings</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout}>
+            <DropdownMenuItem>
+              <Upload className="mr-2 h-4 w-4" />
+              Mass Upload Products
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Upload className="mr-2 h-4 w-4" />
+              Mass Upload Categories
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Download className="mr-2 h-4 w-4" />
+              Export All Data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Account Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="gap-2 px-3 py-2">
+              <User className="h-4 w-4" />
+              <span className="hidden sm:inline">{user?.name || 'User'}</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-sm font-normal text-muted-foreground">
+              {user?.email}
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              <User className="mr-2 h-4 w-4" />
+              Profile Settings
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={logout} className="text-red-600 dark:text-red-400">
               <LogOut className="mr-2 h-4 w-4" />
               Logout
             </DropdownMenuItem>

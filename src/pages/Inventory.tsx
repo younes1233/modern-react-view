@@ -84,13 +84,13 @@ const Inventory = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "in_stock":
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">In Stock</Badge>;
+        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-300 dark:hover:bg-emerald-900/50 transition-colors">In Stock</Badge>;
       case "low_stock":
-        return <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">Low Stock</Badge>;
+        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:hover:bg-amber-900/50 transition-colors">Low Stock</Badge>;
       case "out_of_stock":
-        return <Badge variant="destructive" className="dark:bg-red-900/20 dark:text-red-400">Out of Stock</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50 transition-colors">Out of Stock</Badge>;
       default:
-        return <Badge className="dark:bg-gray-700 dark:text-gray-300">Unknown</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600 transition-colors">Unknown</Badge>;
     }
   };
 

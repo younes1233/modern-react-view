@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, X, Upload, Star } from "lucide-react";
+import { Plus, X, Star } from "lucide-react";
 
 interface ProductThumbnail {
   id: number;
@@ -147,6 +147,27 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
     setFormData(prev => ({
       ...prev,
       variations: prev.variations.filter(v => v.id !== id)
+    }));
+  };
+
+  const handleImageUpload = (files: File[]) => {
+    // Convert files to URLs for preview (in real app, upload to server)
+    const urls = files.map(file => URL.createObjectURL(file));
+    if (urls.length > 0) {
+      setFormData(prev => ({ ...prev, image: urls[0] }));
+    }
+  };
+
+  const handleThumbnailUpload = (files: File[]) => {
+    // Convert files to thumbnails (in real app, upload to server)
+    const newThumbnails = files.map((file, index) => ({
+      id: Date.now() + index,
+      url: URL.createObjectURL(file),
+      alt: file.name
+    }));
+    setFormData(prev => ({
+      ...prev,
+      thumbnails: [...prev.thumbnails, ...newThumbnails]
     }));
   };
 
@@ -340,50 +361,52 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
             <CardHeader>
               <CardTitle className="text-lg">Product Images</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-6">
               <div>
-                <Label htmlFor="image">Main Image URL *</Label>
-                <Input
-                  id="image"
-                  value={formData.image}
-                  onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-                  placeholder="https://example.com/main-image.jpg"
-                  required
+                <Label>Main Product Image *</Label>
+                <FileUpload
+                  onFileSelect={handleImageUpload}
+                  maxFiles={1}
+                  placeholder="Upload main product image"
+                  className="mt-2"
                 />
+                {formData.image && (
+                  <div className="mt-4">
+                    <img 
+                      src={formData.image} 
+                      alt="Main product" 
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>
-                <Label>Additional Thumbnails</Label>
-                <div className="grid grid-cols-2 gap-2 mb-2">
-                  <Input
-                    placeholder="Thumbnail URL"
-                    value={newThumbnail.url}
-                    onChange={(e) => setNewThumbnail(prev => ({ ...prev, url: e.target.value }))}
-                  />
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Alt text"
-                      value={newThumbnail.alt}
-                      onChange={(e) => setNewThumbnail(prev => ({ ...prev, alt: e.target.value }))}
-                    />
-                    <Button type="button" onClick={addThumbnail} size="sm">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
+                <Label>Additional Images</Label>
+                <FileUpload
+                  onFileSelect={handleThumbnailUpload}
+                  maxFiles={5}
+                  placeholder="Upload additional product images"
+                  className="mt-2"
+                />
                 
                 {formData.thumbnails.length > 0 && (
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-3 gap-4 mt-4">
                     {formData.thumbnails.map((thumbnail) => (
-                      <div key={thumbnail.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm truncate">{thumbnail.alt}</span>
+                      <div key={thumbnail.id} className="relative group">
+                        <img 
+                          src={thumbnail.url} 
+                          alt={thumbnail.alt}
+                          className="w-full h-24 object-cover rounded-lg border"
+                        />
                         <Button
                           type="button"
-                          variant="ghost"
-                          size="sm"
+                          variant="destructive"
+                          size="icon"
+                          className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
                           onClick={() => removeThumbnail(thumbnail.id)}
                         >
-                          <X className="w-4 h-4" />
+                          <X className="w-3 h-3" />
                         </Button>
                       </div>
                     ))}

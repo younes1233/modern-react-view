@@ -8,6 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Search, Filter, X, Calendar as CalendarIcon, Download, FileSpreadsheet, FileText } from "lucide-react";
 import { format } from "date-fns";
+import { ExportButton } from "@/components/ui/export-button";
 
 interface FilterOption {
   value: string;
@@ -338,21 +339,15 @@ export function AdvancedFilterBar({
             </DialogContent>
           </Dialog>
 
+          {/* Export Section */}
           {(showExcelExport || showPDFExport) && (
-            <div className="flex gap-1">
-              {showExcelExport && (
-                <Button onClick={onExportExcel} variant="outline" className="bg-purple-50 text-purple-600 border-purple-200 hover:bg-purple-100 dark:bg-purple-900/20 dark:text-purple-400 dark:border-purple-800 dark:hover:bg-purple-900/30">
-                  <Download className="w-4 h-4 mr-2" />
-                  {exportLabel}
-                </Button>
-              )}
-              {showPDFExport && (
-                <Button onClick={onExportPDF} variant="outline" className="bg-red-50 text-red-600 border-red-200 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-900/30">
-                  <FileText className="w-4 h-4 mr-2" />
-                  Export PDF
-                </Button>
-              )}
-            </div>
+            <ExportButton
+              onExportExcel={showExcelExport ? onExportExcel : undefined}
+              onExportPDF={showPDFExport ? onExportPDF : undefined}
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+            />
           )}
         </div>
       </div>
@@ -384,3 +379,5 @@ export function AdvancedFilterBar({
     </div>
   );
 }
+
+export default AdvancedFilterBar;
