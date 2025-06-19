@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RoleBasedSidebar } from "@/components/dashboard/RoleBasedSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { FilterBar } from "@/components/FilterBar";
 import { 
   Table, 
   TableBody, 
@@ -39,7 +40,25 @@ const ProductApproval = () => {
   const [products, setProducts] = useState<Product[]>(demoProducts);
   const [rejectionReason, setRejectionReason] = useState("");
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("");
   const { toast } = useToast();
+
+  // Filter and search products
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      const matchesSearch = searchTerm === "" || 
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.sellerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "" || product.status === statusFilter;
+      const matchesCategory = categoryFilter === "" || product.category === categoryFilter;
+      
+      return matchesSearch && matchesStatus && matchesCategory;
+    });
+  }, [products, searchTerm, statusFilter, categoryFilter]);
 
   const handleApprove = (productId: string) => {
     setProducts(prev => prev.map(product => 
@@ -84,9 +103,19 @@ const ProductApproval = () => {
     }
   };
 
-  const pendingProducts = products.filter(p => p.status === 'pending');
-  const approvedProducts = products.filter(p => p.status === 'approved');
-  const rejectedProducts = products.filter(p => p.status === 'rejected');
+  const pendingProducts = filteredProducts.filter(p => p.status === 'pending');
+  const approvedProducts = filteredProducts.filter(p => p.status === 'approved');
+  const rejectedProducts = filteredProducts.filter(p => p.status === 'rejected');
+
+  // Get unique categories for filter
+  const categoryOptions = Array.from(new Set(products.map(p => p.category)))
+    .map(category => ({ value: category, label: category }));
+
+  const statusOptions = [
+    { value: 'pending', label: 'Pending' },
+    { value: 'approved', label: 'Approved' },
+    { value: 'rejected', label: 'Rejected' }
+  ];
 
   return (
     <SidebarProvider>
@@ -104,6 +133,18 @@ const ProductApproval = () => {
                 <p className="text-gray-600 dark:text-gray-400">Review and approve seller submissions</p>
               </div>
             </div>
+
+            {/* Search and Filter Bar */}
+            <FilterBar
+              searchPlaceholder="Search products, sellers, or descriptions..."
+              statusOptions={statusOptions}
+              categoryOptions={categoryOptions}
+              onSearch={setSearchTerm}
+              onStatusFilter={setStatusFilter}
+              onCategoryFilter={setCategoryFilter}
+              showStatusFilter={true}
+              showCategoryFilter={true}
+            />
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -148,8 +189,8 @@ const ProductApproval = () => {
                   <div className="flex items-center gap-2">
                     <Package className="w-5 h-5 text-blue-600" />
                     <div>
-                      <p className="text-sm text-muted-foreground">Total</p>
-                      <p className="text-2xl font-bold">{products.length}</p>
+                      <p className="text-sm text-muted-foreground">Filtered Results</p>
+                      <p className="text-2xl font-bold">{filteredProducts.length}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -175,7 +216,7 @@ const ProductApproval = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {products.map((product) => (
+                    {filteredProducts.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -357,6 +398,11 @@ const ProductApproval = () => {
                     ))}
                   </TableBody>
                 </Table>
+                {filteredProducts.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No products found matching your search criteria.
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
