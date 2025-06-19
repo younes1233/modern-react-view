@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { 
   Table, 
   TableBody, 
@@ -23,6 +24,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { 
   Users, 
   UserPlus, 
   Search, 
@@ -37,6 +46,12 @@ const UserManagement = () => {
   const [users, setUsers] = useState<User[]>(demoUsers);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newUser, setNewUser] = useState({
+    name: '',
+    email: '',
+    role: 'seller' as User['role']
+  });
   const { toast } = useToast();
 
   const filteredUsers = users.filter(user => {
@@ -45,6 +60,46 @@ const UserManagement = () => {
     const matchesRole = roleFilter === "all" || user.role === roleFilter;
     return matchesSearch && matchesRole;
   });
+
+  const handleAddUser = () => {
+    if (!newUser.name || !newUser.email || !newUser.role) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if email already exists
+    if (users.some(u => u.email === newUser.email)) {
+      toast({
+        title: "Error",
+        description: "A user with this email already exists",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const user: User = {
+      id: `u${Date.now()}`,
+      name: newUser.name,
+      email: newUser.email,
+      role: newUser.role,
+      isActive: true,
+      lastLogin: null,
+      sellerId: newUser.role === 'seller' ? `s${Date.now()}` : undefined
+    };
+
+    setUsers(prev => [...prev, user]);
+    setNewUser({ name: '', email: '', role: 'seller' });
+    setIsAddModalOpen(false);
+    
+    toast({
+      title: "User Added",
+      description: `${user.name} has been added as ${user.role}`,
+    });
+  };
 
   const handleToggleUserStatus = (userId: string) => {
     setUsers(prev => prev.map(user => 
@@ -63,7 +118,11 @@ const UserManagement = () => {
   const handleRoleChange = (userId: string, newRole: string) => {
     setUsers(prev => prev.map(user => 
       user.id === userId 
-        ? { ...user, role: newRole as User['role'] }
+        ? { 
+            ...user, 
+            role: newRole as User['role'],
+            sellerId: newRole === 'seller' ? `s${Date.now()}` : undefined
+          }
         : user
     ));
     
@@ -108,10 +167,62 @@ const UserManagement = () => {
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">Manage user roles and permissions</p>
               </div>
-              <Button className="gap-2">
-                <UserPlus className="w-4 h-4" />
-                Add User
-              </Button>
+              <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
+                <DialogTrigger asChild>
+                  <Button className="gap-2">
+                    <UserPlus className="w-4 h-4" />
+                    Add User
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Add New User</DialogTitle>
+                    <DialogDescription>
+                      Create a new user account with specific role permissions
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="name">Full Name *</Label>
+                      <Input
+                        id="name"
+                        value={newUser.name}
+                        onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Enter full name"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="email">Email *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={newUser.email}
+                        onChange={(e) => setNewUser(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="Enter email address"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="role">Role *</Label>
+                      <Select 
+                        value={newUser.role} 
+                        onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value as User['role'] }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seller">Seller</SelectItem>
+                          <SelectItem value="manager">Manager</SelectItem>
+                          <SelectItem value="super_admin">Super Admin</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <Button onClick={handleAddUser} className="w-full">
+                      Add User
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </div>
 
             {/* Stats Cards */}
