@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RoleBasedSidebar } from "@/components/dashboard/RoleBasedSidebar";
@@ -87,7 +86,8 @@ const UserManagement = () => {
       email: newUser.email,
       role: newUser.role,
       isActive: true,
-      lastLogin: null,
+      createdAt: new Date().toISOString(),
+      lastLogin: undefined,
       sellerId: newUser.role === 'seller' ? `s${Date.now()}` : undefined
     };
 
