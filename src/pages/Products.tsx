@@ -312,8 +312,9 @@ const Products = () => {
               onExportExcel={handleExportExcel}
               showStatusFilter
               showCategoryFilter
-              showExcelExport
+              showExcelExport={false}
               exportLabel="Export"
+              exportButton={<ExportButton onExportExcel={handleExportExcel} />}
             />
 
             {/* Enhanced Products Table */}

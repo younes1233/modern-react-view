@@ -6,10 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { CategoryModal } from "@/components/CategoryModal";
+import { ExportButton } from "@/components/ui/export-button";
 import { 
   Search, 
   Plus, 
@@ -18,7 +17,6 @@ import {
   Grid, 
   Trees, 
   Filter,
-  Download,
   Star,
   Package,
   DollarSign,
@@ -41,6 +39,7 @@ interface Category {
   children?: Category[];
   isExpanded?: boolean;
   level: number;
+  image?: string;
 }
 
 // TODO: Replace with API call to fetch hierarchical categories
@@ -132,12 +131,8 @@ const Categories = () => {
   const [categories, setCategories] = useState(mockCategories);
   const [viewMode, setViewMode] = useState<"tree" | "grid">("tree");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [selectedParentId, setSelectedParentId] = useState<number | null>(null);
-  const [newCategory, setNewCategory] = useState({
-    name: "",
-    description: "",
-    parentId: null as number | null
-  });
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const { toast } = useToast();
 
   const toggleExpand = (categoryId: number) => {
@@ -156,43 +151,41 @@ const Categories = () => {
   };
 
   const handleAddCategory = () => {
-    if (!newCategory.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Category name is required",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    const newCat: Category = {
-      id: Date.now(),
-      name: newCategory.name,
-      description: newCategory.description,
-      products: 0,
-      revenue: 0,
-      status: "active",
-      created: new Date().toISOString().split('T')[0],
-      parentId: selectedParentId || undefined,
-      level: selectedParentId ? 1 : 0
-    };
-
-    // TODO: Replace with API call to create category
-    console.log("Adding category:", newCat);
-    
-    toast({
-      title: "Success",
-      description: `Category "${newCategory.name}" added successfully`
-    });
-
-    setNewCategory({ name: "", description: "", parentId: null });
-    setSelectedParentId(null);
-    setIsAddDialogOpen(false);
+    setModalMode('add');
+    setSelectedCategory(null);
+    setIsAddDialogOpen(true);
   };
 
-  const handleAddSubcategory = (parentId: number) => {
-    setSelectedParentId(parentId);
+  const handleEditCategory = (category: Category) => {
+    setModalMode('edit');
+    setSelectedCategory(category);
     setIsAddDialogOpen(true);
+  };
+
+  const handleSaveCategory = (categoryData: Category) => {
+    if (modalMode === 'add') {
+      const newCategory = {
+        ...categoryData,
+        id: Date.now(),
+        level: categoryData.parentId ? 1 : 0,
+        products: 0,
+        revenue: 0,
+        created: new Date().toISOString().split('T')[0]
+      };
+      setCategories(prev => [...prev, newCategory]);
+    } else if (selectedCategory) {
+      setCategories(prev => prev.map(cat => 
+        cat.id === selectedCategory.id ? { ...cat, ...categoryData } : cat
+      ));
+    }
+  };
+
+  const handleExportExcel = () => {
+    // Implementation for Excel export
+    toast({
+      title: "Export Started",
+      description: "Categories are being exported to Excel"
+    });
   };
 
   const renderCategoryRow = (category: Category) => {
@@ -314,15 +307,15 @@ const Categories = () => {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
         <AppSidebar />
         <main className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader />
           <div className="flex-1 overflow-auto p-6 space-y-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div>
-                <h1 className="text-3xl font-bold text-pink-600">Categories</h1>
-                <p className="text-gray-600">Organize your products with hierarchical categories</p>
+                <h1 className="text-3xl font-bold text-pink-600 dark:text-pink-400">Categories</h1>
+                <p className="text-gray-600 dark:text-gray-400">Organize your products with hierarchical categories</p>
               </div>
               <div className="flex items-center gap-3">
                 <Button
@@ -341,47 +334,10 @@ const Categories = () => {
                   <Grid className="w-4 h-4" />
                   Grid
                 </Button>
-                <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="gap-2 bg-pink-600 hover:bg-pink-700">
-                      <Plus className="w-4 h-4" />
-                      Add Category
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Add New Category</DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="name">Category Name</Label>
-                        <Input
-                          id="name"
-                          value={newCategory.name}
-                          onChange={(e) => setNewCategory(prev => ({ ...prev, name: e.target.value }))}
-                          placeholder="Enter category name"
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={newCategory.description}
-                          onChange={(e) => setNewCategory(prev => ({ ...prev, description: e.target.value }))}
-                          placeholder="Enter category description"
-                        />
-                      </div>
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleAddCategory}>
-                          Add Category
-                        </Button>
-                      </div>
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <Button onClick={handleAddCategory} className="gap-2 bg-pink-600 hover:bg-pink-700">
+                  <Plus className="w-4 h-4" />
+                  Add Category
+                </Button>
               </div>
             </div>
 
@@ -411,10 +367,7 @@ const Categories = () => {
                   <Filter className="w-4 h-4" />
                   Advanced
                 </Button>
-                <Button variant="outline" className="gap-2">
-                  <Download className="w-4 h-4" />
-                  Export
-                </Button>
+                <ExportButton onExportExcel={handleExportExcel} />
               </div>
             </div>
 
@@ -484,14 +437,29 @@ const Categories = () => {
             </div>
 
             {/* Categories Content */}
-            <Card>
-              <CardHeader>
+            <Card className="shadow-lg">
+              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
                 <CardTitle>Category Management</CardTitle>
               </CardHeader>
               <CardContent className="p-0">
                 {viewMode === "tree" ? (
-                  <div className="divide-y divide-gray-100">
-                    {filteredCategories.map(category => renderCategoryRow(category))}
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {filteredCategories.map(category => (
+                      <div key={category.id}>
+                        <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditCategory(category)}
+                              className="text-gray-600 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -499,21 +467,30 @@ const Categories = () => {
                       <Card key={category.id} className="hover:shadow-lg transition-shadow">
                         <CardContent className="p-6">
                           <div className="flex justify-between items-start mb-4">
-                            <div className="p-3 rounded-lg bg-blue-50">
-                              <Package className="w-6 h-6 text-blue-600" />
+                            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900">
+                              {category.image ? (
+                                <img src={category.image} alt={category.name} className="w-6 h-6 rounded" />
+                              ) : (
+                                <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                              )}
                             </div>
-                            <Badge className={category.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                            <Badge className={category.status === "active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"}>
                               {category.status}
                             </Badge>
                           </div>
-                          <h3 className="font-semibold text-lg mb-2">{category.name}</h3>
-                          <p className="text-gray-600 text-sm mb-4">{category.description}</p>
+                          <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{category.name}</h3>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{category.description}</p>
                           <div className="flex justify-between items-center mb-4">
-                            <span className="text-sm text-gray-500">{category.products} products</span>
-                            <span className="text-sm font-bold text-green-600">${category.revenue.toLocaleString()}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{category.products} products</span>
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">${category.revenue.toLocaleString()}</span>
                           </div>
                           <div className="flex gap-2">
-                            <Button variant="ghost" size="sm" className="flex-1">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="flex-1"
+                              onClick={() => handleEditCategory(category)}
+                            >
                               <Edit className="w-4 h-4 mr-2" />
                               Edit
                             </Button>
@@ -538,6 +515,15 @@ const Categories = () => {
           </div>
         </main>
       </div>
+
+      <CategoryModal
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onSave={handleSaveCategory}
+        category={selectedCategory}
+        mode={modalMode}
+        categories={categories}
+      />
     </SidebarProvider>
   );
 };
