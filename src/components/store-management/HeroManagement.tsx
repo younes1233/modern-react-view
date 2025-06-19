@@ -76,26 +76,38 @@ export function HeroManagement() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="relative h-64 rounded-lg overflow-hidden shadow-lg">
+            <div className="relative h-80 rounded-2xl overflow-hidden shadow-2xl">
               <img
                 src={formData.backgroundImage || heroSection.backgroundImage}
                 alt="Hero Background"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
-                <div className="px-6">
-                  <h1 className="text-2xl font-bold text-white mb-2 leading-tight">
-                    {formData.title || heroSection.title}
-                  </h1>
-                  <p className="text-sm text-white/90 mb-4">
-                    {formData.subtitle || heroSection.subtitle}
-                  </p>
-                  <Button 
-                    size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    {formData.ctaText || heroSection.ctaText}
-                  </Button>
+              <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/40 to-transparent">
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                <div className="relative h-full flex items-center justify-center">
+                  <div className="text-center px-6 max-w-2xl">
+                    <h1 className="text-3xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                      {formData.title || heroSection.title}
+                    </h1>
+                    <p className="text-lg text-white/90 mb-6 leading-relaxed">
+                      {formData.subtitle || heroSection.subtitle}
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                      <Button 
+                        size="lg"
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-2xl hover:shadow-blue-500/25 transform hover:scale-105 transition-all duration-300"
+                      >
+                        {formData.ctaText || heroSection.ctaText}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        size="lg"
+                        className="border-2 border-white/30 hover:border-white text-white hover:text-gray-900 hover:bg-white/90 backdrop-blur-sm px-8 py-4 rounded-xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                      >
+                        Browse Categories
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>

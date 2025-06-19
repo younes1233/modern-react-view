@@ -137,26 +137,32 @@ const Store = () => {
       <div className="min-h-screen">
         {/* Hero Section */}
         {heroSection && heroSection.isActive && (
-          <div className="relative h-[500px] md:h-[600px] lg:h-[700px] overflow-hidden">
+          <div className="relative h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
             <img
               src={heroSection.backgroundImage}
               alt="Hero Background"
               className="w-full h-full object-cover"
             />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/50 to-transparent flex items-center">
+            
+            {/* Enhanced Gradient Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            
+            <div className="absolute inset-0 flex items-center justify-center">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="max-w-4xl text-white">
-                  <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-6 lg:mb-8 leading-tight animate-fade-in">
+                <div className="max-w-5xl mx-auto text-center text-white">
+                  <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold mb-6 lg:mb-8 leading-tight animate-fade-in">
                     {heroSection.title}
                   </h1>
-                  <p className="text-lg sm:text-xl lg:text-2xl mb-10 lg:mb-16 leading-relaxed animate-fade-in max-w-3xl">
+                  <p className="text-xl sm:text-2xl lg:text-3xl mb-12 lg:mb-16 leading-relaxed animate-fade-in max-w-4xl mx-auto opacity-90">
                     {heroSection.subtitle}
                   </p>
-                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 animate-fade-in">
+                  <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in">
                     <Link to={heroSection.ctaLink}>
                       <Button 
                         onClick={handleShopNow}
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
+                        size="lg"
+                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-semibold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
                       >
                         {heroSection.ctaText}
                       </Button>
@@ -164,7 +170,8 @@ const Store = () => {
                     <Link to="/store/categories">
                       <Button 
                         variant="outline"
-                        className="border-2 border-white/30 hover:border-white text-white hover:text-gray-900 hover:bg-white/90 backdrop-blur-sm px-10 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg"
+                        size="lg"
+                        className="border-2 border-white/30 hover:border-white text-white hover:text-gray-900 hover:bg-white/90 backdrop-blur-sm px-12 py-6 rounded-2xl font-semibold text-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
                       >
                         Browse Categories
                       </Button>
