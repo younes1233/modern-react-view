@@ -61,12 +61,14 @@ export function AdvancedFilterBar({
 
   const handleStatusChange = (value: string) => {
     setStatusFilter(value);
-    onStatusFilter?.(value);
+    const filterValue = value === "all" ? "" : value;
+    onStatusFilter?.(filterValue);
   };
 
   const handleCategoryChange = (value: string) => {
     setCategoryFilter(value);
-    onCategoryFilter?.(value);
+    const filterValue = value === "all" ? "" : value;
+    onCategoryFilter?.(filterValue);
   };
 
   return (
@@ -91,7 +93,7 @@ export function AdvancedFilterBar({
                   <SelectValue placeholder="Filter by Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Statuses</SelectItem>
+                  <SelectItem value="all">All Statuses</SelectItem>
                   {statusOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
@@ -107,7 +109,7 @@ export function AdvancedFilterBar({
                   <SelectValue placeholder="Filter by Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categoryOptions.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
