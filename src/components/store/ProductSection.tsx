@@ -38,27 +38,37 @@ export function ProductSection({ listing }: ProductSectionProps) {
   }
 
   return (
-    <section className="py-8 lg:py-12">
+    <section className="py-8 lg:py-12 bg-white">
       {listing.showTitle && (
-        <div className="text-center mb-8 lg:mb-12">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 lg:mb-4">
-            {listing.title}
-          </h2>
+        <div className="mb-8">
+          <div className="bg-cyan-500 text-white px-6 py-3 rounded-t-lg inline-block">
+            <h2 className="text-2xl lg:text-3xl font-bold">
+              {listing.title}
+            </h2>
+          </div>
           {listing.subtitle && (
-            <p className="text-gray-600 text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed">
+            <p className="text-gray-600 text-lg mt-4 max-w-2xl">
               {listing.subtitle}
             </p>
           )}
-          <div className="w-20 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto mt-4 rounded-full"></div>
         </div>
       )}
 
       {listing.layout === 'grid' ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+            {products.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          
+          {/* Pagination dots like in the image */}
+          <div className="flex justify-center mt-8 space-x-2">
+            <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
+            <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+            <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+          </div>
+        </>
       ) : (
         <div className="relative">
           <div className="overflow-x-auto scrollbar-hide">
@@ -70,13 +80,13 @@ export function ProductSection({ listing }: ProductSectionProps) {
               ))}
             </div>
           </div>
-          {/* Scroll indicators */}
-          <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white rounded-full shadow-lg p-2 hidden lg:block">
+          {/* Navigation arrows */}
+          <div className="absolute top-1/2 -left-4 transform -translate-y-1/2 bg-white rounded-full shadow-lg p-2 hidden lg:block cursor-pointer hover:bg-gray-50">
             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </div>
-          <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 bg-white rounded-full shadow-lg p-2 hidden lg:block">
+          <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 bg-white rounded-full shadow-lg p-2 hidden lg:block cursor-pointer hover:bg-gray-50">
             <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
