@@ -31,9 +31,14 @@ const Index = () => {
     return <Navigate to="/store" replace />;
   }
 
+  // If no user is logged in, redirect to login
+  if (!user) {
+    return <Navigate to="/role-login" replace />;
+  }
+
   // Different dashboard content based on role
   const getDashboardContent = () => {
-    switch (user?.role) {
+    switch (user.role) {
       case 'seller':
         return (
           <div className="space-y-6">
@@ -289,13 +294,6 @@ const Index = () => {
         );
     }
   };
-
-  // Only show sidebar and header for dashboard users (not customers)
-  const hasDashboardAccess = user && user.role !== 'customer';
-
-  if (!hasDashboardAccess) {
-    return <Navigate to="/store" replace />;
-  }
 
   return (
     <SidebarProvider>
