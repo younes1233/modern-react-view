@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { ProductModal } from "@/components/ProductModal";
+import { ExportButton } from "@/components/ui/export-button";
 import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye, Star, Image } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { exportToExcel } from "@/utils/exportUtils";

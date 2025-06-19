@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     phone: '',
     address: '',
     bio: '',
-    avatar: user?.avatar || ''
+    avatar: ''
   });
 
   const [notifications, setNotifications] = useState({

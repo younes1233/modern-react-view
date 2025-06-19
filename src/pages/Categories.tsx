@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -153,6 +154,13 @@ const Categories = () => {
   const handleAddCategory = () => {
     setModalMode('add');
     setSelectedCategory(null);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleAddSubcategory = (parentId: number) => {
+    setModalMode('add');
+    const parentCategory = flattenCategories(categories).find(cat => cat.id === parentId);
+    setSelectedCategory({ ...parentCategory, parentId } as Category);
     setIsAddDialogOpen(true);
   };
 
@@ -522,7 +530,7 @@ const Categories = () => {
         onSave={handleSaveCategory}
         category={selectedCategory}
         mode={modalMode}
-        categories={categories}
+        categories={flattenCategories(categories)}
       />
     </SidebarProvider>
   );

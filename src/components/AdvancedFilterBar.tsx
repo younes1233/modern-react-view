@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,12 +13,17 @@ interface AdvancedFilterBarProps {
   onSearch?: (term: string) => void;
   onStatusFilter?: (status: string) => void;
   onCategoryFilter?: (category: string) => void;
+  onDateRangeFilter?: (startDate: Date | undefined, endDate: Date | undefined) => void;
+  onAmountRangeFilter?: (min: number | undefined, max: number | undefined) => void;
   onExportExcel?: () => void;
   onExportPDF?: () => void;
   onExportCSV?: () => void;
   showStatusFilter?: boolean;
   showCategoryFilter?: boolean;
+  showDateFilter?: boolean;
+  showAmountFilter?: boolean;
   showExcelExport?: boolean;
+  showPDFExport?: boolean;
   exportLabel?: string;
   exportButton?: React.ReactNode;
 }
@@ -29,12 +35,17 @@ export function AdvancedFilterBar({
   onSearch,
   onStatusFilter,
   onCategoryFilter,
+  onDateRangeFilter,
+  onAmountRangeFilter,
   onExportExcel,
   onExportPDF,
   onExportCSV,
   showStatusFilter = false,
   showCategoryFilter = false,
+  showDateFilter = false,
+  showAmountFilter = false,
   showExcelExport = false,
+  showPDFExport = false,
   exportLabel = "Export",
   exportButton
 }: AdvancedFilterBarProps) {
@@ -106,7 +117,7 @@ export function AdvancedFilterBar({
               </Select>
             )}
 
-            {(showExcelExport || exportButton) && (
+            {(showExcelExport || showPDFExport || exportButton) && (
               exportButton || (
                 <ExportButton 
                   onExportExcel={onExportExcel}
