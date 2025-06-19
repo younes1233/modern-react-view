@@ -1,4 +1,3 @@
-
 import {
   BarChart3,
   Home,
@@ -64,9 +63,6 @@ const roleMenuItems = {
     ],
   },
   manager: {
-    main: [
-      { title: "Dashboard", url: "/", icon: Home, description: "Overview & analytics" },
-    ],
     catalog: [
       { title: "Products", url: "/products", icon: Package, description: "Manage inventory" },
       { title: "Categories", url: "/categories", icon: Settings, description: "Product categories" },
