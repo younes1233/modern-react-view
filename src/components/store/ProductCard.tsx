@@ -56,15 +56,18 @@ export function ProductCard({ product }: ProductCardProps) {
     ...product.thumbnails.map(thumb => ({ url: thumb.url, alt: thumb.alt }))
   ];
 
-  const discountPercentage = Math.floor(Math.random() * 30) + 10; // Mock discount
-  const originalPrice = Math.floor(product.price * 1.3);
+  const discountPercentage = product.originalPrice 
+    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
+    : Math.floor(Math.random() * 30) + 10;
+  
+  const originalPrice = product.originalPrice || Math.floor(product.price * 1.3);
 
   return (
     <>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 bg-white relative overflow-hidden">
+      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden">
         <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
-          {/* Product Image */}
-          <div className="aspect-square bg-white overflow-hidden p-3">
+          {/* Product Image - No padding/margin */}
+          <div className="aspect-square bg-white overflow-hidden">
             <img
               src={currentImage}
               alt={product.name}
@@ -73,22 +76,16 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
           
           {/* Discount badge - Top Left */}
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded">
-              -{discountPercentage}%
-            </Badge>
-          </div>
+          {product.isOnSale && (
+            <div className="absolute top-2 left-2">
+              <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                -{discountPercentage}%
+              </Badge>
+            </div>
+          )}
 
-          {/* Quick action buttons - Top Right */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-1">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={handleQuickView}
-              className="w-8 h-8 p-0 bg-white/90 shadow-md hover:bg-white"
-            >
-              <Eye className="w-4 h-4" />
-            </Button>
+          {/* Wishlist button - Top Right */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button
               size="sm"
               variant="secondary"
@@ -112,20 +109,41 @@ export function ProductCard({ product }: ProductCardProps) {
             </h3>
 
             {/* Price Section */}
-            <div className="flex items-center justify-between">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-bold text-gray-900">
-                    ${product.price}
-                  </span>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg font-bold text-gray-900">
+                ${product.price}
+              </span>
+              {product.isOnSale && (
+                <>
                   <span className="text-sm text-gray-500 line-through">
                     ${originalPrice}
                   </span>
-                </div>
-                <div className="text-xs text-red-500 font-medium">
-                  -{discountPercentage}%
-                </div>
+                  <span className="text-xs text-red-500 font-medium">
+                    -{discountPercentage}%
+                  </span>
+                </>
+              )}
+            </div>
+
+            {/* Bottom Section with Express and Add to Cart */}
+            <div className="flex items-center justify-between">
+              {/* Express Badge */}
+              <div className="flex items-center">
+                <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                  express
+                </Badge>
               </div>
+
+              {/* Add to Cart Button */}
+              <Button
+                size="sm"
+                onClick={handleAddToCart}
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-3 py-1 text-xs"
+                variant="outline"
+              >
+                <ShoppingCart className="w-3 h-3 mr-1" />
+                Add
+              </Button>
             </div>
           </div>
         </CardContent>
