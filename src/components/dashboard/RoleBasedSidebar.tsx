@@ -1,4 +1,3 @@
-
 import {
   BarChart3,
   Home,
@@ -89,9 +88,6 @@ export function RoleBasedSidebar() {
 
   const menuItems = roleMenuItems[user.role] || {};
 
-  // Check if we should show management sections (only for super_admin on dashboard)
-  const showManagementSections = user.role === 'super_admin' && location.pathname === '/';
-
   const renderMenuGroup = (items: any[], title: string) => {
     if (!items || items.length === 0) return null;
     
@@ -171,7 +167,7 @@ export function RoleBasedSidebar() {
 
       <SidebarContent className="px-4 py-4 space-y-6">
         {menuItems.main && renderMenuGroup(menuItems.main, "Overview")}
-        {menuItems.management && showManagementSections && (
+        {menuItems.management && (
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.management, "Management")}
