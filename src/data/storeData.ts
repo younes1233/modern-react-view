@@ -537,7 +537,7 @@ let sampleProductListings: ProductListing[] = [
     order: 3
   }, 
   {
-    id: 3,
+    id: 4,
     title: "Sale Items",
     subtitle: "Great deals you don't want to miss",
     type: "sale",
@@ -548,7 +548,7 @@ let sampleProductListings: ProductListing[] = [
     order: 4
   },
   {
-    id: 3,
+    id: 5,
     title: "Sale Items",
     subtitle: "Great deals you don't want to miss",
     type: "sale",
