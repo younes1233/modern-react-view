@@ -20,6 +20,7 @@ import Customers from "./pages/Customers";
 import Analytics from "./pages/Analytics";
 import SalesReport from "./pages/SalesReport";
 import StoreManagement from "./pages/StoreManagement";
+import Coupons from "./pages/Coupons";
 import Store from "./pages/store/Store";
 import StoreCategories from "./pages/store/StoreCategories";
 import ProductDetail from "./pages/store/ProductDetail";
@@ -83,6 +84,11 @@ const App = () => (
                     <Route path="/customers" element={
                       <ProtectedRoute>
                         <Customers />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/coupons" element={
+                      <ProtectedRoute>
+                        <Coupons />
                       </ProtectedRoute>
                     } />
                     <Route path="/analytics" element={

@@ -12,6 +12,7 @@ import {
   Store,
   RotateCcw,
   ChevronRight,
+  Tag,
 } from "lucide-react"
 
 import {
@@ -81,6 +82,12 @@ const businessItems = [
     url: "/customers",
     icon: Users,
     description: "Customer database"
+  },
+  {
+    title: "Coupons",
+    url: "/coupons",
+    icon: Tag,
+    description: "Discount management"
   },
 ]
 
