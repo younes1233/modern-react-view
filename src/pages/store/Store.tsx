@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Star, Heart, ShoppingCart, Zap, Shield, Truck } from "lucide-react";
-import { storeData } from "@/data/storeData";
+import { getProducts, getFeaturedProducts, getNewArrivals, getProductsOnSale, getProductListings } from "@/data/storeData";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -21,9 +21,15 @@ const Store = () => {
     );
   };
 
-  const featuredProducts = storeData.products.slice(0, 8);
-  const newArrivals = storeData.products.slice(8, 16);
-  const bestSellers = storeData.products.slice(0, 6);
+  const products = getProducts();
+  const featuredProducts = getFeaturedProducts();
+  const newArrivals = getNewArrivals();
+  const bestSellers = getProductsOnSale();
+  const productListings = getProductListings();
+
+  // Find the product listings for sections
+  const featuredListing = productListings.find(listing => listing.type === 'featured');
+  const newArrivalsListing = productListings.find(listing => listing.type === 'newArrivals');
 
   return (
     <div className="min-h-screen bg-background">
@@ -77,7 +83,7 @@ const Store = () => {
               <div className="relative">
                 <div className="relative z-10">
                   <img 
-                    src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80" 
+                    src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2126&q=80" 
                     alt="Premium Products" 
                     className="rounded-2xl shadow-2xl w-full h-[500px] object-cover"
                   />
@@ -126,25 +132,17 @@ const Store = () => {
         </section>
 
         {/* Shop by Category */}
-        <ShopByCategory categories={storeData.categories} />
+        <ShopByCategory />
 
         {/* Featured Products */}
-        <ProductSection 
-          title="Featured Products"
-          subtitle="Discover our most popular items"
-          products={featuredProducts}
-          onToggleFavorite={toggleFavorite}
-          favorites={favorites}
-        />
+        {featuredListing && (
+          <ProductSection listing={featuredListing} />
+        )}
 
         {/* New Arrivals */}
-        <ProductSection 
-          title="New Arrivals"
-          subtitle="Latest additions to our collection"
-          products={newArrivals}
-          onToggleFavorite={toggleFavorite}
-          favorites={favorites}
-        />
+        {newArrivalsListing && (
+          <ProductSection listing={newArrivalsListing} />
+        )}
 
         {/* Best Sellers */}
         <section className="py-16 bg-muted/30 dark:bg-muted/10">
@@ -160,8 +158,6 @@ const Store = () => {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onToggleFavorite={toggleFavorite}
-                  isFavorite={favorites.includes(product.id)}
                 />
               ))}
             </div>
