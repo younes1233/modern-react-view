@@ -509,7 +509,7 @@ let sampleProductListings: ProductListing[] = [
     subtitle: "Hand-picked items just for you",
     type: "featured",
     maxProducts: 8,
-    layout: "grid",
+    layout: "slider",
     showTitle: true,
     isActive: true,
     order: 1
@@ -531,7 +531,7 @@ let sampleProductListings: ProductListing[] = [
     subtitle: "Great deals you don't want to miss",
     type: "sale",
     maxProducts: 4,
-    layout: "grid",
+    layout: "slider",
     showTitle: true,
     isActive: true,
     order: 3
