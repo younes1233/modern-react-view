@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -6,7 +5,8 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
-import { ActionButtons } from "@/components/ActionButtons";
+import { OrderStatusEditor } from "@/components/OrderStatusEditor";
+import { OrderActions } from "@/components/OrderActions";
 import { Package, Truck, Clock, XCircle, DollarSign, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToExcel } from "@/utils/exportUtils";
@@ -99,43 +99,71 @@ const Orders = () => {
     });
   };
 
-  // Action handlers for orders
-  const handleViewOrder = (orderId: string | number) => {
+  const handleStatusChange = (orderId: string, newStatus: string) => {
+    setOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+    setFilteredOrders(prev => prev.map(order => 
+      order.id === orderId ? { ...order, status: newStatus } : order
+    ));
+  };
+
+  const handleViewOrder = (orderId: string) => {
     toast({
       title: "Viewing Order",
-      description: `Opening details for order ${orderId}`,
+      description: `Opening detailed view for order ${orderId}`,
     });
+    console.log(`Viewing order: ${orderId}`);
   };
 
-  const handleEditOrder = (orderId: string | number) => {
+  const handleEditOrder = (orderId: string) => {
     toast({
       title: "Edit Order",
-      description: `Editing order ${orderId}`,
+      description: `Opening edit form for order ${orderId}`,
     });
+    console.log(`Editing order: ${orderId}`);
   };
 
-  const handleDeleteOrder = (orderId: string | number) => {
+  const handleDeleteOrder = (orderId: string) => {
     setOrders(prev => prev.filter(order => order.id !== orderId));
     setFilteredOrders(prev => prev.filter(order => order.id !== orderId));
     toast({
       title: "Order Deleted",
-      description: `Order ${orderId} has been deleted`,
+      description: `Order ${orderId} has been permanently deleted`,
       variant: "destructive",
     });
   };
 
-  const handleDownloadOrder = (orderId: string | number) => {
+  const handleDownloadOrder = (orderId: string) => {
     toast({
       title: "Download Started",
       description: `Downloading invoice for order ${orderId}`,
     });
+    console.log(`Downloading invoice for order: ${orderId}`);
   };
 
-  const handleEmailOrder = (orderId: string | number) => {
+  const handleEmailOrder = (orderId: string) => {
     toast({
       title: "Email Sent",
-      description: `Email notification sent for order ${orderId}`,
+      description: `Order confirmation email sent for ${orderId}`,
     });
+    console.log(`Sending email for order: ${orderId}`);
+  };
+
+  const handleTrackOrder = (orderId: string) => {
+    toast({
+      title: "Tracking Information",
+      description: `Showing tracking details for order ${orderId}`,
+    });
+    console.log(`Tracking order: ${orderId}`);
+  };
+
+  const handleRefundOrder = (orderId: string) => {
+    toast({
+      title: "Refund Processing",
+      description: `Refund has been initiated for order ${orderId}`,
+    });
+    console.log(`Processing refund for order: ${orderId}`);
   };
 
   const getStatusBadge = (status: string) => {
@@ -279,22 +307,24 @@ const Orders = () => {
                           <td className="p-4 text-gray-600 hidden sm:table-cell">{order.date}</td>
                           <td className="p-4 text-gray-600 hidden lg:table-cell">{order.items}</td>
                           <td className="p-4 font-semibold text-gray-900">${order.total}</td>
-                          <td className="p-4">{getStatusBadge(order.status)}</td>
                           <td className="p-4">
-                            <ActionButtons
-                              itemId={order.id}
-                              itemName={`Order ${order.id}`}
-                              variant="compact"
+                            <OrderStatusEditor
+                              orderId={order.id}
+                              currentStatus={order.status}
+                              onStatusChange={handleStatusChange}
+                            />
+                          </td>
+                          <td className="p-4">
+                            <OrderActions
+                              orderId={order.id}
+                              orderStatus={order.status}
                               onView={handleViewOrder}
                               onEdit={handleEditOrder}
                               onDelete={handleDeleteOrder}
                               onDownload={handleDownloadOrder}
                               onEmail={handleEmailOrder}
-                              showView={true}
-                              showEdit={true}
-                              showDelete={true}
-                              showDownload={true}
-                              showEmail={true}
+                              onTrack={handleTrackOrder}
+                              onRefund={handleRefundOrder}
                             />
                           </td>
                         </tr>

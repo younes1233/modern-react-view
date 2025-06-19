@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -256,6 +255,30 @@ const Categories = () => {
       title: "Export Started",
       description: "Categories are being exported to Excel"
     });
+  };
+
+  const getParentCategoryName = (parentId?: number): string => {
+    if (!parentId) return "";
+    const parent = flattenCategories(categories).find(cat => cat.id === parentId);
+    return parent ? parent.name : "";
+  };
+
+  const getCategoryPath = (category: Category): string => {
+    if (category.level === 0) return category.name;
+    
+    const parent = flattenCategories(categories).find(cat => cat.id === category.parentId);
+    if (!parent) return category.name;
+    
+    if (parent.level === 0) {
+      return `${parent.name} > ${category.name}`;
+    }
+    
+    const grandParent = flattenCategories(categories).find(cat => cat.id === parent.parentId);
+    if (grandParent) {
+      return `${grandParent.name} > ${parent.name} > ${category.name}`;
+    }
+    
+    return `${parent.name} > ${category.name}`;
   };
 
   const renderCategoryRow = (category: Category) => {
@@ -577,7 +600,12 @@ const Categories = () => {
                             </Badge>
                           </div>
                           <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{category.name}</h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">{category.description}</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{category.description}</p>
+                          {category.parentId && (
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
+                              📁 {getCategoryPath(category)}
+                            </p>
+                          )}
                           <div className="flex justify-between items-center mb-4">
                             <span className="text-sm text-gray-500 dark:text-gray-400">{category.products} products</span>
                             <span className="text-sm font-bold text-green-600 dark:text-green-400">${category.revenue.toLocaleString()}</span>
