@@ -21,9 +21,15 @@ import {
   Clock
 } from "lucide-react";
 import { useRoleAuth } from "@/contexts/RoleAuthContext";
+import { Navigate } from "react-router-dom";
 
 const Index = () => {
   const { user } = useRoleAuth();
+
+  // Redirect customers to store (they shouldn't be here)
+  if (user?.role === 'customer') {
+    return <Navigate to="/store" replace />;
+  }
 
   // Different dashboard content based on role
   const getDashboardContent = () => {
@@ -283,6 +289,13 @@ const Index = () => {
         );
     }
   };
+
+  // Only show sidebar and header for dashboard users (not customers)
+  const hasDashboardAccess = user && user.role !== 'customer';
+
+  if (!hasDashboardAccess) {
+    return <Navigate to="/store" replace />;
+  }
 
   return (
     <SidebarProvider>

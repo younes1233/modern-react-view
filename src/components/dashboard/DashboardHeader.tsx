@@ -3,7 +3,7 @@ import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAuth } from "@/contexts/RoleAuthContext";
 import { LogOut, User, ExternalLink, Settings, Upload, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -18,7 +18,7 @@ import { MassUploadModal } from "@/components/MassUploadModal";
 import { ProfileSettingsModal } from "@/components/ProfileSettingsModal";
 
 export function DashboardHeader() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useRoleAuth();
   const [isMassUploadOpen, setIsMassUploadOpen] = useState(false);
   const [uploadType, setUploadType] = useState<'products' | 'categories'>('products');
   const [isProfileOpen, setIsProfileOpen] = useState(false);
@@ -48,31 +48,33 @@ export function DashboardHeader() {
           
           <ThemeToggle />
           
-          {/* Settings Button */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Settings className="h-4 w-4" />
-                Settings
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Application Settings</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleMassUpload('products')}>
-                <Upload className="mr-2 h-4 w-4" />
-                Mass Upload Products
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleMassUpload('categories')}>
-                <Upload className="mr-2 h-4 w-4" />
-                Mass Upload Categories
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Download className="mr-2 h-4 w-4" />
-                Export All Data
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Settings Button - Only for super admin */}
+          {user?.role === 'super_admin' && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings className="h-4 w-4" />
+                  Settings
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Application Settings</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => handleMassUpload('products')}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Mass Upload Products
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleMassUpload('categories')}>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Mass Upload Categories
+                </DropdownMenuItem>
+                <DropdownMenuItem>
+                  <Download className="mr-2 h-4 w-4" />
+                  Export All Data
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           {/* Account Menu */}
           <DropdownMenu>
@@ -102,12 +104,14 @@ export function DashboardHeader() {
         </div>
       </header>
 
-      <MassUploadModal
-        isOpen={isMassUploadOpen}
-        onClose={() => setIsMassUploadOpen(false)}
-        type={uploadType}
-        onUploadComplete={handleUploadComplete}
-      />
+      {user?.role === 'super_admin' && (
+        <MassUploadModal
+          isOpen={isMassUploadOpen}
+          onClose={() => setIsMassUploadOpen(false)}
+          type={uploadType}
+          onUploadComplete={handleUploadComplete}
+        />
+      )}
 
       <ProfileSettingsModal
         isOpen={isProfileOpen}
