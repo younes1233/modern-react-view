@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from "react";
-import { ProductListing, getProductsForListing } from "@/data/storeData";
+import { ProductListing, getProductsForListing, getDisplaySettings } from "@/data/storeData";
 import { ProductCard } from "./ProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProductSectionProps {
   listing: ProductListing;
@@ -12,18 +13,21 @@ interface ProductSectionProps {
 export function ProductSection({ listing }: ProductSectionProps) {
   const [products, setProducts] = useState(() => getProductsForListing(listing));
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [displaySettings, setDisplaySettings] = useState(() => getDisplaySettings());
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    const refreshProducts = () => {
+    const refreshData = () => {
       console.log("Refreshing products for listing:", listing.title);
       setProducts(getProductsForListing(listing));
+      setDisplaySettings(getDisplaySettings());
     };
 
-    refreshProducts();
+    refreshData();
 
     // Listen for data updates
     const handleDataUpdate = () => {
-      refreshProducts();
+      refreshData();
     };
 
     window.addEventListener('storeDataUpdated', handleDataUpdate);
@@ -40,7 +44,8 @@ export function ProductSection({ listing }: ProductSectionProps) {
     return null;
   }
 
-  const productsPerSlide = 6;
+  // Responsive products per slide based on settings and screen size
+  const productsPerSlide = isMobile ? 2 : 6;
   const totalSlides = Math.ceil(products.length / productsPerSlide);
 
   const nextSlide = () => {
@@ -49,6 +54,10 @@ export function ProductSection({ listing }: ProductSectionProps) {
 
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  };
+
+  const goToSlide = (slideIndex: number) => {
+    setCurrentSlide(slideIndex);
   };
 
   const startIndex = currentSlide * productsPerSlide;
@@ -72,43 +81,71 @@ export function ProductSection({ listing }: ProductSectionProps) {
         )}
 
         <div className="relative">
-          {/* Product Grid - Exactly 6 products per slide */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {visibleProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
+          {/* Product Grid Container */}
+          <div className="overflow-hidden">
+            <div 
+              className="flex transition-transform duration-300 ease-in-out"
+              style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+            >
+              {Array.from({ length: totalSlides }).map((_, slideIndex) => {
+                const slideStartIndex = slideIndex * productsPerSlide;
+                const slideProducts = products.slice(slideStartIndex, slideStartIndex + productsPerSlide);
+                
+                return (
+                  <div
+                    key={slideIndex}
+                    className="w-full flex-shrink-0"
+                  >
+                    <div className={`grid gap-4 ${
+                      isMobile 
+                        ? 'grid-cols-2' 
+                        : 'grid-cols-6'
+                    }`}>
+                      {slideProducts.map((product) => (
+                        <ProductCard key={product.id} product={product} />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Navigation Arrows - Rectangular buttons */}
+          {/* Navigation Arrows */}
           {totalSlides > 1 && (
             <>
               <Button
                 variant="outline"
                 onClick={prevSlide}
-                className="absolute top-1/2 -left-4 transform -translate-y-1/2 w-8 h-16 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md hidden lg:flex items-center justify-center"
+                disabled={currentSlide === 0}
+                className="absolute top-1/2 -left-4 transform -translate-y-1/2 w-10 h-16 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
               >
-                <ChevronLeft className="w-4 h-4 text-gray-600" />
+                <ChevronLeft className="w-5 h-5 text-gray-600" />
               </Button>
               <Button
                 variant="outline"
                 onClick={nextSlide}
-                className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-8 h-16 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md hidden lg:flex items-center justify-center"
+                disabled={currentSlide === totalSlides - 1}
+                className="absolute top-1/2 -right-4 transform -translate-y-1/2 w-10 h-16 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
               >
-                <ChevronRight className="w-4 h-4 text-gray-600" />
+                <ChevronRight className="w-5 h-5 text-gray-600" />
               </Button>
             </>
           )}
 
-          {/* Pagination dots */}
+          {/* Pagination Dots */}
           {totalSlides > 1 && (
-            <div className="flex justify-center mt-6 space-x-2">
+            <div className="flex justify-center mt-8 space-x-3">
               {Array.from({ length: totalSlides }).map((_, index) => (
                 <button
                   key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    index === currentSlide ? 'bg-cyan-500' : 'bg-gray-300'
+                  onClick={() => goToSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                    index === currentSlide 
+                      ? 'bg-cyan-500 scale-110' 
+                      : 'bg-gray-300 hover:bg-gray-400'
                   }`}
+                  aria-label={`Go to slide ${index + 1}`}
                 />
               ))}
             </div>
