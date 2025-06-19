@@ -135,49 +135,95 @@ const Store = () => {
   return (
     <StoreLayout>
       <div className="min-h-screen">
-        {/* Hero Section */}
+        {/* Modern Hero Section */}
         {heroSection && heroSection.isActive && (
-          <div className="relative h-[600px] md:h-[700px] lg:h-[800px] overflow-hidden">
-            <img
-              src={heroSection.backgroundImage}
-              alt="Hero Background"
-              className="w-full h-full object-cover"
-            />
+          <div className="relative min-h-screen overflow-hidden">
+            {/* Background Image with Parallax Effect */}
+            <div className="absolute inset-0">
+              <img
+                src="https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3"
+                alt="Modern Shopping Experience"
+                className="w-full h-full object-cover scale-105 transform transition-transform duration-20000 hover:scale-110"
+              />
+            </div>
             
-            {/* Enhanced Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/40 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+            {/* Modern Gradient Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/90 via-purple-900/70 to-pink-900/60" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/30 via-transparent to-purple-900/30" />
             
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* Animated Background Elements */}
+            <div className="absolute inset-0 overflow-hidden">
+              <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-blue-400/20 to-purple-600/20 rounded-full blur-3xl animate-pulse"></div>
+              <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-pink-400/20 to-indigo-600/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+            </div>
+            
+            <div className="relative h-full flex items-center justify-center min-h-screen">
               <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="max-w-5xl mx-auto text-center text-white">
-                  <h1 className="text-5xl sm:text-6xl lg:text-8xl font-bold mb-6 lg:mb-8 leading-tight animate-fade-in">
-                    {heroSection.title}
-                  </h1>
-                  <p className="text-xl sm:text-2xl lg:text-3xl mb-12 lg:mb-16 leading-relaxed animate-fade-in max-w-4xl mx-auto opacity-90">
-                    {heroSection.subtitle}
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-6 justify-center animate-fade-in">
-                    <Link to={heroSection.ctaLink}>
-                      <Button 
-                        onClick={handleShopNow}
-                        size="lg"
-                        className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl font-semibold text-xl transition-all duration-300 transform hover:scale-105 shadow-2xl hover:shadow-blue-500/25"
-                      >
-                        {heroSection.ctaText}
-                      </Button>
-                    </Link>
-                    <Link to="/store/categories">
-                      <Button 
-                        variant="outline"
-                        size="lg"
-                        className="border-2 border-white/30 hover:border-white text-white hover:text-gray-900 hover:bg-white/90 backdrop-blur-sm px-12 py-6 rounded-2xl font-semibold text-xl transition-all duration-300 transform hover:scale-105 shadow-lg"
-                      >
-                        Browse Categories
-                      </Button>
-                    </Link>
+                <div className="max-w-6xl mx-auto text-center text-white">
+                  {/* Modern Typography */}
+                  <div className="space-y-8 animate-fade-in">
+                    <h1 className="text-6xl sm:text-7xl lg:text-9xl font-black mb-8 leading-tight tracking-tight">
+                      <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+                        {heroSection.title}
+                      </span>
+                    </h1>
+                    
+                    <p className="text-xl sm:text-2xl lg:text-4xl mb-12 leading-relaxed max-w-5xl mx-auto font-light opacity-90">
+                      <span className="bg-gradient-to-r from-gray-100 to-white bg-clip-text text-transparent">
+                        {heroSection.subtitle}
+                      </span>
+                    </p>
+                    
+                    {/* Modern CTA Buttons */}
+                    <div className="flex flex-col sm:flex-row gap-6 justify-center items-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                      <Link to={heroSection.ctaLink}>
+                        <Button 
+                          onClick={handleShopNow}
+                          size="lg"
+                          className="group relative overflow-hidden bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 hover:from-blue-700 hover:via-purple-700 hover:to-indigo-800 text-white px-16 py-8 rounded-2xl font-bold text-2xl transition-all duration-500 transform hover:scale-110 shadow-2xl hover:shadow-blue-500/50 border border-white/20"
+                        >
+                          <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                          <span className="relative z-10">{heroSection.ctaText}</span>
+                        </Button>
+                      </Link>
+                      
+                      <Link to="/store/categories">
+                        <Button 
+                          variant="outline"
+                          size="lg"
+                          className="group relative overflow-hidden border-2 border-white/40 hover:border-white text-white hover:text-gray-900 hover:bg-white/95 backdrop-blur-xl px-16 py-8 rounded-2xl font-bold text-2xl transition-all duration-500 transform hover:scale-110 shadow-2xl bg-white/10"
+                        >
+                          <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/30 to-white/0 transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></span>
+                          <span className="relative z-10">Browse Categories</span>
+                        </Button>
+                      </Link>
+                    </div>
+
+                    {/* Modern Stats/Features */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20 animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                      <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                        <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">10k+</div>
+                        <div className="text-lg opacity-90">Happy Customers</div>
+                      </div>
+                      <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                        <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">50k+</div>
+                        <div className="text-lg opacity-90">Products</div>
+                      </div>
+                      <div className="backdrop-blur-xl bg-white/10 rounded-3xl p-8 border border-white/20 hover:bg-white/20 transition-all duration-300 transform hover:scale-105">
+                        <div className="text-4xl font-bold mb-2 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">24/7</div>
+                        <div className="text-lg opacity-90">Support</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+
+            {/* Scroll Indicator */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
+              <div className="w-6 h-10 border-2 border-white/50 rounded-full flex justify-center">
+                <div className="w-1 h-3 bg-white/70 rounded-full mt-2 animate-pulse"></div>
               </div>
             </div>
           </div>

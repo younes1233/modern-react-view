@@ -18,6 +18,11 @@ export function HeroManagement() {
 
   useEffect(() => {
     const hero = getHeroSection();
+    // Update with modern image if using old placeholder
+    if (hero && hero.backgroundImage && hero.backgroundImage.includes('placeholder')) {
+      hero.backgroundImage = "https://images.unsplash.com/photo-1441986300917-64674bd600d8?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3";
+      updateHeroSection(hero);
+    }
     setHeroSection(hero);
     setFormData(hero);
   }, []);
@@ -82,12 +87,14 @@ export function HeroManagement() {
                 alt="Hero Background"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-br from-black/80 via-black/40 to-transparent">
+              <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/80 via-purple-900/60 to-pink-900/40">
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
                 <div className="relative h-full flex items-center justify-center">
                   <div className="text-center px-6 max-w-2xl">
                     <h1 className="text-3xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-                      {formData.title || heroSection.title}
+                      <span className="bg-gradient-to-r from-white via-blue-100 to-purple-100 bg-clip-text text-transparent">
+                        {formData.title || heroSection.title}
+                      </span>
                     </h1>
                     <p className="text-lg text-white/90 mb-6 leading-relaxed">
                       {formData.subtitle || heroSection.subtitle}
@@ -153,7 +160,7 @@ export function HeroManagement() {
                 value={formData.backgroundImage || ''}
                 onChange={(e) => handleInputChange('backgroundImage', e.target.value)}
                 disabled={!isEditing}
-                placeholder="https://example.com/image.jpg"
+                placeholder="https://images.unsplash.com/photo-1441986300917-64674bd600d8"
               />
             </div>
 

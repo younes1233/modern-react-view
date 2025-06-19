@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -29,7 +30,7 @@ const statusOptions = [
 ];
 
 const Orders = () => {
-  const [orders] = useState(mockOrders);
+  const [orders, setOrders] = useState(mockOrders);
   const [filteredOrders, setFilteredOrders] = useState(mockOrders);
   const { toast } = useToast();
 
@@ -95,6 +96,45 @@ const Orders = () => {
     toast({
       title: "Export Successful",
       description: "Orders data has been exported to Excel file"
+    });
+  };
+
+  // Action handlers for orders
+  const handleViewOrder = (orderId: string | number) => {
+    toast({
+      title: "Viewing Order",
+      description: `Opening details for order ${orderId}`,
+    });
+  };
+
+  const handleEditOrder = (orderId: string | number) => {
+    toast({
+      title: "Edit Order",
+      description: `Editing order ${orderId}`,
+    });
+  };
+
+  const handleDeleteOrder = (orderId: string | number) => {
+    setOrders(prev => prev.filter(order => order.id !== orderId));
+    setFilteredOrders(prev => prev.filter(order => order.id !== orderId));
+    toast({
+      title: "Order Deleted",
+      description: `Order ${orderId} has been deleted`,
+      variant: "destructive",
+    });
+  };
+
+  const handleDownloadOrder = (orderId: string | number) => {
+    toast({
+      title: "Download Started",
+      description: `Downloading invoice for order ${orderId}`,
+    });
+  };
+
+  const handleEmailOrder = (orderId: string | number) => {
+    toast({
+      title: "Email Sent",
+      description: `Email notification sent for order ${orderId}`,
     });
   };
 
@@ -245,9 +285,16 @@ const Orders = () => {
                               itemId={order.id}
                               itemName={`Order ${order.id}`}
                               variant="compact"
-                              showEmail
-                              showDownload
-                              showDelete={false}
+                              onView={handleViewOrder}
+                              onEdit={handleEditOrder}
+                              onDelete={handleDeleteOrder}
+                              onDownload={handleDownloadOrder}
+                              onEmail={handleEmailOrder}
+                              showView={true}
+                              showEdit={true}
+                              showDelete={true}
+                              showDownload={true}
+                              showEmail={true}
                             />
                           </td>
                         </tr>
