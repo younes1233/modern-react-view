@@ -37,8 +37,11 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
   const requiredFields = type === 'products' ? requiredFieldsProducts : requiredFieldsCategories;
 
   const handleFileSelect = (files: File[]) => {
+    console.log('Files selected:', files);
     if (files.length > 0) {
       const file = files[0];
+      console.log('File type:', file.type, 'File name:', file.name);
+      
       if (file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' || 
           file.type === 'application/vnd.ms-excel' ||
           file.name.endsWith('.xlsx') || 
@@ -56,19 +59,25 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
   };
 
   const validateFile = async (file: File) => {
+    console.log('Starting file validation for:', file.name);
     setIsProcessing(true);
     setUploadProgress(20);
+    setValidationResult(null);
 
     try {
       const data = await file.arrayBuffer();
+      setUploadProgress(40);
+      
       const workbook = XLSX.read(data, { type: 'array' });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const jsonData = XLSX.utils.sheet_to_json(worksheet);
-
-      setUploadProgress(50);
+      
+      console.log('Parsed data:', jsonData);
+      setUploadProgress(70);
 
       const validation = validateData(jsonData);
+      console.log('Validation result:', validation);
       setValidationResult(validation);
       setUploadProgress(100);
 
@@ -77,8 +86,15 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
           title: "File Validated Successfully",
           description: `${validation.data.length} ${type} ready for upload`
         });
+      } else {
+        toast({
+          title: "Validation Issues Found",
+          description: `Found ${validation.errors.length} errors that need to be fixed`,
+          variant: "destructive"
+        });
       }
     } catch (error) {
+      console.error('File processing error:', error);
       toast({
         title: "File Processing Error",
         description: "Unable to process the Excel file. Please check the format.",
@@ -175,7 +191,9 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
   };
 
   const handleUpload = () => {
+    console.log('Starting upload process');
     if (validationResult && validationResult.isValid) {
+      console.log('Uploading data:', validationResult.data);
       onUploadComplete(validationResult.data);
       toast({
         title: "Upload Successful",
@@ -183,6 +201,12 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
       });
       onClose();
       resetState();
+    } else {
+      toast({
+        title: "Cannot Upload",
+        description: "Please fix validation errors before uploading",
+        variant: "destructive"
+      });
     }
   };
 
@@ -209,8 +233,14 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
     });
   };
 
+  // Reset state when modal closes
+  const handleClose = () => {
+    resetState();
+    onClose();
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -239,6 +269,20 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
             placeholder="Drop your Excel file here or click to upload"
             maxFiles={1}
           />
+
+          {uploadedFile && (
+            <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
+              <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded flex items-center justify-center">
+                <Upload className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div className="flex-1">
+                <p className="font-medium text-sm">{uploadedFile.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {(uploadedFile.size / 1024).toFixed(1)} KB
+                </p>
+              </div>
+            </div>
+          )}
 
           {isProcessing && (
             <div className="space-y-2">
@@ -306,12 +350,12 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleClose}>
             Cancel
           </Button>
           <Button 
             onClick={handleUpload} 
-            disabled={!validationResult?.isValid}
+            disabled={!validationResult?.isValid || isProcessing}
             className="gap-2"
           >
             <Upload className="w-4 h-4" />
