@@ -18,10 +18,12 @@ import {
   Activity,
   Target,
   Package,
-  Clock
+  Clock,
+  UserPlus,
+  CheckCircle
 } from "lucide-react";
 import { useRoleAuth } from "@/contexts/RoleAuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 
 const Index = () => {
   const { user } = useRoleAuth();
@@ -95,9 +97,11 @@ const Index = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <Button className="h-20 flex flex-col gap-2 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700">
-                    <Package className="w-6 h-6" />
-                    <span>Add New Product</span>
+                  <Button asChild className="h-20 flex flex-col gap-2 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700">
+                    <Link to="/seller-products">
+                      <Package className="w-6 h-6" />
+                      <span>Manage Products</span>
+                    </Link>
                   </Button>
                   <Button className="h-20 flex flex-col gap-2 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
                     <TrendingUp className="w-6 h-6" />
@@ -206,12 +210,46 @@ const Index = () => {
 
             <MetricCards />
 
-            {/* Quick Actions */}
+            {/* Management Quick Actions */}
             <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
               <CardHeader className="pb-4">
                 <CardTitle className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
                   <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
                     <ArrowUpRight className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                  </div>
+                  Management
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <Button asChild className="h-20 flex flex-col gap-2 bg-gradient-to-br from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <Link to="/user-management">
+                      <Users className="w-6 h-6" />
+                      <span className="text-sm font-medium">Manage Users</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button asChild className="h-20 flex flex-col gap-2 bg-gradient-to-br from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <Link to="/product-approval">
+                      <CheckCircle className="w-6 h-6" />
+                      <span className="text-sm font-medium">Approve Products</span>
+                    </Link>
+                  </Button>
+                  
+                  <Button className="h-20 flex flex-col gap-2 bg-gradient-to-br from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-200">
+                    <UserPlus className="w-6 h-6" />
+                    <span className="text-sm font-medium">Add Seller</span>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Regular Quick Actions */}
+            <Card className="shadow-lg border-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                  <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                    <ArrowUpRight className="w-5 h-5 text-green-600 dark:text-green-400" />
                   </div>
                   Quick Actions
                 </CardTitle>
@@ -294,6 +332,23 @@ const Index = () => {
         );
     }
   };
+
+  // Only show full dashboard layout for users with dashboard access
+  const shouldShowFullDashboard = user.role === 'super_admin' || user.role === 'manager' || user.role === 'seller';
+
+  if (!shouldShowFullDashboard) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold mb-4">Access Denied</h1>
+          <p className="text-muted-foreground mb-4">You don't have permission to access this dashboard.</p>
+          <Button asChild>
+            <Link to="/store">Go to Store</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <SidebarProvider>
