@@ -43,11 +43,6 @@ export function ProductCard({ product }: ProductCardProps) {
     setShowQuickView(true);
   };
 
-  const handleImageZoom = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowImageZoom(true);
-  };
-
   const handleProductClick = () => {
     navigate(`/store/product/${product.slug}`);
   };
@@ -66,9 +61,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative">
-        <div className="relative overflow-hidden bg-white">
-          <div className="aspect-square bg-gray-50 overflow-hidden p-4" onClick={handleProductClick}>
+      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-100 bg-white relative overflow-hidden">
+        <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
+          {/* Product Image */}
+          <div className="aspect-square bg-white overflow-hidden p-3">
             <img
               src={currentImage}
               alt={product.name}
@@ -76,13 +72,20 @@ export function ProductCard({ product }: ProductCardProps) {
             />
           </div>
           
-          {/* Quick action buttons */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-2">
+          {/* Discount badge - Top Left */}
+          <div className="absolute top-2 left-2">
+            <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+              -{discountPercentage}%
+            </Badge>
+          </div>
+
+          {/* Quick action buttons - Top Right */}
+          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 space-y-1">
             <Button
               size="sm"
               variant="secondary"
               onClick={handleQuickView}
-              className="w-8 h-8 p-0 bg-white shadow-md hover:bg-gray-100"
+              className="w-8 h-8 p-0 bg-white/90 shadow-md hover:bg-white"
             >
               <Eye className="w-4 h-4" />
             </Button>
@@ -93,36 +96,22 @@ export function ProductCard({ product }: ProductCardProps) {
               className={`w-8 h-8 p-0 shadow-md ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'bg-white hover:bg-gray-100'
+                  : 'bg-white/90 hover:bg-white'
               }`}
             >
               <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
             </Button>
-          </div>
-
-          {/* Discount badge */}
-          <div className="absolute top-2 left-2">
-            <Badge className="bg-red-500 text-white text-xs px-2 py-1">
-              -{discountPercentage}%
-            </Badge>
-          </div>
-
-          {/* Express badge */}
-          <div className="absolute bottom-2 left-2">
-            <Badge className="bg-red-600 text-white text-xs px-2 py-1 rounded-full">
-              🚚 express
-            </Badge>
           </div>
         </div>
 
         <CardContent className="p-3" onClick={handleProductClick}>
           <div className="space-y-2">
             {/* Product Name */}
-            <h3 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2.5rem]">
+            <h3 className="font-normal text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2.5rem]">
               {product.name}
             </h3>
 
-            {/* Price */}
+            {/* Price Section */}
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
@@ -133,18 +122,10 @@ export function ProductCard({ product }: ProductCardProps) {
                     ${originalPrice}
                   </span>
                 </div>
+                <div className="text-xs text-red-500 font-medium">
+                  -{discountPercentage}%
+                </div>
               </div>
-              
-              {/* Add to cart button */}
-              <Button
-                size="sm"
-                onClick={handleAddToCart}
-                disabled={!product.inStock}
-                className="w-8 h-8 p-0 bg-gray-100 hover:bg-gray-200 text-gray-600"
-                variant="ghost"
-              >
-                <ShoppingCart className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         </CardContent>
