@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
@@ -15,6 +16,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
+import { PackageDiscountModal } from "@/components/coupons/PackageDiscountModal";
 import { 
   Plus, 
   Edit, 
@@ -128,6 +130,32 @@ const initialPackageDiscounts = [
   }
 ];
 
+const validatePackageDiscount = (packageData: any): string[] => {
+  const errors: string[] = [];
+  
+  if (!packageData.name || packageData.name.trim() === '') {
+    errors.push('Package name is required');
+  }
+  
+  if (!packageData.discountType) {
+    errors.push('Discount type is required');
+  }
+  
+  if (packageData.discountValue === undefined || packageData.discountValue < 0) {
+    errors.push('Discount value must be a positive number');
+  }
+  
+  if (packageData.minQuantity < 1) {
+    errors.push('Minimum quantity must be at least 1');
+  }
+  
+  if (packageData.maxQuantity && packageData.maxQuantity < packageData.minQuantity) {
+    errors.push('Maximum quantity must be greater than minimum quantity');
+  }
+  
+  return errors;
+};
+
 const Coupons = () => {
   const [coupons, setCoupons] = useState<Coupon[]>(initialCoupons);
   const [searchTerm, setSearchTerm] = useState("");
@@ -224,6 +252,7 @@ const Coupons = () => {
       case 'percentage': return <Percent className="w-4 h-4" />;
       case 'fixed': return <DollarSign className="w-4 h-4" />;
       case 'free_shipping': return <Package className="w-4 h-4" />;
+      case 'buy_x_get_y': return <Gift className="w-4 h-4" />;
       default: return <Tag className="w-4 h-4" />;
     }
   };
@@ -233,6 +262,7 @@ const Coupons = () => {
       case 'percentage': return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
       case 'fixed': return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
       case 'free_shipping': return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400';
+      case 'buy_x_get_y': return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
       default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400';
     }
   };
@@ -674,7 +704,8 @@ const Coupons = () => {
                             <TableCell>
                               {packageDiscount.discountType === 'percentage' ? `${packageDiscount.discountValue}%` :
                                packageDiscount.discountType === 'fixed' ? `$${packageDiscount.discountValue}` :
-                               `Get ${packageDiscount.discountValue} Free`}
+                               packageDiscount.discountType === 'buy_x_get_y' ? `Get ${packageDiscount.discountValue} Free` :
+                               `${packageDiscount.discountValue}% off`}
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">

@@ -1,150 +1,115 @@
 
 interface Product {
   id: string;
+  title: string;
   price: number;
   category?: string;
+  quantity?: number;
 }
 
 interface PackageDiscount {
   id: string;
-  name: string;
   discountType: 'percentage' | 'fixed' | 'buy_x_get_y';
   discountValue: number;
   minQuantity: number;
-  maxQuantity: number;
+  maxQuantity?: number;
   applicableProducts: string[];
   applicableCategories: string[];
   isActive: boolean;
-  validUntil?: string;
 }
 
 export const calculatePackageDiscount = (
-  cartItems: { product: Product; quantity: number }[],
-  packageDiscounts: PackageDiscount[]
-): {
-  bestDiscount: PackageDiscount | null;
-  discountAmount: number;
-  originalTotal: number;
-  finalTotal: number;
-} => {
-  const originalTotal = cartItems.reduce(
-    (total, item) => total + (item.product.price * item.quantity), 
-    0
-  );
+  products: Product[],
+  packageDiscount: PackageDiscount
+): { discount: number; applicableProducts: Product[] } => {
+  if (!packageDiscount.isActive) {
+    return { discount: 0, applicableProducts: [] };
+  }
 
-  let bestDiscount: PackageDiscount | null = null;
-  let maxDiscountAmount = 0;
-
-  // Check each active package discount
-  packageDiscounts
-    .filter(discount => discount.isActive)
-    .filter(discount => {
-      // Check if discount is still valid
-      if (discount.validUntil) {
-        const validDate = new Date(discount.validUntil);
-        const today = new Date();
-        return validDate >= today;
-      }
+  // Filter applicable products
+  const applicableProducts = products.filter(product => {
+    // If no specific products or categories defined, apply to all
+    if (packageDiscount.applicableProducts.length === 0 && packageDiscount.applicableCategories.length === 0) {
       return true;
-    })
-    .forEach(discount => {
-      // Calculate total quantity of applicable items
-      const applicableItems = cartItems.filter(item => {
-        const productMatch = discount.applicableProducts.length === 0 || 
-          discount.applicableProducts.includes(item.product.id) ||
-          discount.applicableProducts.includes(item.product.name);
-        
-        const categoryMatch = discount.applicableCategories.length === 0 ||
-          discount.applicableCategories.includes(item.product.category || '');
-        
-        return productMatch || categoryMatch;
-      });
+    }
+    
+    // Check if product ID matches
+    if (packageDiscount.applicableProducts.includes(product.id)) {
+      return true;
+    }
+    
+    // Check if product category matches
+    if (product.category && packageDiscount.applicableCategories.includes(product.category)) {
+      return true;
+    }
+    
+    return false;
+  });
 
-      const totalApplicableQuantity = applicableItems.reduce(
-        (total, item) => total + item.quantity, 
-        0
-      );
+  const totalQuantity = applicableProducts.reduce((sum, product) => sum + (product.quantity || 1), 0);
+  
+  // Check if quantity meets minimum requirements
+  if (totalQuantity < packageDiscount.minQuantity) {
+    return { discount: 0, applicableProducts: [] };
+  }
 
-      // Check if minimum quantity is met
-      if (totalApplicableQuantity >= discount.minQuantity) {
-        let discountAmount = 0;
-        const applicableTotal = applicableItems.reduce(
-          (total, item) => total + (item.product.price * item.quantity), 
-          0
-        );
+  // Check if quantity exceeds maximum (if set)
+  if (packageDiscount.maxQuantity && totalQuantity > packageDiscount.maxQuantity) {
+    return { discount: 0, applicableProducts: [] };
+  }
 
-        switch (discount.discountType) {
-          case 'percentage':
-            discountAmount = applicableTotal * (discount.discountValue / 100);
-            break;
-          case 'fixed':
-            discountAmount = discount.discountValue;
-            break;
-          case 'buy_x_get_y':
-            // For buy X get Y, calculate how many free items can be given
-            const eligibleForFree = Math.floor(totalApplicableQuantity / discount.minQuantity);
-            const freeItems = Math.min(eligibleForFree * discount.discountValue, totalApplicableQuantity);
-            
-            // Calculate discount based on cheapest items being free
-            const sortedItems = applicableItems
-              .flatMap(item => Array(item.quantity).fill(item.product.price))
-              .sort((a, b) => a - b);
-            
-            discountAmount = sortedItems.slice(0, freeItems).reduce((sum, price) => sum + price, 0);
-            break;
-        }
+  const subtotal = applicableProducts.reduce((sum, product) => sum + (product.price * (product.quantity || 1)), 0);
 
-        // Apply max quantity limit
-        if (totalApplicableQuantity > discount.maxQuantity) {
-          const ratio = discount.maxQuantity / totalApplicableQuantity;
-          discountAmount *= ratio;
-        }
+  let discount = 0;
 
-        if (discountAmount > maxDiscountAmount) {
-          maxDiscountAmount = discountAmount;
-          bestDiscount = discount;
-        }
+  switch (packageDiscount.discountType) {
+    case 'percentage':
+      discount = (subtotal * packageDiscount.discountValue) / 100;
+      break;
+      
+    case 'fixed':
+      discount = packageDiscount.discountValue;
+      break;
+      
+    case 'buy_x_get_y':
+      // For buy X get Y free, calculate how many free items
+      const freeItems = Math.floor(totalQuantity / (packageDiscount.minQuantity + packageDiscount.discountValue)) * packageDiscount.discountValue;
+      // Find cheapest items to make free
+      const sortedProducts = [...applicableProducts].sort((a, b) => a.price - b.price);
+      let freeItemsCount = freeItems;
+      for (const product of sortedProducts) {
+        if (freeItemsCount <= 0) break;
+        const itemsToDiscount = Math.min(freeItemsCount, product.quantity || 1);
+        discount += product.price * itemsToDiscount;
+        freeItemsCount -= itemsToDiscount;
       }
-    });
+      break;
+      
+    default:
+      discount = 0;
+  }
 
-  return {
-    bestDiscount,
-    discountAmount: maxDiscountAmount,
-    originalTotal,
-    finalTotal: Math.max(0, originalTotal - maxDiscountAmount)
-  };
+  return { discount: Math.max(0, discount), applicableProducts };
 };
 
-export const validatePackageDiscount = (discount: Partial<PackageDiscount>): string[] => {
+export const validatePackageDiscount = (packageData: Partial<PackageDiscount>): string[] => {
   const errors: string[] = [];
-
-  if (!discount.name?.trim()) {
-    errors.push('Package name is required');
+  
+  if (!packageData.discountType) {
+    errors.push('Discount type is required');
   }
-
-  if (!discount.discountValue || discount.discountValue <= 0) {
-    errors.push('Discount value must be greater than 0');
+  
+  if (packageData.discountValue === undefined || packageData.discountValue < 0) {
+    errors.push('Discount value must be a positive number');
   }
-
-  if (discount.discountType === 'percentage' && discount.discountValue > 100) {
-    errors.push('Percentage discount cannot exceed 100%');
-  }
-
-  if (!discount.minQuantity || discount.minQuantity < 1) {
+  
+  if (!packageData.minQuantity || packageData.minQuantity < 1) {
     errors.push('Minimum quantity must be at least 1');
   }
-
-  if (discount.maxQuantity && discount.maxQuantity < discount.minQuantity!) {
-    errors.push('Maximum quantity cannot be less than minimum quantity');
+  
+  if (packageData.maxQuantity && packageData.maxQuantity < packageData.minQuantity) {
+    errors.push('Maximum quantity must be greater than minimum quantity');
   }
-
-  if (discount.validUntil) {
-    const validDate = new Date(discount.validUntil);
-    const today = new Date();
-    if (validDate < today) {
-      errors.push('Valid until date cannot be in the past');
-    }
-  }
-
+  
   return errors;
 };
