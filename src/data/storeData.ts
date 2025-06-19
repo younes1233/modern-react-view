@@ -535,6 +535,28 @@ let sampleProductListings: ProductListing[] = [
     showTitle: true,
     isActive: true,
     order: 3
+  }, 
+  {
+    id: 3,
+    title: "Sale Items",
+    subtitle: "Great deals you don't want to miss",
+    type: "sale",
+    maxProducts: 4,
+    layout: "slider",
+    showTitle: true,
+    isActive: true,
+    order: 4
+  },
+  {
+    id: 3,
+    title: "Sale Items",
+    subtitle: "Great deals you don't want to miss",
+    type: "sale",
+    maxProducts: 4,
+    layout: "slider",
+    showTitle: true,
+    isActive: true,
+    order: 5
   }
 ];
 
