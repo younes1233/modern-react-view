@@ -1,11 +1,11 @@
-
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle, XCircle, Upload, Download, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from 'xlsx';
@@ -210,108 +210,112 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Upload className="w-5 h-5" />
             Mass Upload {type.charAt(0).toUpperCase() + type.slice(1)}
           </DialogTitle>
+          <DialogDescription>
+            Upload an Excel file to add multiple {type} at once
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Upload an Excel file to add multiple {type} at once
-            </p>
-            <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
-              <Download className="w-4 h-4" />
-              Download Template
-            </Button>
-          </div>
-
-          <FileUpload
-            onFileSelect={handleFileSelect}
-            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
-            placeholder="Drop your Excel file here or click to upload"
-            maxFiles={1}
-          />
-
-          {isProcessing && (
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Processing file...</span>
-                <span>{uploadProgress}%</span>
-              </div>
-              <Progress value={uploadProgress} className="w-full" />
+        <ScrollArea className="flex-1 pr-4">
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Select an Excel file with your {type} data
+              </p>
+              <Button variant="outline" size="sm" onClick={downloadTemplate} className="gap-2">
+                <Download className="w-4 h-4" />
+                Download Template
+              </Button>
             </div>
-          )}
 
-          {validationResult && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                {validationResult.isValid ? (
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                ) : (
-                  <XCircle className="w-5 h-5 text-red-600" />
+            <FileUpload
+              onFileSelect={handleFileSelect}
+              accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+              placeholder="Drop your Excel file here or click to upload"
+              maxFiles={1}
+            />
+
+            {isProcessing && (
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Processing file...</span>
+                  <span>{uploadProgress}%</span>
+                </div>
+                <Progress value={uploadProgress} className="w-full" />
+              </div>
+            )}
+
+            {validationResult && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  {validationResult.isValid ? (
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  ) : (
+                    <XCircle className="w-5 h-5 text-red-600" />
+                  )}
+                  <span className="font-semibold">
+                    Validation {validationResult.isValid ? 'Passed' : 'Failed'}
+                  </span>
+                  <Badge variant={validationResult.isValid ? "default" : "destructive"}>
+                    {validationResult.data.length} valid rows
+                  </Badge>
+                </div>
+
+                {validationResult.errors.length > 0 && (
+                  <Alert variant="destructive">
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <strong>Errors found:</strong>
+                        <ScrollArea className="h-24 mt-2">
+                          <ul className="list-disc list-inside text-sm space-y-1 pr-4">
+                            {validationResult.errors.map((error, index) => (
+                              <li key={index}>{error}</li>
+                            ))}
+                          </ul>
+                        </ScrollArea>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
                 )}
-                <span className="font-semibold">
-                  Validation {validationResult.isValid ? 'Passed' : 'Failed'}
-                </span>
-                <Badge variant={validationResult.isValid ? "default" : "destructive"}>
-                  {validationResult.data.length} valid rows
-                </Badge>
+
+                {validationResult.warnings.length > 0 && (
+                  <Alert>
+                    <AlertTriangle className="h-4 w-4" />
+                    <AlertDescription>
+                      <div className="space-y-1">
+                        <strong>Warnings:</strong>
+                        <ul className="list-disc list-inside text-sm">
+                          {validationResult.warnings.map((warning, index) => (
+                            <li key={index}>{warning}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    </AlertDescription>
+                  </Alert>
+                )}
               </div>
-
-              {validationResult.errors.length > 0 && (
-                <Alert variant="destructive">
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <div className="space-y-1">
-                      <strong>Errors found:</strong>
-                      <ul className="list-disc list-inside text-sm space-y-1">
-                        {validationResult.errors.slice(0, 5).map((error, index) => (
-                          <li key={index}>{error}</li>
-                        ))}
-                        {validationResult.errors.length > 5 && (
-                          <li>...and {validationResult.errors.length - 5} more errors</li>
-                        )}
-                      </ul>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {validationResult.warnings.length > 0 && (
-                <Alert>
-                  <AlertTriangle className="h-4 w-4" />
-                  <AlertDescription>
-                    <div className="space-y-1">
-                      <strong>Warnings:</strong>
-                      <ul className="list-disc list-inside text-sm">
-                        {validationResult.warnings.map((warning, index) => (
-                          <li key={index}>{warning}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  </AlertDescription>
-                </Alert>
-              )}
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleUpload} 
-              disabled={!validationResult?.isValid}
-              className="gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Upload {validationResult?.data.length || 0} {type}
-            </Button>
+            )}
           </div>
+        </ScrollArea>
+
+        <div className="flex justify-end gap-3 pt-4 border-t">
+          <Button variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleUpload} 
+            disabled={!validationResult?.isValid}
+            className="gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Upload {validationResult?.data.length || 0} {type}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

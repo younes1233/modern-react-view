@@ -4,6 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CartProvider } from "./contexts/CartContext";
 import { WishlistProvider } from "./contexts/WishlistContext";
@@ -32,80 +33,82 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <CartProvider>
-        <WishlistProvider>
-          <SearchProvider>
-            <TooltipProvider>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <Routes>
-                  <Route path="/login" element={<Login />} />
-                  <Route path="/store" element={<Store />} />
-                  <Route path="/store/categories" element={<StoreCategories />} />
-                  <Route path="/store/product/:id" element={<ProductDetail />} />
-                  <Route path="/store/wishlist" element={<Wishlist />} />
-                  <Route path="/store/checkout" element={<Checkout />} />
-                  <Route path="/store/returns" element={<StoreReturns />} />
-                  <Route path="/" element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/products" element={
-                    <ProtectedRoute>
-                      <Products />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/categories" element={
-                    <ProtectedRoute>
-                      <Categories />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/inventory" element={
-                    <ProtectedRoute>
-                      <Inventory />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/orders" element={
-                    <ProtectedRoute>
-                      <Orders />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/returns" element={
-                    <ProtectedRoute>
-                      <Returns />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/customers" element={
-                    <ProtectedRoute>
-                      <Customers />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/analytics" element={
-                    <ProtectedRoute>
-                      <Analytics />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/sales-report" element={
-                    <ProtectedRoute>
-                      <SalesReport />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/store-management" element={
-                    <ProtectedRoute>
-                      <StoreManagement />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </BrowserRouter>
-            </TooltipProvider>
-          </SearchProvider>
-        </WishlistProvider>
-      </CartProvider>
-    </AuthProvider>
+    <ThemeProvider defaultTheme="system" storageKey="dashboard-theme">
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <SearchProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Sonner />
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/login" element={<Login />} />
+                    <Route path="/store" element={<Store />} />
+                    <Route path="/store/categories" element={<StoreCategories />} />
+                    <Route path="/store/product/:id" element={<ProductDetail />} />
+                    <Route path="/store/wishlist" element={<Wishlist />} />
+                    <Route path="/store/checkout" element={<Checkout />} />
+                    <Route path="/store/returns" element={<StoreReturns />} />
+                    <Route path="/" element={
+                      <ProtectedRoute>
+                        <Index />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/products" element={
+                      <ProtectedRoute>
+                        <Products />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/categories" element={
+                      <ProtectedRoute>
+                        <Categories />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/inventory" element={
+                      <ProtectedRoute>
+                        <Inventory />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/orders" element={
+                      <ProtectedRoute>
+                        <Orders />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/returns" element={
+                      <ProtectedRoute>
+                        <Returns />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/customers" element={
+                      <ProtectedRoute>
+                        <Customers />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/analytics" element={
+                      <ProtectedRoute>
+                        <Analytics />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/sales-report" element={
+                      <ProtectedRoute>
+                        <SalesReport />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="/store-management" element={
+                      <ProtectedRoute>
+                        <StoreManagement />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </BrowserRouter>
+              </TooltipProvider>
+            </SearchProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
