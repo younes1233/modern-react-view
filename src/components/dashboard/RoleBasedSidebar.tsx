@@ -1,3 +1,4 @@
+
 import {
   BarChart3,
   Home,
@@ -84,12 +85,21 @@ export function RoleBasedSidebar() {
   const location = useLocation();
   const { user } = useRoleAuth();
 
+  console.log('RoleBasedSidebar render - user:', user);
+  console.log('RoleBasedSidebar render - location:', location.pathname);
+
   if (!user) return null;
 
   const menuItems = roleMenuItems[user.role] || {};
+  console.log('RoleBasedSidebar render - menuItems:', menuItems);
 
   const renderMenuGroup = (items: any[], title: string) => {
-    if (!items || items.length === 0) return null;
+    if (!items || items.length === 0) {
+      console.log(`No items for group: ${title}`);
+      return null;
+    }
+    
+    console.log(`Rendering group: ${title} with items:`, items);
     
     return (
       <SidebarGroup>
