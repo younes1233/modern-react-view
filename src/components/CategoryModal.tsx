@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -156,11 +155,11 @@ export function CategoryModal({
             <div className="space-y-2">
               <Label htmlFor="parent">Parent Category (Optional)</Label>
               <Select 
-                value={formData.parentId?.toString() || ''} 
+                value={formData.parentId?.toString() || 'none'} 
                 onValueChange={(value) => 
                   setFormData(prev => ({ 
                     ...prev, 
-                    parentId: value ? parseInt(value) : undefined 
+                    parentId: value === 'none' ? undefined : parseInt(value) 
                   }))
                 }
               >
@@ -168,7 +167,7 @@ export function CategoryModal({
                   <SelectValue placeholder="Select parent category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No Parent</SelectItem>
+                  <SelectItem value="none">No Parent</SelectItem>
                   {parentCategories.map((cat) => (
                     <SelectItem key={cat.id} value={cat.id!.toString()}>
                       {cat.name}
