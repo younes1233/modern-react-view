@@ -9,7 +9,7 @@ import { StoreThemeHandler } from "./components/StoreThemeHandler";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleAuthProvider } from "./contexts/RoleAuthContext";
 import { CartProvider } from "./contexts/CartContext";
-import { WishlistProvider } from "./contexts/WishlistProvider";
+import { WishlistProvider } from "./contexts/WishlistContext";
 import { SearchProvider } from "./contexts/SearchContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RoleProtectedRoute } from "./components/RoleProtectedRoute";
