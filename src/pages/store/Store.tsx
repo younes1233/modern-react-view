@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
@@ -8,28 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Star, Heart, ShoppingCart, Zap, Shield, Truck } from "lucide-react";
-import { 
-  getProducts, 
-  getFeaturedProducts, 
-  getNewArrivals, 
-  getProductsOnSale, 
-  getProductListings,
-  getHeroSection,
-  getActiveHomeSections,
-  getBanners,
-  HeroSection,
-  HomeSection,
-  Banner,
-  ProductListing
-} from "@/data/storeData";
-
+import { getProducts, getFeaturedProducts, getNewArrivals, getProductsOnSale, getProductListings, getHeroSection, getActiveHomeSections, getBanners, HeroSection, HomeSection, Banner, ProductListing } from "@/data/storeData";
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
-
   useEffect(() => {
     // Load initial data
     const loadData = () => {
@@ -38,87 +22,59 @@ const Store = () => {
       setBanners(getBanners());
       setProductListings(getProductListings());
     };
-
     loadData();
 
     // Listen for data updates from dashboard
     const handleDataUpdate = () => {
       loadData();
     };
-
     window.addEventListener('storeDataUpdated', handleDataUpdate);
-
     return () => {
       window.removeEventListener('storeDataUpdated', handleDataUpdate);
     };
   }, []);
-
   const toggleFavorite = (productId: string) => {
-    setFavorites(prev => 
-      prev.includes(productId) 
-        ? prev.filter(id => id !== productId)
-        : [...prev, productId]
-    );
+    setFavorites(prev => prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]);
   };
-
   const products = getProducts();
   const featuredProducts = getFeaturedProducts();
   const newArrivals = getNewArrivals();
   const bestSellers = getProductsOnSale();
-
   const getSectionContent = (section: HomeSection) => {
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
       if (!banner) return null;
-      
-      return (
-        <section key={section.id} className="py-8 container mx-auto px-4">
+      return <section key={section.id} className="py-8 container mx-auto px-4">
           <div className="relative rounded-2xl overflow-hidden shadow-lg">
-            <img 
-              src={banner.image} 
-              alt={banner.title} 
-              className="w-full h-64 md:h-80 object-cover"
-            />
+            <img src={banner.image} alt={banner.title} className="w-full h-64 md:h-80 object-cover" />
             <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
               <div className="p-8 text-white">
                 <h2 className="text-2xl md:text-4xl font-bold mb-2">
                   {banner.title}
                 </h2>
-                {banner.subtitle && (
-                  <p className="text-lg mb-4 opacity-90">
+                {banner.subtitle && <p className="text-lg mb-4 opacity-90">
                     {banner.subtitle}
-                  </p>
-                )}
-                {banner.ctaText && banner.ctaLink && (
-                  <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
+                  </p>}
+                {banner.ctaText && banner.ctaLink && <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
                     {banner.ctaText}
-                  </Button>
-                )}
+                  </Button>}
               </div>
             </div>
           </div>
-        </section>
-      );
+        </section>;
     } else if (section.type === 'productListing') {
       const listing = productListings.find(l => l.id === section.itemId);
       if (!listing) return null;
-      
-      return (
-        <section key={section.id} className="py-8 lg:py-12 container mx-auto px-4">
+      return <section key={section.id} className="lg:py-12 container mx-auto px-px py-[10px]">
           <ProductSection listing={listing} />
-        </section>
-      );
+        </section>;
     }
-    
     return null;
   };
-
-  return (
-    <div className="min-h-screen bg-gray-50" data-store-page>
+  return <div className="min-h-screen bg-gray-50" data-store-page>
       <StoreLayout>
         {/* Hero Section - Inspired by wooden door panels design */}
-        {heroSection && heroSection.isActive && (
-          <section className="relative bg-white">
+        {heroSection && heroSection.isActive && <section className="relative bg-white">
             <div className="container mx-auto px-4 py-16">
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div className="space-y-6">
@@ -133,10 +89,7 @@ const Store = () => {
                   </p>
                   
                   <div className="flex items-center gap-4">
-                    <Button 
-                      size="lg" 
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-full text-lg font-semibold"
-                    >
+                    <Button size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-full text-lg font-semibold">
                       {heroSection.ctaText}
                     </Button>
                     <div className="text-right">
@@ -149,11 +102,7 @@ const Store = () => {
                 <div className="relative">
                   {/* Wooden panels display inspired by the image */}
                   <div className="relative bg-gray-100 rounded-2xl p-8 shadow-xl">
-                    <img 
-                      src={heroSection.backgroundImage} 
-                      alt="Premium Products" 
-                      className="w-full h-96 object-cover rounded-lg"
-                    />
+                    <img src={heroSection.backgroundImage} alt="Premium Products" className="w-full h-96 object-cover rounded-lg" />
                     {/* Decorative elements */}
                     <div className="absolute -top-4 -left-4 w-20 h-20 bg-cyan-500 rounded-full opacity-20"></div>
                     <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-cyan-300 rounded-full opacity-30"></div>
@@ -161,18 +110,16 @@ const Store = () => {
                 </div>
               </div>
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* Shop by Category */}
         <ShopByCategory />
 
         {/* Dynamic Home Sections from Dashboard */}
-        {homeSections.map((section) => getSectionContent(section))}
+        {homeSections.map(section => getSectionContent(section))}
 
         {/* Fallback Best Sellers if no sections are configured */}
-        {homeSections.length === 0 && (
-          <section className="py-16 bg-white">
+        {homeSections.length === 0 && <section className="py-16 bg-white">
             <div className="container mx-auto px-4">
               <div className="mb-12">
                 <div className="bg-cyan-500 text-white px-6 py-2 rounded-t-lg inline-block">
@@ -180,12 +127,7 @@ const Store = () => {
                 </div>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                {bestSellers.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                  />
-                ))}
+                {bestSellers.map(product => <ProductCard key={product.id} product={product} />)}
               </div>
               
               {/* Pagination dots */}
@@ -195,8 +137,7 @@ const Store = () => {
                 <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
               </div>
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* Newsletter Section */}
         <section className="py-16 bg-gradient-to-r from-cyan-500 to-blue-600">
@@ -207,11 +148,7 @@ const Store = () => {
                 Be the first to know about new products, exclusive offers, and special events.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white"
-                />
+                <input type="email" placeholder="Enter your email" className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white" />
                 <Button className="bg-white text-cyan-600 hover:bg-gray-100 px-8 py-3 font-semibold">
                   Subscribe
                 </Button>
@@ -220,8 +157,6 @@ const Store = () => {
           </div>
         </section>
       </StoreLayout>
-    </div>
-  );
+    </div>;
 };
-
 export default Store;
