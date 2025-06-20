@@ -1,6 +1,5 @@
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { useLocation } from "react-router-dom"
 
 type Theme = "dark" | "light" | "system"
 
@@ -31,20 +30,11 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
-  const location = useLocation()
 
   useEffect(() => {
     const root = window.document.documentElement
-    const isStorePage = location.pathname.startsWith('/store')
 
-    // Always force light mode for store pages
-    if (isStorePage) {
-      root.classList.remove("light", "dark")
-      root.classList.add("light")
-      return
-    }
-
-    // Apply theme only for dashboard pages
+    // Apply theme only for dashboard pages (store pages are handled separately)
     root.classList.remove("light", "dark")
 
     if (theme === "system") {
@@ -58,18 +48,13 @@ export function ThemeProvider({
     }
 
     root.classList.add(theme)
-  }, [theme, location.pathname])
+  }, [theme])
 
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
     
     const handleChange = () => {
-      const isStorePage = location.pathname.startsWith('/store')
-      
-      // Don't apply system theme changes to store pages
-      if (isStorePage) return
-      
       if (theme === "system") {
         const root = window.document.documentElement
         root.classList.remove("light", "dark")
@@ -79,7 +64,7 @@ export function ThemeProvider({
 
     mediaQuery.addEventListener("change", handleChange)
     return () => mediaQuery.removeEventListener("change", handleChange)
-  }, [theme, location.pathname])
+  }, [theme])
 
   const value = {
     theme,

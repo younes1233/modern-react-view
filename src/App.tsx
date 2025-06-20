@@ -5,10 +5,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "./components/ThemeProvider";
+import { StoreThemeHandler } from "./components/StoreThemeHandler";
 import { AuthProvider } from "./contexts/AuthContext";
 import { RoleAuthProvider } from "./contexts/RoleAuthContext";
 import { CartProvider } from "./contexts/CartContext";
-import { WishlistProvider } from "./contexts/WishlistContext";
+import { WishlistProvider } from "./contexts/WishlistProvider";
 import { SearchProvider } from "./contexts/SearchContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { RoleProtectedRoute } from "./components/RoleProtectedRoute";
@@ -51,6 +52,7 @@ const App = () => (
                   <Toaster />
                   <Sonner />
                   <BrowserRouter>
+                    <StoreThemeHandler />
                     <Routes>
                       {/* Old login system */}
                       <Route path="/login" element={<Login />} />
