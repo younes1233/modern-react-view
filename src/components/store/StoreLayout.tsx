@@ -1,5 +1,4 @@
-
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +27,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
   const navigate = useNavigate();
+
+  // Force light mode for store layout
+  useEffect(() => {
+    const root = document.documentElement;
+    root.classList.remove('dark');
+    root.classList.add('light');
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -74,10 +80,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      {/* Header */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light">
+      {/* Header - Reduced padding */}
       <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-1 md:px-2 lg:px-4">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <div className="flex items-center">
@@ -261,8 +267,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
         </div>
 
-        {/* Mobile Search */}
-        <div className="lg:hidden px-4 pb-4 relative">
+        {/* Mobile Search - Reduced padding */}
+        <div className="lg:hidden px-1 md:px-2 pb-4 relative">
           <form onSubmit={handleSearch} className="relative">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
@@ -286,7 +292,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
           {/* Mobile Search Results Dropdown */}
           {showMobileSearchResults && isSearching && (
-            <div className="absolute top-full left-4 right-4 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
+            <div className="absolute top-full left-1 right-1 md:left-2 md:right-2 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
               {searchResults.length > 0 ? (
                 <div className="p-2">
                   <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
@@ -339,7 +345,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden border-t border-gray-100 bg-white/95 backdrop-blur-md">
-            <div className="px-4 py-3 space-y-2">
+            <div className="px-1 md:px-2 py-3 space-y-2">
               <Link 
                 to="/store" 
                 className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
@@ -406,9 +412,9 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900/95 backdrop-blur-md text-white py-12 lg:py-16 mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Footer - Reduced padding */}
+      <footer className="bg-gray-900/95 backdrop-blur-md text-white py-8 lg:py-12 mt-8 lg:mt-16">
+        <div className="max-w-7xl mx-auto px-1 md:px-2 lg:px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             <div className="lg:col-span-2">
               <h3 className="text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">Store</h3>
