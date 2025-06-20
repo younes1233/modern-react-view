@@ -51,24 +51,26 @@ const Store = () => {
       const banner = banners.find(b => b.id === section.itemId);
       if (!banner) return null;
       return (
-        <section key={section.id} className="py-4 md:py-8 container mx-auto px-1 md:px-2">
-          <div className="relative rounded-2xl overflow-hidden shadow-lg">
-            <img src={banner.image} alt={banner.title} className="w-full h-64 md:h-80 object-cover" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
-              <div className="p-4 md:p-8 text-white">
-                <h2 className="text-2xl md:text-4xl font-bold mb-2">
-                  {banner.title}
-                </h2>
-                {banner.subtitle && (
-                  <p className="text-lg mb-4 opacity-90">
-                    {banner.subtitle}
-                  </p>
-                )}
-                {banner.ctaText && banner.ctaLink && (
-                  <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
-                    {banner.ctaText}
-                  </Button>
-                )}
+        <section key={section.id} className="py-4 md:py-8">
+          <div className="w-full max-w-full overflow-hidden">
+            <div className="relative rounded-2xl overflow-hidden shadow-lg">
+              <img src={banner.image} alt={banner.title} className="w-full h-64 md:h-80 object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
+                <div className="p-4 md:p-8 text-white">
+                  <h2 className="text-2xl md:text-4xl font-bold mb-2">
+                    {banner.title}
+                  </h2>
+                  {banner.subtitle && (
+                    <p className="text-lg mb-4 opacity-90">
+                      {banner.subtitle}
+                    </p>
+                  )}
+                  {banner.ctaText && banner.ctaLink && (
+                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
+                      {banner.ctaText}
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -87,13 +89,13 @@ const Store = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 light" data-store-page>
+    <div className="min-h-screen bg-gray-50 light overflow-x-hidden" data-store-page>
       <StoreLayout>
-        {/* Hero Section - Reduced padding */}
+        {/* Hero Section */}
         {heroSection && heroSection.isActive && (
-          <section className="relative bg-white">
-            <div className="container mx-auto px-1 md:px-2 py-8 md:py-16">
-              <div className="grid lg:grid-cols-2 gap-8 items-center">
+          <section className="relative bg-white overflow-hidden">
+            <div className="w-full max-w-full px-2 md:px-4 py-8 md:py-16">
+              <div className="grid lg:grid-cols-2 gap-8 items-center max-w-7xl mx-auto">
                 <div className="space-y-6">
                   <div className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
                     ✨ Premium Quality
@@ -116,7 +118,7 @@ const Store = () => {
                   </div>
                 </div>
 
-                <div className="relative">
+                <div className="relative overflow-hidden">
                   {/* Wooden panels display inspired by the image */}
                   <div className="relative bg-gray-100 rounded-2xl p-8 shadow-xl">
                     <img src={heroSection.backgroundImage} alt="Premium Products" className="w-full h-96 object-cover rounded-lg" />
@@ -130,42 +132,46 @@ const Store = () => {
           </section>
         )}
 
-        {/* Shop by Category - Reduced padding */}
-        <div className="px-1 md:px-2">
+        {/* Shop by Category */}
+        <div className="w-full overflow-hidden">
           <ShopByCategory />
         </div>
 
         {/* Dynamic Home Sections from Dashboard */}
-        {homeSections.map(section => getSectionContent(section))}
+        <div className="w-full overflow-hidden">
+          {homeSections.map(section => getSectionContent(section))}
+        </div>
 
         {/* Fallback Best Sellers if no sections are configured */}
         {homeSections.length === 0 && (
-          <section className="py-8 md:py-16 bg-white">
-            <div className="container mx-auto px-1 md:px-2">
-              <div className="mb-12">
-                <div className="bg-cyan-500 text-white px-6 py-2 rounded-t-lg inline-block">
-                  <h2 className="text-2xl lg:text-3xl font-bold">Electronic</h2>
+          <section className="py-8 md:py-16 bg-white overflow-hidden">
+            <div className="w-full max-w-full px-2 md:px-4">
+              <div className="max-w-7xl mx-auto">
+                <div className="mb-12">
+                  <div className="bg-cyan-500 text-white px-6 py-2 rounded-t-lg inline-block">
+                    <h2 className="text-2xl lg:text-3xl font-bold">Electronic</h2>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                {bestSellers.map(product => (
-                  <ProductCard key={product.id} product={product} />
-                ))}
-              </div>
-              
-              {/* Pagination dots */}
-              <div className="flex justify-center mt-8 space-x-2">
-                <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
-                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                  {bestSellers.map(product => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                
+                {/* Pagination dots */}
+                <div className="flex justify-center mt-8 space-x-2">
+                  <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
+                  <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                  <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
+                </div>
               </div>
             </div>
           </section>
         )}
 
-        {/* Newsletter Section - Reduced padding */}
-        <section className="py-8 md:py-16 bg-gradient-to-r from-cyan-500 to-blue-600">
-          <div className="container mx-auto px-1 md:px-2 text-center">
+        {/* Newsletter Section */}
+        <section className="py-8 md:py-16 bg-gradient-to-r from-cyan-500 to-blue-600 overflow-hidden">
+          <div className="w-full max-w-full px-2 md:px-4 text-center">
             <div className="max-w-2xl mx-auto text-white">
               <h2 className="text-3xl lg:text-4xl font-bold mb-4">Stay in the Loop</h2>
               <p className="text-lg mb-8 text-cyan-100">

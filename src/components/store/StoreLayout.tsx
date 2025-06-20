@@ -80,20 +80,20 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light">
-      {/* Header - Reduced padding */}
-      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-1 md:px-2 lg:px-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light overflow-x-hidden">
+      {/* Header */}
+      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50 w-full overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
-            <div className="flex items-center">
+            <div className="flex items-center flex-shrink-0">
               <Link to="/store" className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
                 Store
               </Link>
             </div>
 
             {/* Navigation */}
-            <nav className="hidden md:flex space-x-8">
+            <nav className="hidden md:flex space-x-8 flex-shrink-0">
               <Link to="/store" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group">
                 Home
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
@@ -192,7 +192,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center space-x-3 lg:space-x-4">
+            <div className="flex items-center space-x-3 lg:space-x-4 flex-shrink-0">
               <Link to="/store/wishlist">
                 <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-blue-50 hover:text-blue-600 relative rounded-xl transition-all duration-300">
                   <Heart className="w-5 h-5" />
@@ -267,9 +267,9 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
         </div>
 
-        {/* Mobile Search - Reduced padding */}
-        <div className="lg:hidden px-1 md:px-2 pb-4 relative">
-          <form onSubmit={handleSearch} className="relative">
+        {/* Mobile Search */}
+        <div className="lg:hidden px-2 md:px-4 pb-4 relative w-full overflow-hidden">
+          <form onSubmit={handleSearch} className="relative w-full">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
@@ -292,7 +292,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
           {/* Mobile Search Results Dropdown */}
           {showMobileSearchResults && isSearching && (
-            <div className="absolute top-full left-1 right-1 md:left-2 md:right-2 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
+            <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
               {searchResults.length > 0 ? (
                 <div className="p-2">
                   <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
@@ -344,7 +344,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-100 bg-white/95 backdrop-blur-md">
+          <div className="md:hidden border-t border-gray-100 bg-white/95 backdrop-blur-md w-full overflow-hidden">
             <div className="px-1 md:px-2 py-3 space-y-2">
               <Link 
                 to="/store" 
@@ -408,13 +408,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       </header>
 
       {/* Main Content */}
-      <main>
+      <main className="w-full overflow-x-hidden">
         {children}
       </main>
 
-      {/* Footer - Reduced padding */}
-      <footer className="bg-gray-900/95 backdrop-blur-md text-white py-8 lg:py-12 mt-8 lg:mt-16">
-        <div className="max-w-7xl mx-auto px-1 md:px-2 lg:px-4">
+      {/* Footer */}
+      <footer className="bg-gray-900/95 backdrop-blur-md text-white py-8 lg:py-12 mt-8 lg:mt-16 w-full overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
             <div className="lg:col-span-2">
               <h3 className="text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">Store</h3>
