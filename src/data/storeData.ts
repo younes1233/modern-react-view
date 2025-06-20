@@ -740,7 +740,7 @@ let sampleProductListings: ProductListing[] = [
   {
     id: 1,
     title: "Featured Products",
-    subtitle: "",
+    subtitle: "Hand-picked items just for you",
     type: "featured",
     maxProducts: 8,
     layout: "slider",
@@ -751,7 +751,7 @@ let sampleProductListings: ProductListing[] = [
   {
     id: 2,
     title: "New Arrivals",
-    subtitle: "",
+    subtitle: "Latest products in our store",
     type: "newArrivals",
     maxProducts: 6,
     layout: "slider",
@@ -773,7 +773,7 @@ let sampleProductListings: ProductListing[] = [
   {
     id: 4,
     title: "Sale Items",
-    subtitle: "",
+    subtitle: "Great deals you don't want to miss",
     type: "sale",
     maxProducts: 4,
     layout: "slider",
