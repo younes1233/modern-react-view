@@ -85,6 +85,26 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  /* Force light mode for store pages */
+  body:has([data-store-page]) {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+  }
 }
 
 @layer base {
@@ -135,6 +155,47 @@
 
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  /* Dark mode fixes for dashboard components */
+  .dark .bg-white {
+    @apply bg-card;
+  }
+
+  .dark .text-gray-900 {
+    @apply text-foreground;
+  }
+
+  .dark .text-gray-700 {
+    @apply text-muted-foreground;
+  }
+
+  .dark .text-gray-600 {
+    @apply text-muted-foreground;
+  }
+
+  .dark .border-gray-200 {
+    @apply border-border;
+  }
+
+  .dark .border-gray-300 {
+    @apply border-border;
+  }
+
+  .dark .hover\:bg-gray-50:hover {
+    @apply bg-accent;
+  }
+
+  .dark .hover\:bg-gray-100:hover {
+    @apply bg-accent;
+  }
+
+  .dark .bg-gray-50 {
+    @apply bg-muted;
+  }
+
+  .dark .bg-gray-100 {
+    @apply bg-muted;
   }
 }
 

@@ -114,7 +114,7 @@ const Store = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50" data-store-page>
       <StoreLayout>
         {/* Hero Section - Inspired by wooden door panels design */}
         {heroSection && heroSection.isActive && (
