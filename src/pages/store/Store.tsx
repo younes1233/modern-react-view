@@ -91,40 +91,39 @@ const Store = () => {
   return (
     <div className="min-h-screen bg-gray-50 light overflow-x-hidden" data-store-page>
       <StoreLayout>
-        {/* Hero Section */}
+        {/* Hero Section - Full Width with Overlay Text */}
         {heroSection && heroSection.isActive && (
-          <section className="relative bg-white overflow-hidden">
-            <div className="w-full max-w-full px-2 md:px-4 py-8 md:py-16">
-              <div className="grid lg:grid-cols-2 gap-8 items-center max-w-7xl mx-auto">
-                <div className="space-y-6">
-                  <div className="inline-block bg-cyan-100 text-cyan-800 px-3 py-1 rounded-full text-sm font-medium">
+          <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
+            <div className="absolute inset-0">
+              <img 
+                src={heroSection.backgroundImage} 
+                alt="Hero Background" 
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
+            </div>
+            
+            <div className="relative z-10 h-full flex items-center">
+              <div className="w-full max-w-7xl mx-auto px-4 md:px-8">
+                <div className="max-w-2xl text-white">
+                  <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-4 py-2 rounded-full text-sm font-medium mb-6">
                     ✨ Premium Quality
                   </div>
-                  <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 leading-tight">
+                  <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
                     {heroSection.title}
                   </h1>
-                  <p className="text-xl text-gray-600 leading-relaxed">
+                  <p className="text-lg md:text-xl text-gray-200 leading-relaxed mb-8 max-w-xl">
                     {heroSection.subtitle}
                   </p>
                   
-                  <div className="flex items-center gap-4">
-                    <Button size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-full text-lg font-semibold">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
+                    <Button size="lg" className="bg-cyan-500 hover:bg-cyan-600 text-white px-8 py-4 rounded-full text-lg font-semibold shadow-xl">
                       {heroSection.ctaText}
                     </Button>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">961 76591765</div>
-                      <div className="text-sm text-gray-600">WWW.MEEMHOME.COM</div>
+                    <div className="text-left">
+                      <div className="text-xl md:text-2xl font-bold text-white">961 76591765</div>
+                      <div className="text-sm text-gray-300">WWW.MEEMHOME.COM</div>
                     </div>
-                  </div>
-                </div>
-
-                <div className="relative overflow-hidden">
-                  {/* Wooden panels display inspired by the image */}
-                  <div className="relative bg-gray-100 rounded-2xl p-8 shadow-xl">
-                    <img src={heroSection.backgroundImage} alt="Premium Products" className="w-full h-96 object-cover rounded-lg" />
-                    {/* Decorative elements */}
-                    <div className="absolute -top-4 -left-4 w-20 h-20 bg-cyan-500 rounded-full opacity-20"></div>
-                    <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-cyan-300 rounded-full opacity-30"></div>
                   </div>
                 </div>
               </div>
@@ -170,18 +169,34 @@ const Store = () => {
         )}
 
         {/* Newsletter Section */}
-        <section className="py-8 md:py-16 bg-gradient-to-r from-cyan-500 to-blue-600 overflow-hidden">
-          <div className="w-full max-w-full px-2 md:px-4 text-center">
+        <section className="py-12 md:py-16 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
+          {/* Decorative Background Pattern */}
+          <div className="absolute inset-0 opacity-10">
+            <div className="absolute top-10 left-10 text-6xl text-white transform rotate-12">+</div>
+            <div className="absolute top-20 right-20 text-4xl text-white transform -rotate-12">×</div>
+            <div className="absolute bottom-10 left-20 text-5xl text-white transform rotate-45">+</div>
+            <div className="absolute bottom-20 right-10 text-3xl text-white transform -rotate-45">×</div>
+            <div className="absolute top-1/2 left-1/4 text-4xl text-white transform rotate-12">+</div>
+            <div className="absolute top-1/3 right-1/3 text-3xl text-white transform -rotate-12">×</div>
+          </div>
+          
+          <div className="relative z-10 w-full max-w-full px-4 md:px-8 text-center">
             <div className="max-w-2xl mx-auto text-white">
-              <h2 className="text-3xl lg:text-4xl font-bold mb-4">Stay in the Loop</h2>
-              <p className="text-lg mb-8 text-cyan-100">
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Get Your Order Now</h2>
+              <p className="text-lg mb-8 text-cyan-100 opacity-90">
                 Be the first to know about new products, exclusive offers, and special events.
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto">
-                <input type="email" placeholder="Enter your email" className="flex-1 px-4 py-3 rounded-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white" />
-                <Button className="bg-white text-cyan-600 hover:bg-gray-100 px-8 py-3 font-semibold">
-                  Subscribe
-                </Button>
+              <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
+                <div className="relative flex-1">
+                  <input 
+                    type="email" 
+                    placeholder="Type your email here" 
+                    className="w-full px-6 py-4 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white bg-white/95 backdrop-blur-sm" 
+                  />
+                  <Button className="absolute right-1 top-1 bottom-1 bg-cyan-500 hover:bg-cyan-600 text-white px-8 rounded-full font-semibold">
+                    Subscribe
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

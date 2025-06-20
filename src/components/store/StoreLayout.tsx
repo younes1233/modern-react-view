@@ -11,6 +11,7 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Separator } from '@/components/ui/separator';
 
 interface StoreLayoutProps {
   children: ReactNode;
@@ -412,51 +413,85 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         {children}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900/95 backdrop-blur-md text-white py-8 lg:py-12 mt-8 lg:mt-16 w-full overflow-hidden">
-        <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
-            <div className="lg:col-span-2">
-              <h3 className="text-2xl lg:text-3xl font-bold mb-4 bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">Store</h3>
-              <p className="text-gray-300 text-lg leading-relaxed mb-6">Your one-stop shop for everything you need. We offer quality products at unbeatable prices with exceptional customer service.</p>
-              <div className="flex items-center gap-4 text-gray-400">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span>123 Store Street</span>
+      {/* Footer - New Design Based on Reference Image */}
+      <footer className="bg-gradient-to-br from-gray-50 to-cyan-50 text-gray-700 py-12 lg:py-16 mt-8 lg:mt-16 w-full overflow-hidden relative">
+        {/* Decorative Background Pattern */}
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-16 left-16 text-6xl text-cyan-500 transform rotate-12">+</div>
+          <div className="absolute top-32 right-24 text-4xl text-cyan-500 transform -rotate-12">×</div>
+          <div className="absolute bottom-16 left-24 text-5xl text-cyan-500 transform rotate-45">+</div>
+          <div className="absolute bottom-32 right-16 text-3xl text-cyan-500 transform -rotate-45">×</div>
+          <div className="absolute top-1/2 left-1/4 text-4xl text-cyan-500 transform rotate-12">+</div>
+          <div className="absolute top-1/3 right-1/3 text-3xl text-cyan-500 transform -rotate-12">×</div>
+        </div>
+
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 lg:gap-16">
+            {/* Meem Home Brand Section */}
+            <div className="lg:col-span-1">
+              <h3 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">
+                Meem<br />Home
+              </h3>
+              <div className="flex space-x-4 mb-8">
+                <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white hover:bg-cyan-600 transition-colors cursor-pointer">
+                  <Phone className="w-5 h-5" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4" />
-                  <span>(555) 123-4567</span>
+                <div className="w-10 h-10 bg-cyan-500 rounded-full flex items-center justify-center text-white hover:bg-cyan-600 transition-colors cursor-pointer">
+                  <MapPin className="w-5 h-5" />
+                </div>
+                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">f</span>
+                </div>
+                <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white hover:bg-pink-600 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">@</span>
                 </div>
               </div>
+              
+              {/* Cyan decorative bars */}
+              <div className="flex space-x-2 mb-8">
+                {Array.from({ length: 9 }).map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="h-1 bg-cyan-400 rounded-full"
+                    style={{ width: `${Math.random() * 30 + 20}px` }}
+                  ></div>
+                ))}
+              </div>
             </div>
+
+            {/* Quick Links */}
             <div>
-              <h4 className="font-semibold mb-6 text-lg">Quick Links</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li><Link to="/store" className="hover:text-white transition-colors">Home</Link></li>
-                <li><Link to="/store/categories" className="hover:text-white transition-colors">Categories</Link></li>
-                <li><Link to="/store/wishlist" className="hover:text-white transition-colors">Wishlist</Link></li>
-                <li><Link to="/store/returns" className="hover:text-white transition-colors">Returns</Link></li>
-                <li><button className="hover:text-white transition-colors">Deals</button></li>
-                <li><button className="hover:text-white transition-colors">New Arrivals</button></li>
+              <h4 className="font-bold mb-6 text-lg text-cyan-600">Quick Links</h4>
+              <ul className="space-y-4 text-gray-600">
+                <li><Link to="/store" className="hover:text-cyan-600 transition-colors">Home</Link></li>
+                <li><button className="hover:text-cyan-600 transition-colors">About</button></li>
+                <li><button className="hover:text-cyan-600 transition-colors">Contact</button></li>
+                <li><button className="hover:text-cyan-600 transition-colors">Terms & Conditions</button></li>
+                <li><button className="hover:text-cyan-600 transition-colors">Privacy Policy</button></li>
               </ul>
             </div>
+
+            {/* Contact Info */}
             <div>
-              <h4 className="font-semibold mb-6 text-lg">Customer Service</h4>
-              <ul className="space-y-3 text-gray-400">
-                <li><button className="hover:text-white transition-colors">Contact Us</button></li>
-                <li><button className="hover:text-white transition-colors">FAQ</button></li>
-                <li><button className="hover:text-white transition-colors">Shipping Info</button></li>
-                <li><button className="hover:text-white transition-colors">Return Policy</button></li>
-              </ul>
+              <h4 className="font-bold mb-6 text-lg text-cyan-600">Have a Questions?</h4>
+              <div className="space-y-4 text-gray-600">
+                <p>mejdiaya-tripoli-lebanon</p>
+                <p className="font-semibold text-gray-800">+961 76 591 765</p>
+                <p>info@email</p>
+              </div>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col lg:flex-row justify-between items-center gap-4">
-            <p className="text-gray-400 text-center lg:text-left">&copy; 2024 Store. All rights reserved.</p>
-            <div className="flex space-x-6">
-              <button className="text-gray-400 hover:text-white transition-colors">Privacy Policy</button>
-              <button className="text-gray-400 hover:text-white transition-colors">Terms of Service</button>
-            </div>
+
+          <Separator className="my-12 bg-cyan-200" />
+
+          {/* Bottom Section */}
+          <div className="text-center space-y-4">
+            <p className="text-sm text-cyan-600">
+              This site is protected by recaptcha and the Google Privacy Policy and Terms Service apply.
+            </p>
+            <p className="text-sm text-gray-500">
+              Meemhome 2025 Copyright
+            </p>
           </div>
         </div>
       </footer>
