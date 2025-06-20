@@ -64,16 +64,16 @@ export function ProductSection({ listing }: ProductSectionProps) {
   const visibleProducts = products.slice(startIndex, startIndex + productsPerSlide);
 
   return (
-    <section className="py-4 md:py-8 bg-white">
-      <div className="container mx-auto px-2 md:px-4">
-        {/* Header Section - Smaller on mobile */}
+    <section className="py-2 md:py-4 bg-white">
+      <div className="container mx-auto px-1 md:px-2">
+        {/* Header Section - Minimal padding */}
         {listing.showTitle && (
-          <div className="bg-gradient-to-r from-cyan-100 to-blue-100 rounded-lg mb-4 md:mb-8 p-3 md:p-6">
-            <h2 className="text-2xl md:text-4xl font-bold text-cyan-600 mb-1 md:mb-2">
+          <div className="bg-gradient-to-r from-cyan-100 to-blue-100 rounded-lg mb-2 md:mb-4 p-2 md:p-4">
+            <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1">
               {listing.title}
             </h2>
             {listing.subtitle && (
-              <p className="text-gray-600 text-sm md:text-lg">
+              <p className="text-gray-600 text-sm md:text-base">
                 {listing.subtitle}
               </p>
             )}
@@ -81,7 +81,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
         )}
 
         <div className="relative">
-          {/* Product Grid Container */}
+          {/* Product Grid Container - Minimal spacing */}
           <div className="overflow-hidden">
             <div 
               className="flex transition-transform duration-300 ease-in-out"
@@ -96,7 +96,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
                     key={slideIndex}
                     className="w-full flex-shrink-0"
                   >
-                    <div className={`grid gap-2 md:gap-4 ${
+                    <div className={`grid gap-1 md:gap-2 ${
                       isMobile 
                         ? 'grid-cols-2' 
                         : 'grid-cols-6'
@@ -111,31 +111,31 @@ export function ProductSection({ listing }: ProductSectionProps) {
             </div>
           </div>
 
-          {/* Navigation Arrows */}
+          {/* Navigation Arrows - Repositioned closer */}
           {totalSlides > 1 && (
             <>
               <Button
                 variant="outline"
                 onClick={prevSlide}
                 disabled={currentSlide === 0}
-                className="absolute top-1/2 -left-2 md:-left-4 transform -translate-y-1/2 w-8 h-12 md:w-10 md:h-16 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
+                className="absolute top-1/2 -left-1 md:-left-2 transform -translate-y-1/2 w-6 h-10 md:w-8 md:h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
               >
-                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+                <ChevronLeft className="w-3 h-3 md:w-4 md:h-4 text-gray-600" />
               </Button>
               <Button
                 variant="outline"
                 onClick={nextSlide}
                 disabled={currentSlide === totalSlides - 1}
-                className="absolute top-1/2 -right-2 md:-right-4 transform -translate-y-1/2 w-8 h-12 md:w-10 md:h-16 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
+                className="absolute top-1/2 -right-1 md:-right-2 transform -translate-y-1/2 w-6 h-10 md:w-8 md:h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
               >
-                <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+                <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-gray-600" />
               </Button>
             </>
           )}
 
-          {/* Pagination Dots */}
+          {/* Pagination Dots - Minimal spacing */}
           {totalSlides > 1 && (
-            <div className="flex justify-center mt-4 md:mt-8 space-x-2 md:space-x-3">
+            <div className="flex justify-center mt-2 md:mt-4 space-x-1 md:space-x-2">
               {Array.from({ length: totalSlides }).map((_, index) => (
                 <button
                   key={index}

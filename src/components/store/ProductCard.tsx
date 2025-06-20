@@ -64,10 +64,10 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden">
+      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
         <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
-          {/* Product Image - Larger on mobile */}
-          <div className="aspect-square bg-white overflow-hidden">
+          {/* Product Image - Much taller on mobile */}
+          <div className="aspect-[4/5] md:aspect-square bg-white overflow-hidden">
             <img
               src={currentImage}
               alt={product.name}
@@ -77,45 +77,45 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Discount badge - Top Left */}
           {product.isOnSale && (
-            <div className="absolute top-1 left-1 md:top-2 md:left-2">
-              <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded">
+            <div className="absolute top-0.5 left-0.5 md:top-1 md:left-1">
+              <Badge className="bg-red-500 text-white text-xs px-1 py-0.5 rounded">
                 -{discountPercentage}%
               </Badge>
             </div>
           )}
 
           {/* Wishlist button - Top Right */}
-          <div className="absolute top-1 right-1 md:top-2 md:right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-0.5 right-0.5 md:top-1 md:right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button
               size="sm"
               variant="secondary"
               onClick={handleWishlistToggle}
-              className={`w-6 h-6 md:w-8 md:h-8 p-0 shadow-md ${
+              className={`w-5 h-5 md:w-6 md:h-6 p-0 shadow-md ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 text-white hover:bg-red-600'
                   : 'bg-white/90 hover:bg-white'
               }`}
             >
-              <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+              <Heart className={`w-2.5 h-2.5 md:w-3 md:h-3 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
             </Button>
           </div>
         </div>
 
-        <CardContent className="p-2 md:p-3" onClick={handleProductClick}>
-          <div className="space-y-1.5 md:space-y-2">
-            {/* Product Name - Smaller text */}
-            <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2rem] md:min-h-[2.5rem]">
+        <CardContent className="p-1.5 md:p-2 flex flex-col justify-between flex-1" onClick={handleProductClick}>
+          <div className="space-y-1 md:space-y-1.5 flex-1">
+            {/* Product Name - Smaller text, more compact */}
+            <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[1.5rem] md:min-h-[2rem]">
               {product.name}
             </h3>
 
-            {/* Price Section */}
-            <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
-              <span className="text-base md:text-lg font-bold text-gray-900">
+            {/* Price Section - More compact */}
+            <div className="flex items-center gap-1 md:gap-1.5 mb-1 md:mb-2">
+              <span className="text-sm md:text-base font-bold text-gray-900">
                 ${product.price}
               </span>
               {product.isOnSale && (
                 <>
-                  <span className="text-xs md:text-sm text-gray-500 line-through">
+                  <span className="text-xs text-gray-500 line-through">
                     ${originalPrice}
                   </span>
                   <span className="text-xs text-red-500 font-medium">
@@ -125,23 +125,23 @@ export function ProductCard({ product }: ProductCardProps) {
               )}
             </div>
 
-            {/* Bottom Section with Express and Add to Cart */}
-            <div className="flex items-center justify-between">
+            {/* Bottom Section with Express and Add to Cart - More compact */}
+            <div className="flex items-center justify-between mt-auto">
               {/* Express Badge */}
               <div className="flex items-center">
-                <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded">
+                <Badge className="bg-red-500 text-white text-xs px-1 py-0.5 rounded">
                   express
                 </Badge>
               </div>
 
-              {/* Add to Cart Button - Responsive text */}
+              {/* Add to Cart Button - Smaller and no text on mobile */}
               <Button
                 size="sm"
                 onClick={handleAddToCart}
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-2 md:px-3 py-1 text-xs"
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-1.5 md:px-2 py-0.5 text-xs"
                 variant="outline"
               >
-                <ShoppingCart className="w-3 h-3 mr-0 md:mr-1" />
+                <ShoppingCart className="w-3 h-3 md:mr-1" />
                 <span className="hidden md:inline">Add</span>
               </Button>
             </div>
