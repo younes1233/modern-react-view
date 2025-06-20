@@ -85,26 +85,6 @@
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
-
-  /* Force light mode for store pages */
-  body:has([data-store-page]) {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-  }
 }
 
 @layer base {
@@ -196,6 +176,59 @@
 
   .dark .bg-gray-100 {
     @apply bg-muted;
+  }
+
+  /* Additional dark mode fixes for orders section */
+  .dark table {
+    @apply bg-card;
+  }
+
+  .dark th {
+    @apply bg-muted text-muted-foreground border-border;
+  }
+
+  .dark td {
+    @apply bg-card text-card-foreground border-border;
+  }
+
+  .dark tr:hover td {
+    @apply bg-accent;
+  }
+
+  .dark .order-status-badge {
+    @apply border-border;
+  }
+
+  .dark .dropdown-menu-item:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .dark button[variant="ghost"]:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .dark button[variant="outline"] {
+    @apply border-border bg-background text-foreground;
+  }
+
+  .dark button[variant="outline"]:hover {
+    @apply bg-accent text-accent-foreground;
+  }
+
+  .dark .select-trigger {
+    @apply bg-background border-border text-foreground;
+  }
+
+  .dark .select-content {
+    @apply bg-popover border-border text-popover-foreground;
+  }
+
+  .dark .dialog-content {
+    @apply bg-card border-border text-card-foreground;
+  }
+
+  .dark .alert-dialog-content {
+    @apply bg-card border-border text-card-foreground;
   }
 }
 

@@ -66,7 +66,7 @@ export function ProductCard({ product }: ProductCardProps) {
     <>
       <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden">
         <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
-          {/* Product Image - No padding/margin */}
+          {/* Product Image - Larger on mobile */}
           <div className="aspect-square bg-white overflow-hidden">
             <img
               src={currentImage}
@@ -77,45 +77,45 @@ export function ProductCard({ product }: ProductCardProps) {
           
           {/* Discount badge - Top Left */}
           {product.isOnSale && (
-            <div className="absolute top-2 left-2">
-              <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+            <div className="absolute top-1 left-1 md:top-2 md:left-2">
+              <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded">
                 -{discountPercentage}%
               </Badge>
             </div>
           )}
 
           {/* Wishlist button - Top Right */}
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-1 right-1 md:top-2 md:right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <Button
               size="sm"
               variant="secondary"
               onClick={handleWishlistToggle}
-              className={`w-8 h-8 p-0 shadow-md ${
+              className={`w-6 h-6 md:w-8 md:h-8 p-0 shadow-md ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 text-white hover:bg-red-600'
                   : 'bg-white/90 hover:bg-white'
               }`}
             >
-              <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+              <Heart className={`w-3 h-3 md:w-4 md:h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
             </Button>
           </div>
         </div>
 
-        <CardContent className="p-3" onClick={handleProductClick}>
-          <div className="space-y-2">
-            {/* Product Name */}
-            <h3 className="font-normal text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2.5rem]">
+        <CardContent className="p-2 md:p-3" onClick={handleProductClick}>
+          <div className="space-y-1.5 md:space-y-2">
+            {/* Product Name - Smaller text */}
+            <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2rem] md:min-h-[2.5rem]">
               {product.name}
             </h3>
 
             {/* Price Section */}
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg font-bold text-gray-900">
+            <div className="flex items-center gap-1.5 md:gap-2 mb-2 md:mb-3">
+              <span className="text-base md:text-lg font-bold text-gray-900">
                 ${product.price}
               </span>
               {product.isOnSale && (
                 <>
-                  <span className="text-sm text-gray-500 line-through">
+                  <span className="text-xs md:text-sm text-gray-500 line-through">
                     ${originalPrice}
                   </span>
                   <span className="text-xs text-red-500 font-medium">
@@ -129,20 +129,20 @@ export function ProductCard({ product }: ProductCardProps) {
             <div className="flex items-center justify-between">
               {/* Express Badge */}
               <div className="flex items-center">
-                <Badge className="bg-red-500 text-white text-xs px-2 py-1 rounded">
+                <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5 md:px-2 md:py-1 rounded">
                   express
                 </Badge>
               </div>
 
-              {/* Add to Cart Button */}
+              {/* Add to Cart Button - Responsive text */}
               <Button
                 size="sm"
                 onClick={handleAddToCart}
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-3 py-1 text-xs"
+                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-2 md:px-3 py-1 text-xs"
                 variant="outline"
               >
-                <ShoppingCart className="w-3 h-3 mr-1" />
-                Add
+                <ShoppingCart className="w-3 h-3 mr-0 md:mr-1" />
+                <span className="hidden md:inline">Add</span>
               </Button>
             </div>
           </div>
