@@ -70,18 +70,17 @@ export function ProductSection({ listing }: ProductSectionProps) {
           {/* Header Section */}
           {listing.showTitle && (
             <div className="mb-2 md:mb-4 relative">
-              <div className="bg-gradient-to-r from-cyan-100 to-blue-100 p-0 md:p-0 w-full">
-                <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1 relative z-10">
-                  <span className="ml-4 md:ml-8">
-                    {listing.title}
-                  </span>
-                </h2>
-                {listing.subtitle && (
-                  <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8">
-                    {listing.subtitle}
-                  </p>
-                )}
-              </div>
+              <div className="bg-gradient-to-r from-cyan-100 to-blue-100 p-0 md:p-0 w-full relative overflow-visible">
+  <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1 absolute -top-5 md:-top-8 left-4 md:left-8 z-10">
+    {listing.title}
+  </h2>
+  {listing.subtitle && (
+    <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8 pt-8">
+      {listing.subtitle}
+    </p>
+  )}
+</div>
+
             </div>
           )}
 
