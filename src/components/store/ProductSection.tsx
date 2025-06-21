@@ -134,17 +134,17 @@ export function ProductSection({ listing }: ProductSectionProps) {
               </>
             )}
 
-            {/* Pagination Dots */}
+            {/* Modern Pagination Dots */}
             {totalSlides > 1 && (
-              <div className="flex justify-center mt-2 md:mt-4 space-x-1 md:space-x-2">
+              <div className="flex justify-end mt-2 md:mt-4 space-x-1 md:space-x-2 pr-4">
                 {Array.from({ length: totalSlides }).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
-                    className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 ${
+                    className={`w-8 h-2 md:w-10 md:h-3 rounded-full transition-all duration-500 transform hover:scale-110 ${
                       index === currentSlide 
-                        ? 'bg-cyan-500 scale-110' 
-                        : 'bg-gray-300 hover:bg-gray-400'
+                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg scale-110' 
+                        : 'bg-gray-300 hover:bg-gray-400 hover:shadow-md'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />
