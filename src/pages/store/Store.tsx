@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
@@ -9,14 +8,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Star, Heart, ShoppingCart, Zap, Shield, Truck } from "lucide-react";
 import { getProducts, getFeaturedProducts, getNewArrivals, getProductsOnSale, getProductListings, getHeroSection, getActiveHomeSections, getBanners, HeroSection, HomeSection, Banner, ProductListing } from "@/data/storeData";
-
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
-
   useEffect(() => {
     // Load initial data
     const loadData = () => {
@@ -36,22 +33,18 @@ const Store = () => {
       window.removeEventListener('storeDataUpdated', handleDataUpdate);
     };
   }, []);
-
   const toggleFavorite = (productId: string) => {
     setFavorites(prev => prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]);
   };
-
   const products = getProducts();
   const featuredProducts = getFeaturedProducts();
   const newArrivals = getNewArrivals();
   const bestSellers = getProductsOnSale();
-
   const getSectionContent = (section: HomeSection) => {
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
       if (!banner) return null;
-      return (
-        <section key={section.id} className="py-4 md:py-8">
+      return <section key={section.id} className="py-4 md:py-8">
           <div className="w-full max-w-full overflow-hidden">
             <div className="relative rounded-2xl overflow-hidden shadow-lg">
               <img src={banner.image} alt={banner.title} className="w-full h-64 md:h-80 object-cover" />
@@ -60,50 +53,36 @@ const Store = () => {
                   <h2 className="text-2xl md:text-4xl font-bold mb-2">
                     {banner.title}
                   </h2>
-                  {banner.subtitle && (
-                    <p className="text-lg mb-4 opacity-90">
+                  {banner.subtitle && <p className="text-lg mb-4 opacity-90">
                       {banner.subtitle}
-                    </p>
-                  )}
-                  {banner.ctaText && banner.ctaLink && (
-                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
+                    </p>}
+                  {banner.ctaText && banner.ctaLink && <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-6 py-2 rounded-full">
                       {banner.ctaText}
-                    </Button>
-                  )}
+                    </Button>}
                 </div>
               </div>
             </div>
           </div>
-        </section>
-      );
+        </section>;
     } else if (section.type === 'productListing') {
       const listing = productListings.find(l => l.id === section.itemId);
       if (!listing) return null;
-      return (
-        <section key={section.id} className="py-1 md:py-2">
+      return <section key={section.id} className="py-1 md:py-2">
           <ProductSection listing={listing} />
-        </section>
-      );
+        </section>;
     }
     return null;
   };
-
-  return (
-    <div className="min-h-screen bg-gray-50 light overflow-x-hidden" data-store-page>
+  return <div className="min-h-screen bg-gray-50 light overflow-x-hidden" data-store-page>
       <StoreLayout>
         {/* Hero Section - Full Width with Overlay Text */}
-        {heroSection && heroSection.isActive && (
-          <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
+        {heroSection && heroSection.isActive && <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
             <div className="absolute inset-0">
-              <img 
-                src={heroSection.backgroundImage} 
-                alt="Hero Background" 
-                className="w-full h-full object-cover"
-              />
+              <img src={heroSection.backgroundImage} alt="Hero Background" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
             </div>
             
-            <div className="relative z-10 h-full flex items-center">
+            <div className="relative z-10 h-full flex items-center rounded-md mx-0">
               <div className="w-full max-w-7xl mx-auto px-4 md:px-8">
                 <div className="max-w-2xl text-white">
                   <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-4 py-2 rounded-full text-sm font-medium mb-6">
@@ -128,8 +107,7 @@ const Store = () => {
                 </div>
               </div>
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* Shop by Category */}
         <div className="w-full overflow-hidden">
@@ -142,8 +120,7 @@ const Store = () => {
         </div>
 
         {/* Fallback Best Sellers if no sections are configured */}
-        {homeSections.length === 0 && (
-          <section className="py-8 md:py-16 bg-white overflow-hidden">
+        {homeSections.length === 0 && <section className="py-8 md:py-16 bg-white overflow-hidden">
             <div className="w-full max-w-full px-2 md:px-4">
               <div className="max-w-7xl mx-auto">
                 <div className="mb-12">
@@ -152,9 +129,7 @@ const Store = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                  {bestSellers.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
+                  {bestSellers.map(product => <ProductCard key={product.id} product={product} />)}
                 </div>
                 
                 {/* Pagination dots */}
@@ -165,8 +140,7 @@ const Store = () => {
                 </div>
               </div>
             </div>
-          </section>
-        )}
+          </section>}
 
         {/* Newsletter Section */}
         <section className="py-12 md:py-16 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
@@ -188,11 +162,7 @@ const Store = () => {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
                 <div className="relative flex-1">
-                  <input 
-                    type="email" 
-                    placeholder="Type your email here" 
-                    className="w-full px-6 py-4 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white bg-white/95 backdrop-blur-sm" 
-                  />
+                  <input type="email" placeholder="Type your email here" className="w-full px-6 py-4 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white bg-white/95 backdrop-blur-sm" />
                   <Button className="absolute right-1 top-1 bottom-1 bg-cyan-500 hover:bg-cyan-600 text-white px-8 rounded-full font-semibold">
                     Subscribe
                   </Button>
@@ -202,8 +172,6 @@ const Store = () => {
           </div>
         </section>
       </StoreLayout>
-    </div>
-  );
+    </div>;
 };
-
 export default Store;
