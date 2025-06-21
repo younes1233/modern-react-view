@@ -84,7 +84,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-[1000] w-full overflow-hidden">
+      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50 w-full overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
@@ -115,7 +115,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </nav>
 
             {/* Search Bar */}
-            <div className="hidden lg:flex flex-1 max-w-lg mx-8 relative z-[1001]">
+            <div className="hidden lg:flex flex-1 max-w-lg mx-8 relative">
               <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
                 <Input
@@ -124,7 +124,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
-                  className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 relative z-10"
+                  className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 relative"
                 />
                 {searchQuery && (
                   <button
@@ -139,7 +139,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
               {/* Search Results Dropdown */}
               {showSearchResults && searchQuery.length > 0 && (
-                <div className="fixed top-[4.5rem] left-0 right-0 mx-auto max-w-lg bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[1002]">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]">
                   {isSearching && searchResults.length > 0 ? (
                     <div className="p-2">
                       <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
@@ -266,7 +266,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         </div>
 
         {/* Mobile Search */}
-        <div className="lg:hidden px-2 md:px-4 pb-4 relative w-full overflow-hidden z-[1001]">
+        <div className="lg:hidden px-2 md:px-4 pb-4 relative w-full overflow-hidden">
           <form onSubmit={handleSearch} className="relative w-full">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
             <Input
@@ -275,7 +275,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               value={searchQuery}
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
-              className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white relative z-10"
+              className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white relative"
             />
             {searchQuery && (
               <button
@@ -290,7 +290,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
           {/* Mobile Search Results Dropdown */}
           {showMobileSearchResults && searchQuery.length > 0 && (
-            <div className="fixed top-[8rem] left-2 right-2 md:left-4 md:right-4 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[1002]">
+            <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]">
               {isSearching && searchResults.length > 0 ? (
                 <div className="p-2">
                   <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
