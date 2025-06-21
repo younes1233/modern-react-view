@@ -50,7 +50,7 @@ const Store = () => {
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
       if (!banner) return null;
-      return <section key={section.id} className="py-4 md:py-8">
+      return <section key={section.id} className="py-2 md:py-4">
           <div className="w-full max-w-full overflow-hidden">
             <div className="relative rounded-2xl overflow-hidden shadow-lg">
               <img src={banner.image} alt={banner.title} className="w-full h-64 md:h-80 object-cover" />
