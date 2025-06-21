@@ -100,11 +100,15 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50 w-full overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
-          <div className="flex items-center justify-between h-16 lg:h-20">
+          <div className="flex items-center justify-between h-16 lg:h-20 gap-4">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
-              <Link to="/store" className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
-                Meem Home
+              <Link to="/store" className="hover:scale-105 transition-transform duration-300">
+                <img 
+                  src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png" 
+                  alt="Meem Home" 
+                  className="h-8 md:h-10 lg:h-12 w-auto object-contain"
+                />
               </Link>
             </div>
 
@@ -128,25 +132,30 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               </button>
             </nav>
 
-            {/* Search Bar */}
+            {/* Search Bar - Desktop */}
             <div className="hidden lg:flex flex-1 max-w-lg mx-8 relative">
-              <form onSubmit={handleSearch} className="relative w-full">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+              <form onSubmit={handleSearch} className="relative w-full flex">
                 <Input
                   ref={setSearchInputRef}
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search Meem or type"
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 relative"
+                  className="flex-1 h-10 px-4 py-2 border-0 rounded-l-lg bg-white shadow-sm focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-500"
                 />
+                <button
+                  type="submit"
+                  className="h-10 px-6 bg-cyan-400 text-white rounded-r-lg hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center font-medium"
+                >
+                  Search
+                </button>
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={handleClearSearch}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
+                    className="absolute right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors z-10"
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -232,23 +241,28 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
         {/* Mobile Search */}
         <div className="lg:hidden px-2 md:px-4 pb-4 relative w-full overflow-hidden">
-          <form onSubmit={handleSearch} className="relative w-full">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
+          <form onSubmit={handleSearch} className="relative w-full flex">
             <Input
               ref={setMobileSearchInputRef}
               type="text"
-              placeholder="Search products..."
+              placeholder="Search Meem or type"
               value={searchQuery}
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
               onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-              className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white relative"
+              className="flex-1 h-10 px-4 py-2 border-0 rounded-l-lg bg-white shadow-sm focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-500"
             />
+            <button
+              type="submit"
+              className="h-10 px-4 md:px-6 bg-cyan-400 text-white rounded-r-lg hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center font-medium text-sm md:text-base"
+            >
+              Search
+            </button>
             {searchQuery && (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                className="absolute right-16 md:right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
               >
                 <X className="w-4 h-4" />
               </button>
