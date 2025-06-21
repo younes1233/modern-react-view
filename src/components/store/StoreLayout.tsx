@@ -341,7 +341,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         <div className="w-full max-w-7xl mx-auto px-4">
           <div className="flex justify-center items-center">
             <div className="flex items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
-              <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-[scroll_20s_linear_infinite]">
+              <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-scroll">
                 <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
                 <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
                 <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
@@ -572,16 +572,21 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         defaultMode={authMode}
       />
 
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
+      <style>
+        {`
+          @keyframes scroll {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
           }
-          100% {
-            transform: translateX(-50%);
+          .animate-scroll {
+            animation: scroll 20s linear infinite;
           }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }
