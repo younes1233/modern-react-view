@@ -321,6 +321,22 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         )}
       </header>
 
+      {/* Social Media Banner */}
+      <div className="bg-cyan-400 text-white py-2 md:py-3 w-full overflow-hidden">
+        <div className="w-full max-w-7xl mx-auto px-4">
+          <div className="flex justify-center items-center">
+            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
+              <span className="hover:text-cyan-100 transition-colors cursor-pointer">TIKTOK</span>
+              <span className="hover:text-cyan-100 transition-colors cursor-pointer">INSTAGRAM</span>
+              <span className="hover:text-cyan-100 transition-colors cursor-pointer">TIKTOK</span>
+              <span className="hover:text-cyan-100 transition-colors cursor-pointer">FACEBOOK</span>
+              <span className="hover:text-cyan-100 transition-colors cursor-pointer">INSTAGRAM</span>
+              <span className="hover:text-cyan-100 transition-colors cursor-pointer">TIKTOK</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Desktop Search Results Dropdown - Rendered as Portal */}
       {showSearchResults && searchQuery.length > 0 && searchInputRef && (
         <Portal.Root>
