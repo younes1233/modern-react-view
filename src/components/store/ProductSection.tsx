@@ -66,7 +66,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
   return (
     <section className="py-2 md:py-4 bg-white overflow-hidden">
       <div className="w-full max-w-full px-2 md:px-4">
-        <div className="max-w-7xl mx-auto">
+        <div className="mx-auto">
           {/* Header Section */}
           {listing.showTitle && (
             <div className="mb-2 md:mb-4 relative">

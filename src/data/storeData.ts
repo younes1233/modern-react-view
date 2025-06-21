@@ -388,240 +388,6 @@ const sampleProducts: Product[] = [
       { id: 29, type: "color", value: "Black", priceModifier: 0, stock: 20 },
       { id: 30, type: "color", value: "Gray", priceModifier: 10, stock: 15 }
     ]
-  },
-  {
-    id: 9,
-    name: "Gaming Mechanical Keyboard",
-    slug: "gaming-mechanical-keyboard",
-    description: "RGB mechanical gaming keyboard with blue switches and customizable lighting effects.",
-    price: 159.99,
-    originalPrice: 199.99,
-    category: "electronics",
-    image: "https://images.unsplash.com/photo-1541140532154-b024d705b90a?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.6,
-    reviews: 324,
-    isFeatured: false,
-    isNewArrival: true,
-    isOnSale: true,
-    sku: "GMK-009",
-    thumbnails: [
-      {
-        id: 18,
-        url: "https://images.unsplash.com/photo-1587829741301-dc798b83add3?w=500&h=500&fit=crop&crop=center",
-        alt: "Keyboard top view"
-      },
-      {
-        id: 19,
-        url: "https://images.unsplash.com/photo-1595044426077-d36d9236d54a?w=500&h=500&fit=crop&crop=center",
-        alt: "Keyboard RGB lighting"
-      }
-    ],
-    variations: [
-      { id: 31, type: "switch", value: "Blue", priceModifier: 0, stock: 18 },
-      { id: 32, type: "switch", value: "Red", priceModifier: 10, stock: 22 },
-      { id: 33, type: "switch", value: "Brown", priceModifier: 5, stock: 15 }
-    ]
-  },
-  {
-    id: 10,
-    name: "Portable Bluetooth Speaker",
-    slug: "portable-bluetooth-speaker",
-    description: "Waterproof portable speaker with 12-hour battery life and crystal clear sound quality.",
-    price: 89.99,
-    category: "electronics",
-    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.4,
-    reviews: 167,
-    isFeatured: true,
-    isNewArrival: false,
-    isOnSale: false,
-    sku: "PBS-010",
-    thumbnails: [
-      {
-        id: 20,
-        url: "https://images.unsplash.com/photo-1545454675-3531b543be5d?w=500&h=500&fit=crop&crop=center",
-        alt: "Speaker side view"
-      }
-    ],
-    variations: [
-      { id: 34, type: "color", value: "Black", priceModifier: 0, stock: 25 },
-      { id: 35, type: "color", value: "Blue", priceModifier: 0, stock: 20 },
-      { id: 36, type: "color", value: "Red", priceModifier: 5, stock: 15 }
-    ]
-  },
-  {
-    id: 11,
-    name: "Yoga Mat Premium",
-    slug: "yoga-mat-premium",
-    description: "Extra thick non-slip yoga mat made from eco-friendly materials with carrying strap.",
-    price: 49.99,
-    originalPrice: 69.99,
-    category: "sports",
-    image: "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.5,
-    reviews: 89,
-    isFeatured: false,
-    isNewArrival: true,
-    isOnSale: true,
-    sku: "YMP-011",
-    thumbnails: [
-      {
-        id: 21,
-        url: "https://images.unsplash.com/photo-1506629905607-b5f0d284e671?w=500&h=500&fit=crop&crop=center",
-        alt: "Yoga mat rolled"
-      }
-    ],
-    variations: [
-      { id: 37, type: "color", value: "Purple", priceModifier: 0, stock: 30 },
-      { id: 38, type: "color", value: "Pink", priceModifier: 0, stock: 25 },
-      { id: 39, type: "color", value: "Blue", priceModifier: 0, stock: 20 }
-    ]
-  },
-  {
-    id: 12,
-    name: "Stainless Steel Water Bottle",
-    slug: "stainless-steel-water-bottle",
-    description: "Insulated water bottle that keeps drinks cold for 24 hours or hot for 12 hours.",
-    price: 29.99,
-    category: "sports",
-    image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.3,
-    reviews: 234,
-    isFeatured: true,
-    isNewArrival: false,
-    isOnSale: false,
-    sku: "SSWB-012",
-    thumbnails: [
-      {
-        id: 22,
-        url: "https://images.unsplash.com/photo-1553062407-98eeb64c6bd3?w=500&h=500&fit=crop&crop=center",
-        alt: "Water bottle with cap"
-      }
-    ],
-    variations: [
-      { id: 40, type: "size", value: "500ml", priceModifier: 0, stock: 40 },
-      { id: 41, type: "size", value: "750ml", priceModifier: 10, stock: 35 },
-      { id: 42, type: "color", value: "Silver", priceModifier: 0, stock: 50 },
-      { id: 43, type: "color", value: "Black", priceModifier: 0, stock: 45 }
-    ]
-  },
-  {
-    id: 13,
-    name: "Vintage Denim Jacket",
-    slug: "vintage-denim-jacket",
-    description: "Classic vintage-style denim jacket with authentic wash and comfortable fit.",
-    price: 79.99,
-    originalPrice: 99.99,
-    category: "fashion",
-    image: "https://images.unsplash.com/photo-1551488831-00ddcb6c6bd3?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.4,
-    reviews: 156,
-    isFeatured: false,
-    isNewArrival: true,
-    isOnSale: true,
-    sku: "VDJ-013",
-    thumbnails: [
-      {
-        id: 23,
-        url: "https://images.unsplash.com/photo-1544966503-7cc5ac882d5e?w=500&h=500&fit=crop&crop=center",
-        alt: "Denim jacket front"
-      }
-    ],
-    variations: [
-      { id: 44, type: "size", value: "S", priceModifier: 0, stock: 15 },
-      { id: 45, type: "size", value: "M", priceModifier: 0, stock: 20 },
-      { id: 46, type: "size", value: "L", priceModifier: 0, stock: 18 },
-      { id: 47, type: "size", value: "XL", priceModifier: 5, stock: 12 }
-    ]
-  },
-  {
-    id: 14,
-    name: "Smart Home Security Camera",
-    slug: "smart-home-security-camera",
-    description: "1080p WiFi security camera with night vision, motion detection, and mobile app control.",
-    price: 129.99,
-    category: "electronics",
-    image: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.7,
-    reviews: 298,
-    isFeatured: true,
-    isNewArrival: false,
-    isOnSale: false,
-    sku: "SHSC-014",
-    thumbnails: [
-      {
-        id: 24,
-        url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=500&h=500&fit=crop&crop=center",
-        alt: "Security camera mounted"
-      }
-    ],
-    variations: [
-      { id: 48, type: "color", value: "White", priceModifier: 0, stock: 25 },
-      { id: 49, type: "color", value: "Black", priceModifier: 0, stock: 30 }
-    ]
-  },
-  {
-    id: 15,
-    name: "Ceramic Plant Pot Set",
-    slug: "ceramic-plant-pot-set",
-    description: "Set of 3 modern ceramic plant pots with drainage holes and matching saucers.",
-    price: 39.99,
-    category: "home",
-    image: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.2,
-    reviews: 67,
-    isFeatured: false,
-    isNewArrival: true,
-    isOnSale: false,
-    sku: "CPPS-015",
-    thumbnails: [
-      {
-        id: 25,
-        url: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=500&h=500&fit=crop&crop=center",
-        alt: "Plant pots with plants"
-      }
-    ],
-    variations: [
-      { id: 50, type: "color", value: "White", priceModifier: 0, stock: 20 },
-      { id: 51, type: "color", value: "Terracotta", priceModifier: 5, stock: 15 },
-      { id: 52, type: "color", value: "Gray", priceModifier: 0, stock: 18 }
-    ]
-  },
-  {
-    id: 16,
-    name: "Professional Hair Dryer",
-    slug: "professional-hair-dryer",
-    description: "Ionic hair dryer with multiple heat settings and concentrator nozzle for salon-quality results.",
-    price: 119.99,
-    originalPrice: 149.99,
-    category: "beauty",
-    image: "https://images.unsplash.com/photo-1522338242992-e1a54906a8da?w=500&h=500&fit=crop&crop=center",
-    inStock: true,
-    rating: 4.6,
-    reviews: 189,
-    isFeatured: true,
-    isNewArrival: false,
-    isOnSale: true,
-    sku: "PHD-016",
-    thumbnails: [
-      {
-        id: 26,
-        url: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=500&h=500&fit=crop&crop=center",
-        alt: "Hair dryer with attachments"
-      }
-    ],
-    variations: [
-      { id: 53, type: "color", value: "Black", priceModifier: 0, stock: 22 },
-      { id: 54, type: "color", value: "White", priceModifier: 0, stock: 18 },
-      { id: 55, type: "color", value: "Rose Gold", priceModifier: 15, stock: 12 }
-    ]
   }
 ];
 
@@ -742,7 +508,7 @@ let sampleProductListings: ProductListing[] = [
     title: "Featured Products",
     subtitle: "",
     type: "featured",
-    maxProducts: 8,
+    maxProducts: 16,
     layout: "slider",
     showTitle: true,
     isActive: true,
@@ -753,7 +519,7 @@ let sampleProductListings: ProductListing[] = [
     title: "New Arrivals",
     subtitle: "",
     type: "newArrivals",
-    maxProducts: 6,
+    maxProducts: 12,
     layout: "slider",
     showTitle: true,
     isActive: true,
@@ -762,35 +528,13 @@ let sampleProductListings: ProductListing[] = [
   {
     id: 3,
     title: "Sale Items",
-    subtitle: "Great deals you don't want to miss",
+    subtitle: "",
     type: "sale",
-    maxProducts: 4,
+    maxProducts: 10,
     layout: "slider",
     showTitle: true,
     isActive: true,
     order: 3
-  }, 
-  {
-    id: 4,
-    title: "Sale Items",
-    subtitle: "",
-    type: "sale",
-    maxProducts: 4,
-    layout: "slider",
-    showTitle: true,
-    isActive: true,
-    order: 4
-  },
-  {
-    id: 5,
-    title: "Sale Items",
-    subtitle: "Great deals you don't want to miss",
-    type: "sale",
-    maxProducts: 4,
-    layout: "slider",
-    showTitle: true,
-    isActive: true,
-    order: 5
   }
 ];
 
