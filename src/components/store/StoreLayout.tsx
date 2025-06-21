@@ -95,10 +95,6 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Navigation */}
             <nav className="hidden md:flex space-x-8 flex-shrink-0">
-              <Link to="/store" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group">
-                Home
-                <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
-              </Link>
               <Link to="/store/categories" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group">
                 Categories
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
