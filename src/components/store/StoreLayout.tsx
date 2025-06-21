@@ -107,7 +107,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 <img 
                   src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png" 
                   alt="Meem Home" 
-                  className="h-14 md:h-18 lg:h-20 w-auto object-contain"
+                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
                 />
               </Link>
             </div>
@@ -134,7 +134,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Search Bar - Desktop */}
             <div className="hidden lg:flex flex-1 max-w-lg xl:max-w-xl mx-4 xl:mx-8 relative">
-              <form onSubmit={handleSearch} className="relative w-full flex border-[3px] border-cyan-400">
+              <form onSubmit={handleSearch} className="relative w-full flex border-[4px] border-cyan-400">
                 <Input
                   ref={setSearchInputRef}
                   type="text"
@@ -143,11 +143,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
                 />
                 <button
                   type="submit"
-                  className="h-8 px-6 xl:px-8 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-lg xl:text-xl font-normal"
+                  className="h-7 px-6 xl:px-8 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-lg xl:text-xl font-normal"
                 >
                   Search
                 </button>
@@ -241,7 +241,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
         {/* Mobile Search */}
         <div className="lg:hidden px-3 md:px-6 pb-4 relative w-full overflow-hidden">
-          <form onSubmit={handleSearch} className="relative w-full flex border-[3px] border-cyan-400">
+          <form onSubmit={handleSearch} className="relative w-full flex border-[4px] border-cyan-400">
             <Input
               ref={setMobileSearchInputRef}
               type="text"
@@ -250,11 +250,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
               onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-              className="flex-1 h-8 md:h-10 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-500"
+              className="flex-1 h-7 md:h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
             />
             <button
               type="submit"
-              className="h-8 md:h-10 px-4 md:px-6 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-base md:text-lg font-normal"
+              className="h-7 md:h-8 px-4 md:px-6 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-base md:text-lg font-normal"
             >
               <span className="hidden md:inline">Search</span>
               <Search className="w-4 h-4 md:hidden" />
@@ -340,13 +340,18 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       <div className="bg-cyan-400 text-white py-2 md:py-3 w-full overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-4">
           <div className="flex justify-center items-center">
-            <div className="flex flex-wrap justify-center items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider animate-pulse">
-              <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 hover:rotate-2 transform cursor-pointer animate-bounce">TIKTOK</span>
-              <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 hover:-rotate-2 transform cursor-pointer animate-pulse">INSTAGRAM</span>
-              <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 hover:rotate-1 transform cursor-pointer animate-bounce">TIKTOK</span>
-              <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 hover:-rotate-1 transform cursor-pointer animate-pulse">FACEBOOK</span>
-              <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 hover:rotate-2 transform cursor-pointer animate-bounce">INSTAGRAM</span>
-              <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 hover:-rotate-2 transform cursor-pointer animate-pulse">TIKTOK</span>
+            <div className="flex items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
+              <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-[scroll_20s_linear_infinite]">
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
+              </div>
             </div>
           </div>
         </div>
@@ -566,6 +571,17 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         onOpenChange={setAuthModalOpen} 
         defaultMode={authMode}
       />
+
+      <style jsx>{`
+        @keyframes scroll {
+          0% {
+            transform: translateX(0);
+          }
+          100% {
+            transform: translateX(-50%);
+          }
+        }
+      `}</style>
     </div>
   );
 }

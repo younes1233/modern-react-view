@@ -66,8 +66,8 @@ export function ProductCard({ product }: ProductCardProps) {
     <>
       <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
         <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
-          {/* Product Image - Much taller on mobile */}
-          <div className="aspect-[4/5] md:aspect-square bg-white overflow-hidden">
+          {/* Product Image - Taller with better containment */}
+          <div className="aspect-[4/6] md:aspect-[4/5] bg-white overflow-hidden">
             <img
               src={currentImage}
               alt={product.name}

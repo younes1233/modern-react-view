@@ -69,15 +69,23 @@ export function ProductSection({ listing }: ProductSectionProps) {
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
           {listing.showTitle && (
-            <div className="bg-gradient-to-r from-cyan-100 to-blue-100 mb-2 md:mb-4 p-2 md:p-4">
-              <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1">
-                {listing.title}
-              </h2>
-              {listing.subtitle && (
-                <p className="text-gray-600 text-sm md:text-base">
-                  {listing.subtitle}
-                </p>
-              )}
+            <div className="mb-2 md:mb-4 relative">
+              <div className="bg-gradient-to-r from-cyan-100 to-blue-100 p-1 md:p-2 w-1/2">
+                <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1 relative z-10">
+                  <span className="bg-white px-2 md:px-4 py-1 md:py-2 inline-block">
+                    {listing.title.split(' ').slice(0, Math.ceil(listing.title.split(' ').length / 2)).join(' ')}
+                  </span>
+                  <br />
+                  <span className="ml-4 md:ml-8">
+                    {listing.title.split(' ').slice(Math.ceil(listing.title.split(' ').length / 2)).join(' ')}
+                  </span>
+                </h2>
+                {listing.subtitle && (
+                  <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8">
+                    {listing.subtitle}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -141,10 +149,10 @@ export function ProductSection({ listing }: ProductSectionProps) {
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
-                    className={`w-8 h-2 md:w-10 md:h-3 rounded-full transition-all duration-500 transform hover:scale-110 ${
+                    className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 transform hover:scale-110 ${
                       index === currentSlide 
-                        ? 'bg-gradient-to-r from-cyan-500 to-blue-500 shadow-lg scale-110' 
-                        : 'bg-gray-300 hover:bg-gray-400 hover:shadow-md'
+                        ? 'bg-cyan-500 shadow-lg scale-110' 
+                        : 'bg-gray-300 hover:bg-gray-400'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}
                   />

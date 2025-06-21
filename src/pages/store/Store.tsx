@@ -50,9 +50,9 @@ const Store = () => {
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
       if (!banner) return null;
-      return <section key={section.id} className="py-1 md:py-2">
-          <div className="w-full max-w-full overflow-hidden">
-            <div className="relative rounded-2xl overflow-hidden shadow-lg">
+      return <section key={section.id} className="py-1 md:py-2 bg-white">
+          <div className="w-full max-w-full overflow-hidden bg-white">
+            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white">
               <img src={banner.image} alt={banner.title} className="w-full h-64 md:h-80 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
                 <div className="p-4 md:p-8 text-white">
@@ -73,7 +73,7 @@ const Store = () => {
     } else if (section.type === 'productListing') {
       const listing = productListings.find(l => l.id === section.itemId);
       if (!listing) return null;
-      return <section key={section.id} className="py-1 md:py-2">
+      return <section key={section.id} className="py-1 md:py-2 bg-white">
           <ProductSection listing={listing} />
         </section>;
     }
@@ -122,7 +122,7 @@ const Store = () => {
         </div>
 
         {/* Dynamic Home Sections from Dashboard */}
-        <div className="w-full overflow-hidden">
+        <div className="w-full overflow-hidden bg-white">
           {homeSections.map(section => getSectionContent(section))}
         </div>
 
