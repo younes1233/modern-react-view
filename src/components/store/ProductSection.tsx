@@ -70,7 +70,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
           {/* Header Section */}
           {listing.showTitle && (
             <div className="mb-2 md:mb-4 relative">
-              <div className="bg-gradient-to-r from-cyan-100 to-blue-100 p-1 md:p-2 w-1/2">
+              <div className="bg-gradient-to-r from-cyan-100 to-blue-100 p-0 md:p-0 w-full">
                 <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1 relative z-10">
                   <span className="bg-white px-2 md:px-4 py-1 md:py-2 inline-block">
                     {listing.title.split(' ').slice(0, Math.ceil(listing.title.split(' ').length / 2)).join(' ')}
