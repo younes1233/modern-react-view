@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
@@ -8,12 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Star, Heart, ShoppingCart, Zap, Shield, Truck } from "lucide-react";
 import { getProducts, getFeaturedProducts, getNewArrivals, getProductsOnSale, getProductListings, getHeroSection, getActiveHomeSections, getBanners, HeroSection, HomeSection, Banner, ProductListing } from "@/data/storeData";
+
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
+
   useEffect(() => {
     // Load initial data
     const loadData = () => {
@@ -33,13 +36,16 @@ const Store = () => {
       window.removeEventListener('storeDataUpdated', handleDataUpdate);
     };
   }, []);
+
   const toggleFavorite = (productId: string) => {
     setFavorites(prev => prev.includes(productId) ? prev.filter(id => id !== productId) : [...prev, productId]);
   };
+
   const products = getProducts();
   const featuredProducts = getFeaturedProducts();
   const newArrivals = getNewArrivals();
   const bestSellers = getProductsOnSale();
+
   const getSectionContent = (section: HomeSection) => {
     if (section.type === 'banner') {
       const banner = banners.find(b => b.id === section.itemId);
@@ -73,16 +79,17 @@ const Store = () => {
     }
     return null;
   };
+
   return <div className="min-h-screen bg-gray-50 light overflow-x-hidden" data-store-page>
       <StoreLayout>
         {/* Hero Section - Full Width with Overlay Text */}
-        {heroSection && heroSection.isActive && <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden">
+        {heroSection && heroSection.isActive && <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden z-10">
             <div className="absolute inset-0">
               <img src={heroSection.backgroundImage} alt="Hero Background" className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
             </div>
             
-            <div className="relative z-10 h-full flex items-center rounded-md mx-0">
+            <div className="relative z-20 h-full flex items-center rounded-md mx-0">
               <div className="w-full max-w-7xl mx-auto px-4 md:px-8">
                 <div className="max-w-2xl text-white">
                   <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-4 py-2 rounded-full text-sm font-medium mb-6">
@@ -174,4 +181,5 @@ const Store = () => {
       </StoreLayout>
     </div>;
 };
+
 export default Store;
