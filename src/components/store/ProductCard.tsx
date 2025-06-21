@@ -115,11 +115,11 @@ export function ProductCard({ product }: ProductCardProps) {
               </span>
               {product.isOnSale && (
                 <>
-                  <span className="text-xs text-red-500 font-medium border border-red-500 rounded-sm px-1">
-                  -{discountPercentage}%
-                  </span>
                   <span className="text-xs text-gray-500 line-through">
                     ${originalPrice}
+                  </span>
+                  <span className="text-xs text-red-500 font-medium">
+                    -{discountPercentage}%
                   </span>
                 </>
               )}
