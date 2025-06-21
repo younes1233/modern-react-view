@@ -66,12 +66,13 @@ export function ProductCard({ product }: ProductCardProps) {
     <>
       <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
         <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
-          {/* Product Image - Taller with better containment */}
-          <div className="aspect-[4/6] md:aspect-[4/5] bg-white overflow-hidden">
+          {/* Product Image - Taller with better containment and white background */}
+          <div className="aspect-[4/6] md:aspect-[4/5] bg-white overflow-hidden p-2">
             <img
               src={currentImage}
               alt={product.name}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 bg-white"
+              style={{ backgroundColor: 'white' }}
             />
           </div>
           

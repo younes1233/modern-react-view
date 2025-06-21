@@ -69,9 +69,10 @@ export function ProductSection({ listing }: ProductSectionProps) {
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
           {listing.showTitle && (
-            <div className="mb-2 md:mb-4 relative">
-              <div className="bg-gradient-to-r from-cyan-100 to-blue-100 p-1 md:p-2 w-1/2">
-                <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1 relative z-10">
+            <div className="mb-2 md:mb-4 relative w-full">
+              <div className="w-full relative">
+                <div className="bg-gradient-to-r from-cyan-100 to-blue-100 h-8 md:h-12 w-full absolute top-4 md:top-6"></div>
+                <h2 className="text-xl md:text-3xl font-bold text-cyan-600 relative z-10 leading-tight">
                   <span className="bg-white px-2 md:px-4 py-1 md:py-2 inline-block">
                     {listing.title.split(' ').slice(0, Math.ceil(listing.title.split(' ').length / 2)).join(' ')}
                   </span>
@@ -81,7 +82,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
                   </span>
                 </h2>
                 {listing.subtitle && (
-                  <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8">
+                  <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8 relative z-10">
                     {listing.subtitle}
                   </p>
                 )}
@@ -151,7 +152,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
                     onClick={() => goToSlide(index)}
                     className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 transform hover:scale-110 ${
                       index === currentSlide 
-                        ? 'bg-cyan-500 shadow-lg scale-110' 
+                        ? 'bg-blue-500 shadow-lg scale-110' 
                         : 'bg-gray-300 hover:bg-gray-400'
                     }`}
                     aria-label={`Go to slide ${index + 1}`}

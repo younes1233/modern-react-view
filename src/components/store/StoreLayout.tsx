@@ -107,7 +107,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 <img 
                   src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png" 
                   alt="Meem Home" 
-                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
+                  className="h-20 md:h-24 lg:h-32 w-auto object-contain"
                 />
               </Link>
             </div>
@@ -143,11 +143,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-[4px] border-cyan-400 bg-white shadow-none ring-0 focus:ring-0 focus:outline-none focus:border-cyan-400 text-gray-700 placeholder:text-gray-500"
                 />
                 <button
                   type="submit"
-                  className="h-7 px-6 xl:px-8 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-lg xl:text-xl font-normal"
+                  className="h-7 px-6 xl:px-8 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-xl xl:text-2xl font-normal"
                 >
                   Search
                 </button>
@@ -250,7 +250,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
               onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-              className="flex-1 h-7 md:h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
+              className="flex-1 h-7 md:h-8 px-4 py-2 border-[4px] border-cyan-400 bg-white shadow-none ring-0 focus:ring-0 focus:outline-none focus:border-cyan-400 text-gray-700 placeholder:text-gray-500"
             />
             <button
               type="submit"
@@ -341,16 +341,19 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         <div className="w-full max-w-7xl mx-auto px-4">
           <div className="flex justify-center items-center">
             <div className="flex items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
-              <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-[scroll_20s_linear_infinite]">
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
+              <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-[scroll_30s_linear_infinite] whitespace-nowrap">
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">FACEBOOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">FACEBOOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">FACEBOOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">TIKTOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">INSTAGRAM</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer">FACEBOOK</span>
               </div>
             </div>
           </div>
@@ -572,16 +575,18 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         defaultMode={authMode}
       />
 
-      <style jsx>{`
-        @keyframes scroll {
-          0% {
-            transform: translateX(0);
+      <style>
+        {`
+          @keyframes scroll {
+            0% {
+              transform: translateX(0);
+            }
+            100% {
+              transform: translateX(-100%);
+            }
           }
-          100% {
-            transform: translateX(-50%);
-          }
-        }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 }
