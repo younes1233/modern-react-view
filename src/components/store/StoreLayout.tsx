@@ -19,7 +19,7 @@ interface StoreLayoutProps {
 }
 
 export function StoreLayout({ children }: StoreLayoutProps) {
-  const { searchQuery, setSearchQuery, clearSearch, isSearching, searchResults } = useSearch();
+  const { searchQuery, setSearchQuery, clearSearch, searchResults } = useSearch();
   const { items: wishlistItems } = useWishlist();
   const { getTotalItems } = useCart();
   const { user, logout } = useAuth();
@@ -124,6 +124,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
+                  onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
                   className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all duration-300 relative"
                 />
                 {searchQuery && (
@@ -140,7 +141,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               {/* Search Results Dropdown */}
               {showSearchResults && searchQuery.length > 0 && (
                 <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]">
-                  {isSearching && searchResults.length > 0 ? (
+                  {searchResults.length > 0 ? (
                     <div className="p-2">
                       <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
                         {searchResults.length} results found
@@ -275,6 +276,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               value={searchQuery}
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
+              onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
               className="w-full pl-12 pr-12 py-3 border-0 rounded-2xl bg-white/80 backdrop-blur-sm shadow-lg focus:ring-2 focus:ring-blue-500 focus:bg-white relative"
             />
             {searchQuery && (
@@ -291,7 +293,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           {/* Mobile Search Results Dropdown */}
           {showMobileSearchResults && searchQuery.length > 0 && (
             <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]">
-              {isSearching && searchResults.length > 0 ? (
+              {searchResults.length > 0 ? (
                 <div className="p-2">
                   <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
                     {searchResults.length} results found
