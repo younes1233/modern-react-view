@@ -43,10 +43,8 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
         (product.sku && product.sku.toLowerCase().includes(query)) ||
         (product.description && product.description.toLowerCase().includes(query))
       );
-      setSearchResults(filtered); // Update search results for dropdown
     } else {
       setIsSearching(false);
-      setSearchResults([]);
     }
 
     // Apply category filter
@@ -86,6 +84,7 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
     }
 
     setFilteredProducts(filtered);
+    setSearchResults(filtered);
   }, [searchQuery, selectedCategory, priceRange, sortBy]);
 
   const clearFilters = () => {
@@ -97,7 +96,6 @@ export function SearchProvider({ children }: { children: React.ReactNode }) {
   const clearSearch = () => {
     setSearchQuery('');
     setIsSearching(false);
-    setSearchResults([]);
   };
 
   return (

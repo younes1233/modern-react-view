@@ -9,7 +9,6 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Grid, List, Filter, X } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
-import { useLocation } from 'react-router-dom';
 import { 
   getProducts, 
   getDisplaySettings,
@@ -19,11 +18,11 @@ import {
 
 const StoreCategories = () => {
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [displaySettings, setDisplaySettings] = useState<DisplaySettings | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const location = useLocation();
 
   const {
     searchQuery,
@@ -33,7 +32,6 @@ const StoreCategories = () => {
     setPriceRange,
     sortBy,
     setSortBy,
-    filteredProducts,
     clearFilters
   } = useSearch();
 
@@ -44,14 +42,54 @@ const StoreCategories = () => {
     if (getDisplaySettings()) {
       setViewMode(getDisplaySettings().layout);
     }
+  }, []);
 
-    // Check for category parameter in URL
-    const urlParams = new URLSearchParams(location.search);
-    const categoryParam = urlParams.get('category');
-    if (categoryParam && categoryParam !== selectedCategory) {
-      setSelectedCategory(categoryParam);
+  // Filter and sort products
+  useEffect(() => {
+    let filtered = [...products];
+
+    // Filter by search query
+    if (searchQuery) {
+      filtered = filtered.filter(product =>
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
     }
-  }, [location.search, selectedCategory, setSelectedCategory]);
+
+    // Filter by category
+    if (selectedCategory !== 'all') {
+      filtered = filtered.filter(product => product.category === selectedCategory);
+    }
+
+    // Filter by price range
+    filtered = filtered.filter(product => 
+      product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
+
+    // Sort products
+    switch (sortBy) {
+      case 'price-low':
+        filtered.sort((a, b) => a.price - b.price);
+        break;
+      case 'price-high':
+        filtered.sort((a, b) => b.price - a.price);
+        break;
+      case 'rating':
+        filtered.sort((a, b) => b.rating - a.rating);
+        break;
+      case 'newest':
+        filtered.sort((a, b) => (b.isNewArrival ? 1 : 0) - (a.isNewArrival ? 1 : 0));
+        break;
+      case 'featured':
+      default:
+        filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+        break;
+    }
+
+    setFilteredProducts(filtered);
+    setCurrentPage(1);
+  }, [products, searchQuery, selectedCategory, priceRange, sortBy]);
 
   const categories = [
     { id: 'all', name: 'All Products', count: products.length },
@@ -65,11 +103,6 @@ const StoreCategories = () => {
   const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
   const startIndex = (currentPage - 1) * productsPerPage;
   const displayedProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
-
-  // Reset to first page when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchQuery, selectedCategory, priceRange, sortBy]);
 
   const getGridColumns = () => {
     const cols = displaySettings?.gridColumns || 3;
@@ -88,9 +121,7 @@ const StoreCategories = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Shop by Category</h1>
-          <p className="text-gray-600">
-            {searchQuery ? `Search results for "${searchQuery}"` : 'Discover our wide range of products'}
-          </p>
+          <p className="text-gray-600">Discover our wide range of products</p>
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">
@@ -215,9 +246,7 @@ const StoreCategories = () => {
             {/* Products Grid/List */}
             {displayedProducts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-600 text-lg">
-                  {searchQuery ? `No products found for "${searchQuery}"` : 'No products found matching your criteria.'}
-                </p>
+                <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
                 <Button onClick={clearFilters} className="mt-4 bg-cyan-600 hover:bg-cyan-700">
                   Clear Filters
                 </Button>
