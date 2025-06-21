@@ -134,7 +134,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Search Bar - Desktop */}
             <div className="hidden lg:flex flex-1 max-w-lg xl:max-w-xl mx-4 xl:mx-8 relative">
-              <form onSubmit={handleSearch} className="relative w-full flex border-2 border-cyan-400">
+              <form onSubmit={handleSearch} className="relative w-full flex border-4 border-cyan-400">
                 <Input
                   ref={setSearchInputRef}
                   type="text"
@@ -143,11 +143,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-12 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-500 rounded-none"
+                  className="flex-1 h-10 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500 rounded-none"
                 />
                 <button
                   type="submit"
-                  className="h-12 px-6 xl:px-8 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center font-medium text-sm xl:text-base"
+                  className="h-10 px-6 xl:px-8 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-lg xl:text-xl font-normal"
                 >
                   Search
                 </button>
@@ -241,7 +241,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
         {/* Mobile Search */}
         <div className="lg:hidden px-3 md:px-6 pb-4 relative w-full overflow-hidden">
-          <form onSubmit={handleSearch} className="relative w-full flex border-2 border-cyan-400">
+          <form onSubmit={handleSearch} className="relative w-full flex border-4 border-cyan-400">
             <Input
               ref={setMobileSearchInputRef}
               type="text"
@@ -250,11 +250,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
               onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-              className="flex-1 h-10 md:h-12 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-500 rounded-none"
+              className="flex-1 h-8 md:h-10 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500 rounded-none"
             />
             <button
               type="submit"
-              className="h-10 md:h-12 px-4 md:px-6 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center font-medium text-sm md:text-base"
+              className="h-8 md:h-10 px-4 md:px-6 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-base md:text-lg font-normal"
             >
               Search
             </button>
