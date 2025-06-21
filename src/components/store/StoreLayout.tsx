@@ -13,6 +13,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import * as Portal from '@radix-ui/react-portal';
 
 interface StoreLayoutProps {
   children: ReactNode;
@@ -28,6 +29,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const [showMobileSearchResults, setShowMobileSearchResults] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [searchInputRef, setSearchInputRef] = useState<HTMLInputElement | null>(null);
+  const [mobileSearchInputRef, setMobileSearchInputRef] = useState<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
   // Force light mode for store layout
@@ -81,6 +84,17 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     navigate('/store');
   };
 
+  const getSearchDropdownPosition = (inputRef: HTMLInputElement | null) => {
+    if (!inputRef) return { top: 0, left: 0, width: 0 };
+    
+    const rect = inputRef.getBoundingClientRect();
+    return {
+      top: rect.bottom + 8,
+      left: rect.left,
+      width: rect.width
+    };
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light overflow-x-hidden">
       {/* Header */}
@@ -119,6 +133,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               <form onSubmit={handleSearch} className="relative w-full">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
                 <Input
+                  ref={setSearchInputRef}
                   type="text"
                   placeholder="Search products..."
                   value={searchQuery}
@@ -137,57 +152,6 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   </button>
                 )}
               </form>
-
-              {/* Search Results Dropdown */}
-              {showSearchResults && searchQuery.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]">
-                  {searchResults.length > 0 ? (
-                    <div className="p-2">
-                      <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
-                        {searchResults.length} results found
-                      </div>
-                      {searchResults.slice(0, 6).map((product) => (
-                        <button
-                          key={product.id}
-                          onClick={() => handleSearchResultClick(product.id)}
-                          className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
-                        >
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            className="w-12 h-12 object-cover rounded-xl shadow-md"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-gray-900 truncate">
-                              {product.name}
-                            </h4>
-                            <p className="text-sm text-gray-500 capitalize">{product.category}</p>
-                            <p className="text-sm font-semibold text-blue-600">
-                              ${product.price.toFixed(2)}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                      {searchResults.length > 6 && (
-                        <button
-                          onClick={() => {
-                            navigate('/store/categories');
-                            setShowSearchResults(false);
-                          }}
-                          className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                        >
-                          View all {searchResults.length} results
-                        </button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="p-8 text-center text-gray-500">
-                      <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
-                      <p>No products found for "{searchQuery}"</p>
-                    </div>
-                  )}
-                </div>
-              )}
             </div>
 
             {/* Actions */}
@@ -271,6 +235,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           <form onSubmit={handleSearch} className="relative w-full">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
             <Input
+              ref={setMobileSearchInputRef}
               type="text"
               placeholder="Search products..."
               value={searchQuery}
@@ -289,57 +254,6 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               </button>
             )}
           </form>
-
-          {/* Mobile Search Results Dropdown */}
-          {showMobileSearchResults && searchQuery.length > 0 && (
-            <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-2 bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]">
-              {searchResults.length > 0 ? (
-                <div className="p-2">
-                  <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
-                    {searchResults.length} results found
-                  </div>
-                  {searchResults.slice(0, 6).map((product) => (
-                    <button
-                      key={product.id}
-                      onClick={() => handleSearchResultClick(product.id)}
-                      className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
-                    >
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-12 h-12 object-cover rounded-xl shadow-md"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-gray-900 truncate">
-                          {product.name}
-                        </h4>
-                        <p className="text-sm text-gray-500 capitalize">{product.category}</p>
-                        <p className="text-sm font-semibold text-blue-600">
-                          ${product.price.toFixed(2)}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
-                  {searchResults.length > 6 && (
-                    <button
-                      onClick={() => {
-                        navigate('/store/categories');
-                        setShowMobileSearchResults(false);
-                      }}
-                      className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                    >
-                      View all {searchResults.length} results
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="p-8 text-center text-gray-500">
-                  <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
-                  <p>No products found for "{searchQuery}"</p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Mobile Menu */}
@@ -406,6 +320,126 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
         )}
       </header>
+
+      {/* Desktop Search Results Dropdown - Rendered as Portal */}
+      {showSearchResults && searchQuery.length > 0 && searchInputRef && (
+        <Portal.Root>
+          <div 
+            className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
+            style={{
+              top: getSearchDropdownPosition(searchInputRef).top,
+              left: getSearchDropdownPosition(searchInputRef).left,
+              width: getSearchDropdownPosition(searchInputRef).width,
+            }}
+          >
+            {searchResults.length > 0 ? (
+              <div className="p-2">
+                <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
+                  {searchResults.length} results found
+                </div>
+                {searchResults.slice(0, 6).map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => handleSearchResultClick(product.id)}
+                    className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                  >
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-12 h-12 object-cover rounded-xl shadow-md"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">
+                        {product.name}
+                      </h4>
+                      <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                      <p className="text-sm font-semibold text-blue-600">
+                        ${product.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+                {searchResults.length > 6 && (
+                  <button
+                    onClick={() => {
+                      navigate('/store/categories');
+                      setShowSearchResults(false);
+                    }}
+                    className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                  >
+                    View all {searchResults.length} results
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
+                <p>No products found for "{searchQuery}"</p>
+              </div>
+            )}
+          </div>
+        </Portal.Root>
+      )}
+
+      {/* Mobile Search Results Dropdown - Rendered as Portal */}
+      {showMobileSearchResults && searchQuery.length > 0 && mobileSearchInputRef && (
+        <Portal.Root>
+          <div 
+            className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
+            style={{
+              top: getSearchDropdownPosition(mobileSearchInputRef).top,
+              left: getSearchDropdownPosition(mobileSearchInputRef).left,
+              width: getSearchDropdownPosition(mobileSearchInputRef).width,
+            }}
+          >
+            {searchResults.length > 0 ? (
+              <div className="p-2">
+                <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
+                  {searchResults.length} results found
+                </div>
+                {searchResults.slice(0, 6).map((product) => (
+                  <button
+                    key={product.id}
+                    onClick={() => handleSearchResultClick(product.id)}
+                    className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                  >
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-12 h-12 object-cover rounded-xl shadow-md"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate">
+                        {product.name}
+                      </h4>
+                      <p className="text-sm text-gray-500 capitalize">{product.category}</p>
+                      <p className="text-sm font-semibold text-blue-600">
+                        ${product.price.toFixed(2)}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+                {searchResults.length > 6 && (
+                  <button
+                    onClick={() => {
+                      navigate('/store/categories');
+                      setShowMobileSearchResults(false);
+                    }}
+                    className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                  >
+                    View all {searchResults.length} results
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-gray-500">
+                <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
+                <p>No products found for "{searchQuery}"</p>
+              </div>
+            )}
+          </div>
+        </Portal.Root>
+      )}
 
       {/* Main Content */}
       <main className="w-full overflow-x-hidden">
