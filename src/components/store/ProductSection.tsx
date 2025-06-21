@@ -69,7 +69,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
           {listing.showTitle && (
-            <div className="bg-gradient-to-r from-cyan-100 to-blue-100 rounded-lg mb-2 md:mb-4 p-2 md:p-4">
+            <div className="bg-gradient-to-r from-cyan-100 to-blue-100 mb-2 md:mb-4 p-2 md:p-4">
               <h2 className="text-xl md:text-3xl font-bold text-cyan-600 mb-1">
                 {listing.title}
               </h2>
