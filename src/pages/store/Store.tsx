@@ -80,7 +80,7 @@ const Store = () => {
     return null;
   };
 
-  return <div className="min-h-screen bg-gray-50 light overflow-x-hidden" data-store-page>
+  return <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
       <StoreLayout>
         {/* Hero Section - Full Width with Overlay Text */}
         {heroSection && heroSection.isActive && <section className="relative w-full h-[70vh] md:h-[80vh] overflow-hidden z-10">
