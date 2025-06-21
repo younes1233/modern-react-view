@@ -101,7 +101,7 @@ export function ProductCard({ product }: ProductCardProps) {
           </div>
         </div>
 
-        <CardContent className="p-1.5 md:p-2 flex flex-col justify-between flex-1" onClick={handleProductClick}>
+        <CardContent className="p-3 md:p-4 flex flex-col justify-between flex-1" onClick={handleProductClick}>
           <div className="space-y-1 md:space-y-1.5 flex-1">
             {/* Product Name - Smaller text, more compact */}
             <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[1.5rem] md:min-h-[2rem]">
