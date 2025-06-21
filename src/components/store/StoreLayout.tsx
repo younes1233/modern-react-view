@@ -83,13 +83,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light overflow-x-hidden">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50 w-full overflow-hidden">
+      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-[100] w-full overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-2 md:px-4">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
-              <Link to="/store" className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
-                Store
+              <Link to="/store" className="text-2xl lg:text-3xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent hover:scale-105 transition-transform duration-300">
+                Meem Home
               </Link>
             </div>
 
@@ -142,7 +142,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
               {/* Search Results Dropdown */}
               {showSearchResults && isSearching && (
-                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[200]">
                   {searchResults.length > 0 ? (
                     <div className="p-2">
                       <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
@@ -293,7 +293,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
           {/* Mobile Search Results Dropdown */}
           {showMobileSearchResults && isSearching && (
-            <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-50">
+            <div className="absolute top-full left-2 right-2 md:left-4 md:right-4 mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[200]">
               {searchResults.length > 0 ? (
                 <div className="p-2">
                   <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
