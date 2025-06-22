@@ -134,15 +134,14 @@ export function ProductCard({ product }: ProductCardProps) {
                 </Badge>
               </div>
 
-              {/* Add to Cart Button - Smaller and no text on mobile */}
+              {/* Add to Cart Button - Only icon, no text */}
               <Button
                 size="sm"
                 onClick={handleAddToCart}
                 className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-1.5 md:px-2 py-0.5 text-xs"
                 variant="outline"
               >
-                <ShoppingCart className="w-3 h-3 md:mr-1" />
-                <span className="hidden md:inline">Add</span>
+                <ShoppingCart className="w-3 h-3" />
               </Button>
             </div>
           </div>
