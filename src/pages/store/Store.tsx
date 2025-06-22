@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
@@ -63,22 +64,22 @@ const Store = () => {
       const banner = banners.find((b) => b.id === section.itemId);
       if (!banner) return null;
       return (
-        <section key={section.id} className="py-0.5 md:py-2 bg-white">
+        <section key={section.id} className="py-1 md:py-2 bg-white">
           <div className="w-full max-w-full overflow-hidden bg-white">
             <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white">
               <img
                 src={banner.image}
                 alt={banner.title}
-                className="w-full h-28 sm:h-36 md:h-48 lg:h-64 object-cover"
+                className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
-                <div className="p-2 sm:p-3 md:p-6 text-white">
-                  <h2 className="text-sm sm:text-lg md:text-xl lg:text-3xl font-bold mb-1 sm:mb-2">{banner.title}</h2>
+                <div className="p-3 sm:p-4 md:p-8 text-white">
+                  <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2">{banner.title}</h2>
                   {banner.subtitle && (
-                    <p className="text-xs sm:text-sm md:text-base mb-1 sm:mb-2 md:mb-3 opacity-90">{banner.subtitle}</p>
+                    <p className="text-sm sm:text-base md:text-lg mb-2 sm:mb-3 md:mb-4 opacity-90">{banner.subtitle}</p>
                   )}
                   {banner.ctaText && banner.ctaLink && (
-                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 rounded-full text-xs md:text-sm">
+                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-full text-sm md:text-base">
                       {banner.ctaText}
                     </Button>
                   )}
@@ -92,7 +93,7 @@ const Store = () => {
       const listing = productListings.find((l) => l.id === section.itemId);
       if (!listing) return null;
       return (
-        <section key={section.id} className="py-0.5 md:py-2 bg-white">
+        <section key={section.id} className="py-1 md:py-2 bg-white">
           <ProductSection listing={listing} />
         </section>
       );
@@ -105,7 +106,7 @@ const Store = () => {
       <StoreLayout>
         {/* Hero Section */}
         {heroSection && heroSection.isActive && (
-          <section className="relative w-full h-[35vh] sm:h-[45vh] md:h-[60vh] lg:h-[70vh] overflow-hidden z-10">
+          <section className="relative w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden z-10">
             <div className="absolute inset-0">
               <img
                 src={heroSection.backgroundImage}
@@ -116,31 +117,31 @@ const Store = () => {
             </div>
 
             <div className="relative z-20 h-full flex items-center rounded-md mx-0">
-              <div className="w-full max-w-7xl mx-auto px-2 sm:px-3 md:px-6 flex flex-col md:flex-row justify-between items-start md:items-center">
+              <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
                 {/* Left side: title + subtitle */}
                 <div className="max-w-2xl text-white">
-                  <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-1.5 sm:px-2 md:px-3 py-0.5 sm:py-1 md:py-1.5 rounded-full text-xs font-medium mb-2 sm:mb-3 md:mb-4">
+                  <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 md:mb-6">
                     ✨ Premium Quality
                   </div>
-                  <h1 className="text-lg sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-2 sm:mb-3 md:mb-5">
+                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-3 sm:mb-4 md:mb-6">
                     {heroSection.title}
                   </h1>
-                  <p className="text-xs sm:text-sm md:text-base lg:text-lg text-gray-200 leading-relaxed mb-3 sm:mb-4 md:mb-6 max-w-xl">
+                  <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 leading-relaxed mb-4 sm:mb-6 md:mb-8 max-w-xl">
                     {heroSection.subtitle}
                   </p>
                 </div>
 
                 {/* Bottom right: button + contact info with small left margin */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-1 sm:mt-2 md:mt-0 ml-0 md:ml-6 self-end">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-8 self-end">
                   <Button
-                    size="sm"
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 md:py-3 rounded-full text-xs sm:text-sm md:text-base font-semibold shadow-xl"
+                    size="lg"
+                    className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-sm sm:text-base md:text-lg font-semibold shadow-xl"
                   >
                     {heroSection.ctaText}
                   </Button>
                   <div className="text-left">
-                    <div className="text-sm sm:text-base md:text-lg lg:text-xl font-bold text-white">961 76591765</div>
-                    <div className="text-xs text-gray-300">WWW.MEEMHOME.COM</div>
+                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">961 76591765</div>
+                    <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
                   </div>
                 </div>
               </div>
@@ -154,13 +155,13 @@ const Store = () => {
         </div>
 
         {/* Dynamic Home Sections from Dashboard */}
-        <div className="w-full overflow-hidden bg-white space-y-1 md:space-y-2">
+        <div className="w-full overflow-hidden bg-white">
           {homeSections.map((section) => getSectionContent(section))}
         </div>
 
         {/* Fallback Best Sellers if no sections are configured */}
         {homeSections.length === 0 && (
-          <section className="py-4 md:py-12 bg-white overflow-hidden">
+          <section className="py-8 md:py-16 bg-white overflow-hidden">
             <div className="w-full max-w-full px-2 md:px-4">
               <div className="max-w-7xl mx-auto">
                 <div className="mb-12">
@@ -186,7 +187,7 @@ const Store = () => {
         )}
 
         {/* Newsletter Section */}
-        <section className="py-6 md:py-12 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
+        <section className="py-12 md:py-16 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
           {/* Decorative Background Pattern */}
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 text-6xl text-white transform rotate-12">+</div>
