@@ -109,7 +109,7 @@ export const calculateVariationPrice = (basePrice: number, variations: ProductVa
   return basePrice + priceModifier;
 };
 
-// Sample product data with real images
+// Sample product data with real images with white backgrounds
 const sampleProducts: Product[] = [
   {
     id: 1,
@@ -119,7 +119,7 @@ const sampleProducts: Product[] = [
     price: 299.99,
     originalPrice: 399.99,
     category: "electronics",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.5,
     reviews: 234,
@@ -130,18 +130,13 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 1,
-        url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1484704849700-f032a568e944?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Headphones side view"
       },
       {
         id: 2,
-        url: "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Headphones folded"
-      },
-      {
-        id: 3,
-        url: "https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=500&h=500&fit=crop&crop=center",
-        alt: "Headphones with case"
       }
     ],
     variations: [
@@ -157,7 +152,7 @@ const sampleProducts: Product[] = [
     description: "Ergonomic aluminum laptop stand with adjustable height and angle. Compatible with all laptop sizes.",
     price: 79.99,
     category: "electronics",
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.2,
     reviews: 89,
@@ -168,13 +163,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 4,
-        url: "https://images.unsplash.com/photo-1541746972996-4e0b0f93e586?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1541746972996-4e0b0f93e586?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Laptop stand angle view"
-      },
-      {
-        id: 5,
-        url: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=500&h=500&fit=crop&crop=center",
-        alt: "Laptop stand with laptop"
       }
     ],
     variations: [
@@ -190,7 +180,7 @@ const sampleProducts: Product[] = [
     price: 349.99,
     originalPrice: 449.99,
     category: "furniture",
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.7,
     reviews: 156,
@@ -201,13 +191,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 6,
-        url: "https://images.unsplash.com/photo-1541558869434-2840d308329a?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1541558869434-2840d308329a?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Office chair front view"
-      },
-      {
-        id: 7,
-        url: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&h=500&fit=crop&crop=center",
-        alt: "Office chair side profile"
       }
     ],
     variations: [
@@ -223,7 +208,7 @@ const sampleProducts: Product[] = [
     description: "Premium 100% organic cotton t-shirt with modern fit and sustainable production.",
     price: 39.99,
     category: "fashion",
-    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.3,
     reviews: 412,
@@ -234,13 +219,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 8,
-        url: "https://images.unsplash.com/photo-1554568218-0f1715e72254?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1554568218-0f1715e72254?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "T-shirt flat lay"
-      },
-      {
-        id: 9,
-        url: "https://images.unsplash.com/photo-1503341455253-b2e723bb3dbb?w=500&h=500&fit=crop&crop=center",
-        alt: "T-shirt detail"
       }
     ],
     variations: [
@@ -261,7 +241,7 @@ const sampleProducts: Product[] = [
     description: "WiFi-enabled coffee maker with app control, programmable brewing, and built-in grinder.",
     price: 199.99,
     category: "home",
-    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.6,
     reviews: 78,
@@ -272,13 +252,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 10,
-        url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Coffee maker brewing"
-      },
-      {
-        id: 11,
-        url: "https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=500&h=500&fit=crop&crop=center",
-        alt: "Coffee maker detail"
       }
     ],
     variations: [
@@ -293,7 +268,7 @@ const sampleProducts: Product[] = [
     description: "LED desk lamp with touch controls, adjustable brightness, and USB charging port.",
     price: 89.99,
     category: "furniture",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.4,
     reviews: 203,
@@ -304,13 +279,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 12,
-        url: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Desk lamp on"
-      },
-      {
-        id: 13,
-        url: "https://images.unsplash.com/photo-1524484485831-a92ffc0de03f?w=500&h=500&fit=crop&crop=center",
-        alt: "Desk lamp workspace"
       }
     ],
     variations: [
@@ -326,7 +296,7 @@ const sampleProducts: Product[] = [
     price: 49.99,
     originalPrice: 69.99,
     category: "electronics",
-    image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1572569511254-d8f925fe2cbb?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.1,
     reviews: 145,
@@ -337,13 +307,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 14,
-        url: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1558618047-3c8c76ca7d13?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Charging pad with phone"
-      },
-      {
-        id: 15,
-        url: "https://images.unsplash.com/photo-1580191947416-62d35a55e71d?w=500&h=500&fit=crop&crop=center",
-        alt: "Charging pad detail"
       }
     ],
     variations: [
@@ -358,7 +323,7 @@ const sampleProducts: Product[] = [
     description: "Comfortable and stylish sneakers made with sustainable materials and modern design.",
     price: 129.99,
     category: "fashion",
-    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?w=500&h=500&fit=crop&crop=center",
+    image: "https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop&bg=white",
     inStock: true,
     rating: 4.5,
     reviews: 89,
@@ -369,13 +334,8 @@ const sampleProducts: Product[] = [
     thumbnails: [
       {
         id: 16,
-        url: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?w=500&h=500&fit=crop&crop=center",
+        url: "https://images.unsplash.com/photo-1460353581641-37baddab0fa2?q=80&w=500&auto=format&fit=crop&bg=white",
         alt: "Sneakers side view"
-      },
-      {
-        id: 17,
-        url: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?w=500&h=500&fit=crop&crop=center",
-        alt: "Sneakers pair"
       }
     ],
     variations: [
@@ -388,15 +348,245 @@ const sampleProducts: Product[] = [
       { id: 29, type: "color", value: "Black", priceModifier: 0, stock: 20 },
       { id: 30, type: "color", value: "Gray", priceModifier: 10, stock: 15 }
     ]
+  },
+  {
+    id: 9,
+    name: "Modern Smart Watch",
+    slug: "modern-smart-watch",
+    description: "Advanced fitness tracking, heart rate monitoring, and smartphone connectivity in a sleek design.",
+    price: 249.99,
+    originalPrice: 299.99,
+    category: "electronics",
+    image: "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.6,
+    reviews: 312,
+    isFeatured: true,
+    isNewArrival: false,
+    isOnSale: true,
+    sku: "MSW-009",
+    thumbnails: [
+      {
+        id: 17,
+        url: "https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Smart watch display"
+      }
+    ],
+    variations: [
+      { id: 31, type: "color", value: "Black", priceModifier: 0, stock: 20 },
+      { id: 32, type: "color", value: "Silver", priceModifier: 25, stock: 15 },
+      { id: 33, type: "color", value: "Rose Gold", priceModifier: 50, stock: 10 }
+    ]
+  },
+  {
+    id: 10,
+    name: "Ceramic Dinner Set",
+    slug: "ceramic-dinner-set",
+    description: "Elegant 16-piece ceramic dinner set perfect for family meals and entertaining guests.",
+    price: 89.99,
+    category: "home",
+    image: "https://images.unsplash.com/photo-1578662996442-48f60103fc96?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.4,
+    reviews: 156,
+    isFeatured: false,
+    isNewArrival: true,
+    isOnSale: false,
+    sku: "CDS-010",
+    thumbnails: [
+      {
+        id: 18,
+        url: "https://images.unsplash.com/photo-1610701596007-11502861dcfa?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Dinner set arrangement"
+      }
+    ],
+    variations: [
+      { id: 34, type: "color", value: "White", priceModifier: 0, stock: 25 },
+      { id: 35, type: "color", value: "Blue", priceModifier: 15, stock: 18 }
+    ]
+  },
+  {
+    id: 11,
+    name: "Leather Handbag",
+    slug: "leather-handbag",
+    description: "Premium genuine leather handbag with multiple compartments and adjustable strap.",
+    price: 159.99,
+    originalPrice: 199.99,
+    category: "fashion",
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.7,
+    reviews: 89,
+    isFeatured: true,
+    isNewArrival: false,
+    isOnSale: true,
+    sku: "LHB-011",
+    thumbnails: [
+      {
+        id: 19,
+        url: "https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Handbag detail view"
+      }
+    ],
+    variations: [
+      { id: 36, type: "color", value: "Black", priceModifier: 0, stock: 15 },
+      { id: 37, type: "color", value: "Brown", priceModifier: 0, stock: 12 },
+      { id: 38, type: "color", value: "Tan", priceModifier: 20, stock: 8 }
+    ]
+  },
+  {
+    id: 12,
+    name: "Wireless Gaming Mouse",
+    slug: "wireless-gaming-mouse",
+    description: "High-precision gaming mouse with customizable RGB lighting and programmable buttons.",
+    price: 79.99,
+    category: "electronics",
+    image: "https://images.unsplash.com/photo-1527814050087-3793815479db?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.5,
+    reviews: 234,
+    isFeatured: false,
+    isNewArrival: true,
+    isOnSale: false,
+    sku: "WGM-012",
+    thumbnails: [
+      {
+        id: 20,
+        url: "https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Gaming mouse side view"
+      }
+    ],
+    variations: [
+      { id: 39, type: "color", value: "Black", priceModifier: 0, stock: 20 },
+      { id: 40, type: "color", value: "White", priceModifier: 10, stock: 15 }
+    ]
+  },
+  {
+    id: 13,
+    name: "Wooden Bookshelf",
+    slug: "wooden-bookshelf",
+    description: "5-tier wooden bookshelf with modern design, perfect for home office or living room.",
+    price: 199.99,
+    category: "furniture",
+    image: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.3,
+    reviews: 67,
+    isFeatured: false,
+    isNewArrival: false,
+    isOnSale: false,
+    sku: "WBS-013",
+    thumbnails: [
+      {
+        id: 21,
+        url: "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Bookshelf with books"
+      }
+    ],
+    variations: [
+      { id: 41, type: "color", value: "Natural Oak", priceModifier: 0, stock: 12 },
+      { id: 42, type: "color", value: "Dark Walnut", priceModifier: 25, stock: 8 }
+    ]
+  },
+  {
+    id: 14,
+    name: "Bluetooth Speaker",
+    slug: "bluetooth-speaker",
+    description: "Portable waterproof Bluetooth speaker with 12-hour battery life and premium sound quality.",
+    price: 69.99,
+    originalPrice: 89.99,
+    category: "electronics",
+    image: "https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.4,
+    reviews: 189,
+    isFeatured: true,
+    isNewArrival: false,
+    isOnSale: true,
+    sku: "BTS-014",
+    thumbnails: [
+      {
+        id: 22,
+        url: "https://images.unsplash.com/photo-1545454675-3531b543be5d?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Bluetooth speaker front"
+      }
+    ],
+    variations: [
+      { id: 43, type: "color", value: "Black", priceModifier: 0, stock: 25 },
+      { id: 44, type: "color", value: "Blue", priceModifier: 0, stock: 20 },
+      { id: 45, type: "color", value: "Red", priceModifier: 5, stock: 15 }
+    ]
+  },
+  {
+    id: 15,
+    name: "Stainless Steel Water Bottle",
+    slug: "stainless-steel-water-bottle",
+    description: "Insulated stainless steel water bottle keeps drinks cold for 24 hours or hot for 12 hours.",
+    price: 24.99,
+    category: "home",
+    image: "https://images.unsplash.com/photo-1602143407151-7111542de6e8?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.6,
+    reviews: 345,
+    isFeatured: false,
+    isNewArrival: true,
+    isOnSale: false,
+    sku: "SSWB-015",
+    thumbnails: [
+      {
+        id: 23,
+        url: "https://images.unsplash.com/photo-1523362628745-0c100150b504?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Water bottle side view"
+      }
+    ],
+    variations: [
+      { id: 46, type: "color", value: "Silver", priceModifier: 0, stock: 30 },
+      { id: 47, type: "color", value: "Black", priceModifier: 0, stock: 25 },
+      { id: 48, type: "color", value: "Blue", priceModifier: 0, stock: 20 }
+    ]
+  },
+  {
+    id: 16,
+    name: "Running Shoes",
+    slug: "running-shoes",
+    description: "Lightweight running shoes with advanced cushioning technology for maximum comfort.",
+    price: 119.99,
+    originalPrice: 149.99,
+    category: "fashion",
+    image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?q=80&w=800&auto=format&fit=crop&bg=white",
+    inStock: true,
+    rating: 4.5,
+    reviews: 267,
+    isFeatured: true,
+    isNewArrival: true,
+    isOnSale: true,
+    sku: "RS-016",
+    thumbnails: [
+      {
+        id: 24,
+        url: "https://images.unsplash.com/photo-1551107696-a4b0c5a0d9a2?q=80&w=500&auto=format&fit=crop&bg=white",
+        alt: "Running shoes pair"
+      }
+    ],
+    variations: [
+      { id: 49, type: "size", value: "7", priceModifier: 0, stock: 10 },
+      { id: 50, type: "size", value: "8", priceModifier: 0, stock: 15 },
+      { id: 51, type: "size", value: "9", priceModifier: 0, stock: 18 },
+      { id: 52, type: "size", value: "10", priceModifier: 0, stock: 12 },
+      { id: 53, type: "size", value: "11", priceModifier: 0, stock: 8 },
+      { id: 54, type: "color", value: "Black/White", priceModifier: 0, stock: 25 },
+      { id: 55, type: "color", value: "Navy/Gray", priceModifier: 0, stock: 20 },
+      { id: 56, type: "color", value: "Red/Black", priceModifier: 10, stock: 15 }
+    ]
   }
 ];
 
-// Sample hero section data
+// Sample hero section data with home door image
 let sampleHeroSection: HeroSection = {
   id: 1,
   title: "Welcome to Our Store",
   subtitle: "Discover amazing products at unbeatable prices with fast shipping and exceptional customer service",
-  backgroundImage: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=1200&h=600&fit=crop",
+  backgroundImage: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=1200&auto=format&fit=crop&bg=white",
   ctaText: "Shop Now",
   ctaLink: "/store/categories",
   isActive: true
