@@ -180,7 +180,7 @@ const sampleProducts: Product[] = [
     price: 349.99,
     originalPrice: 449.99,
     category: "furniture",
-    image: "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?q=80&w=800&auto=format&fit=crop&bg=white",
+    image: "https://hometag.com.lb/wp-content/uploads/2024/09/product-1-81.webp",
     inStock: true,
     rating: 4.7,
     reviews: 156,
