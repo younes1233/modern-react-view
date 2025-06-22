@@ -32,11 +32,11 @@ export function ShopByCategory() {
   const visibleCategories = categories.slice(startIndex, startIndex + 7);
 
   return (
-    <section className="py-6 sm:py-8 md:py-12 bg-white">
+    <section className="py-3 sm:py-4 md:py-8 bg-white">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
-          <h2 className="text-xl sm:text-2xl md:text-3xl font-light text-gray-600 tracking-wide">
+        <div className="text-center mb-3 sm:mb-4 md:mb-6">
+          <h2 className="text-base sm:text-lg md:text-2xl font-light text-gray-600 tracking-wide">
             SHOP BY CATEGORY
           </h2>
         </div>
@@ -110,7 +110,7 @@ export function ShopByCategory() {
 
         {/* Mobile & Tablet: Horizontal Scroll */}
         <div className="lg:hidden">
-          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide">
+          <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-3 scrollbar-hide">
             {categories.map((category) => (
               <Link
                 key={category.id}
@@ -118,7 +118,7 @@ export function ShopByCategory() {
                 onClick={() => handleCategoryClick(category.slug)}
                 className="group flex-shrink-0"
               >
-                <Card className="w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white overflow-hidden rounded-2xl">
+                <Card className="w-16 h-20 sm:w-18 sm:h-24 md:w-20 md:h-28 border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white overflow-hidden rounded-2xl">
                   <CardContent className="p-0 h-full">
                     <div className="relative h-full">
                       <img
@@ -127,10 +127,10 @@ export function ShopByCategory() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                      <div className="absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
+                      <div className="absolute inset-0 flex flex-col justify-between p-1.5 sm:p-2">
                         <div className="flex justify-center">
-                          <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                            <span className="text-xs sm:text-sm md:text-base">{category.icon}</span>
+                          <div className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+                            <span className="text-xs">{category.icon}</span>
                           </div>
                         </div>
                         <div className="text-center text-white">
@@ -147,20 +147,20 @@ export function ShopByCategory() {
           </div>
 
           {/* Navigation Dots on right with hidden slides count */}
-          <div className="flex justify-end items-center mt-4 space-x-3 pr-4">
-            <div className="flex space-x-2">
+          <div className="flex justify-end items-center mt-3 space-x-2 pr-4">
+            <div className="flex space-x-1">
               {Array.from({ length: Math.ceil(categories.length / 7) }).map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                  className={`w-2 h-2 rounded-full transition-colors duration-300 ${
                     index === currentSlide ? 'bg-cyan-500' : 'bg-gray-300'
                   }`}
                 />
               ))}
             </div>
             {/* Number of hidden slides */}
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            <span className="text-xs font-medium text-gray-700 dark:text-gray-300">
               {Math.max(0, (Math.ceil(categories.length / 7) - 1 - currentSlide))} more
             </span>
           </div>
