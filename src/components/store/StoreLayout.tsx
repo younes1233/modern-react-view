@@ -1,4 +1,3 @@
-
 import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -166,7 +165,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             {/* Actions */}
             <div className="flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
               <Link to="/store/wishlist">
-                <Button variant="ghost" size="sm" className="hidden sm:flex hover:bg-blue-50 hover:text-blue-600 relative rounded-xl transition-all duration-300 p-2">
+                <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 relative rounded-xl transition-all duration-300 p-2">
                   <Heart className="w-4 h-4 md:w-5 md:h-5" />
                   {wishlistItems.length > 0 && (
                     <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
@@ -250,22 +249,21 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               onChange={handleMobileSearchInputChange}
               onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
               onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-              className="flex-1 h-7 md:h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
+              className="flex-1 h-6 md:h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
             />
             <button
               type="submit"
-              className="h-7 md:h-8 px-4 md:px-6 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-base md:text-lg font-normal"
+              className="h-6 md:h-7 px-3 md:px-4 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-base md:text-lg font-normal"
             >
-              <span className="hidden md:inline">Search</span>
-              <Search className="w-4 h-4 md:hidden" />
+              <Search className="w-4 h-4" />
             </button>
             {searchQuery && (
               <button
                 type="button"
                 onClick={handleClearSearch}
-                className="absolute right-12 md:right-20 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                className="absolute right-12 md:right-16 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3 md:w-4 md:h-4" />
               </button>
             )}
           </form>
