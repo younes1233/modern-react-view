@@ -586,7 +586,7 @@ let sampleHeroSection: HeroSection = {
   id: 1,
   title: "Welcome to Our Store",
   subtitle: "Discover amazing products at unbeatable prices with fast shipping and exceptional customer service",
-  backgroundImage: "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?q=80&w=1200&auto=format&fit=crop&bg=white",
+  backgroundImage: "https://www.hurstdoors.co.uk/wp-content/uploads/2025/02/Composite-Duo-Home-Page-Banners-Feb-2025.jpg",
   ctaText: "Shop Now",
   ctaLink: "/store/categories",
   isActive: true
