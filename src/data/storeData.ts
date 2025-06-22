@@ -152,7 +152,7 @@ const sampleProducts: Product[] = [
     description: "Ergonomic aluminum laptop stand with adjustable height and angle. Compatible with all laptop sizes.",
     price: 79.99,
     category: "electronics",
-    image: "https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?q=80&w=800&auto=format&fit=crop&bg=white",
+    image: "https://hometag.com.lb/wp-content/uploads/2024/09/product-1-81.webp",
     inStock: true,
     rating: 4.2,
     reviews: 89,
