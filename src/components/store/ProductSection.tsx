@@ -85,66 +85,79 @@ export function ProductSection({ listing }: ProductSectionProps) {
           )}
 
           <div className="relative overflow-hidden">
-            {/* Product Grid Container */}
-            <div className="overflow-hidden">
-              <div 
-                className="flex transition-transform duration-300 ease-in-out"
-                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-              >
-                {Array.from({ length: totalSlides }).map((_, slideIndex) => {
-                  const slideStartIndex = slideIndex * productsPerSlide;
-                  const slideProducts = products.slice(slideStartIndex, slideStartIndex + productsPerSlide);
-                  
-                  return (
+            {/* Mobile: Horizontal scroll container */}
+            {isMobile ? (
+              <div className="overflow-x-auto scrollbar-hide">
+                <div className="flex gap-1 pb-2" style={{ width: `${products.length * 50}%` }}>
+                  {products.map((product) => (
                     <div
-                      key={slideIndex}
-                      className="w-full flex-shrink-0"
+                      key={product.id}
+                      className="flex-shrink-0"
+                      style={{ width: '44.44%' }} // 2.25 products visible (100% / 2.25)
                     >
-                      <div className={`grid gap-1 md:gap-2 ${
-                        isMobile 
-                          ? 'grid-cols-2' 
-                          : 'grid-cols-6'
-                      }`}>
-                        {slideProducts.map((product) => (
-                          <ProductCard key={product.id} product={product} />
-                        ))}
-                      </div>
+                      <ProductCard product={product} />
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              /* Desktop: Slider with navigation */
+              <div className="overflow-hidden">
+                <div 
+                  className="flex transition-transform duration-300 ease-in-out"
+                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                >
+                  {Array.from({ length: totalSlides }).map((_, slideIndex) => {
+                    const slideStartIndex = slideIndex * productsPerSlide;
+                    const slideProducts = products.slice(slideStartIndex, slideStartIndex + productsPerSlide);
+                    
+                    return (
+                      <div
+                        key={slideIndex}
+                        className="w-full flex-shrink-0"
+                      >
+                        <div className="grid gap-2 grid-cols-6">
+                          {slideProducts.map((product) => (
+                            <ProductCard key={product.id} product={product} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-            {/* Navigation Arrows */}
-            {totalSlides > 1 && (
+            {/* Navigation Arrows - Desktop only */}
+            {!isMobile && totalSlides > 1 && (
               <>
                 <Button
                   variant="outline"
                   onClick={prevSlide}
                   disabled={currentSlide === 0}
-                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-6 h-10 md:w-8 md:h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
+                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-8 h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
                 >
-                  <ChevronLeft className="w-3 h-3 md:w-4 md:h-4 text-gray-600" />
+                  <ChevronLeft className="w-4 h-4 text-gray-600" />
                 </Button>
                 <Button
                   variant="outline"
                   onClick={nextSlide}
                   disabled={currentSlide === totalSlides - 1}
-                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-6 h-10 md:w-8 md:h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
+                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-8 h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
                 >
-                  <ChevronRight className="w-3 h-3 md:w-4 md:h-4 text-gray-600" />
+                  <ChevronRight className="w-4 h-4 text-gray-600" />
                 </Button>
               </>
             )}
 
-            {/* Modern Pagination Dots */}
-            {totalSlides > 1 && (
-              <div className="flex justify-end mt-2 md:mt-4 space-x-1 md:space-x-2 pr-4">
+            {/* Modern Pagination Dots - Desktop only */}
+            {!isMobile && totalSlides > 1 && (
+              <div className="flex justify-end mt-4 space-x-2 pr-4">
                 {Array.from({ length: totalSlides }).map((_, index) => (
                   <button
                     key={index}
                     onClick={() => goToSlide(index)}
-                    className={`w-2 h-2 md:w-3 md:h-3 rounded-full transition-all duration-300 transform hover:scale-110 ${
+                    className={`w-3 h-3 rounded-full transition-all duration-300 transform hover:scale-110 ${
                       index === currentSlide 
                         ? 'bg-cyan-500 shadow-lg scale-110' 
                         : 'bg-gray-300 hover:bg-gray-400'
