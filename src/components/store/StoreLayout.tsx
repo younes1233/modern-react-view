@@ -1,10 +1,9 @@
-
 import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X, LogOut, RotateCcw } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X, LogOut, RotateCcw, Home, Grid, ShoppingBag } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { CartSidebar } from './CartSidebar';
 import { AuthModal } from '../auth/AuthModal';
 import { useSearch } from '@/contexts/SearchContext';
@@ -32,6 +31,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const [searchInputRef, setSearchInputRef] = useState<HTMLInputElement | null>(null);
   const [mobileSearchInputRef, setMobileSearchInputRef] = useState<HTMLInputElement | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Force light mode for store layout
   useEffect(() => {
@@ -107,12 +107,12 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 <img 
                   src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png" 
                   alt="Meem Home" 
-                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
+                  className="h-12 md:h-20 lg:h-24 w-auto object-contain"
                 />
               </Link>
             </div>
 
-            {/* Navigation */}
+            {/* Navigation - Desktop only */}
             <nav className="hidden lg:flex space-x-6 xl:space-x-8 flex-shrink-0">
               <Link to="/store/categories" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group text-sm xl:text-base">
                 Categories
@@ -163,8 +163,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               </form>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
+            {/* Desktop Actions */}
+            <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
               <Link to="/store/wishlist">
                 <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 relative rounded-xl transition-all duration-300 p-2">
                   <Heart className="w-4 h-4 md:w-5 md:h-5" />
@@ -236,38 +236,49 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 <Menu className="w-4 h-4 md:w-5 md:h-5" />
               </Button>
             </div>
-          </div>
-        </div>
 
-        {/* Mobile Search */}
-        <div className="lg:hidden px-3 md:px-6 pb-4 relative w-full overflow-hidden">
-          <form onSubmit={handleSearch} className="relative w-full flex border-[4px] border-cyan-400">
-            <Input
-              ref={setMobileSearchInputRef}
-              type="text"
-              placeholder="Search Meem or type"
-              value={searchQuery}
-              onChange={handleMobileSearchInputChange}
-              onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
-              onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-              className="flex-1 h-6 md:h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
-            />
-            <button
-              type="submit"
-              className="h-6 md:h-7 px-3 md:px-4 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center text-base md:text-lg font-normal"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={handleClearSearch}
-                className="absolute right-12 md:right-16 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+            {/* Mobile: Search Bar and Menu Button */}
+            <div className="lg:hidden flex items-center flex-1 gap-2">
+              <div className="flex-1 relative">
+                <form onSubmit={handleSearch} className="relative w-full flex border-[3px] border-cyan-400 rounded-full overflow-hidden">
+                  <Input
+                    ref={setMobileSearchInputRef}
+                    type="text"
+                    placeholder="Search..."
+                    value={searchQuery}
+                    onChange={handleMobileSearchInputChange}
+                    onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
+                    onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
+                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-400 text-sm rounded-full"
+                  />
+                  <button
+                    type="submit"
+                    className="h-8 px-3 bg-cyan-400 text-white hover:bg-cyan-500 transition-colors duration-300 flex items-center justify-center"
+                  >
+                    <Search className="w-4 h-4" />
+                  </button>
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="absolute right-10 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 z-10"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  )}
+                </form>
+              </div>
+              
+              <Button 
+                className="lg:hidden rounded-xl p-2 w-10 h-10" 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
-                <X className="w-3 h-3 md:w-4 md:h-4" />
-              </button>
-            )}
-          </form>
+                <Menu className="w-5 h-5" />
+              </Button>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Menu */}
@@ -477,9 +488,112 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="w-full overflow-x-hidden">
+      <main className="w-full overflow-x-hidden pb-20 lg:pb-0">
         {children}
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40">
+        <div className="flex items-center justify-around py-2 px-4">
+          <Link to="/store" className="flex flex-col items-center group">
+            <div className={`p-2 rounded-xl transition-all duration-300 ${location.pathname === '/store' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+              <Home className="w-5 h-5" />
+            </div>
+            <span className={`text-xs mt-1 transition-colors duration-300 ${location.pathname === '/store' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
+              Home
+            </span>
+          </Link>
+
+          <Link to="/store/categories" className="flex flex-col items-center group">
+            <div className={`p-2 rounded-xl transition-all duration-300 ${location.pathname === '/store/categories' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+              <Grid className="w-5 h-5" />
+            </div>
+            <span className={`text-xs mt-1 transition-colors duration-300 ${location.pathname === '/store/categories' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
+              Categories
+            </span>
+          </Link>
+
+          <button className="flex flex-col items-center group">
+            <div className="p-2 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+              <ShoppingBag className="w-5 h-5" />
+            </div>
+            <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+              Deals
+            </span>
+          </button>
+
+          {/* User/Account Button */}
+          {user ? (
+            <Popover>
+              <PopoverTrigger asChild>
+                <button className="flex flex-col items-center group">
+                  <div className="p-2 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+                    <User className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+                    Account
+                  </span>
+                </button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 bg-white/95 backdrop-blur-md border-gray-200 rounded-2xl shadow-2xl mb-4" align="end">
+                <div className="space-y-4">
+                  <div className="border-b border-gray-100 pb-3">
+                    <p className="font-semibold text-gray-900">{user.name}</p>
+                    <p className="text-sm text-gray-600">{user.email}</p>
+                  </div>
+                  <div className="space-y-2">
+                    <Link to="/store/wishlist" className="block w-full text-left">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300">
+                        <Heart className="w-4 h-4 mr-3" />
+                        My Wishlist
+                      </Button>
+                    </Link>
+                    <Link to="/store/returns" className="block w-full text-left">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300">
+                        <RotateCcw className="w-4 h-4 mr-3" />
+                        Returns
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      onClick={handleLogout}
+                      className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-300"
+                    >
+                      <LogOut className="w-4 h-4 mr-3" />
+                      Sign Out
+                    </Button>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+          ) : (
+            <button 
+              className="flex flex-col items-center group"
+              onClick={() => openAuthModal('signin')}
+            >
+              <div className="p-2 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+                <User className="w-5 h-5" />
+              </div>
+              <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+                Account
+              </span>
+            </button>
+          )}
+
+          {/* Cart Button */}
+          <div className="flex flex-col items-center group relative">
+            <CartSidebar />
+            <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+              Cart
+            </span>
+            {getTotalItems() > 0 && (
+              <Badge className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                {getTotalItems()}
+              </Badge>
+            )}
+          </div>
+        </div>
+      </div>
 
       {/* Footer - Updated Design Based on Reference Image */}
       <footer className="bg-white text-gray-700 py-12 lg:py-8 mt-8 lg:mt-10 w-full overflow-hidden relative">
