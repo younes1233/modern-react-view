@@ -44,8 +44,8 @@ export function ProductSection({ listing }: ProductSectionProps) {
     return null;
   }
 
-  // Responsive products per slide based on settings and screen size
-  const productsPerSlide = isMobile ? 2 : 6;
+  // Desktop slider configuration
+  const productsPerSlide = 6;
   const totalSlides = Math.ceil(products.length / productsPerSlide);
 
   const nextSlide = () => {
@@ -60,9 +60,6 @@ export function ProductSection({ listing }: ProductSectionProps) {
     setCurrentSlide(slideIndex);
   };
 
-  const startIndex = currentSlide * productsPerSlide;
-  const visibleProducts = products.slice(startIndex, startIndex + productsPerSlide);
-
   return (
     <section className="py-2 md:py-4 bg-white overflow-hidden">
       <div className="w-full max-w-full px-2 md:px-4">
@@ -70,17 +67,16 @@ export function ProductSection({ listing }: ProductSectionProps) {
           {/* Header Section */}
           {listing.showTitle && (
             <div className="mb-2 md:mb-4 relative">
-            <div className="relative bg-gradient-to-r from-cyan-100 to-blue-100 pt-6 md:pt-10 overflow-visible w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] absolute">
-              <h2 className="absolute -top-3 md:-top-6 text-xl md:text-3xl font-bold text-cyan-600 ml-4 md:ml-8 z-10">
-                {listing.title}
-              </h2>
-              {listing.subtitle && (
-             <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8">
-               {listing.subtitle}
-             </p>
-        )}
-      </div>
-
+              <div className="relative bg-gradient-to-r from-cyan-100 to-blue-100 pt-6 md:pt-10 overflow-visible w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] absolute">
+                <h2 className="absolute -top-3 md:-top-6 text-xl md:text-3xl font-bold text-cyan-600 ml-4 md:ml-8 z-10">
+                  {listing.title}
+                </h2>
+                {listing.subtitle && (
+                  <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8">
+                    {listing.subtitle}
+                  </p>
+                )}
+              </div>
             </div>
           )}
 
@@ -88,12 +84,11 @@ export function ProductSection({ listing }: ProductSectionProps) {
             {/* Mobile: Horizontal scroll container */}
             {isMobile ? (
               <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex gap-1 pb-2" style={{ width: `${products.length * 50}%` }}>
+                <div className="flex gap-2 pb-2">
                   {products.map((product) => (
                     <div
                       key={product.id}
-                      className="flex-shrink-0"
-                      style={{ width: '44.44%' }} // 2.25 products visible (100% / 2.25)
+                      className="flex-shrink-0 w-[44%]"
                     >
                       <ProductCard product={product} />
                     </div>
@@ -170,6 +165,16 @@ export function ProductSection({ listing }: ProductSectionProps) {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+      `}</style>
     </section>
   );
 }
