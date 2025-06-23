@@ -3,7 +3,7 @@ import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X, LogOut, RotateCcw, Home, Grid, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X, LogOut, RotateCcw, Home, Grid, ShoppingBag, Plus, ChevronDown } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { CartSidebar } from './CartSidebar';
 import { AuthModal } from '../auth/AuthModal';
@@ -14,6 +14,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
 import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import * as Portal from '@radix-ui/react-portal';
 
 interface StoreLayoutProps {
@@ -145,7 +146,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 text-gray-700 placeholder:text-gray-500"
                 />
                 <button
                   type="submit"
@@ -251,7 +252,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     onChange={handleMobileSearchInputChange}
                     onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
                     onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent text-gray-700 placeholder:text-gray-400 text-sm rounded-full"
+                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 text-gray-700 placeholder:text-gray-400 text-sm rounded-full"
                   />
                   <button
                     type="submit"
@@ -271,83 +272,100 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 </form>
               </div>
               
-              {/* Mobile Menu Drawer */}
-              <Drawer open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-                <DrawerTrigger asChild>
-                  <Button 
-                    className="lg:hidden rounded-xl p-2 w-10 h-10" 
-                    variant="ghost" 
-                    size="sm"
-                  >
-                    <Menu className="w-5 h-5" />
-                  </Button>
-                </DrawerTrigger>
-                <DrawerContent className="h-full max-h-screen">
-                  <div className="flex flex-col h-full">
-                    <div className="flex items-center justify-between p-4 border-b">
-                      <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
-                      <DrawerClose asChild>
-                        <Button variant="ghost" size="sm" className="rounded-full p-2">
-                          <X className="w-5 h-5" />
-                        </Button>
-                      </DrawerClose>
-                    </div>
-                    <div className="flex-1 overflow-y-auto p-4">
-                      <div className="space-y-2">
-                        <Link 
-                          to="/store" 
-                          className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Home
-                        </Link>
-                        <Link 
-                          to="/store/categories" 
-                          className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Categories
-                        </Link>
-                        <Link 
-                          to="/store/returns" 
-                          className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                        >
-                          Returns
-                        </Link>
-                        {!user && (
-                          <>
-                            <button 
-                              className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                              onClick={() => {
-                                openAuthModal('signin');
-                                setIsMobileMenuOpen(false);
-                              }}
+              {/* Mobile Sidebar - Sliding from left */}
+              <div className="lg:hidden">
+                <Button 
+                  className="rounded-xl p-2 w-10 h-10" 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => setIsMobileMenuOpen(true)}
+                >
+                  <Menu className="w-5 h-5" />
+                </Button>
+                
+                {/* Mobile Menu Overlay */}
+                {isMobileMenuOpen && (
+                  <div className="fixed inset-0 z-50 lg:hidden">
+                    {/* Backdrop with blur */}
+                    <div 
+                      className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    />
+                    
+                    {/* Sidebar */}
+                    <div className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-300 ease-out ${
+                      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}>
+                      <div className="flex flex-col h-full">
+                        <div className="flex items-center justify-between p-4 border-b">
+                          <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="rounded-full p-2"
+                            onClick={() => setIsMobileMenuOpen(false)}
+                          >
+                            <X className="w-5 h-5" />
+                          </Button>
+                        </div>
+                        <div className="flex-1 overflow-y-auto p-4">
+                          <div className="space-y-2">
+                            <Link 
+                              to="/store" 
+                              className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                              onClick={() => setIsMobileMenuOpen(false)}
                             >
-                              Sign In
-                            </button>
-                            <button 
-                              className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                              onClick={() => {
-                                openAuthModal('signup');
-                                setIsMobileMenuOpen(false);
-                              }}
+                              Home
+                            </Link>
+                            <Link 
+                              to="/store/categories" 
+                              className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                              onClick={() => setIsMobileMenuOpen(false)}
                             >
-                              Sign Up
+                              Categories
+                            </Link>
+                            <Link 
+                              to="/store/returns" 
+                              className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                            >
+                              Returns
+                            </Link>
+                            {!user && (
+                              <>
+                                <button 
+                                  className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                                  onClick={() => {
+                                    openAuthModal('signin');
+                                    setIsMobileMenuOpen(false);
+                                  }}
+                                >
+                                  Sign In
+                                </button>
+                                <button 
+                                  className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                                  onClick={() => {
+                                    openAuthModal('signup');
+                                    setIsMobileMenuOpen(false);
+                                  }}
+                                >
+                                  Sign Up
+                                </button>
+                              </>
+                            )}
+                            <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
+                              Deals
                             </button>
-                          </>
-                        )}
-                        <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
-                          Deals
-                        </button>
-                        <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
-                          About
-                        </button>
+                            <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
+                              About
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </DrawerContent>
-              </Drawer>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -602,7 +620,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         </div>
       </div>
 
-      {/* Footer - Updated Design Based on Reference Image */}
+      {/* Footer - Mobile Responsive with Dropdowns */}
       <footer className="bg-white text-gray-700 py-12 lg:py-8 mt-8 lg:mt-10 w-full overflow-hidden relative">
         {/* Decorative Background Pattern */}
         <div className="absolute inset-0 opacity-70">
@@ -616,7 +634,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           <div className="absolute bottom-20 left-1/3 text-4xl text-cyan-400 transform -rotate-12">×</div>
         </div>
 
-        <div className="relative z-10  max-w-7xl mx-auto px-4 md:px-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
           {/* Email Subscription Section */}
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-5xl font-light mb-8 text-cyan-400">
@@ -628,7 +646,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   <Input
                     type="email"
                     placeholder="Type your email here"
-                    className="flex-1 border-0 bg-transparent px-6 py-4 focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-400 rounded-none"
+                    className="flex-1 border-0 bg-transparent px-6 py-4 focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 text-gray-700 placeholder:text-gray-400 rounded-none"
                   />
                   <Button className="bg-cyan-400 hover:bg-cyan-500 text-white px-8 py-4 rounded-none border-0 font-medium">
                     →
@@ -638,7 +656,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
+          {/* Desktop Layout */}
+          <div className="hidden md:grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
             {/* Meem Home Brand Section */}
             <div className="md:col-span-1">
               <h3 className="text-4xl lg:text-5xl font-light mb-8 text-cyan-400">
@@ -658,17 +677,6 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   <span className="text-sm font-bold">@</span>
                 </div>
               </div>
-              
-              {/* Cyan decorative bars */}
-              {/* <div className="flex space-x-2 mb-8">
-                {Array.from({ length: 9 }).map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="h-2 bg-cyan-400 rounded-full"
-                    style={{ width: `${[20, 35, 25, 40, 30, 45, 25, 35, 20][i]}px` }}
-                  ></div>
-                ))}
-              </div> */}
             </div>
 
             {/* Quick Links */}
@@ -692,6 +700,62 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 <p>info@email</p>
               </div>
             </div>
+          </div>
+
+          {/* Mobile Layout with Dropdowns */}
+          <div className="md:hidden space-y-6">
+            {/* Meem Home Brand Section - Always visible */}
+            <div className="text-center">
+              <h3 className="text-3xl font-light mb-6 text-cyan-400">
+                Meem Home
+              </h3>
+              <div className="flex justify-center space-x-3 mb-6">
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                  <Phone className="w-5 h-5" />
+                </div>
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">f</span>
+                </div>
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">in</span>
+                </div>
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                  <span className="text-sm font-bold">@</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Links Dropdown */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <h4 className="font-semibold text-lg text-cyan-400">Quick Links</h4>
+                <ChevronDown className="w-5 h-5 text-cyan-400 transition-transform data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 py-2">
+                <ul className="space-y-3 text-gray-600">
+                  <li><Link to="/store" className="block py-2 hover:text-cyan-400 transition-colors">Home</Link></li>
+                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">About</button></li>
+                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">Contact</button></li>
+                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">Terms & Conditions</button></li>
+                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">Privacy Policy</button></li>
+                </ul>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Contact Info Dropdown */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
+                <h4 className="font-semibold text-lg text-cyan-400">Have a Questions?</h4>
+                <ChevronDown className="w-5 h-5 text-cyan-400 transition-transform data-[state=open]:rotate-180" />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="px-4 py-2">
+                <div className="space-y-3 text-gray-600">
+                  <p className="py-1">mejdiaya-tripoli-lebanon</p>
+                  <p className="py-1 font-semibold text-gray-800">+961 76 591 765</p>
+                  <p className="py-1">info@email</p>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
           </div>
 
           {/* Bottom decorative bars */}
