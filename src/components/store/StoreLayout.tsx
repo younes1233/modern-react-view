@@ -96,7 +96,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 light overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-blue-100 light overflow-x-hidden">
       {/* Header */}
       <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50 w-full overflow-hidden">
         <div className="w-full max-w-7xl mx-auto px-3 md:px-6">
@@ -495,7 +495,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           <div className="absolute bottom-20 left-1/3 text-4xl text-cyan-400 transform -rotate-12">×</div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8">
+        <div className="relative z-10  max-w-7xl mx-auto px-4 md:px-8">
           {/* Email Subscription Section */}
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-5xl font-light mb-8 text-cyan-400">
