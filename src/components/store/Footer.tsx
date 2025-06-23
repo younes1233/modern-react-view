@@ -20,6 +20,27 @@ export function Footer() {
       </div>
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 md:px-8">
+        {/* Email Subscription Section */}
+        <div className="text-center mb-16">
+          <h2 className="text-3xl lg:text-5xl font-light mb-8 text-cyan-400">
+            Get Your Order Now
+          </h2>
+          <div className="flex justify-center">
+            <div className="relative max-w-lg w-full">
+              <div className="border-4 border-cyan-400 rounded-full overflow-hidden bg-white flex">
+                <Input
+                  type="email"
+                  placeholder="Type your email here"
+                  className="flex-1 border-0 bg-transparent px-6 py-4 focus:ring-0 focus:outline-none text-gray-700 placeholder:text-gray-400 rounded-none"
+                />
+                <Button className="bg-cyan-400 hover:bg-cyan-500 text-white px-8 py-4 rounded-none border-0 font-medium">
+                  →
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
           {/* Meem Home Brand Section */}
           <div className="md:col-span-1">
