@@ -187,8 +187,7 @@ const Store = () => {
         )}
 
         {/* Newsletter Section */}
-        <section className="py-12 md:py-16 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
-          {/* Decorative Background Pattern */}
+        {/* <section className="py-12 md:py-16 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
           <div className="absolute inset-0 opacity-10">
             <div className="absolute top-10 left-10 text-6xl text-white transform rotate-12">+</div>
             <div className="absolute top-20 right-20 text-4xl text-white transform -rotate-12">×</div>
@@ -218,7 +217,7 @@ const Store = () => {
               </div>
             </div>
           </div>
-        </section>
+        </section> */}
       </StoreLayout>
     </div>
   );

@@ -482,9 +482,9 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       </main>
 
       {/* Footer - Updated Design Based on Reference Image */}
-      <footer className="bg-gray-50 text-gray-700 py-12 lg:py-16 mt-8 lg:mt-16 w-full overflow-hidden relative">
+      <footer className="bg-white text-gray-700 py-12 lg:py-8 mt-8 lg:mt-10 w-full overflow-hidden relative">
         {/* Decorative Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
+        <div className="absolute inset-0 opacity-70">
           <div className="absolute top-16 left-16 text-6xl text-cyan-400 transform rotate-12">+</div>
           <div className="absolute top-32 right-24 text-4xl text-cyan-400 transform -rotate-12">×</div>
           <div className="absolute bottom-16 left-24 text-5xl text-cyan-400 transform rotate-45">+</div>
@@ -527,19 +527,19 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
                   <Phone className="w-5 h-5" />
                 </div>
-                <div className="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white hover:bg-blue-600 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
                   <span className="text-sm font-bold">f</span>
                 </div>
-                <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white hover:bg-blue-700 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
                   <span className="text-sm font-bold">in</span>
                 </div>
-                <div className="w-10 h-10 bg-pink-500 rounded-full flex items-center justify-center text-white hover:bg-pink-600 transition-colors cursor-pointer">
+                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
                   <span className="text-sm font-bold">@</span>
                 </div>
               </div>
               
               {/* Cyan decorative bars */}
-              <div className="flex space-x-2 mb-8">
+              {/* <div className="flex space-x-2 mb-8">
                 {Array.from({ length: 9 }).map((_, i) => (
                   <div 
                     key={i} 
@@ -547,7 +547,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     style={{ width: `${[20, 35, 25, 40, 30, 45, 25, 35, 20][i]}px` }}
                   ></div>
                 ))}
-              </div>
+              </div> */}
             </div>
 
             {/* Quick Links */}
@@ -574,11 +574,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
 
           {/* Bottom decorative bars */}
-          <div className="flex justify-center space-x-3 my-12">
+          <div className="flex justify-center space-x-12 my-12">
             {Array.from({ length: 9 }).map((_, i) => (
               <div 
                 key={i} 
-                className="h-2 bg-cyan-400 rounded-full"
+                className="h-2 bg-cyan-400"
                 style={{ width: `${[30, 50, 40, 60, 45, 70, 40, 50, 35][i]}px` }}
               ></div>
             ))}
