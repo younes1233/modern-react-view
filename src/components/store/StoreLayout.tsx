@@ -13,6 +13,7 @@ import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import * as Portal from '@radix-ui/react-portal';
 
 interface StoreLayoutProps {
@@ -92,7 +93,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     return {
       top: rect.bottom + 8,
       left: rect.left,
-      width: Math.max(rect.width, 400) // Make dropdown wider
+      width: Math.min(rect.width + 100, 500) // Limit max width to 500px
     };
   };
 
@@ -270,81 +271,86 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 </form>
               </div>
               
-              <Button 
-                className="lg:hidden rounded-xl p-2 w-10 h-10" 
-                variant="ghost" 
-                size="sm"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                <Menu className="w-5 h-5" />
-              </Button>
+              {/* Mobile Menu Drawer */}
+              <Drawer open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+                <DrawerTrigger asChild>
+                  <Button 
+                    className="lg:hidden rounded-xl p-2 w-10 h-10" 
+                    variant="ghost" 
+                    size="sm"
+                  >
+                    <Menu className="w-5 h-5" />
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="h-full max-h-screen">
+                  <div className="flex flex-col h-full">
+                    <div className="flex items-center justify-between p-4 border-b">
+                      <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                      <DrawerClose asChild>
+                        <Button variant="ghost" size="sm" className="rounded-full p-2">
+                          <X className="w-5 h-5" />
+                        </Button>
+                      </DrawerClose>
+                    </div>
+                    <div className="flex-1 overflow-y-auto p-4">
+                      <div className="space-y-2">
+                        <Link 
+                          to="/store" 
+                          className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Home
+                        </Link>
+                        <Link 
+                          to="/store/categories" 
+                          className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Categories
+                        </Link>
+                        <Link 
+                          to="/store/returns" 
+                          className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                        >
+                          Returns
+                        </Link>
+                        {!user && (
+                          <>
+                            <button 
+                              className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                              onClick={() => {
+                                openAuthModal('signin');
+                                setIsMobileMenuOpen(false);
+                              }}
+                            >
+                              Sign In
+                            </button>
+                            <button 
+                              className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                              onClick={() => {
+                                openAuthModal('signup');
+                                setIsMobileMenuOpen(false);
+                              }}
+                            >
+                              Sign Up
+                            </button>
+                          </>
+                        )}
+                        <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
+                          Deals
+                        </button>
+                        <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
+                          About
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </DrawerContent>
+              </Drawer>
             </div>
           </div>
         </div>
-
-        {/* Mobile Menu */}
-        {isMobileMenuOpen && (
-          <div className="lg:hidden border-t border-gray-100 bg-white/95 backdrop-blur-md w-full overflow-hidden">
-            <div className="px-1 md:px-2 py-3 space-y-2">
-              <Link 
-                to="/store" 
-                className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Home
-              </Link>
-              <Link 
-                to="/store/categories" 
-                className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Categories
-              </Link>
-              <Link 
-                to="/store/returns" 
-                className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Returns
-              </Link>
-              <Link 
-                to="/store/wishlist" 
-                className="block px-4 py-3 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium"
-                onClick={() => setIsMobileMenuOpen(false)}
-              >
-                Wishlist ({wishlistItems.length})
-              </Link>
-              {!user && (
-                <>
-                  <button 
-                    className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                    onClick={() => {
-                      openAuthModal('signin');
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    Sign In
-                  </button>
-                  <button 
-                    className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
-                    onClick={() => {
-                      openAuthModal('signup');
-                      setIsMobileMenuOpen(false);
-                    }}
-                  >
-                    Sign Up
-                  </button>
-                </>
-              )}
-              <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
-                Deals
-              </button>
-              <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
-                About
-              </button>
-            </div>
-          </div>
-        )}
       </header>
 
       {/* Social Media Banner */}
@@ -393,10 +399,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-10 h-10 object-cover rounded-lg shadow-md"
+                      className="w-8 h-8 object-cover rounded-lg shadow-md"
                     />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate text-sm">
+                      <h4 className="font-medium text-gray-900 truncate text-xs">
                         {product.name}
                       </h4>
                       <p className="text-xs text-gray-500 capitalize">{product.category}</p>
@@ -436,7 +442,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             style={{
               top: getSearchDropdownPosition(mobileSearchInputRef).top,
               left: getSearchDropdownPosition(mobileSearchInputRef).left,
-              width: getSearchDropdownPosition(mobileSearchInputRef).width,
+              width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350), // Limit mobile width
             }}
           >
             {searchResults.length > 0 ? (
@@ -453,10 +459,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-10 h-10 object-cover rounded-lg shadow-md"
+                      className="w-8 h-8 object-cover rounded-lg shadow-md"
                     />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate text-sm">
+                      <h4 className="font-medium text-gray-900 truncate text-xs">
                         {product.name}
                       </h4>
                       <p className="text-xs text-gray-500 capitalize">{product.category}</p>
@@ -592,11 +598,6 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             <span className="text-xs mt-0.5 text-gray-500 transition-colors duration-300">
               Cart
             </span>
-            {getTotalItems() > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg">
-                {getTotalItems()}
-              </Badge>
-            )}
           </div>
         </div>
       </div>

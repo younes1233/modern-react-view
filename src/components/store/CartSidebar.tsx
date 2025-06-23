@@ -20,10 +20,10 @@ export function CartSidebar() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative hover:bg-cyan-50 hover:text-cyan-600">
+        <Button variant="ghost" size="sm" className="relative hover:bg-cyan-50 hover:text-cyan-600 p-1.5 rounded-xl transition-all duration-300">
           <ShoppingCart className="w-5 h-5" />
           {getTotalItems() > 0 && (
-            <Badge className="absolute -top-2 -right-2 bg-cyan-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
+            <Badge className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg">
               {getTotalItems()}
             </Badge>
           )}
