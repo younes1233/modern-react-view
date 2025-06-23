@@ -1,3 +1,4 @@
+
 import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -91,7 +92,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     return {
       top: rect.bottom + 8,
       left: rect.left,
-      width: rect.width
+      width: Math.max(rect.width, 400) // Make dropdown wider
     };
   };
 
@@ -380,26 +381,26 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           >
             {searchResults.length > 0 ? (
               <div className="p-2">
-                <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
+                <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
                   {searchResults.length} results found
                 </div>
                 {searchResults.slice(0, 6).map((product) => (
                   <button
                     key={product.id}
                     onClick={() => handleSearchResultClick(product.id)}
-                    className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                    className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
                   >
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-12 h-12 object-cover rounded-xl shadow-md"
+                      className="w-10 h-10 object-cover rounded-lg shadow-md"
                     />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate">
+                      <h4 className="font-medium text-gray-900 truncate text-sm">
                         {product.name}
                       </h4>
-                      <p className="text-sm text-gray-500 capitalize">{product.category}</p>
-                      <p className="text-sm font-semibold text-blue-600">
+                      <p className="text-xs text-gray-500 capitalize">{product.category}</p>
+                      <p className="text-xs font-semibold text-blue-600">
                         ${product.price.toFixed(2)}
                       </p>
                     </div>
@@ -411,16 +412,16 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       navigate('/store/categories');
                       setShowSearchResults(false);
                     }}
-                    className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                    className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
                   >
                     View all {searchResults.length} results
                   </button>
                 )}
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
-                <p>No products found for "{searchQuery}"</p>
+              <div className="p-6 text-center text-gray-500">
+                <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No products found for "{searchQuery}"</p>
               </div>
             )}
           </div>
@@ -440,26 +441,26 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           >
             {searchResults.length > 0 ? (
               <div className="p-2">
-                <div className="text-xs text-gray-500 px-4 py-3 border-b border-gray-100">
+                <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
                   {searchResults.length} results found
                 </div>
                 {searchResults.slice(0, 6).map((product) => (
                   <button
                     key={product.id}
                     onClick={() => handleSearchResultClick(product.id)}
-                    className="w-full flex items-center space-x-4 p-4 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                    className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
                   >
                     <img
                       src={product.image}
                       alt={product.name}
-                      className="w-12 h-12 object-cover rounded-xl shadow-md"
+                      className="w-10 h-10 object-cover rounded-lg shadow-md"
                     />
                     <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate">
+                      <h4 className="font-medium text-gray-900 truncate text-sm">
                         {product.name}
                       </h4>
-                      <p className="text-sm text-gray-500 capitalize">{product.category}</p>
-                      <p className="text-sm font-semibold text-blue-600">
+                      <p className="text-xs text-gray-500 capitalize">{product.category}</p>
+                      <p className="text-xs font-semibold text-blue-600">
                         ${product.price.toFixed(2)}
                       </p>
                     </div>
@@ -471,16 +472,16 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       navigate('/store/categories');
                       setShowMobileSearchResults(false);
                     }}
-                    className="w-full p-4 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                    className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
                   >
                     View all {searchResults.length} results
                   </button>
                 )}
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-500">
-                <Search className="w-8 h-8 mx-auto mb-3 text-gray-300" />
-                <p>No products found for "{searchQuery}"</p>
+              <div className="p-6 text-center text-gray-500">
+                <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">No products found for "{searchQuery}"</p>
               </div>
             )}
           </div>
@@ -488,49 +489,54 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="w-full overflow-x-hidden pb-20 lg:pb-0">
+      <main className="w-full overflow-x-hidden pb-16 lg:pb-0">
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40">
-        <div className="flex items-center justify-around py-2 px-4">
+      {/* Mobile Bottom Navigation - Updated with smaller height and wishlist */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 animate-bottom-nav">
+        <div className="flex items-center justify-around py-1.5 px-4">
           <Link to="/store" className="flex flex-col items-center group">
-            <div className={`p-2 rounded-xl transition-all duration-300 ${location.pathname === '/store' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+            <div className={`p-1.5 rounded-xl transition-all duration-300 ${location.pathname === '/store' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
               <Home className="w-5 h-5" />
             </div>
-            <span className={`text-xs mt-1 transition-colors duration-300 ${location.pathname === '/store' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
+            <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
               Home
             </span>
           </Link>
 
           <Link to="/store/categories" className="flex flex-col items-center group">
-            <div className={`p-2 rounded-xl transition-all duration-300 ${location.pathname === '/store/categories' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+            <div className={`p-1.5 rounded-xl transition-all duration-300 ${location.pathname === '/store/categories' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
               <Grid className="w-5 h-5" />
             </div>
-            <span className={`text-xs mt-1 transition-colors duration-300 ${location.pathname === '/store/categories' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
+            <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store/categories' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
               Categories
             </span>
           </Link>
 
-          <button className="flex flex-col items-center group">
-            <div className="p-2 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
-              <ShoppingBag className="w-5 h-5" />
+          <Link to="/store/wishlist" className="flex flex-col items-center group relative">
+            <div className={`p-1.5 rounded-xl transition-all duration-300 ${location.pathname === '/store/wishlist' ? 'bg-pink-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-pink-50 group-hover:text-pink-600'}`}>
+              <Heart className="w-5 h-5" />
             </div>
-            <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
-              Deals
+            <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store/wishlist' ? 'text-pink-600 font-medium' : 'text-gray-500'}`}>
+              Wishlist
             </span>
-          </button>
+            {wishlistItems.length > 0 && (
+              <Badge className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg animate-pulse">
+                {wishlistItems.length}
+              </Badge>
+            )}
+          </Link>
 
           {/* User/Account Button */}
           {user ? (
             <Popover>
               <PopoverTrigger asChild>
                 <button className="flex flex-col items-center group">
-                  <div className="p-2 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+                  <div className="p-1.5 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
                     <User className="w-5 h-5" />
                   </div>
-                  <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+                  <span className="text-xs mt-0.5 text-gray-500 transition-colors duration-300">
                     Account
                   </span>
                 </button>
@@ -571,23 +577,23 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               className="flex flex-col items-center group"
               onClick={() => openAuthModal('signin')}
             >
-              <div className="p-2 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+              <div className="p-1.5 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
                 <User className="w-5 h-5" />
               </div>
-              <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+              <span className="text-xs mt-0.5 text-gray-500 transition-colors duration-300">
                 Account
               </span>
             </button>
           )}
 
-          {/* Cart Button */}
+          {/* Cart Button - Fixed to only show blue badge */}
           <div className="flex flex-col items-center group relative">
             <CartSidebar />
-            <span className="text-xs mt-1 text-gray-500 transition-colors duration-300">
+            <span className="text-xs mt-0.5 text-gray-500 transition-colors duration-300">
               Cart
             </span>
             {getTotalItems() > 0 && (
-              <Badge className="absolute -top-1 -right-1 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg animate-pulse">
+              <Badge className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg">
                 {getTotalItems()}
               </Badge>
             )}

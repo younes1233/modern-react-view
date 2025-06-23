@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { ProductListing, getProductsForListing, getDisplaySettings } from "@/data/storeData";
 import { ProductCard } from "./ProductCard";
@@ -83,11 +84,12 @@ export function ProductSection({ listing }: ProductSectionProps) {
             {/* Mobile: Horizontal scroll container */}
             {isMobile ? (
               <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex gap-2 pb-2">
+                <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
                   {products.map((product) => (
                     <div
                       key={product.id}
-                      className="flex-shrink-0 w-[44%]"
+                      className="flex-shrink-0"
+                      style={{ width: 'calc(40vw - 8px)' }}
                     >
                       <ProductCard product={product} />
                     </div>
@@ -165,15 +167,17 @@ export function ProductSection({ listing }: ProductSectionProps) {
         </div>
       </div>
 
-      <style jsx>{`
-        .scrollbar-hide {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
-        .scrollbar-hide::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
+      <style>
+        {`
+          .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+          }
+          .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+          }
+        `}
+      </style>
     </section>
   );
 }
