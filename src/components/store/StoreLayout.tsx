@@ -177,7 +177,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500 text-base"
+                  style={{ fontSize: '16px' }}
                 />
                 <button
                   type="submit"
@@ -283,7 +284,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     onChange={handleMobileSearchInputChange}
                     onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
                     onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-400 text-sm rounded-full"
+                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-400 rounded-full"
+                    style={{ fontSize: '16px' }}
                   />
                   <button
                     type="submit"
@@ -590,15 +592,15 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="w-full overflow-x-hidden pb-14 lg:pb-0">
+      <main className="w-full overflow-x-hidden pb-12 lg:pb-0">
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Reduced height */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 animate-bottom-nav">
-        <div className="flex items-center justify-around py-1.5 px-4">
+        <div className="flex items-center justify-around py-1 px-4">
           <Link to="/store" className="flex flex-col items-center group">
-            <div className={`p-1.5 rounded-xl transition-all duration-300 ${location.pathname === '/store' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+            <div className={`p-1 rounded-xl transition-all duration-300 ${location.pathname === '/store' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
               <Home className="w-5 h-5" />
             </div>
             <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
@@ -607,7 +609,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </Link>
 
           <Link to="/store/categories" className="flex flex-col items-center group">
-            <div className={`p-1.5 rounded-xl transition-all duration-300 ${location.pathname === '/store/categories' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+            <div className={`p-1 rounded-xl transition-all duration-300 ${location.pathname === '/store/categories' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
               <Grid className="w-5 h-5" />
             </div>
             <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store/categories' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
@@ -616,7 +618,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </Link>
 
           <Link to="/store/wishlist" className="flex flex-col items-center group relative">
-            <div className={`p-1.5 rounded-xl transition-all duration-300 ${location.pathname === '/store/wishlist' ? 'bg-pink-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-pink-50 group-hover:text-pink-600'}`}>
+            <div className={`p-1 rounded-xl transition-all duration-300 ${location.pathname === '/store/wishlist' ? 'bg-pink-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-pink-50 group-hover:text-pink-600'}`}>
               <Heart className="w-5 h-5" />
             </div>
             <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store/wishlist' ? 'text-pink-600 font-medium' : 'text-gray-500'}`}>
@@ -634,7 +636,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             <Popover>
               <PopoverTrigger asChild>
                 <button className="flex flex-col items-center group">
-                  <div className="p-1.5 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+                  <div className="p-1 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
                     <User className="w-5 h-5" />
                   </div>
                   <span className="text-xs mt-0.5 text-gray-500 transition-colors duration-300">
@@ -678,7 +680,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               className="flex flex-col items-center group"
               onClick={() => openAuthModal('signin')}
             >
-              <div className="p-1.5 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
+              <div className="p-1 rounded-xl text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600 transition-all duration-300">
                 <User className="w-5 h-5" />
               </div>
               <span className="text-xs mt-0.5 text-gray-500 transition-colors duration-300">
@@ -724,6 +726,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     type="email"
                     placeholder="Type your email here"
                     className="flex-1 border-0 bg-transparent px-6 py-4 focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 text-gray-700 placeholder:text-gray-400 rounded-none"
+                    style={{ fontSize: '16px' }}
                   />
                   <Button className="bg-cyan-400 hover:bg-cyan-500 text-white px-8 py-4 rounded-none border-0 font-medium">
                     →
