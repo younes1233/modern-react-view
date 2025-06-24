@@ -1,4 +1,3 @@
-
 import { ReactNode, useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -94,7 +93,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     return {
       top: rect.bottom + 8,
       left: rect.left,
-      width: Math.min(rect.width + 50, 400) // Reduced max width to 400px
+      width: Math.min(rect.width + 50, 400)
     };
   };
 
@@ -146,7 +145,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500"
                 />
                 <button
                   type="submit"
@@ -252,7 +251,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     onChange={handleMobileSearchInputChange}
                     onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
                     onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
-                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 text-gray-700 placeholder:text-gray-400 text-sm rounded-full"
+                    className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-400 text-sm rounded-full"
                   />
                   <button
                     type="submit"
@@ -272,7 +271,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 </form>
               </div>
               
-              {/* Mobile Sidebar - Sliding from left */}
+              {/* Mobile Menu Button and Sidebar */}
               <div className="lg:hidden">
                 <Button 
                   className="rounded-xl p-2 w-10 h-10" 
@@ -288,76 +287,132 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   <div className="fixed inset-0 z-50 lg:hidden">
                     {/* Backdrop with blur */}
                     <div 
-                      className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300"
+                      className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ease-out ${
+                        isMobileMenuOpen ? 'opacity-100' : 'opacity-0'
+                      }`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     />
                     
                     {/* Sidebar */}
-                    <div className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-300 ease-out ${
+                    <div className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-500 ease-out ${
                       isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}>
-                      <div className="flex flex-col h-full animate-slide-in-right">
-                        <div className="flex items-center justify-between p-4 border-b">
-                          <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                      <div className="flex flex-col h-full">
+                        {/* Header */}
+                        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-cyan-50 to-blue-50">
+                          <h2 className="text-xl font-semibold text-gray-900 animate-fade-in">Menu</h2>
                           <Button 
                             variant="ghost" 
                             size="sm" 
-                            className="rounded-full p-2"
+                            className="rounded-full p-2 hover:bg-gray-100 transition-all duration-300"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            <X className="w-5 h-5" />
+                            <X className="w-6 h-6" />
                           </Button>
                         </div>
-                        <div className="flex-1 overflow-y-auto p-4">
-                          <div className="space-y-2">
+                        
+                        {/* Content */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                          <div className="space-y-3">
                             <Link 
                               to="/store" 
-                              className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
                               onClick={() => setIsMobileMenuOpen(false)}
+                              style={{ animationDelay: '0.1s' }}
                             >
-                              Home
+                              <Home className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                              <span>Home</span>
                             </Link>
                             <Link 
                               to="/store/categories" 
-                              className="block px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
                               onClick={() => setIsMobileMenuOpen(false)}
+                              style={{ animationDelay: '0.2s' }}
                             >
-                              Categories
+                              <Grid className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                              <span>Categories</span>
+                            </Link>
+                            <Link 
+                              to="/store/wishlist" 
+                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
+                              onClick={() => setIsMobileMenuOpen(false)}
+                              style={{ animationDelay: '0.3s' }}
+                            >
+                              <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                              <span>Wishlist</span>
+                              {wishlistItems.length > 0 && (
+                                <Badge className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full animate-pulse">
+                                  {wishlistItems.length}
+                                </Badge>
+                              )}
                             </Link>
                             <Link 
                               to="/store/returns" 
-                              className="block px-4 py-3 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium"
+                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
                               onClick={() => setIsMobileMenuOpen(false)}
+                              style={{ animationDelay: '0.4s' }}
                             >
-                              Returns
+                              <RotateCcw className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                              <span>Returns</span>
                             </Link>
+                            
+                            {/* Divider */}
+                            <div className="border-t border-gray-200 my-4 animate-fade-in" style={{ animationDelay: '0.5s' }}></div>
+                            
                             {!user && (
                               <>
                                 <button 
-                                  className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                                  className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
                                   onClick={() => {
                                     openAuthModal('signin');
                                     setIsMobileMenuOpen(false);
                                   }}
+                                  style={{ animationDelay: '0.6s' }}
                                 >
-                                  Sign In
+                                  <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                                  <span>Sign In</span>
                                 </button>
                                 <button 
-                                  className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium"
+                                  className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
                                   onClick={() => {
                                     openAuthModal('signup');
                                     setIsMobileMenuOpen(false);
                                   }}
+                                  style={{ animationDelay: '0.7s' }}
                                 >
-                                  Sign Up
+                                  <Plus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                                  <span>Sign Up</span>
                                 </button>
                               </>
                             )}
-                            <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
-                              Deals
+                            
+                            {user && (
+                              <>
+                                <div className="px-4 py-3 bg-gray-50 rounded-xl animate-fade-in" style={{ animationDelay: '0.6s' }}>
+                                  <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
+                                  <p className="text-xs text-gray-600">{user.email}</p>
+                                </div>
+                                <button
+                                  onClick={() => {
+                                    handleLogout();
+                                    setIsMobileMenuOpen(false);
+                                  }}
+                                  className="flex items-center gap-4 w-full px-4 py-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
+                                  style={{ animationDelay: '0.7s' }}
+                                >
+                                  <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                                  <span>Sign Out</span>
+                                </button>
+                              </>
+                            )}
+                            
+                            <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right" style={{ animationDelay: '0.8s' }}>
+                              <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                              <span>Deals</span>
                             </button>
-                            <button className="block w-full text-left px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium">
-                              About
+                            <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right" style={{ animationDelay: '0.9s' }}>
+                              <Phone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                              <span>About</span>
                             </button>
                           </div>
                         </div>
@@ -460,7 +515,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             style={{
               top: getSearchDropdownPosition(mobileSearchInputRef).top,
               left: getSearchDropdownPosition(mobileSearchInputRef).left,
-              width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350), // Limit mobile width
+              width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350),
             }}
           >
             {searchResults.length > 0 ? (
@@ -517,7 +572,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         {children}
       </main>
 
-      {/* Mobile Bottom Navigation - Updated with smaller height and wishlist */}
+      {/* Mobile Bottom Navigation */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 animate-bottom-nav">
         <div className="flex items-center justify-around py-1.5 px-4">
           <Link to="/store" className="flex flex-col items-center group">
@@ -703,7 +758,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
 
           {/* Mobile Layout with Dropdowns */}
-          <div className="md:hidden space-y-6">
+          <div className="md:hidden space-y-4">
             {/* Meem Home Brand Section - Always visible */}
             <div className="text-center">
               <h3 className="text-3xl font-light mb-6 text-cyan-400">
@@ -727,32 +782,42 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Quick Links Dropdown */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300">
-                <h4 className="font-medium text-sm text-cyan-400">Quick Links</h4>
-                <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 group">
+                <h4 className="font-medium text-sm text-cyan-400 group-hover:text-cyan-500 transition-colors duration-300">Quick Links</h4>
+                <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 group-hover:text-cyan-500 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-3 py-2 animate-accordion-down">
                 <ul className="space-y-2 text-gray-600">
-                  <li><Link to="/store" className="block py-2 text-sm hover:text-cyan-400 transition-colors">Home</Link></li>
-                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">About</button></li>
-                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">Contact</button></li>
-                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">Terms & Conditions</button></li>
-                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">Privacy Policy</button></li>
+                  <li className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                    <Link to="/store" className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Home</Link>
+                  </li>
+                  <li className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">About</button>
+                  </li>
+                  <li className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Contact</button>
+                  </li>
+                  <li className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Terms & Conditions</button>
+                  </li>
+                  <li className="animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Privacy Policy</button>
+                  </li>
                 </ul>
               </CollapsibleContent>
             </Collapsible>
 
             {/* Contact Info Dropdown */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300">
-                <h4 className="font-medium text-sm text-cyan-400">Have a Questions?</h4>
-                <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 group">
+                <h4 className="font-medium text-sm text-cyan-400 group-hover:text-cyan-500 transition-colors duration-300">Have a Questions?</h4>
+                <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 group-hover:text-cyan-500 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-3 py-2 animate-accordion-down">
                 <div className="space-y-2 text-gray-600">
-                  <p className="py-1 text-sm">mejdiaya-tripoli-lebanon</p>
-                  <p className="py-1 text-sm font-semibold text-gray-800">+961 76 591 765</p>
-                  <p className="py-1 text-sm">info@email</p>
+                  <p className="py-1 text-sm animate-fade-in hover:text-cyan-400 transition-colors duration-300" style={{ animationDelay: '0.1s' }}>mejdiaya-tripoli-lebanon</p>
+                  <p className="py-1 text-sm font-semibold text-gray-800 animate-fade-in hover:text-cyan-600 transition-colors duration-300" style={{ animationDelay: '0.2s' }}>+961 76 591 765</p>
+                  <p className="py-1 text-sm animate-fade-in hover:text-cyan-400 transition-colors duration-300" style={{ animationDelay: '0.3s' }}>info@email</p>
                 </div>
               </CollapsibleContent>
             </Collapsible>
