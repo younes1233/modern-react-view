@@ -592,7 +592,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="w-full overflow-x-hidden pb-12 lg:pb-0">
+      <main className="w-full overflow-x-hidden pb-6 lg:pb-0">
         {children}
       </main>
 
@@ -700,7 +700,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       </div>
 
       {/* Footer - Mobile Responsive with Dropdowns */}
-      <footer className="bg-white text-gray-700 py-12 lg:py-8 mt-8 lg:mt-10 w-full overflow-hidden relative">
+<footer className="bg-white text-gray-700 py-12 lg:py-8 mt-[2px] lg:mt-10 w-full overflow-hidden relative">
         {/* Decorative Background Pattern */}
         <div className="absolute inset-0 opacity-70">
           <div className="absolute top-16 left-16 text-6xl text-cyan-400 transform rotate-12">+</div>
