@@ -94,7 +94,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     return {
       top: rect.bottom + 8,
       left: rect.left,
-      width: Math.min(rect.width + 100, 500) // Limit max width to 500px
+      width: Math.min(rect.width + 50, 400) // Reduced max width to 400px
     };
   };
 
@@ -288,7 +288,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   <div className="fixed inset-0 z-50 lg:hidden">
                     {/* Backdrop with blur */}
                     <div 
-                      className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+                      className="absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-300"
                       onClick={() => setIsMobileMenuOpen(false)}
                     />
                     
@@ -296,7 +296,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     <div className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-300 ease-out ${
                       isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
                     }`}>
-                      <div className="flex flex-col h-full">
+                      <div className="flex flex-col h-full animate-slide-in-right">
                         <div className="flex items-center justify-between p-4 border-b">
                           <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
                           <Button 
@@ -513,7 +513,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       )}
 
       {/* Main Content */}
-      <main className="w-full overflow-x-hidden pb-16 lg:pb-0">
+      <main className="w-full overflow-x-hidden pb-14 lg:pb-0">
         {children}
       </main>
 
@@ -727,32 +727,32 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Quick Links Dropdown */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                <h4 className="font-semibold text-lg text-cyan-400">Quick Links</h4>
-                <ChevronDown className="w-5 h-5 text-cyan-400 transition-transform data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300">
+                <h4 className="font-medium text-sm text-cyan-400">Quick Links</h4>
+                <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 py-2">
-                <ul className="space-y-3 text-gray-600">
-                  <li><Link to="/store" className="block py-2 hover:text-cyan-400 transition-colors">Home</Link></li>
-                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">About</button></li>
-                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">Contact</button></li>
-                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">Terms & Conditions</button></li>
-                  <li><button className="block py-2 hover:text-cyan-400 transition-colors">Privacy Policy</button></li>
+              <CollapsibleContent className="px-3 py-2 animate-accordion-down">
+                <ul className="space-y-2 text-gray-600">
+                  <li><Link to="/store" className="block py-2 text-sm hover:text-cyan-400 transition-colors">Home</Link></li>
+                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">About</button></li>
+                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">Contact</button></li>
+                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">Terms & Conditions</button></li>
+                  <li><button className="block py-2 text-sm hover:text-cyan-400 transition-colors">Privacy Policy</button></li>
                 </ul>
               </CollapsibleContent>
             </Collapsible>
 
             {/* Contact Info Dropdown */}
             <Collapsible>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                <h4 className="font-semibold text-lg text-cyan-400">Have a Questions?</h4>
-                <ChevronDown className="w-5 h-5 text-cyan-400 transition-transform data-[state=open]:rotate-180" />
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300">
+                <h4 className="font-medium text-sm text-cyan-400">Have a Questions?</h4>
+                <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
-              <CollapsibleContent className="px-4 py-2">
-                <div className="space-y-3 text-gray-600">
-                  <p className="py-1">mejdiaya-tripoli-lebanon</p>
-                  <p className="py-1 font-semibold text-gray-800">+961 76 591 765</p>
-                  <p className="py-1">info@email</p>
+              <CollapsibleContent className="px-3 py-2 animate-accordion-down">
+                <div className="space-y-2 text-gray-600">
+                  <p className="py-1 text-sm">mejdiaya-tripoli-lebanon</p>
+                  <p className="py-1 text-sm font-semibold text-gray-800">+961 76 591 765</p>
+                  <p className="py-1 text-sm">info@email</p>
                 </div>
               </CollapsibleContent>
             </Collapsible>
