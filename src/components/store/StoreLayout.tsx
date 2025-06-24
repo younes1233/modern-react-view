@@ -42,6 +42,19 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     root.classList.add('light');
   }, []);
 
+  // Prevent body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -145,7 +158,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500"
                 />
                 <button
                   type="submit"
@@ -271,160 +284,147 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 </form>
               </div>
               
-              {/* Mobile Menu Button and Sidebar */}
-              <div className="lg:hidden">
-                <Button 
-                  className="rounded-xl p-2 w-10 h-10" 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setIsMobileMenuOpen(true)}
-                >
-                  <Menu className="w-5 h-5" />
-                </Button>
-                
-                {/* Mobile Menu Overlay */}
-                {isMobileMenuOpen && (
-                  <div className="fixed inset-0 z-50 lg:hidden">
-                    {/* Backdrop with blur */}
-                    <div 
-                      className={`absolute inset-0 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ease-out ${
-                        isMobileMenuOpen ? 'opacity-100' : 'opacity-0'
-                      }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    />
-                    
-                    {/* Sidebar */}
-                    <div className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-500 ease-out ${
-                      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}>
-                      <div className="flex flex-col h-full">
-                        {/* Header */}
-                        <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-cyan-50 to-blue-50">
-                          <h2 className="text-xl font-semibold text-gray-900 animate-fade-in">Menu</h2>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="rounded-full p-2 hover:bg-gray-100 transition-all duration-300"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <X className="w-6 h-6" />
-                          </Button>
-                        </div>
-                        
-                        {/* Content */}
-                        <div className="flex-1 overflow-y-auto p-6">
-                          <div className="space-y-3">
-                            <Link 
-                              to="/store" 
-                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                              style={{ animationDelay: '0.1s' }}
-                            >
-                              <Home className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                              <span>Home</span>
-                            </Link>
-                            <Link 
-                              to="/store/categories" 
-                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                              style={{ animationDelay: '0.2s' }}
-                            >
-                              <Grid className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                              <span>Categories</span>
-                            </Link>
-                            <Link 
-                              to="/store/wishlist" 
-                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                              style={{ animationDelay: '0.3s' }}
-                            >
-                              <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                              <span>Wishlist</span>
-                              {wishlistItems.length > 0 && (
-                                <Badge className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full animate-pulse">
-                                  {wishlistItems.length}
-                                </Badge>
-                              )}
-                            </Link>
-                            <Link 
-                              to="/store/returns" 
-                              className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                              onClick={() => setIsMobileMenuOpen(false)}
-                              style={{ animationDelay: '0.4s' }}
-                            >
-                              <RotateCcw className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                              <span>Returns</span>
-                            </Link>
-                            
-                            {/* Divider */}
-                            <div className="border-t border-gray-200 my-4 animate-fade-in" style={{ animationDelay: '0.5s' }}></div>
-                            
-                            {!user && (
-                              <>
-                                <button 
-                                  className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                                  onClick={() => {
-                                    openAuthModal('signin');
-                                    setIsMobileMenuOpen(false);
-                                  }}
-                                  style={{ animationDelay: '0.6s' }}
-                                >
-                                  <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                                  <span>Sign In</span>
-                                </button>
-                                <button 
-                                  className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                                  onClick={() => {
-                                    openAuthModal('signup');
-                                    setIsMobileMenuOpen(false);
-                                  }}
-                                  style={{ animationDelay: '0.7s' }}
-                                >
-                                  <Plus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                                  <span>Sign Up</span>
-                                </button>
-                              </>
-                            )}
-                            
-                            {user && (
-                              <>
-                                <div className="px-4 py-3 bg-gray-50 rounded-xl animate-fade-in" style={{ animationDelay: '0.6s' }}>
-                                  <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
-                                  <p className="text-xs text-gray-600">{user.email}</p>
-                                </div>
-                                <button
-                                  onClick={() => {
-                                    handleLogout();
-                                    setIsMobileMenuOpen(false);
-                                  }}
-                                  className="flex items-center gap-4 w-full px-4 py-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right"
-                                  style={{ animationDelay: '0.7s' }}
-                                >
-                                  <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                                  <span>Sign Out</span>
-                                </button>
-                              </>
-                            )}
-                            
-                            <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right" style={{ animationDelay: '0.8s' }}>
-                              <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                              <span>Deals</span>
-                            </button>
-                            <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group animate-slide-in-right" style={{ animationDelay: '0.9s' }}>
-                              <Phone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                              <span>About</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              {/* Mobile Menu Button */}
+              <Button 
+                className="rounded-xl p-2 w-10 h-10" 
+                variant="ghost" 
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(true)}
+              >
+                <Menu className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
       </header>
+
+      {/* Mobile Menu Overlay - Fixed positioning and high z-index */}
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-[9999] lg:hidden">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ease-out"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
+          
+          {/* Sidebar */}
+          <div 
+            className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-500 ease-out ${
+              isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+            }`}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-cyan-50 to-blue-50">
+              <h2 className="text-xl font-semibold text-gray-900">Menu</h2>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="rounded-full p-2 hover:bg-gray-100 transition-all duration-300"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <X className="w-6 h-6" />
+              </Button>
+            </div>
+            
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="space-y-3">
+                <Link 
+                  to="/store" 
+                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Home className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>Home</span>
+                </Link>
+                <Link 
+                  to="/store/categories" 
+                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Grid className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>Categories</span>
+                </Link>
+                <Link 
+                  to="/store/wishlist" 
+                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>Wishlist</span>
+                  {wishlistItems.length > 0 && (
+                    <Badge className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full">
+                      {wishlistItems.length}
+                    </Badge>
+                  )}
+                </Link>
+                <Link 
+                  to="/store/returns" 
+                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium group"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  <RotateCcw className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>Returns</span>
+                </Link>
+                
+                {/* Divider */}
+                <div className="border-t border-gray-200 my-4"></div>
+                
+                {!user ? (
+                  <>
+                    <button 
+                      className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
+                      onClick={() => {
+                        openAuthModal('signin');
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span>Sign In</span>
+                    </button>
+                    <button 
+                      className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
+                      onClick={() => {
+                        openAuthModal('signup');
+                        setIsMobileMenuOpen(false);
+                      }}
+                    >
+                      <Plus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span>Sign Up</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="px-4 py-3 bg-gray-50 rounded-xl">
+                      <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
+                      <p className="text-xs text-gray-600">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className="flex items-center gap-4 w-full px-4 py-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium group"
+                    >
+                      <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                )}
+                
+                <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group">
+                  <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>Deals</span>
+                </button>
+                <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group">
+                  <Phone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>About</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Social Media Banner */}
       <div className="bg-cyan-400 text-white py-2 md:py-3 w-full overflow-hidden">
