@@ -104,14 +104,22 @@ const Store = () => {
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
       <StoreLayout>
-        {/* Hero Section */}
+        {/* Fixed Hero Section for iPhone */}
         {heroSection && heroSection.isActive && (
-          <section className="relative w-full h-[50vh] sm:h-[60vh] md:h-[70vh] lg:h-[80vh] overflow-hidden z-10">
+          <section className="relative w-full overflow-hidden z-10" style={{
+            height: 'clamp(400px, 50vh, 600px)',
+            minHeight: '400px',
+            maxHeight: '600px'
+          }}>
             <div className="absolute inset-0">
               <img
                 src={heroSection.backgroundImage}
                 alt="Hero Background"
                 className="w-full h-full object-cover"
+                style={{
+                  objectPosition: 'center center',
+                  transform: 'scale(1.02)', // Slight scale to prevent gaps on iOS
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
             </div>
@@ -123,10 +131,10 @@ const Store = () => {
                   <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 md:mb-6">
                     ✨ Premium Quality
                   </div>
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-6xl xl:text-7xl font-bold leading-tight mb-3 sm:mb-4 md:mb-6">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-3 sm:mb-4 md:mb-6">
                     {heroSection.title}
                   </h1>
-                  <p className="text-sm sm:text-base md:text-lg lg:text-xl text-gray-200 leading-relaxed mb-4 sm:mb-6 md:mb-8 max-w-xl">
+                  <p className="text-sm sm:text-base md:text-lg text-gray-200 leading-relaxed mb-4 sm:mb-6 md:mb-8 max-w-xl">
                     {heroSection.subtitle}
                   </p>
                 </div>
@@ -140,7 +148,7 @@ const Store = () => {
                     {heroSection.ctaText}
                   </Button>
                   <div className="text-left">
-                    <div className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-white">961 76591765</div>
+                    <div className="text-base sm:text-lg md:text-xl font-bold text-white">961 76591765</div>
                     <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
                   </div>
                 </div>

@@ -42,16 +42,35 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     root.classList.add('light');
   }, []);
 
-  // Prevent body scroll when mobile menu is open
+  // Prevent body scroll when mobile menu is open and fix iOS viewport issues
   useEffect(() => {
     if (isMobileMenuOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+      document.body.style.height = '100%';
+      // Prevent iOS Safari address bar resize issues
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+      }
     } else {
       document.body.style.overflow = 'unset';
+      document.body.style.position = 'unset';
+      document.body.style.width = 'unset';
+      document.body.style.height = 'unset';
+      // Restore normal viewport
+      const viewport = document.querySelector('meta[name=viewport]');
+      if (viewport) {
+        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+      }
     }
     
     return () => {
       document.body.style.overflow = 'unset';
+      document.body.style.position = 'unset';
+      document.body.style.width = 'unset';
+      document.body.style.height = 'unset';
     };
   }, [isMobileMenuOpen]);
 
@@ -158,7 +177,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
                   onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
-                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500"
+                  className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500"
                 />
                 <button
                   type="submit"
@@ -181,7 +200,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             {/* Desktop Actions */}
             <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
               <Link to="/store/wishlist">
-                <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 relative rounded-xl transition-all duration-300 p-2">
+                <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 p-2">
                   <Heart className="w-4 h-4 md:w-5 md:h-5" />
                   {wishlistItems.length > 0 && (
                     <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
@@ -298,129 +317,132 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         </div>
       </header>
 
-      {/* Mobile Menu Overlay - Fixed positioning and high z-index */}
+      {/* Enhanced Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-[9999] lg:hidden">
-          {/* Backdrop */}
+        <div className="fixed inset-0 z-[99999] lg:hidden">
+          {/* Enhanced Backdrop */}
           <div 
-            className="absolute inset-0 bg-black/30 backdrop-blur-sm transition-opacity duration-300 ease-out"
+            className={`absolute inset-0 backdrop-blur-md transition-all duration-500 ease-out ${
+              isMobileMenuOpen ? 'bg-black/40' : 'bg-black/0'
+            }`}
             onClick={() => setIsMobileMenuOpen(false)}
           />
           
-          {/* Sidebar */}
+          {/* Enhanced Sidebar with better animation */}
           <div 
-            className={`absolute left-0 top-0 h-full w-[90%] bg-white shadow-2xl transform transition-transform duration-500 ease-out ${
+            className={`absolute left-0 top-0 h-full w-[85%] max-w-sm bg-white/95 backdrop-blur-xl shadow-2xl transform transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
               isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
+            style={{
+              borderTopRightRadius: '24px',
+              borderBottomRightRadius: '24px',
+            }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-cyan-50 to-blue-50">
-              <h2 className="text-xl font-semibold text-gray-900">Menu</h2>
+            {/* Header with gradient */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100/50 bg-gradient-to-r from-cyan-50/80 to-blue-50/80 backdrop-blur-sm rounded-tr-3xl">
+              <h2 className="text-xl font-semibold text-gray-900 animate-fade-in">Menu</h2>
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="rounded-full p-2 hover:bg-gray-100 transition-all duration-300"
+                className="rounded-full p-2 hover:bg-white/50 transition-all duration-300 hover:scale-110 hover:rotate-90"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 <X className="w-6 h-6" />
               </Button>
             </div>
             
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-6">
-              <div className="space-y-3">
+            {/* Content with staggered animations */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-2">
+              {[
+                { to: "/store", icon: Home, label: "Home", delay: "0.1s" },
+                { to: "/store/categories", icon: Grid, label: "Categories", delay: "0.2s" },
+                { to: "/store/wishlist", icon: Heart, label: "Wishlist", delay: "0.3s", badge: wishlistItems.length },
+                { to: "/store/returns", icon: RotateCcw, label: "Returns", delay: "0.4s" }
+              ].map((item, index) => (
                 <Link 
-                  to="/store" 
-                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
+                  key={item.to}
+                  to={item.to} 
+                  className={`flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0`}
+                  style={{ 
+                    animationDelay: item.delay,
+                    animationFillMode: 'forwards',
+                    animationDuration: '0.6s'
+                  }}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
-                  <Home className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Home</span>
-                </Link>
-                <Link 
-                  to="/store/categories" 
-                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Grid className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Categories</span>
-                </Link>
-                <Link 
-                  to="/store/wishlist" 
-                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium group"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Heart className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Wishlist</span>
-                  {wishlistItems.length > 0 && (
-                    <Badge className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full">
-                      {wishlistItems.length}
+                  <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span className="flex-1">{item.label}</span>
+                  {item.badge && item.badge > 0 && (
+                    <Badge className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full animate-pulse">
+                      {item.badge}
                     </Badge>
                   )}
                 </Link>
-                <Link 
-                  to="/store/returns" 
-                  className="flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-purple-600 hover:bg-purple-50 rounded-xl transition-all duration-300 font-medium group"
-                  onClick={() => setIsMobileMenuOpen(false)}
+              ))}
+              
+              {/* Animated Divider */}
+              <div className="border-t border-gray-200 my-6 animate-fade-in opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}></div>
+              
+              {/* User Section with enhanced animations */}
+              {!user ? (
+                <>
+                  {[
+                    { onClick: () => { openAuthModal('signin'); setIsMobileMenuOpen(false); }, icon: User, label: "Sign In", delay: "0.6s" },
+                    { onClick: () => { openAuthModal('signup'); setIsMobileMenuOpen(false); }, icon: Plus, label: "Sign Up", delay: "0.7s" }
+                  ].map((item, index) => (
+                    <button 
+                      key={item.label}
+                      className={`flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0`}
+                      style={{ 
+                        animationDelay: item.delay,
+                        animationFillMode: 'forwards',
+                        animationDuration: '0.6s'
+                      }}
+                      onClick={item.onClick}
+                    >
+                      <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      <span>{item.label}</span>
+                    </button>
+                  ))}
+                </>
+              ) : (
+                <>
+                  <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-2xl animate-fade-in opacity-0 backdrop-blur-sm" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
+                    <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
+                    <p className="text-xs text-gray-600">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      setIsMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-4 w-full px-4 py-4 text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0"
+                    style={{ animationDelay: '0.7s', animationFillMode: 'forwards', animationDuration: '0.6s' }}
+                  >
+                    <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                    <span>Sign Out</span>
+                  </button>
+                </>
+              )}
+              
+              {/* Additional Menu Items */}
+              {[
+                { icon: ShoppingBag, label: "Deals", delay: "0.8s" },
+                { icon: Phone, label: "About", delay: "0.9s" }
+              ].map((item, index) => (
+                <button 
+                  key={item.label}
+                  className={`flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0`}
+                  style={{ 
+                    animationDelay: item.delay,
+                    animationFillMode: 'forwards',
+                    animationDuration: '0.6s'
+                  }}
                 >
-                  <RotateCcw className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Returns</span>
-                </Link>
-                
-                {/* Divider */}
-                <div className="border-t border-gray-200 my-4"></div>
-                
-                {!user ? (
-                  <>
-                    <button 
-                      className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
-                      onClick={() => {
-                        openAuthModal('signin');
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <User className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                      <span>Sign In</span>
-                    </button>
-                    <button 
-                      className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group"
-                      onClick={() => {
-                        openAuthModal('signup');
-                        setIsMobileMenuOpen(false);
-                      }}
-                    >
-                      <Plus className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                      <span>Sign Up</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="px-4 py-3 bg-gray-50 rounded-xl">
-                      <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
-                      <p className="text-xs text-gray-600">{user.email}</p>
-                    </div>
-                    <button
-                      onClick={() => {
-                        handleLogout();
-                        setIsMobileMenuOpen(false);
-                      }}
-                      className="flex items-center gap-4 w-full px-4 py-4 text-red-600 hover:text-red-700 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium group"
-                    >
-                      <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                      <span>Sign Out</span>
-                    </button>
-                  </>
-                )}
-                
-                <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group">
-                  <ShoppingBag className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>Deals</span>
+                  <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                  <span>{item.label}</span>
                 </button>
-                <button className="flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group">
-                  <Phone className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>About</span>
-                </button>
-              </div>
+              ))}
             </div>
           </div>
         </div>
@@ -865,6 +887,21 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           }
           .animate-scroll {
             animation: scroll 20s linear infinite;
+          }
+          
+          @keyframes fade-in {
+            from {
+              opacity: 0;
+              transform: translateY(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+          
+          .animate-fade-in {
+            animation: fade-in 0.6s ease-out forwards;
           }
         `}
       </style>
