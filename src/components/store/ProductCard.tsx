@@ -10,6 +10,7 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import { ProductQuickView } from './ProductQuickView';
 import { ImageZoom } from './ImageZoom';
 import { useNavigate } from 'react-router-dom';
+import { Package } from "lucide-react";
 
 interface ProductCardProps {
   product: Product;
@@ -90,7 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
               size="sm"
               variant="secondary"
               onClick={handleWishlistToggle}
-              className={`w-5 h-5 md:w-6 md:h-6 p-0 shadow-md ${
+              className={`w-7 h-7 md:w-6 md:h-6 p-0 shadow-md ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 text-white hover:bg-red-600'
                   : 'bg-white/90 hover:bg-white'
@@ -118,9 +119,11 @@ export function ProductCard({ product }: ProductCardProps) {
                   <span className="text-xs text-gray-500 line-through">
                     ${originalPrice}
                   </span>
+                  {/* <>
                   <span className="text-xs text-red-500 font-medium">
                     -{discountPercentage}%
                   </span>
+                  </> */}
                 </>
               )}
             </div>
@@ -128,12 +131,19 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Bottom Section with Express and Add to Cart - More compact */}
             <div className="flex items-center justify-between mt-auto">
               {/* Express Badge */}
-              <div className="flex items-center">
-                <Badge className="bg-red-500 text-white text-xs px-1 py-0.5 rounded">
-                  express
-                </Badge>
-              </div>
-
+               <div className="flex items-center">
+  <div
+    className="flex items-center bg-red-600 text-white text-[10px] pl-1.5 pr-2 py-[2px] gap-[2px]"
+    style={{
+      clipPath: 'polygon(0 0, 88% 0, 100% 50%, 88% 95%, 0 100%)',
+      borderTopLeftRadius: '9999px',
+      borderBottomLeftRadius: '9999px'
+    }}
+  >
+    <Package size={10} className="text-white" />
+    <span>express</span>
+  </div>
+</div>
               {/* Add to Cart Button - Only icon, no text */}
               <Button
                 size="sm"
