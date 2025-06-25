@@ -40,7 +40,7 @@ const Login = () => {
     } else {
       toast({
         title: 'Error',
-        description: 'Invalid credentials. Try admin@example.com / password',
+        description: 'Invalid credentials. Please check your email and password.',
         variant: 'destructive',
       });
     }
@@ -62,7 +62,7 @@ const Login = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="admin@example.com"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -74,7 +74,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="password"
+                  placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -107,9 +107,9 @@ const Login = () => {
           </form>
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>Demo Credentials:</strong><br />
-              Email: admin@example.com<br />
-              Password: password
+              <strong>API Connected:</strong><br />
+              Using live authentication API<br />
+              Register your account to get started
             </p>
           </div>
         </CardContent>

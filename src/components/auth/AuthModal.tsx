@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/sonner';
 
@@ -21,8 +21,21 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [referralToken, setReferralToken] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading } = useAuth();
+  const { login, register, isLoading } = useAuth();
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    // Basic phone validation for Lebanese numbers (+96170123456 format)
+    const phoneRegex = /^\+961\d{8}$/;
+    return phoneRegex.test(phone);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,23 +45,41 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
       return;
     }
 
+    if (!validateEmail(email)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
     if (mode === 'signup') {
-      if (!name) {
-        toast.error('Please enter your name');
+      if (!name || !phone) {
+        toast.error('Please fill in all required fields');
         return;
       }
+
+      if (!validatePhone(phone)) {
+        toast.error('Please enter a valid Lebanese phone number (+96170123456)');
+        return;
+      }
+
       if (password !== confirmPassword) {
         toast.error('Passwords do not match');
         return;
       }
+
       if (password.length < 6) {
         toast.error('Password must be at least 6 characters');
         return;
       }
       
-      // Simulate signup
-      toast.success('Account created successfully! Please sign in.');
-      setMode('signin');
+      const result = await register(name, email, phone, password, confirmPassword, referralToken || undefined);
+      
+      if (result.success) {
+        toast.success('Account created successfully! Welcome!');
+        onOpenChange(false);
+        resetForm();
+      } else {
+        toast.error(result.message || 'Registration failed');
+      }
       return;
     }
 
@@ -57,13 +88,9 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
     if (success) {
       toast.success('Welcome back!');
       onOpenChange(false);
-      // Reset form
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setName('');
+      resetForm();
     } else {
-      toast.error('Invalid credentials. Try admin@example.com / password');
+      toast.error('Invalid credentials. Please check your email and password.');
     }
   };
 
@@ -72,6 +99,9 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
     setPassword('');
     setConfirmPassword('');
     setName('');
+    setPhone('');
+    setReferralToken('');
+    setShowPassword(false);
   };
 
   const switchMode = () => {
@@ -81,7 +111,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">
             {mode === 'signin' ? 'Sign In' : 'Sign Up'}
@@ -104,25 +134,44 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      id="name"
-                      type="text"
-                      placeholder="Enter your full name"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="pl-10"
-                      required
-                    />
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Full Name *</Label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="name"
+                        type="text"
+                        placeholder="Enter your full name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
                   </div>
-                </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="phone">Phone Number *</Label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="phone"
+                        type="tel"
+                        placeholder="+96170123456"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                    <p className="text-xs text-gray-500">Format: +96170123456</p>
+                  </div>
+                </>
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email *</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
@@ -138,7 +187,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password">Password *</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
@@ -167,21 +216,34 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
               </div>
               
               {mode === 'signup' && (
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        className="pl-10"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="referralToken">Referral Token (Optional)</Label>
                     <Input
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="Confirm your password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      className="pl-10"
-                      required
+                      id="referralToken"
+                      type="text"
+                      placeholder="Enter referral token if you have one"
+                      value={referralToken}
+                      onChange={(e) => setReferralToken(e.target.value)}
                     />
                   </div>
-                </div>
+                </>
               )}
               
               <Button 
@@ -207,16 +269,6 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                 </button>
               </p>
             </div>
-            
-            {mode === 'signin' && (
-              <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                <p className="text-sm text-blue-700">
-                  <strong>Demo Credentials:</strong><br />
-                  Email: admin@example.com<br />
-                  Password: password
-                </p>
-              </div>
-            )}
           </CardContent>
         </Card>
       </DialogContent>
