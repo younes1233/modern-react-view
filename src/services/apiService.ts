@@ -1,3 +1,4 @@
+
 interface ApiResponse<T = any> {
   error: boolean;
   message: string;
@@ -12,7 +13,7 @@ interface AuthResponse {
 }
 
 class ApiService {
-  private baseURL = 'https://meemhome.com/api';
+  private baseURL = 'http://meemhomebackend.test/api';
   private token: string | null = null;
 
   constructor() {
