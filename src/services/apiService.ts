@@ -2,19 +2,57 @@
 interface ApiResponse<T = any> {
   error: boolean;
   message: string;
-  data?: T;
+  details?: T;
 }
 
 interface AuthResponse {
   error: boolean;
   message: string;
-  user: any;
-  token: string;
+  details: {
+    user: any;
+    token: string;
+  };
+}
+
+interface LogoutResponse {
+  error: boolean;
+  message: string;
+}
+
+interface ForgotPasswordResponse {
+  error: boolean;
+  message: string;
+  details?: {
+    waiting_period_secondes?: number;
+  };
+}
+
+interface VerifyOtpResponse {
+  error: boolean;
+  message: string;
+  details?: {};
+}
+
+interface ResetPasswordResponse {
+  error: boolean;
+  message: string;
+  details: {
+    user: any;
+  };
+}
+
+interface RefreshTokenResponse {
+  error: boolean;
+  message: string;
+  details: {
+    token: string;
+  };
 }
 
 class ApiService {
   private baseURL = 'http://meemhome.com/api';
   private token: string | null = null;
+  private apiSecret = 'AJ8smLS2vGcxzHpV0Dj3RukPgEdxN0YJ';
 
   constructor() {
     // Get token from localStorage on initialization
@@ -44,6 +82,7 @@ class ApiService {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        'X-API-SECRET': this.apiSecret,
         ...(this.token && { Authorization: `Bearer ${this.token}` }),
         ...options.headers,
       },
@@ -102,8 +141,8 @@ class ApiService {
       password,
     });
     
-    if (response.token) {
-      this.setToken(response.token);
+    if (response.details?.token) {
+      this.setToken(response.details.token);
     }
     
     return response;
@@ -117,11 +156,9 @@ class ApiService {
     password: string,
     passwordConfirmation: string,
     gender: string,
-    referralToken?: string
+    dateOfBirth?: string
   ): Promise<AuthResponse> {
-    const endpoint = referralToken ? `/auth/register?token=${referralToken}` : '/auth/register';
-    
-    const response = await this.post<AuthResponse>(endpoint, {
+    const response = await this.post<AuthResponse>('/auth/register', {
       first_name: firstName,
       last_name: lastName,
       email,
@@ -129,12 +166,56 @@ class ApiService {
       password,
       password_confirmation: passwordConfirmation,
       gender,
+      ...(dateOfBirth && { date_of_birth: dateOfBirth }),
     });
     
-    if (response.token) {
-      this.setToken(response.token);
+    if (response.details?.token) {
+      this.setToken(response.details.token);
     }
     
+    return response;
+  }
+
+  async logout(): Promise<LogoutResponse> {
+    const response = await this.post<LogoutResponse>('/auth/logout');
+    this.removeToken();
+    return response;
+  }
+
+  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
+    return this.post<ForgotPasswordResponse>('/auth/forgot-password', {
+      email,
+    });
+  }
+
+  async verifyOtp(email: string, otp: number): Promise<VerifyOtpResponse> {
+    return this.post<VerifyOtpResponse>('/auth/verify-otp', {
+      email,
+      otp,
+    });
+  }
+
+  async resetPassword(
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ): Promise<ResetPasswordResponse> {
+    return this.post<ResetPasswordResponse>('/auth/reset-password', {
+      email,
+      password,
+      password_confirmation: passwordConfirmation,
+    });
+  }
+
+  async getMe(): Promise<ApiResponse<{ user: any }>> {
+    return this.get<ApiResponse<{ user: any }>>('/auth/me');
+  }
+
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    const response = await this.post<RefreshTokenResponse>('/auth/refresh');
+    if (response.details?.token) {
+      this.setToken(response.details.token);
+    }
     return response;
   }
 

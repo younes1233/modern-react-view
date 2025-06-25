@@ -1,12 +1,25 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '@/services/apiService';
 
 interface User {
   id: string;
   email: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   phone?: string;
-  [key: string]: any; // Allow for additional user properties from API
+  avatar?: string;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  isEmailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLogin?: string;
+  sellerId?: string;
+  sellerStatus?: string;
+  addresses?: any[];
+  [key: string]: any;
 }
 
 interface AuthContextType {
@@ -20,9 +33,12 @@ interface AuthContextType {
     password: string,
     passwordConfirmation: string,
     gender: string,
-    referralToken?: string
+    dateOfBirth?: string
   ) => Promise<{ success: boolean; message: string }>;
-  logout: () => void;
+  logout: () => Promise<void>;
+  forgotPassword: (email: string) => Promise<{ success: boolean; message: string; waitingPeriod?: number }>;
+  verifyOtp: (email: string, otp: number) => Promise<{ success: boolean; message: string }>;
+  resetPassword: (email: string, password: string, passwordConfirmation: string) => Promise<{ success: boolean; message: string }>;
   isLoading: boolean;
 }
 
@@ -40,12 +56,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const token = apiService.getToken();
         if (token) {
-          // If token exists, you might want to validate it with the server
-          // For now, we'll just check if token exists
-          // You can add a /auth/me endpoint later to get current user
-          const savedUser = localStorage.getItem('user');
-          if (savedUser) {
-            setUser(JSON.parse(savedUser));
+          // Validate token with the server
+          const response = await apiService.getMe();
+          if (!response.error && response.details?.user) {
+            setUser(response.details.user);
+          } else {
+            // Clear invalid token
+            apiService.removeToken();
+            localStorage.removeItem('user');
           }
         }
       } catch (error) {
@@ -67,9 +85,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await apiService.login(email, password);
       
-      if (!response.error && response.user && response.token) {
-        setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (!response.error && response.details?.user && response.details?.token) {
+        setUser(response.details.user);
+        localStorage.setItem('user', JSON.stringify(response.details.user));
         setIsLoading(false);
         return true;
       } else {
@@ -91,7 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     password: string,
     passwordConfirmation: string,
     gender: string,
-    referralToken?: string
+    dateOfBirth?: string
   ): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true);
     
@@ -104,12 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         password,
         passwordConfirmation,
         gender,
-        referralToken
+        dateOfBirth
       );
       
-      if (!response.error && response.user && response.token) {
-        setUser(response.user);
-        localStorage.setItem('user', JSON.stringify(response.user));
+      if (!response.error && response.details?.user && response.details?.token) {
+        setUser(response.details.user);
+        localStorage.setItem('user', JSON.stringify(response.details.user));
         setIsLoading(false);
         return { success: true, message: response.message };
       } else {
@@ -126,14 +144,83 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    apiService.removeToken();
-    localStorage.removeItem('user');
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await apiService.logout();
+    } catch (error) {
+      console.error('Logout failed:', error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('user');
+      setIsLoading(false);
+    }
+  };
+
+  const forgotPassword = async (email: string): Promise<{ success: boolean; message: string; waitingPeriod?: number }> => {
+    try {
+      const response = await apiService.forgotPassword(email);
+      return {
+        success: !response.error,
+        message: response.message,
+        waitingPeriod: response.details?.waiting_period_secondes
+      };
+    } catch (error) {
+      console.error('Forgot password failed:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Failed to send OTP'
+      };
+    }
+  };
+
+  const verifyOtp = async (email: string, otp: number): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await apiService.verifyOtp(email, otp);
+      return {
+        success: !response.error,
+        message: response.message
+      };
+    } catch (error) {
+      console.error('OTP verification failed:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'OTP verification failed'
+      };
+    }
+  };
+
+  const resetPassword = async (
+    email: string,
+    password: string,
+    passwordConfirmation: string
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const response = await apiService.resetPassword(email, password, passwordConfirmation);
+      return {
+        success: !response.error,
+        message: response.message
+      };
+    } catch (error) {
+      console.error('Password reset failed:', error);
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Password reset failed'
+      };
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isLoading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      register, 
+      logout, 
+      forgotPassword, 
+      verifyOtp, 
+      resetPassword, 
+      isLoading 
+    }}>
       {children}
     </AuthContext.Provider>
   );

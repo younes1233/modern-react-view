@@ -25,7 +25,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
   const [gender, setGender] = useState('');
-  const [referralToken, setReferralToken] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, register, isLoading } = useAuth();
 
@@ -35,8 +35,8 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   };
 
   const validatePhone = (phone: string) => {
-    // Basic phone validation for Lebanese numbers (+96170123456 format)
-    const phoneRegex = /^\+961\d{8}$/;
+    // Basic phone validation
+    const phoneRegex = /^\+?[\d\s-()]+$/;
     return phoneRegex.test(phone);
   };
 
@@ -54,13 +54,13 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
     }
 
     if (mode === 'signup') {
-      if (!firstName || !lastName || !phone || !gender) {
+      if (!firstName || !lastName) {
         toast.error('Please fill in all required fields');
         return;
       }
 
-      if (!validatePhone(phone)) {
-        toast.error('Please enter a valid Lebanese phone number (+96170123456)');
+      if (phone && !validatePhone(phone)) {
+        toast.error('Please enter a valid phone number');
         return;
       }
 
@@ -69,9 +69,19 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
         return;
       }
 
-      if (password.length < 6) {
-        toast.error('Password must be at least 6 characters');
+      if (password.length < 8) {
+        toast.error('Password must be at least 8 characters');
         return;
+      }
+
+      // Validate date of birth if provided
+      if (dateOfBirth) {
+        const today = new Date();
+        const birthDate = new Date(dateOfBirth);
+        if (birthDate >= today) {
+          toast.error('Date of birth must be before today');
+          return;
+        }
       }
       
       const result = await register(
@@ -82,7 +92,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
         password,
         confirmPassword,
         gender,
-        referralToken || undefined
+        dateOfBirth || undefined
       );
       
       if (result.success) {
@@ -114,7 +124,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
     setLastName('');
     setPhone('');
     setGender('');
-    setReferralToken('');
+    setDateOfBirth('');
     setShowPassword(false);
   };
 
@@ -184,7 +194,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
+                    <Label htmlFor="phone">Phone Number</Label>
                     <div className="relative">
                       <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                       <Input
@@ -194,23 +204,34 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         className="pl-10"
-                        required
                       />
                     </div>
-                    <p className="text-xs text-gray-500">Format: +96170123456</p>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="gender">Gender *</Label>
-                    <Select value={gender} onValueChange={setGender} required>
+                    <Label htmlFor="gender">Gender</Label>
+                    <Select value={gender} onValueChange={setGender}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select gender" />
+                        <SelectValue placeholder="Select gender (optional)" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="male">Male</SelectItem>
                         <SelectItem value="female">Female</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                        <SelectItem value="prefer_not_to_say">Prefer not to say</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                    <Input
+                      id="dateOfBirth"
+                      type="date"
+                      value={dateOfBirth}
+                      onChange={(e) => setDateOfBirth(e.target.value)}
+                      max={new Date().toISOString().split('T')[0]}
+                    />
                   </div>
                 </>
               )}
@@ -261,34 +282,21 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
               </div>
               
               {mode === 'signup' && (
-                <>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Confirm your password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="referralToken">Referral Token (Optional)</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
-                      id="referralToken"
-                      type="text"
-                      placeholder="Enter referral token if you have one"
-                      value={referralToken}
-                      onChange={(e) => setReferralToken(e.target.value)}
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="pl-10"
+                      required
                     />
                   </div>
-                </>
+                </div>
               )}
               
               <Button 
