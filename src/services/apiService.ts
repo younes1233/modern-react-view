@@ -13,7 +13,7 @@ interface AuthResponse {
 }
 
 class ApiService {
-  private baseURL = 'http://meemhome.test/api';
+  private baseURL = 'http://meemhome.com/api';
   private token: string | null = null;
 
   constructor() {
