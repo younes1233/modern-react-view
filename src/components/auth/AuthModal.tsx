@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Eye, EyeOff, Mail, Lock, User, Phone } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/sonner';
@@ -20,8 +21,10 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [phone, setPhone] = useState('');
+  const [gender, setGender] = useState('');
   const [referralToken, setReferralToken] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { login, register, isLoading } = useAuth();
@@ -51,7 +54,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
     }
 
     if (mode === 'signup') {
-      if (!name || !phone) {
+      if (!firstName || !lastName || !phone || !gender) {
         toast.error('Please fill in all required fields');
         return;
       }
@@ -71,10 +74,19 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
         return;
       }
       
-      const result = await register(name, email, phone, password, confirmPassword, referralToken || undefined);
+      const result = await register(
+        firstName,
+        lastName,
+        email,
+        phone,
+        password,
+        confirmPassword,
+        gender,
+        referralToken || undefined
+      );
       
       if (result.success) {
-        toast.success('Account created successfully! Welcome!');
+        toast.success('Account created successfully! You are now signed in!');
         onOpenChange(false);
         resetForm();
       } else {
@@ -98,8 +110,10 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
     setEmail('');
     setPassword('');
     setConfirmPassword('');
-    setName('');
+    setFirstName('');
+    setLastName('');
     setPhone('');
+    setGender('');
     setReferralToken('');
     setShowPassword(false);
   };
@@ -135,19 +149,37 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             <form onSubmit={handleSubmit} className="space-y-4">
               {mode === 'signup' && (
                 <>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Full Name *</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                      <Input
-                        id="name"
-                        type="text"
-                        placeholder="Enter your full name"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="pl-10"
-                        required
-                      />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="firstName">First Name *</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          id="firstName"
+                          type="text"
+                          placeholder="First name"
+                          value={firstName}
+                          onChange={(e) => setFirstName(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="lastName">Last Name *</Label>
+                      <div className="relative">
+                        <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          id="lastName"
+                          type="text"
+                          placeholder="Last name"
+                          value={lastName}
+                          onChange={(e) => setLastName(e.target.value)}
+                          className="pl-10"
+                          required
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -166,6 +198,19 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                       />
                     </div>
                     <p className="text-xs text-gray-500">Format: +96170123456</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="gender">Gender *</Label>
+                    <Select value={gender} onValueChange={setGender} required>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select gender" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="male">Male</SelectItem>
+                        <SelectItem value="female">Female</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </>
               )}

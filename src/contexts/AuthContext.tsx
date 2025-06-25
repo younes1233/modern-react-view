@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { apiService } from '@/services/apiService';
 
@@ -14,11 +13,13 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<boolean>;
   register: (
-    name: string,
+    firstName: string,
+    lastName: string,
     email: string,
     phone: string,
     password: string,
     passwordConfirmation: string,
+    gender: string,
     referralToken?: string
   ) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
@@ -83,22 +84,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (
-    name: string,
+    firstName: string,
+    lastName: string,
     email: string,
     phone: string,
     password: string,
     passwordConfirmation: string,
+    gender: string,
     referralToken?: string
   ): Promise<{ success: boolean; message: string }> => {
     setIsLoading(true);
     
     try {
       const response = await apiService.register(
-        name,
+        firstName,
+        lastName,
         email,
         phone,
         password,
         passwordConfirmation,
+        gender,
         referralToken
       );
       

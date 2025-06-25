@@ -109,21 +109,25 @@ class ApiService {
   }
 
   async register(
-    name: string,
+    firstName: string,
+    lastName: string,
     email: string,
     phone: string,
     password: string,
     passwordConfirmation: string,
+    gender: string,
     referralToken?: string
   ): Promise<AuthResponse> {
     const endpoint = referralToken ? `/auth/register?token=${referralToken}` : '/auth/register';
     
     const response = await this.post<AuthResponse>(endpoint, {
-      name,
+      first_name: firstName,
+      last_name: lastName,
       email,
       phone,
       password,
       password_confirmation: passwordConfirmation,
+      gender,
     });
     
     if (response.token) {
