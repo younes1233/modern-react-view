@@ -199,17 +199,23 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </div>
 
             {/* Desktop Actions */}
-            <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
-              <Link to="/store/wishlist">
-                <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 p-2">
-                  <Heart className="w-4 h-4 md:w-5 md:h-5" />
-                  {wishlistItems.length > 0 && (
-                    <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold shadow-lg">
-                      {wishlistItems.length}
-                    </Badge>
-                  )}
-                </Button>
-              </Link>
+         <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
+  <Link to="/store/wishlist">
+    <Button
+      variant="ghost"
+      size="sm"
+      className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 p-2 relative"
+    >
+      <div className="relative">
+        <Heart className="w-4 h-4 md:w-5 md:h-5" />
+        {wishlistItems.length > 0 && (
+          <span className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-4 flex items-center justify-center font-bold shadow-lg">
+            {wishlistItems.length}
+          </span>
+        )}
+      </div>
+    </Button>
+  </Link>
               
               {/* User Menu */}
               {user ? (
