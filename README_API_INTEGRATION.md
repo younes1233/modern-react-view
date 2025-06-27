@@ -8,7 +8,7 @@ This project contains comprehensive documentation for integrating real APIs with
 | File | Purpose | When to Use |
 |------|---------|-------------|
 | `docs/API_INTEGRATION_GUIDE.md` | Overview and quick start | Read this first |
-| `docs/API_ENDPOINTS.md` | Complete API specification | When building the backend |
+| `docs/API_ENDPOINTS.md` | Complete API specification | When building the backend | 
 | `docs/DATA_MODELS.md` | Request/response formats | When defining API contracts |
 | `docs/IMPLEMENTATION_STRATEGY.md` | Step-by-step integration guide | During implementation |
 | `docs/CURRENT_MOCK_FUNCTIONS.md` | What to replace and where | When refactoring code |

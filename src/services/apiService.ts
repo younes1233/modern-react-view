@@ -50,9 +50,9 @@ interface RefreshTokenResponse {
 }
 
 class ApiService {
-  private baseURL = 'http://meemhome.com/api';
+  private baseURL = 'https://meemhome.com/api';
   private token: string | null = null;
-  private apiSecret = 'AJ8smLS2vGcxzHpV0Dj3RukPgEdxN0YJ';
+  private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
 
   constructor() {
     // Get token from localStorage on initialization
