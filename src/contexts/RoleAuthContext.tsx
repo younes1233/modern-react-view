@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { apiService } from '@/services/apiService';
+import { authService } from '@/services/authService';
 
 interface User {
   id: string;
@@ -38,7 +37,7 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in on mount
-    const token = apiService.getToken();
+    const token = authService.getToken();
     const savedUser = localStorage.getItem('roleUser');
     
     if (token && savedUser) {
@@ -48,7 +47,7 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         localStorage.removeItem('roleUser');
-        apiService.removeToken();
+        authService.removeToken();
       }
     }
     setIsLoading(false);
@@ -58,7 +57,7 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     
     try {
-      const response = await apiService.apiLogin(email, password);
+      const response = await authService.login(email, password);
       
       if (!response.error && response.details?.user && response.details?.token) {
         const apiUser = response.details.user;
@@ -100,13 +99,13 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     try {
-      await apiService.apiLogout();
+      await authService.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
       localStorage.removeItem('roleUser');
-      apiService.removeToken();
+      authService.removeToken();
     }
   };
 

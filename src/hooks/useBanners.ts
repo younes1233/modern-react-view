@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { apiService } from '@/services/apiService';
+import { bannerService } from '@/services/bannerService';
 
 export interface Banner {
   id: number;
@@ -50,7 +50,7 @@ export const useBanners = () => {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await apiService.getBanners();
+      const response = await bannerService.getBanners();
       
       if (response.error) {
         throw new Error(response.message);
@@ -70,7 +70,7 @@ export const useBanners = () => {
   const addBanner = async (bannerData: Omit<Banner, 'id'>) => {
     try {
       const apiData = transformBannerToAPI(bannerData);
-      const response = await apiService.createBanner(apiData);
+      const response = await bannerService.createBanner(apiData);
       
       if (response.error) {
         throw new Error(response.message);
@@ -99,7 +99,7 @@ export const useBanners = () => {
   const updateBanner = async (id: number, bannerData: Partial<Omit<Banner, 'id'>>) => {
     try {
       const apiData = transformBannerToAPI(bannerData as Omit<Banner, 'id'>);
-      const response = await apiService.updateBanner(id, apiData);
+      const response = await bannerService.updateBanner(id, apiData);
       
       if (response.error) {
         throw new Error(response.message);
@@ -129,7 +129,7 @@ export const useBanners = () => {
 
   const deleteBanner = async (id: number) => {
     try {
-      const response = await apiService.deleteBanner(id);
+      const response = await bannerService.deleteBanner(id);
       
       if (response.error) {
         throw new Error(response.message);
@@ -156,7 +156,7 @@ export const useBanners = () => {
 
   const reorderBanners = async (bannerIds: number[]) => {
     try {
-      const response = await apiService.reorderBanners(bannerIds);
+      const response = await bannerService.reorderBanners(bannerIds);
       
       if (response.error) {
         throw new Error(response.message);

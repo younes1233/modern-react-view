@@ -1,14 +1,12 @@
-
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
-import { apiService } from '@/services/apiService';
+import { authService } from '@/services/authService';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -33,7 +31,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      const response = await apiService.apiLogin(email, password);
+      const response = await authService.login(email, password);
       
       if (!response.error && response.details?.user && response.details?.token) {
         toast({

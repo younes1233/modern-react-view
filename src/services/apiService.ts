@@ -1,261 +1,23 @@
-interface ApiResponse<T = any> {
-  error: boolean;
-  message: string;
-  details?: T;
-}
 
-interface AuthResponse {
-  error: boolean;
-  message: string;
-  details: {
-    user: {
-      id: string;
-      email: string;
-      firstName: string;
-      lastName: string;
-      phone: string;
-      avatar: string | null;
-      role: string;
-      permissions: string[];
-      isActive: boolean;
-      isEmailVerified: boolean;
-      createdAt: string;
-      updatedAt: string;
-      lastLogin: string;
-      sellerId: string | null;
-      sellerStatus: string | null;
-      orders: any[];
-      whishlist: any[];
-      cart: any[];
-      addresses: any[];
-    };
-    token: string;
-  };
-}
+import { authService } from './authService';
+import { bannerService } from './bannerService';
 
-interface LogoutResponse {
-  error: boolean;
-  message: string;
-}
+// Export all services
+export { authService, bannerService };
 
-interface ForgotPasswordResponse {
-  error: boolean;
-  message: string;
-  details?: {
-    waiting_period_secondes?: number;
-  };
-}
-
-interface VerifyOtpResponse {
-  error: boolean;
-  message: string;
-  details?: {};
-}
-
-interface ResetPasswordResponse {
-  error: boolean;
-  message: string;
-  details: {
-    user: any;
-  };
-}
-
-interface RefreshTokenResponse {
-  error: boolean;
-  message: string;
-  details: {
-    token: string;
-  };
-}
-
-interface BannerResponse {
-  error: boolean;
-  message: string;
-  details: {
-    banners: BannerAPIData[];
-  };
-}
-
-interface BannerCreateResponse {
-  error: boolean;
-  message: string;
-  details: {
-    banner: BannerAPIData;
-  };
-}
-
-interface BannerAPIData {
-  id: number;
-  title: string;
-  subtitle?: string;
-  image: string;
-  alt?: string;
-  cta_text?: string;
-  cta_link?: string;
-  position: 'hero' | 'secondary' | 'sidebar';
-  is_active: boolean;
-  order: number;
-}
-
+// Legacy compatibility - combine all services into one object
 class ApiService {
-  private baseURL = 'https://meemhome.com/api';
-  private token: string | null = null;
-  private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
-
-  constructor() {
-    // Get token from localStorage on initialization
-    this.token = localStorage.getItem('auth_token');
+  // Auth methods
+  async apiLogin(email: string, password: string) {
+    return authService.login(email, password);
   }
 
-  // Set authentication token
-  setToken(token: string) {
-    this.token = token;
-    localStorage.setItem('auth_token', token);
+  async apiLogout() {
+    return authService.logout();
   }
 
-  // Remove authentication token
-  removeToken() {
-    this.token = null;
-    localStorage.removeItem('auth_token');
-  }
-
-  // Generic request method
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-API-SECRET': this.apiSecret,
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      return await response.json();
-    } catch (error) {
-      console.error('API Request failed:', error);
-      throw error;
-    }
-  }
-
-  // GET request
-  async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'GET',
-    });
-  }
-
-  // POST request
-  async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  // PUT request
-  async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
-  }
-
-  // DELETE request
-  async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'DELETE',
-    });
-  }
-
-  // Banner API methods
-  async getBanners(): Promise<BannerResponse> {
-    return this.get<BannerResponse>('/banners');
-  }
-
-  async createBanner(bannerData: {
-    title: string;
-    subtitle?: string;
-    image: string;
-    alt?: string;
-    cta_text?: string;
-    cta_link?: string;
-    position: 'hero' | 'secondary' | 'sidebar';
-    is_active?: boolean;
-  }): Promise<BannerCreateResponse> {
-    return this.post<BannerCreateResponse>('/banners', bannerData);
-  }
-
-  async updateBanner(
-    id: number,
-    bannerData: Partial<{
-      title: string;
-      subtitle: string;
-      image: string;
-      alt: string;
-      cta_text: string;
-      cta_link: string;
-      position: 'hero' | 'secondary' | 'sidebar';
-      is_active: boolean;
-    }>
-  ): Promise<BannerCreateResponse> {
-    return this.put<BannerCreateResponse>(`/banners/${id}`, bannerData);
-  }
-
-  async deleteBanner(id: number): Promise<BannerResponse> {
-    return this.delete<BannerResponse>(`/banners/${id}`);
-  }
-
-  async reorderBanners(bannerIds: number[]): Promise<BannerResponse> {
-    return this.put<BannerResponse>('/banners/reorder', bannerIds);
-  }
-
-  // New API Authentication methods
-  async apiLogin(email: string, password: string): Promise<AuthResponse> {
-    const response = await this.post<AuthResponse>('/auth/login', {
-      email,
-      password,
-    });
-    
-    if (response.details?.token && !response.error) {
-      this.setToken(response.details.token);
-    }
-    
-    return response;
-  }
-
-  async apiLogout(): Promise<LogoutResponse> {
-    const response = await this.post<LogoutResponse>('/auth/logout');
-    this.removeToken();
-    return response;
-  }
-
-  // Legacy authentication methods (keep for backward compatibility)
-  async login(email: string, password: string): Promise<AuthResponse> {
-    const response = await this.post<AuthResponse>('/auth/login', {
-      email,
-      password,
-    });
-    
-    if (response.details?.token) {
-      this.setToken(response.details.token);
-    }
-    
-    return response;
+  async login(email: string, password: string) {
+    return authService.login(email, password);
   }
 
   async register(
@@ -267,79 +29,75 @@ class ApiService {
     passwordConfirmation: string,
     gender: string,
     dateOfBirth?: string
-  ): Promise<AuthResponse> {
-    const response = await this.post<AuthResponse>('/auth/register', {
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      phone,
-      password,
-      password_confirmation: passwordConfirmation,
-      gender,
-      ...(dateOfBirth && { date_of_birth: dateOfBirth }),
-    });
-    
-    if (response.details?.token) {
-      this.setToken(response.details.token);
-    }
-    
-    return response;
+  ) {
+    return authService.register(firstName, lastName, email, phone, password, passwordConfirmation, gender, dateOfBirth);
   }
 
-  async logout(): Promise<LogoutResponse> {
-    const response = await this.post<LogoutResponse>('/auth/logout');
-    this.removeToken();
-    return response;
+  async logout() {
+    return authService.logout();
   }
 
-  async forgotPassword(email: string): Promise<ForgotPasswordResponse> {
-    return this.post<ForgotPasswordResponse>('/auth/forgot-password', {
-      email,
-    });
+  async forgotPassword(email: string) {
+    return authService.forgotPassword(email);
   }
 
-  async verifyOtp(email: string, otp: number): Promise<VerifyOtpResponse> {
-    return this.post<VerifyOtpResponse>('/auth/verify-otp', {
-      email,
-      otp,
-    });
+  async verifyOtp(email: string, otp: number) {
+    return authService.verifyOtp(email, otp);
   }
 
-  async resetPassword(
-    email: string,
-    password: string,
-    passwordConfirmation: string
-  ): Promise<ResetPasswordResponse> {
-    return this.post<ResetPasswordResponse>('/auth/reset-password', {
-      email,
-      password,
-      password_confirmation: passwordConfirmation,
-    });
+  async resetPassword(email: string, password: string, passwordConfirmation: string) {
+    return authService.resetPassword(email, password, passwordConfirmation);
   }
 
-  async getMe(): Promise<ApiResponse<{ user: any }>> {
-    return this.get<ApiResponse<{ user: any }>>('/auth/me');
+  async getMe() {
+    return authService.getMe();
   }
 
-  async refreshToken(): Promise<RefreshTokenResponse> {
-    const response = await this.post<RefreshTokenResponse>('/auth/refresh');
-    if (response.details?.token) {
-      this.setToken(response.details.token);
-    }
-    return response;
+  async refreshToken() {
+    return authService.refreshToken();
   }
 
-  // Get current token
-  getToken(): string | null {
-    return this.token;
+  // Banner methods
+  async getBanners() {
+    return bannerService.getBanners();
   }
 
-  // Check if user is authenticated
-  isAuthenticated(): boolean {
-    return !!this.token;
+  async createBanner(bannerData: any) {
+    return bannerService.createBanner(bannerData);
+  }
+
+  async updateBanner(id: number, bannerData: any) {
+    return bannerService.updateBanner(id, bannerData);
+  }
+
+  async deleteBanner(id: number) {
+    return bannerService.deleteBanner(id);
+  }
+
+  async reorderBanners(bannerIds: number[]) {
+    return bannerService.reorderBanners(bannerIds);
+  }
+
+  // Token management
+  setToken(token: string) {
+    authService.setToken(token);
+    bannerService.setToken(token);
+  }
+
+  removeToken() {
+    authService.removeToken();
+    bannerService.removeToken();
+  }
+
+  getToken() {
+    return authService.getToken();
+  }
+
+  isAuthenticated() {
+    return authService.isAuthenticated();
   }
 }
 
-// Create and export a singleton instance
+// Create and export a singleton instance for backward compatibility
 export const apiService = new ApiService();
 export default apiService;
