@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share } from 'lucide-react';
+import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { getProducts, getProductBySlug, Product, ProductVariation, calculateVariationPrice } from '@/data/storeData';
@@ -84,6 +83,15 @@ const ProductDetail = () => {
     ));
   };
 
+  // Breadcrumb data
+  const breadcrumbs = [
+    { label: 'Home', path: '/store' },
+    { label: 'Electronics & Mobiles', path: '/store/categories' },
+    { label: 'Mobiles & Accessories', path: '/store/categories' },
+    { label: 'Mobile Phones', path: '/store/categories' },
+    { label: product.name, path: '', current: true }
+  ];
+
   return (
     <StoreLayout>
       <div className="min-h-screen bg-white">
@@ -115,21 +123,53 @@ const ProductDetail = () => {
         </div>
 
         <div className="max-w-7xl mx-auto">
+          {/* Enhanced Mobile Breadcrumb Navigation */}
+          <div className="lg:hidden px-4 py-3 border-b border-gray-100">
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className="flex items-center space-x-1 text-xs text-gray-500">
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <div key={index} className="flex items-center space-x-1">
+                    {index > 0 && (
+                      <ChevronRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
+                    )}
+                    {breadcrumb.current ? (
+                      <span className="text-gray-900 font-medium truncate max-w-[120px]">
+                        {breadcrumb.label}
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => breadcrumb.path && navigate(breadcrumb.path)}
+                        className="hover:text-cyan-600 transition-colors truncate max-w-[100px] text-left"
+                      >
+                        {breadcrumb.label}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
+
           {/* Desktop Breadcrumb */}
           <div className="hidden lg:block px-4 sm:px-6 lg:px-8 py-4">
             <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex items-center space-x-2 text-xs text-gray-500">
-                <button onClick={() => navigate('/store')} className="hover:text-cyan-600 transition-colors">
-                  Store
-                </button>
-                <span>/</span>
-                <button onClick={() => navigate('/store/categories')} className="hover:text-cyan-600 transition-colors">
-                  Categories
-                </button>
-                <span>/</span>
-                <span className="text-gray-700 font-medium capitalize">{product.category}</span>
-                <span>/</span>
-                <span className="text-gray-900 font-medium truncate">{product.name}</span>
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
+                {breadcrumbs.map((breadcrumb, index) => (
+                  <div key={index} className="flex items-center space-x-2">
+                    {index > 0 && <span>/</span>}
+                    {breadcrumb.current ? (
+                      <span className="text-gray-900 font-medium">{breadcrumb.label}</span>
+                    ) : (
+                      <button
+                        onClick={() => breadcrumb.path && navigate(breadcrumb.path)}
+                        className="hover:text-cyan-600 transition-colors"
+                      >
+                        {breadcrumb.label}
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
               <ScrollBar orientation="horizontal" />
             </ScrollArea>
@@ -164,25 +204,25 @@ const ProductDetail = () => {
                 </div>
               </div>
               
-              {/* Thumbnail Navigation */}
+              {/* Enhanced Thumbnail Navigation */}
               {allImages.length > 1 && (
                 <div className="mt-4 px-4 lg:px-0">
                   <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex gap-2 pb-2">
+                    <div className="flex gap-3 pb-2">
                       {allImages.map((image, index) => (
                         <button
                           key={index}
                           onClick={() => setSelectedImage(index)}
-                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                          className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
                             index === selectedImage
-                              ? 'border-cyan-500 ring-2 ring-cyan-500/20'
-                              : 'border-gray-200 hover:border-gray-300'
+                              ? 'w-16 h-16 lg:w-20 lg:h-20 ring-2 ring-gray-300 shadow-lg transform scale-110'
+                              : 'w-12 h-12 lg:w-16 lg:h-16 hover:scale-105'
                           }`}
                         >
                           <img
                             src={image.url}
                             alt={image.alt}
-                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-110"
+                            className="w-full h-full object-cover transition-transform duration-200"
                           />
                         </button>
                       ))}
