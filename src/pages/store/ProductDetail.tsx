@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
@@ -7,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { getProducts, getProductBySlug, Product, ProductVariation, calculateVariationPrice } from '@/data/storeData';
@@ -25,7 +24,8 @@ const ProductDetail = () => {
   const [showThumbnails, setShowThumbnails] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const thumbnailTimeoutRef = useRef<NodeJS.Timeout>();
-  const { addToCart, isInCart } = useCart();
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   useEffect(() => {
@@ -39,6 +39,37 @@ const ProductDetail = () => {
       setProduct(foundProduct);
     }
   }, [id]);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0];
+    touchStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartRef.current || !product) return;
+    
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartRef.current.x;
+    const deltaY = touch.clientY - touchStartRef.current.y;
+    
+    // Only handle horizontal swipes (ignore vertical scrolling)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      const allImages = [
+        { url: product.image, alt: product.name },
+        ...product.thumbnails.map(thumb => ({ url: thumb.url, alt: thumb.alt }))
+      ];
+      
+      if (deltaX > 0 && selectedImage > 0) {
+        // Swipe right - previous image
+        handleImageChange(selectedImage - 1);
+      } else if (deltaX < 0 && selectedImage < allImages.length - 1) {
+        // Swipe left - next image
+        handleImageChange(selectedImage + 1);
+      }
+    }
+    
+    touchStartRef.current = null;
+  };
 
   const handleImageInteraction = () => {
     // Show thumbnails temporarily on mobile when not on first image
@@ -61,8 +92,10 @@ const ProductDetail = () => {
 
   const handleImageChange = (index: number) => {
     setSelectedImage(index);
-    // Hide thumbnails when going back to first image
-    if (index === 0) {
+    // Show thumbnails when navigating away from first image
+    if (index > 0 && window.innerWidth < 1024) {
+      handleImageInteraction();
+    } else if (index === 0) {
       setShowThumbnails(false);
     }
   };
@@ -82,7 +115,6 @@ const ProductDetail = () => {
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h1>
             <Button onClick={() => navigate('/store')} className="bg-cyan-600 hover:bg-cyan-700">
-              <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Store
             </Button>
           </div>
@@ -134,34 +166,20 @@ const ProductDetail = () => {
   return (
     <StoreLayout>
       <div className="min-h-screen bg-white">
-        {/* Mobile Header */}
-        <div className="lg:hidden sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-40 px-4 py-3">
-          <div className="flex items-center justify-end">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleWishlistToggle}
-                className={`p-2 ${isInWishlist(product.id) ? 'text-red-500' : ''}`}
-              >
-                <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2"
-              >
-                <Share className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Mobile Breadcrumb Navigation */}
           <div className="lg:hidden px-4 py-2 border-b border-gray-100">
-            <div className="w-full overflow-x-auto">
-              <div className="flex items-center space-x-1 text-xs text-gray-500 whitespace-nowrap">
+            <div className="w-full">
+              <div className="flex items-center space-x-1 text-xs text-gray-500 overflow-x-auto">
+                <style>{`
+                  .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                  }
+                  .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                  }
+                `}</style>
                 {breadcrumbs.map((breadcrumb, index) => (
                   <div key={index} className="flex items-center space-x-1 flex-shrink-0">
                     {index > 0 && (
@@ -182,15 +200,6 @@ const ProductDetail = () => {
                   </div>
                 ))}
               </div>
-              <style>{`
-                .scrollbar-hide::-webkit-scrollbar {
-                  display: none;
-                }
-                .scrollbar-hide {
-                  -ms-overflow-style: none;
-                  scrollbar-width: none;
-                }
-              `}</style>
             </div>
           </div>
 
@@ -226,7 +235,8 @@ const ProductDetail = () => {
                 ref={imageContainerRef}
                 className="relative aspect-square bg-gray-50 overflow-hidden lg:rounded-2xl group cursor-pointer"
                 onClick={handleImageClick}
-                onTouchStart={handleImageInteraction}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
                 onMouseEnter={() => window.innerWidth >= 1024 && handleImageInteraction()}
               >
                 <img
@@ -254,10 +264,33 @@ const ProductDetail = () => {
                   )}
                 </div>
 
+                {/* Mobile: Wishlist and Share buttons - aligned with badge */}
+                <div className="lg:hidden absolute top-4 right-4 flex items-center space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleWishlistToggle();
+                    }}
+                    className={`p-2 bg-white/90 hover:bg-white shadow-lg rounded-full w-9 h-9 ${isInWishlist(product.id) ? 'text-red-500' : 'text-gray-700'}`}
+                  >
+                    <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-2 bg-white/90 hover:bg-white shadow-lg rounded-full w-9 h-9 text-gray-700"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                </div>
+
                 {/* Mobile: Smaller pagination dots */}
                 {allImages.length > 1 && (
-                  <div className="lg:hidden absolute bottom-4 left-1/2 transform -translate-x-1/2">
-                    <div className="flex space-x-1.5">
+                  <div className="lg:hidden absolute bottom-2 left-1/2 transform -translate-x-1/2">
+                    <div className="flex space-x-1">
                       {allImages.map((_, index) => (
                         <button
                           key={index}
@@ -267,7 +300,7 @@ const ProductDetail = () => {
                           }}
                           className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                             index === selectedImage
-                              ? 'bg-black scale-125'
+                              ? 'bg-white scale-125'
                               : 'bg-white/50 hover:bg-white/75'
                           }`}
                         />
@@ -280,11 +313,11 @@ const ProductDetail = () => {
               {/* Enhanced Thumbnail Navigation */}
               {allImages.length > 1 && (
                 <>
-                  {/* Mobile: Conditional thumbnails - only show when not on first image and when showThumbnails is true */}
+                  {/* Mobile: Conditional thumbnails - show only when not on first image or when showThumbnails is true */}
                   <div className={`lg:hidden mt-4 px-4 transition-all duration-300 ${
-                    showThumbnails && selectedImage > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+                    (showThumbnails || selectedImage > 0) ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0 overflow-hidden'
                   }`}>
-                    <div className="w-full overflow-x-auto">
+                    <div className="w-full overflow-x-auto scrollbar-hide">
                       <div className="flex gap-2 pb-2">
                         {allImages.map((image, index) => (
                           <button
@@ -295,10 +328,9 @@ const ProductDetail = () => {
                             }}
                             className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
                               index === selectedImage
-                                ? 'w-14 h-14 shadow-lg scale-110'
+                                ? 'w-16 h-16 shadow-lg ring-2 ring-cyan-500'
                                 : 'w-12 h-12 hover:scale-105'
                             }`}
-                            style={{ transformOrigin: 'center' }}
                           >
                             <img
                               src={image.url}
@@ -308,15 +340,6 @@ const ProductDetail = () => {
                           </button>
                         ))}
                       </div>
-                      <style>{`
-                        .scrollbar-hide::-webkit-scrollbar {
-                          display: none;
-                        }
-                        .scrollbar-hide {
-                          -ms-overflow-style: none;
-                          scrollbar-width: none;
-                        }
-                      `}</style>
                     </div>
                   </div>
 
