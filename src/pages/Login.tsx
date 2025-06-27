@@ -8,12 +8,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogIn } from 'lucide-react';
+import { apiService } from '@/services/apiService';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -29,20 +30,32 @@ const Login = () => {
       return;
     }
 
-    const success = await login(email, password);
+    setIsLoading(true);
     
-    if (success) {
-      toast({
-        title: 'Success',
-        description: 'Login successful!',
-      });
-      navigate('/');
-    } else {
+    try {
+      const response = await apiService.apiLogin(email, password);
+      
+      if (!response.error && response.details?.user && response.details?.token) {
+        toast({
+          title: 'Success',
+          description: 'Login successful!',
+        });
+        navigate('/');
+      } else {
+        toast({
+          title: 'Error',
+          description: response.message || 'Invalid credentials. Please check your email and password.',
+          variant: 'destructive',
+        });
+      }
+    } catch (error) {
       toast({
         title: 'Error',
-        description: 'Invalid credentials. Please check your email and password.',
+        description: 'Login failed. Please try again.',
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 

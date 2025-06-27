@@ -8,7 +8,27 @@ interface AuthResponse {
   error: boolean;
   message: string;
   details: {
-    user: any;
+    user: {
+      id: string;
+      email: string;
+      firstName: string;
+      lastName: string;
+      phone: string;
+      avatar: string | null;
+      role: string;
+      permissions: string[];
+      isActive: boolean;
+      isEmailVerified: boolean;
+      createdAt: string;
+      updatedAt: string;
+      lastLogin: string;
+      sellerId: string | null;
+      sellerStatus: string | null;
+      orders: any[];
+      whishlist: any[];
+      cart: any[];
+      addresses: any[];
+    };
     token: string;
   };
 }
@@ -204,7 +224,27 @@ class ApiService {
     return this.put<BannerResponse>('/banners/reorder', bannerIds);
   }
 
-  // Authentication methods
+  // New API Authentication methods
+  async apiLogin(email: string, password: string): Promise<AuthResponse> {
+    const response = await this.post<AuthResponse>('/auth/login', {
+      email,
+      password,
+    });
+    
+    if (response.details?.token && !response.error) {
+      this.setToken(response.details.token);
+    }
+    
+    return response;
+  }
+
+  async apiLogout(): Promise<LogoutResponse> {
+    const response = await this.post<LogoutResponse>('/auth/logout');
+    this.removeToken();
+    return response;
+  }
+
+  // Legacy authentication methods (keep for backward compatibility)
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await this.post<AuthResponse>('/auth/login', {
       email,

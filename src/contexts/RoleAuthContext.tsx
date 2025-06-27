@@ -1,6 +1,25 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { demoUsers, User, rolePermissions } from '@/data/users';
+import { apiService } from '@/services/apiService';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  avatar: string | null;
+  role: string;
+  permissions: string[];
+  isActive: boolean;
+  isEmailVerified: boolean;
+  createdAt: string;
+  updatedAt: string;
+  lastLogin: string;
+  sellerId: string | null;
+  sellerStatus: string | null;
+}
 
 interface RoleAuthContextType {
   user: User | null;
@@ -19,15 +38,17 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Check if user is logged in on mount
+    const token = apiService.getToken();
     const savedUser = localStorage.getItem('roleUser');
-    if (savedUser) {
-      const userData = JSON.parse(savedUser);
-      // Verify user still exists in demo data
-      const currentUser = demoUsers.find(u => u.id === userData.id);
-      if (currentUser) {
-        setUser(currentUser);
-      } else {
+    
+    if (token && savedUser) {
+      try {
+        const userData = JSON.parse(savedUser);
+        setUser(userData);
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
         localStorage.removeItem('roleUser');
+        apiService.removeToken();
       }
     }
     setIsLoading(false);
@@ -36,37 +57,66 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Demo authentication - find user by email
-    const foundUser = demoUsers.find(u => u.email === email && u.isActive);
-    
-    if (foundUser && password === 'password') {
-      setUser(foundUser);
-      localStorage.setItem('roleUser', JSON.stringify(foundUser));
+    try {
+      const response = await apiService.apiLogin(email, password);
+      
+      if (!response.error && response.details?.user && response.details?.token) {
+        const apiUser = response.details.user;
+        
+        // Transform API user to our User interface
+        const transformedUser: User = {
+          id: apiUser.id,
+          email: apiUser.email,
+          name: `${apiUser.firstName} ${apiUser.lastName}`,
+          firstName: apiUser.firstName,
+          lastName: apiUser.lastName,
+          phone: apiUser.phone,
+          avatar: apiUser.avatar,
+          role: apiUser.role,
+          permissions: apiUser.permissions,
+          isActive: apiUser.isActive,
+          isEmailVerified: apiUser.isEmailVerified,
+          createdAt: apiUser.createdAt,
+          updatedAt: apiUser.updatedAt,
+          lastLogin: apiUser.lastLogin,
+          sellerId: apiUser.sellerId,
+          sellerStatus: apiUser.sellerStatus,
+        };
+        
+        setUser(transformedUser);
+        localStorage.setItem('roleUser', JSON.stringify(transformedUser));
+        setIsLoading(false);
+        return true;
+      }
+      
       setIsLoading(false);
-      return true;
+      return false;
+    } catch (error) {
+      console.error('Login error:', error);
+      setIsLoading(false);
+      return false;
     }
-    
-    setIsLoading(false);
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('roleUser');
+  const logout = async () => {
+    try {
+      await apiService.apiLogout();
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem('roleUser');
+      apiService.removeToken();
+    }
   };
 
   const hasPermission = (permission: string): boolean => {
     if (!user) return false;
     
-    const userPermissions = rolePermissions[user.role];
-    
     // Super admin has all permissions
-    if (userPermissions.includes('*')) return true;
+    if (user.permissions.includes('*') || user.role === 'super_admin') return true;
     
-    return userPermissions.includes(permission);
+    return user.permissions.includes(permission);
   };
 
   const canAccess = (resource: string, action: string): boolean => {
