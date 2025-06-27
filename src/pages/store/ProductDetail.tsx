@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,9 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedVariations, setSelectedVariations] = useState<ProductVariation[]>([]);
   const [showImageZoom, setShowImageZoom] = useState(false);
+  const [showThumbnails, setShowThumbnails] = useState(false);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
+  const thumbnailTimeoutRef = useRef<NodeJS.Timeout>();
   const { addToCart, isInCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
@@ -35,6 +39,33 @@ const ProductDetail = () => {
       setProduct(foundProduct);
     }
   }, [id]);
+
+  const handleImageInteraction = () => {
+    // Show thumbnails temporarily on mobile
+    if (window.innerWidth < 1024) {
+      setShowThumbnails(true);
+      if (thumbnailTimeoutRef.current) {
+        clearTimeout(thumbnailTimeoutRef.current);
+      }
+      thumbnailTimeoutRef.current = setTimeout(() => {
+        setShowThumbnails(false);
+      }, 3000);
+    }
+  };
+
+  const handleImageClick = () => {
+    if (window.innerWidth < 1024) {
+      setShowImageZoom(true);
+    }
+  };
+
+  useEffect(() => {
+    return () => {
+      if (thumbnailTimeoutRef.current) {
+        clearTimeout(thumbnailTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!product) {
     return (
@@ -106,40 +137,27 @@ const ProductDetail = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm" className="p-2">
-                <Share className="w-5 h-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleWishlistToggle}
-                className={`p-2 ${isInWishlist(product.id) ? 'text-red-500' : ''}`}
-              >
-                <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-              </Button>
-            </div>
           </div>
         </div>
 
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Mobile Breadcrumb Navigation */}
-          <div className="lg:hidden px-4 py-3 border-b border-gray-100">
-            <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex items-center space-x-1 text-xs text-gray-500">
+          <div className="lg:hidden px-4 py-2 border-b border-gray-100">
+            <ScrollArea className="w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="flex items-center space-x-1 text-xs text-gray-500 whitespace-nowrap">
                 {breadcrumbs.map((breadcrumb, index) => (
-                  <div key={index} className="flex items-center space-x-1">
+                  <div key={index} className="flex items-center space-x-1 flex-shrink-0">
                     {index > 0 && (
                       <ChevronRight className="h-3 w-3 text-gray-400 flex-shrink-0" />
                     )}
                     {breadcrumb.current ? (
-                      <span className="text-gray-900 font-medium truncate max-w-[120px]">
+                      <span className="text-gray-900 font-medium text-xs">
                         {breadcrumb.label}
                       </span>
                     ) : (
                       <button
                         onClick={() => breadcrumb.path && navigate(breadcrumb.path)}
-                        className="hover:text-cyan-600 transition-colors truncate max-w-[100px] text-left"
+                        className="hover:text-cyan-600 transition-colors text-xs"
                       >
                         {breadcrumb.label}
                       </button>
@@ -147,7 +165,11 @@ const ProductDetail = () => {
                   </div>
                 ))}
               </div>
-              <ScrollBar orientation="horizontal" />
+              <style jsx>{`
+                .scrollbar-hide::-webkit-scrollbar {
+                  display: none;
+                }
+              `}</style>
             </ScrollArea>
           </div>
 
@@ -179,17 +201,50 @@ const ProductDetail = () => {
             {/* Product Images */}
             <div className="lg:sticky lg:top-4 lg:h-fit">
               {/* Main Image */}
-              <div className="relative aspect-square bg-gray-50 overflow-hidden lg:rounded-2xl group">
+              <div 
+                ref={imageContainerRef}
+                className="relative aspect-square bg-gray-50 overflow-hidden lg:rounded-2xl group cursor-pointer"
+                onClick={handleImageClick}
+                onTouchStart={handleImageInteraction}
+                onMouseEnter={() => window.innerWidth >= 1024 && handleImageInteraction()}
+              >
                 <img
                   src={allImages[selectedImage]?.url}
                   alt={allImages[selectedImage]?.alt}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
+                
+                {/* Mobile: Wishlist and Share buttons */}
+                <div className="lg:hidden absolute top-4 right-4 flex flex-col space-y-2">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleWishlistToggle();
+                    }}
+                    className={`opacity-90 transition-opacity duration-200 bg-white/90 hover:bg-white shadow-lg w-10 h-10 p-0 ${
+                      isInWishlist(product.id) ? 'text-red-500' : ''
+                    }`}
+                  >
+                    <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={(e) => e.stopPropagation()}
+                    className="opacity-90 transition-opacity duration-200 bg-white/90 hover:bg-white shadow-lg w-10 h-10 p-0"
+                  >
+                    <Share className="w-4 h-4" />
+                  </Button>
+                </div>
+
+                {/* Desktop: Zoom button */}
                 <Button
                   variant="secondary"
                   size="sm"
                   onClick={() => setShowImageZoom(true)}
-                  className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 hover:bg-white shadow-lg"
+                  className="hidden lg:block absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 hover:bg-white shadow-lg"
                 >
                   <ZoomIn className="w-4 h-4" />
                 </Button>
@@ -202,34 +257,96 @@ const ProductDetail = () => {
                     <Badge variant="destructive">Out of Stock</Badge>
                   )}
                 </div>
+
+                {/* Mobile: Pagination dots */}
+                {allImages.length > 1 && (
+                  <div className="lg:hidden absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                    <div className="flex space-x-2">
+                      {allImages.map((_, index) => (
+                        <button
+                          key={index}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedImage(index);
+                          }}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            index === selectedImage
+                              ? 'bg-white scale-125'
+                              : 'bg-white/50 hover:bg-white/75'
+                          }`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
               
               {/* Enhanced Thumbnail Navigation */}
               {allImages.length > 1 && (
-                <div className="mt-4 px-4 lg:px-0">
-                  <ScrollArea className="w-full whitespace-nowrap">
-                    <div className="flex gap-3 pb-2">
-                      {allImages.map((image, index) => (
-                        <button
-                          key={index}
-                          onClick={() => setSelectedImage(index)}
-                          className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
-                            index === selectedImage
-                              ? 'w-16 h-16 lg:w-20 lg:h-20 ring-2 ring-gray-300 shadow-lg transform scale-110'
-                              : 'w-12 h-12 lg:w-16 lg:h-16 hover:scale-105'
-                          }`}
-                        >
-                          <img
-                            src={image.url}
-                            alt={image.alt}
-                            className="w-full h-full object-cover transition-transform duration-200"
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <ScrollBar orientation="horizontal" />
-                  </ScrollArea>
-                </div>
+                <>
+                  {/* Mobile: Conditional thumbnails */}
+                  <div className={`lg:hidden mt-4 px-4 transition-all duration-300 ${
+                    showThumbnails ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
+                  }`}>
+                    <ScrollArea className="w-full" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                      <div className="flex gap-2 pb-2">
+                        {allImages.map((image, index) => (
+                          <button
+                            key={index}
+                            onClick={() => {
+                              setSelectedImage(index);
+                              setShowThumbnails(false);
+                            }}
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
+                              index === selectedImage
+                                ? 'w-14 h-14 scale-110 shadow-lg'
+                                : 'w-12 h-12 hover:scale-105'
+                            }`}
+                            style={{ transformOrigin: 'center' }}
+                          >
+                            <img
+                              src={image.url}
+                              alt={image.alt}
+                              className="w-full h-full object-cover transition-transform duration-200"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <style jsx>{`
+                        .scrollbar-hide::-webkit-scrollbar {
+                          display: none;
+                        }
+                      `}</style>
+                    </ScrollArea>
+                  </div>
+
+                  {/* Desktop: Always visible thumbnails */}
+                  <div className="hidden lg:block mt-4">
+                    <ScrollArea className="w-full whitespace-nowrap">
+                      <div className="flex gap-3 pb-2">
+                        {allImages.map((image, index) => (
+                          <button
+                            key={index}
+                            onClick={() => setSelectedImage(index)}
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
+                              index === selectedImage
+                                ? 'w-20 h-20 scale-110 shadow-lg'
+                                : 'w-16 h-16 hover:scale-105'
+                            }`}
+                            style={{ transformOrigin: 'center' }}
+                          >
+                            <img
+                              src={image.url}
+                              alt={image.alt}
+                              className="w-full h-full object-cover transition-transform duration-200"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                      <ScrollBar orientation="horizontal" />
+                    </ScrollArea>
+                  </div>
+                </>
               )}
             </div>
 
