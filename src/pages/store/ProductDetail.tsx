@@ -318,7 +318,7 @@ const ProductDetail = () => {
                     (showThumbnails || selectedImage > 0) ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0 overflow-hidden'
                   }`}>
                     <div className="w-full overflow-x-auto scrollbar-hide">
-                      <div className="flex gap-2 pb-2">
+                      <div className="flex gap-2 pb-1 pt-1">
                         {allImages.map((image, index) => (
                           <button
                             key={index}
@@ -328,8 +328,8 @@ const ProductDetail = () => {
                             }}
                             className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
                               index === selectedImage
-                                ? 'w-16 h-16 shadow-lg ring-2 ring-cyan-500'
-                                : 'w-12 h-12 hover:scale-105'
+                                ? 'w-12 h-12 shadow-lg ring-2 ring-cyan-500'
+                                : 'w-10 h-10 hover:scale-105'
                             }`}
                           >
                             <img
