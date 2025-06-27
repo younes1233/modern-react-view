@@ -50,7 +50,7 @@ interface RefreshTokenResponse {
 }
 
 class ApiService {
-  private baseURL = 'http://meemhome.com/api';
+  private baseURL = 'https://meemhome.com/api';
   private token: string | null = null;
   private apiSecret = 'AJ8smLS2vGcxzHpV0Dj3RukPgEdxN0YJ';
 
