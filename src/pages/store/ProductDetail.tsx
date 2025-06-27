@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
@@ -93,8 +92,10 @@ const ProductDetail = () => {
 
   const handleImageChange = (index: number) => {
     setSelectedImage(index);
-    // Hide thumbnails when going back to first image
-    if (index === 0) {
+    // Show thumbnails when navigating away from first image
+    if (index > 0 && window.innerWidth < 1024) {
+      handleImageInteraction();
+    } else if (index === 0) {
       setShowThumbnails(false);
     }
   };
@@ -165,34 +166,20 @@ const ProductDetail = () => {
   return (
     <StoreLayout>
       <div className="min-h-screen bg-white">
-        {/* Mobile Header */}
-        <div className="lg:hidden sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-40 px-4 py-3">
-          <div className="flex items-center justify-end">
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleWishlistToggle}
-                className={`p-2 ${isInWishlist(product.id) ? 'text-red-500' : ''}`}
-              >
-                <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-2"
-              >
-                <Share className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
         <div className="max-w-7xl mx-auto">
           {/* Enhanced Mobile Breadcrumb Navigation */}
           <div className="lg:hidden px-4 py-2 border-b border-gray-100">
             <div className="w-full">
-              <div className="flex items-center space-x-1 text-xs text-gray-500 overflow-x-auto scrollbar-hide">
+              <div className="flex items-center space-x-1 text-xs text-gray-500 overflow-x-auto">
+                <style>{`
+                  .scrollbar-hide::-webkit-scrollbar {
+                    display: none;
+                  }
+                  .scrollbar-hide {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
+                  }
+                `}</style>
                 {breadcrumbs.map((breadcrumb, index) => (
                   <div key={index} className="flex items-center space-x-1 flex-shrink-0">
                     {index > 0 && (
@@ -213,15 +200,6 @@ const ProductDetail = () => {
                   </div>
                 ))}
               </div>
-              <style>{`
-                .scrollbar-hide::-webkit-scrollbar {
-                  display: none;
-                }
-                .scrollbar-hide {
-                  -ms-overflow-style: none;
-                  scrollbar-width: none;
-                }
-              `}</style>
             </div>
           </div>
 
@@ -277,7 +255,7 @@ const ProductDetail = () => {
                   <ZoomIn className="w-4 h-4" />
                 </Button>
                 
-                {/* Mobile: Stock badge and action buttons */}
+                {/* Mobile: Stock badge */}
                 <div className="lg:hidden absolute top-4 left-4">
                   {product.inStock ? (
                     <Badge className="bg-green-500 text-white">In Stock</Badge>
@@ -311,7 +289,7 @@ const ProductDetail = () => {
 
                 {/* Mobile: Smaller pagination dots */}
                 {allImages.length > 1 && (
-                  <div className="lg:hidden absolute bottom-4 left-1/2 transform -translate-x-1/2">
+                  <div className="lg:hidden absolute bottom-2 left-1/2 transform -translate-x-1/2">
                     <div className="flex space-x-1">
                       {allImages.map((_, index) => (
                         <button
@@ -320,9 +298,9 @@ const ProductDetail = () => {
                             e.stopPropagation();
                             handleImageChange(index);
                           }}
-                          className={`w-1 h-1 rounded-full transition-all duration-300 ${
+                          className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                             index === selectedImage
-                              ? 'bg-white scale-150'
+                              ? 'bg-white scale-125'
                               : 'bg-white/50 hover:bg-white/75'
                           }`}
                         />
@@ -335,10 +313,10 @@ const ProductDetail = () => {
               {/* Enhanced Thumbnail Navigation */}
               {allImages.length > 1 && (
                 <>
-                  {/* Mobile: Conditional thumbnails - hide when on first image unless showThumbnails is true */}
+                  {/* Mobile: Conditional thumbnails - show only when not on first image or when showThumbnails is true */}
                   <div className={`lg:hidden mt-4 px-4 transition-all duration-300 ${
-                    (showThumbnails && selectedImage > 0) || selectedImage === 0 ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'
-                  } ${selectedImage === 0 ? 'hidden' : ''}`}>
+                    (showThumbnails || selectedImage > 0) ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0 overflow-hidden'
+                  }`}>
                     <div className="w-full overflow-x-auto scrollbar-hide">
                       <div className="flex gap-2 pb-2">
                         {allImages.map((image, index) => (
@@ -348,9 +326,9 @@ const ProductDetail = () => {
                               handleImageChange(index);
                               setShowThumbnails(false);
                             }}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform-gpu ${
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
                               index === selectedImage
-                                ? 'w-16 h-16 shadow-lg scale-110'
+                                ? 'w-16 h-16 shadow-lg ring-2 ring-cyan-500'
                                 : 'w-12 h-12 hover:scale-105'
                             }`}
                           >

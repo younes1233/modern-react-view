@@ -2,7 +2,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { ZoomIn, ZoomOut, RotateCw, X, ChevronLeft, ChevronRight, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCw, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface ImageZoomProps {
@@ -19,7 +19,6 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
   const [rotation, setRotation] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [isFullscreen, setIsFullscreen] = useState(false);
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isMobile = useIsMobile();
@@ -86,10 +85,6 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
     handleImageChange(newIndex);
   }, [selectedIndex, images.length, handleImageChange]);
 
-  const toggleFullscreen = useCallback(() => {
-    setIsFullscreen(prev => !prev);
-  }, []);
-
   // Keyboard controls
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -126,96 +121,75 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
   useEffect(() => {
     if (open) {
       resetTransform();
-      setIsFullscreen(false);
     }
   }, [open, resetTransform]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent 
-        className={`max-w-none max-h-none p-0 bg-black border-0 ${
-          isFullscreen ? 'w-screen h-screen' : 'w-[95vw] h-[95vh]'
-        }`}
-      >
-        <div className="relative w-full h-full flex flex-col overflow-hidden">
-          {/* Header - Modern floating design */}
-          <div className="absolute top-4 left-4 right-4 z-50 flex items-center justify-between">
-            <div className="flex items-center space-x-2 bg-black/70 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/10">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleZoomOut}
-                disabled={zoom <= 0.5}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-xl"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </Button>
-              <span className="text-white text-sm font-medium min-w-[60px] text-center">
-                {Math.round(zoom * 100)}%
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleZoomIn}
-                disabled={zoom >= 5}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-xl"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </Button>
-              <div className="w-px h-6 bg-white/20" />
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRotate}
-                className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-xl"
-              >
-                <RotateCw className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={resetTransform}
-                className="text-white hover:bg-white/20 h-8 px-3 rounded-xl text-xs"
-              >
-                Reset
-              </Button>
-              {!isMobile && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={toggleFullscreen}
-                  className="text-white hover:bg-white/20 h-8 w-8 p-0 rounded-xl"
-                >
-                  <Maximize className="w-4 h-4" />
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <div className="bg-black/70 backdrop-blur-md rounded-2xl px-4 py-2 border border-white/10">
-                <span className="text-white text-sm">
-                  {selectedIndex + 1} / {images.length}
-                </span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => onOpenChange(false)}
-                className="text-white hover:bg-white/20 bg-black/70 backdrop-blur-md border border-white/10 h-10 w-10 p-0 rounded-2xl"
-              >
-                <X className="w-5 h-5" />
-              </Button>
-            </div>
+      <DialogContent className="max-w-none max-h-none w-screen h-screen p-0 bg-white border-0">
+        <div className="relative w-full h-full flex flex-col overflow-hidden bg-white">
+          {/* Clean minimal header */}
+          <div className="absolute top-4 right-4 z-50">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onOpenChange(false)}
+              className="text-gray-700 hover:bg-gray-100 bg-white/90 backdrop-blur-sm border border-gray-200 h-10 w-10 p-0 rounded-full shadow-sm"
+            >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
 
-          {/* Navigation arrows */}
+          {/* Controls - minimalist design */}
+          <div className="absolute top-4 left-4 z-50 flex items-center space-x-2 bg-white/90 backdrop-blur-sm rounded-full px-4 py-2 border border-gray-200 shadow-sm">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleZoomOut}
+              disabled={zoom <= 0.5}
+              className="text-gray-700 hover:bg-gray-100 h-8 w-8 p-0 rounded-full"
+            >
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <span className="text-gray-700 text-sm font-medium min-w-[60px] text-center">
+              {Math.round(zoom * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleZoomIn}
+              disabled={zoom >= 5}
+              className="text-gray-700 hover:bg-gray-100 h-8 w-8 p-0 rounded-full"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+            <div className="w-px h-6 bg-gray-200" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleRotate}
+              className="text-gray-700 hover:bg-gray-100 h-8 w-8 p-0 rounded-full"
+            >
+              <RotateCw className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={resetTransform}
+              className="text-gray-700 hover:bg-gray-100 h-8 px-3 rounded-full text-xs"
+            >
+              Reset
+            </Button>
+          </div>
+
+          {/* Navigation arrows - clean design */}
           {images.length > 1 && (
             <>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handlePrevious}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 text-white hover:bg-white/20 bg-black/50 backdrop-blur-md border border-white/10 h-12 w-12 p-0 rounded-2xl"
+                className="absolute left-4 top-1/2 -translate-y-1/2 z-40 text-gray-700 hover:bg-gray-100 bg-white/90 backdrop-blur-sm border border-gray-200 h-12 w-12 p-0 rounded-full shadow-sm"
               >
                 <ChevronLeft className="w-6 h-6" />
               </Button>
@@ -223,7 +197,7 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
                 variant="ghost"
                 size="sm"
                 onClick={handleNext}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 text-white hover:bg-white/20 bg-black/50 backdrop-blur-md border border-white/10 h-12 w-12 p-0 rounded-2xl"
+                className="absolute right-4 top-1/2 -translate-y-1/2 z-40 text-gray-700 hover:bg-gray-100 bg-white/90 backdrop-blur-sm border border-gray-200 h-12 w-12 p-0 rounded-full shadow-sm"
               >
                 <ChevronRight className="w-6 h-6" />
               </Button>
@@ -233,7 +207,7 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
           {/* Main Image Container */}
           <div 
             ref={containerRef}
-            className="flex-1 flex items-center justify-center overflow-hidden relative"
+            className="flex-1 flex items-center justify-center overflow-hidden relative bg-white"
             onWheel={handleWheel}
           >
             <div
@@ -261,10 +235,10 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
             </div>
           </div>
 
-          {/* Modern Thumbnail Navigation */}
+          {/* Clean Thumbnail Navigation */}
           {images.length > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50">
-              <div className="bg-black/70 backdrop-blur-md rounded-2xl p-3 border border-white/10">
+              <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-3 border border-gray-200 shadow-sm">
                 <div className="flex items-center space-x-2 max-w-sm overflow-x-auto scrollbar-hide">
                   {images.map((image, index) => (
                     <button
@@ -272,8 +246,8 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
                       onClick={() => handleImageChange(index)}
                       className={`flex-shrink-0 w-12 h-12 sm:w-16 sm:h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
                         index === selectedIndex
-                          ? 'border-white shadow-lg shadow-white/20'
-                          : 'border-white/30 hover:border-white/60'
+                          ? 'border-gray-900 ring-2 ring-gray-900/20'
+                          : 'border-gray-200 hover:border-gray-400'
                       }`}
                     >
                       <img
@@ -288,11 +262,20 @@ export function ImageZoom({ images, selectedIndex, open, onOpenChange, onImageCh
             </div>
           )}
 
+          {/* Counter */}
+          <div className="absolute bottom-4 right-4 z-40">
+            <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 border border-gray-200 shadow-sm">
+              <span className="text-gray-700 text-sm">
+                {selectedIndex + 1} / {images.length}
+              </span>
+            </div>
+          </div>
+
           {/* Help text for desktop */}
           {!isMobile && (
-            <div className="absolute bottom-4 right-4 z-40">
-              <div className="bg-black/70 backdrop-blur-md rounded-xl px-3 py-2 border border-white/10">
-                <p className="text-white/70 text-xs">
+            <div className="absolute bottom-16 right-4 z-40">
+              <div className="bg-white/90 backdrop-blur-sm rounded-xl px-3 py-2 border border-gray-200 shadow-sm">
+                <p className="text-gray-600 text-xs">
                   Scroll to zoom • Arrow keys to navigate • ESC to close
                 </p>
               </div>
