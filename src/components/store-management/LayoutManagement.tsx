@@ -18,22 +18,22 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   getHomeSections, 
-  getBanners,
   getProductListings,
   updateHomeSection,
   deleteHomeSection,
   reorderHomeSections,
   addHomeSection,
   HomeSection,
-  Banner,
   ProductListing
 } from "@/data/storeData";
+import { useBanners, Banner } from "@/hooks/useBanners";
 
 export function LayoutManagement() {
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
   const { toast } = useToast();
+  
+  const { banners, isLoading: bannersLoading } = useBanners();
 
   useEffect(() => {
     refreshData();
@@ -41,7 +41,6 @@ export function LayoutManagement() {
 
   const refreshData = () => {
     setHomeSections(getHomeSections());
-    setBanners(getBanners());
     setProductListings(getProductListings());
   };
 
@@ -146,6 +145,21 @@ export function LayoutManagement() {
 
   const availableBanners = banners.filter(b => b.isActive && !homeSections.some(s => s.type === 'banner' && s.itemId === b.id));
   const availableListings = productListings.filter(p => p.isActive && !homeSections.some(s => s.type === 'productListing' && s.itemId === p.id));
+
+  if (bannersLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              <p className="ml-4 text-gray-600">Loading layout data...</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

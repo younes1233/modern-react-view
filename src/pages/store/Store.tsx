@@ -16,25 +16,24 @@ import {
   getProductListings,
   getHeroSection,
   getActiveHomeSections,
-  getBanners,
   HeroSection,
   HomeSection,
-  Banner,
   ProductListing,
 } from "@/data/storeData";
+import { useBanners, Banner } from "@/hooks/useBanners";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [banners, setBanners] = useState<Banner[]>([]);
   const [productListings, setProductListings] = useState<ProductListing[]>([]);
+  
+  const { banners, isLoading: bannersLoading } = useBanners();
 
   useEffect(() => {
     const loadData = () => {
       setHeroSection(getHeroSection());
       setHomeSections(getActiveHomeSections());
-      setBanners(getBanners());
       setProductListings(getProductListings());
     };
     loadData();
@@ -61,7 +60,8 @@ const Store = () => {
 
   const getSectionContent = (section: HomeSection) => {
     if (section.type === "banner") {
-      const banner = banners.find((b) => b.id === section.itemId);
+      // Use API banners instead of demo data
+      const banner = banners.find((b) => b.id === section.itemId && b.isActive);
       if (!banner) return null;
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white">
@@ -100,6 +100,20 @@ const Store = () => {
     }
     return null;
   };
+
+  // Show loading state while banners are loading
+  if (bannersLoading) {
+    return (
+      <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
+        <StoreLayout>
+          <div className="flex items-center justify-center min-h-screen">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+            <p className="ml-4 text-gray-600">Loading store...</p>
+          </div>
+        </StoreLayout>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
@@ -193,39 +207,6 @@ const Store = () => {
             </div>
           </section>
         )}
-
-        {/* Newsletter Section */}
-        {/* <section className="py-12 md:py-16 bg-gradient-to-r from-cyan-400 to-blue-500 overflow-hidden relative">
-          <div className="absolute inset-0 opacity-10">
-            <div className="absolute top-10 left-10 text-6xl text-white transform rotate-12">+</div>
-            <div className="absolute top-20 right-20 text-4xl text-white transform -rotate-12">×</div>
-            <div className="absolute bottom-10 left-20 text-5xl text-white transform rotate-45">+</div>
-            <div className="absolute bottom-20 right-10 text-3xl text-white transform -rotate-45">×</div>
-            <div className="absolute top-1/2 left-1/4 text-4xl text-white transform rotate-12">+</div>
-            <div className="absolute top-1/3 right-1/3 text-3xl text-white transform -rotate-12">×</div>
-          </div>
-
-          <div className="relative z-10 w-full max-w-full px-4 md:px-8 text-center">
-            <div className="max-w-2xl mx-auto text-white">
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">Get Your Order Now</h2>
-              <p className="text-lg mb-8 text-cyan-100 opacity-90">
-                Be the first to know about new products, exclusive offers, and special events.
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4 max-w-lg mx-auto">
-                <div className="relative flex-1">
-                  <input
-                    type="email"
-                    placeholder="Type your email here"
-                    className="w-full px-6 py-4 rounded-full text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-white bg-white/95 backdrop-blur-sm"
-                  />
-                  <Button className="absolute right-1 top-1 bottom-1 bg-cyan-500 hover:bg-cyan-600 text-white px-8 rounded-full font-semibold">
-                    Subscribe
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section> */}
       </StoreLayout>
     </div>
   );
