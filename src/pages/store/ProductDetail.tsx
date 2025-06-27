@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn } from 'lucide-react';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { Star, Heart, ShoppingCart, ArrowLeft, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { getProducts, getProductBySlug, Product, ProductVariation, calculateVariationPrice } from '@/data/storeData';
@@ -39,7 +40,7 @@ const ProductDetail = () => {
   if (!product) {
     return (
       <StoreLayout>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Product not found</h1>
             <Button onClick={() => navigate('/store')} className="bg-cyan-600 hover:bg-cyan-700">
@@ -85,100 +86,181 @@ const ProductDetail = () => {
 
   return (
     <StoreLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <div className="flex items-center space-x-2 text-sm text-gray-600 mb-8">
-          <button onClick={() => navigate('/store')} className="hover:text-cyan-600">
-            Store
-          </button>
-          <span>/</span>
-          <button onClick={() => navigate('/store/categories')} className="hover:text-cyan-600">
-            Categories
-          </button>
-          <span>/</span>
-          <span className="text-gray-900 font-medium capitalize">{product.category}</span>
-          <span>/</span>
-          <span className="text-gray-900 font-medium">{product.name}</span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
-          {/* Product Images */}
-          <div className="space-y-4">
-            <div className="relative aspect-square rounded-lg overflow-hidden bg-gray-100 group">
-              <img
-                src={allImages[selectedImage]?.url}
-                alt={allImages[selectedImage]?.alt}
-                className="w-full h-full object-cover"
-              />
+      <div className="min-h-screen bg-white">
+        {/* Mobile Header */}
+        <div className="lg:hidden sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-100 z-40 px-4 py-3">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigate('/store')}
+              className="p-2"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Button>
+            <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="sm" className="p-2">
+                <Share className="w-5 h-5" />
+              </Button>
               <Button
-                variant="secondary"
+                variant="ghost"
                 size="sm"
-                onClick={() => setShowImageZoom(true)}
-                className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
+                onClick={handleWishlistToggle}
+                className={`p-2 ${isInWishlist(product.id) ? 'text-red-500' : ''}`}
               >
-                <ZoomIn className="w-4 h-4" />
+                <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
               </Button>
             </div>
-            
-            {/* Thumbnail Navigation */}
-            {allImages.length > 1 && (
-              <div className="grid grid-cols-4 gap-2">
-                {allImages.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImage(index)}
-                    className={`aspect-square rounded-lg overflow-hidden border-2 transition-all ${
-                      index === selectedImage
-                        ? 'border-cyan-500'
-                        : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <img
-                      src={image.url}
-                      alt={image.alt}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto">
+          {/* Desktop Breadcrumb */}
+          <div className="hidden lg:block px-4 sm:px-6 lg:px-8 py-4">
+            <ScrollArea className="w-full whitespace-nowrap">
+              <div className="flex items-center space-x-2 text-xs text-gray-500">
+                <button onClick={() => navigate('/store')} className="hover:text-cyan-600 transition-colors">
+                  Store
+                </button>
+                <span>/</span>
+                <button onClick={() => navigate('/store/categories')} className="hover:text-cyan-600 transition-colors">
+                  Categories
+                </button>
+                <span>/</span>
+                <span className="text-gray-700 font-medium capitalize">{product.category}</span>
+                <span>/</span>
+                <span className="text-gray-900 font-medium truncate">{product.name}</span>
               </div>
-            )}
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
 
-          {/* Product Info */}
-          <div className="space-y-6">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="secondary" className="capitalize">
-                  {product.category}
-                </Badge>
-                {product.isFeatured && (
-                  <Badge className="bg-cyan-500">Featured</Badge>
-                )}
+          <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:px-4 sm:lg:px-6 lg:lg:px-8">
+            {/* Product Images */}
+            <div className="lg:sticky lg:top-4 lg:h-fit">
+              {/* Main Image */}
+              <div className="relative aspect-square bg-gray-50 overflow-hidden lg:rounded-2xl group">
+                <img
+                  src={allImages[selectedImage]?.url}
+                  alt={allImages[selectedImage]?.alt}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setShowImageZoom(true)}
+                  className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-white/90 hover:bg-white shadow-lg"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                
+                {/* Mobile: Stock badge */}
+                <div className="lg:hidden absolute top-4 left-4">
+                  {product.inStock ? (
+                    <Badge className="bg-green-500 text-white">In Stock</Badge>
+                  ) : (
+                    <Badge variant="destructive">Out of Stock</Badge>
+                  )}
+                </div>
               </div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
+              
+              {/* Thumbnail Navigation */}
+              {allImages.length > 1 && (
+                <div className="mt-4 px-4 lg:px-0">
+                  <ScrollArea className="w-full whitespace-nowrap">
+                    <div className="flex gap-2 pb-2">
+                      {allImages.map((image, index) => (
+                        <button
+                          key={index}
+                          onClick={() => setSelectedImage(index)}
+                          className={`flex-shrink-0 w-16 h-16 lg:w-20 lg:h-20 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
+                            index === selectedImage
+                              ? 'border-cyan-500 ring-2 ring-cyan-500/20'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt={image.alt}
+                            className="w-full h-full object-cover transition-transform duration-200 hover:scale-110"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <ScrollBar orientation="horizontal" />
+                  </ScrollArea>
+                </div>
+              )}
+            </div>
+
+            {/* Product Info */}
+            <div className="px-4 py-6 lg:px-0 lg:py-0 space-y-6">
+              {/* Brand & Category */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Badge variant="secondary" className="capitalize text-xs">
+                    {product.category}
+                  </Badge>
+                  {product.isFeatured && (
+                    <Badge className="bg-cyan-500 text-xs">Featured</Badge>
+                  )}
+                </div>
+                <div className="hidden lg:flex items-center space-x-2">
+                  <Button variant="ghost" size="sm">
+                    <Share className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleWishlistToggle}
+                    className={isInWishlist(product.id) ? 'text-red-500' : ''}
+                  >
+                    <Heart className={`w-4 h-4 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Product Title */}
+              <div>
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                  {product.name}
+                </h1>
+              </div>
               
               {/* Rating */}
-              <div className="flex items-center space-x-2 mb-4">
+              <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
                   {renderStars(product.rating)}
                 </div>
-                <span className="text-sm text-gray-600">({product.rating} out of 5)</span>
+                <span className="text-sm text-gray-600">
+                  {product.rating} ({Math.floor(Math.random() * 1000 + 100)}k reviews)
+                </span>
               </div>
 
               {/* Price */}
-              <div className="text-3xl font-bold text-gray-900 mb-6">
-                ${currentPrice.toFixed(2)}
-                {currentPrice !== product.price && (
-                  <span className="text-lg text-gray-500 line-through ml-2">
-                    ${product.price.toFixed(2)}
+              <div className="space-y-2">
+                <div className="flex items-baseline space-x-3">
+                  <span className="text-3xl lg:text-4xl font-bold text-gray-900">
+                    ${currentPrice.toFixed(2)}
                   </span>
-                )}
+                  {currentPrice !== product.price && (
+                    <span className="text-lg text-gray-500 line-through">
+                      ${product.price.toFixed(2)}
+                    </span>
+                  )}
+                  {currentPrice !== product.price && (
+                    <Badge className="bg-red-500 text-white">
+                      {Math.round(((product.price - currentPrice) / product.price) * 100)}% Off
+                    </Badge>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600">Inclusive of VAT</p>
               </div>
 
-              {/* Stock Status */}
-              <div className="mb-6">
+              {/* Desktop Stock Status */}
+              <div className="hidden lg:block">
                 {product.inStock ? (
-                  <Badge className="bg-green-500">In Stock</Badge>
+                  <Badge className="bg-green-500 text-white">In Stock</Badge>
                 ) : (
                   <Badge variant="destructive">Out of Stock</Badge>
                 )}
@@ -186,7 +268,7 @@ const ProductDetail = () => {
 
               {/* Product Variations */}
               {product.variations.length > 0 && (
-                <div className="mb-6">
+                <div className="space-y-4">
                   <ProductVariations
                     variations={product.variations}
                     basePrice={product.price}
@@ -195,164 +277,165 @@ const ProductDetail = () => {
                 </div>
               )}
 
-              {/* Quantity Selector */}
-              <div className="flex items-center space-x-4 mb-6">
-                <span className="text-sm font-medium text-gray-900">Quantity:</span>
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-8 h-8 p-0"
-                  >
-                    <Minus className="w-3 h-3" />
-                  </Button>
-                  <span className="w-12 text-center font-medium">{quantity}</span>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setQuantity(quantity + 1)}
-                    className="w-8 h-8 p-0"
-                  >
-                    <Plus className="w-3 h-3" />
-                  </Button>
+              {/* Quantity & Actions */}
+              <div className="space-y-4">
+                {/* Quantity Selector */}
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm font-medium text-gray-900">Qty</span>
+                  <div className="flex items-center border border-gray-200 rounded-lg">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-10 h-10 p-0 hover:bg-gray-50"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </Button>
+                    <span className="w-12 text-center font-medium text-lg">{quantity}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setQuantity(quantity + 1)}
+                      className="w-10 h-10 p-0 hover:bg-gray-50"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-3">
+                {/* Action Button */}
                 <Button
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
-                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white h-12"
+                  className="w-full bg-cyan-600 hover:bg-cyan-700 text-white h-14 text-lg font-semibold rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50"
                   size="lg"
                 >
                   <ShoppingCart className="w-5 h-5 mr-2" />
-                  {isInCart(product.id) ? 'Add More to Cart' : 'Add to Cart'}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={handleWishlistToggle}
-                  className={`w-full h-12 ${isInWishlist(product.id) ? 'text-red-500 border-red-500' : ''}`}
-                  size="lg"
-                >
-                  <Heart className={`w-5 h-5 mr-2 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-                  {isInWishlist(product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+                  ADD TO CART
                 </Button>
               </div>
 
               {/* Features */}
-              <div className="border-t pt-6 space-y-4">
+              <div className="space-y-3 pt-4 border-t border-gray-100">
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
-                  <Truck className="w-5 h-5" />
-                  <span>Free shipping on orders over $50</span>
+                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                    <Truck className="w-3 h-3 text-green-600" />
+                  </div>
+                  <span>Free delivery on orders over $50</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
-                  <Shield className="w-5 h-5" />
+                  <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
+                    <Shield className="w-3 h-3 text-blue-600" />
+                  </div>
                   <span>1 year warranty included</span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
-                  <RotateCcw className="w-5 h-5" />
+                  <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
+                    <RotateCcw className="w-3 h-3 text-orange-600" />
+                  </div>
                   <span>30-day return policy</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Product Details Tabs */}
-        <div className="mt-12">
-          <Tabs defaultValue="description" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="description">Description</TabsTrigger>
-              <TabsTrigger value="specifications">Specifications</TabsTrigger>
-              <TabsTrigger value="reviews">Reviews</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="description" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <p className="text-gray-700 leading-relaxed">
-                    {product.description || `Discover the amazing features of ${product.name}. This high-quality product combines style, functionality, and durability to meet all your needs. Whether you're looking for everyday use or special occasions, this product delivers exceptional performance and value.`}
-                  </p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="specifications" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <span className="font-medium text-gray-900">SKU:</span>
-                      <span className="text-gray-600">{product.sku}</span>
-                    </div>
-                    <div className="space-y-2">
-                      <span className="font-medium text-gray-900">Category:</span>
-                      <span className="text-gray-600 capitalize">{product.category}</span>
-                    </div>
-                    {product.variations.length > 0 && (
-                      <div className="space-y-2">
-                        <span className="font-medium text-gray-900">Available Options:</span>
-                        <span className="text-gray-600">
-                          {Array.from(new Set(product.variations.map(v => v.type))).join(', ')}
-                        </span>
-                      </div>
-                    )}
-                    <div className="space-y-2">
-                      <span className="font-medium text-gray-900">Weight:</span>
-                      <span className="text-gray-600">2.5 lbs</span>
-                    </div>
-                    <div className="space-y-2">
-                      <span className="font-medium text-gray-900">Dimensions:</span>
-                      <span className="text-gray-600">10" x 8" x 6"</span>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-            
-            <TabsContent value="reviews" className="mt-6">
-              <Card>
-                <CardContent className="p-6">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Customer Reviews</h3>
-                      <div className="flex items-center space-x-2">
-                        <div className="flex items-center space-x-1">
-                          {renderStars(product.rating)}
+          {/* Product Details Tabs */}
+          <div className="mt-8 lg:mt-12 px-4 sm:px-6 lg:px-8 pb-8">
+            <Tabs defaultValue="description" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-gray-50 p-1 rounded-xl">
+                <TabsTrigger value="description" className="rounded-lg">Description</TabsTrigger>
+                <TabsTrigger value="specifications" className="rounded-lg">Specifications</TabsTrigger>
+                <TabsTrigger value="reviews" className="rounded-lg">Reviews</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="description" className="mt-6">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-6">
+                    <p className="text-gray-700 leading-relaxed">
+                      {product.description || `Discover the amazing features of ${product.name}. This high-quality product combines style, functionality, and durability to meet all your needs. Whether you're looking for everyday use or special occasions, this product delivers exceptional performance and value.`}
+                    </p>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="specifications" className="mt-6">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-900">SKU:</span>
+                          <span className="text-gray-600">{product.sku}</span>
                         </div>
-                        <span className="text-sm text-gray-600">({product.rating} out of 5)</span>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-4">
-                      <div className="border-b pb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">John D.</span>
-                          <div className="flex items-center space-x-1">
-                            {renderStars(5)}
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-900">Category:</span>
+                          <span className="text-gray-600 capitalize">{product.category}</span>
+                        </div>
+                        {product.variations.length > 0 && (
+                          <div className="flex justify-between">
+                            <span className="font-medium text-gray-900">Available Options:</span>
+                            <span className="text-gray-600">
+                              {Array.from(new Set(product.variations.map(v => v.type))).join(', ')}
+                            </span>
                           </div>
+                        )}
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-900">Weight:</span>
+                          <span className="text-gray-600">2.5 lbs</span>
                         </div>
-                        <p className="text-gray-700">Amazing product! Exactly what I was looking for. Great quality and fast shipping.</p>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-900">Dimensions:</span>
+                          <span className="text-gray-600">10" x 8" x 6"</span>
+                        </div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+              
+              <TabsContent value="reviews" className="mt-6">
+                <Card className="border-0 shadow-sm">
+                  <CardContent className="p-6">
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Customer Reviews</h3>
+                        <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-1">
+                            {renderStars(product.rating)}
+                          </div>
+                          <span className="text-sm text-gray-600">({product.rating} out of 5)</span>
+                        </div>
                       </div>
                       
-                      <div className="border-b pb-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-medium">Sarah M.</span>
-                          <div className="flex items-center space-x-1">
-                            {renderStars(4)}
+                      <div className="space-y-4">
+                        <div className="border-b border-gray-100 pb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">John D.</span>
+                            <div className="flex items-center space-x-1">
+                              {renderStars(5)}
+                            </div>
                           </div>
+                          <p className="text-gray-700">Amazing product! Exactly what I was looking for. Great quality and fast shipping.</p>
                         </div>
-                        <p className="text-gray-700">Very satisfied with this purchase. Good value for money and excellent customer service.</p>
+                        
+                        <div className="border-b border-gray-100 pb-4">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="font-medium">Sarah M.</span>
+                            <div className="flex items-center space-x-1">
+                              {renderStars(4)}
+                            </div>
+                          </div>
+                          <p className="text-gray-700">Very satisfied with this purchase. Good value for money and excellent customer service.</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
 
         <ImageZoom
