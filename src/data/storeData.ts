@@ -733,7 +733,8 @@ let sampleHomeSections: HomeSection[] = [
   { id: 2, type: "productListing", itemId: 1, order: 2, isActive: true },
   { id: 3, type: "banner", itemId: 2, order: 3, isActive: true },
   { id: 4, type: "productListing", itemId: 2, order: 4, isActive: true },
-  { id: 5, type: "productListing", itemId: 3, order: 5, isActive: true }
+  { id: 5, type: "productListing", itemId: 3, order: 5, isActive: true },
+   { id: 6, type: "banner", itemId: 5, order: 6, isActive: true },
 ];
 
 const sampleDisplaySettings: DisplaySettings = {
