@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { productService, ProductAPI } from '@/services/productService';
 import { useToast } from '@/hooks/use-toast';
@@ -45,14 +44,6 @@ export const useProducts = (
           to: 0,
         }
       };
-    },
-    onError: (error: any) => {
-      console.error('useProducts error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to fetch products",
-        variant: "destructive"
-      });
     }
   });
 };

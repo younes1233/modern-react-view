@@ -14,25 +14,23 @@ import {
   getNewArrivals,
   getProductsOnSale,
   getHeroSection,
-  getActiveHomeSections,
   HeroSection,
-  HomeSection,
 } from "@/data/storeData";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
+import { useHomeSections } from "@/hooks/useHomeSections";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
-  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: productListingsLoading } = useProductListings();
+  const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
 
   useEffect(() => {
     const loadData = () => {
       setHeroSection(getHeroSection());
-      setHomeSections(getActiveHomeSections());
     };
     loadData();
 
@@ -52,14 +50,14 @@ const Store = () => {
   };
 
   const products = getProducts();
-  const featuredProducts = getFeaturedProducts();
-  const newArrivals = getNewArrivals();
   const bestSellers = getProductsOnSale();
 
-  const getSectionContent = (section: HomeSection) => {
-    if (section.type === "banner") {
+  const getSectionContent = (section: any) => {
+    if (!section.is_active) return null;
+
+    if (section.type === 'banner') {
       // Use API banners instead of demo data
-      const banner = banners.find((b) => b.id === section.itemId && b.isActive);
+      const banner = banners.find((b) => b.id === section.item_id && b.isActive) || section.item;
       if (!banner) return null;
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white">
@@ -87,9 +85,9 @@ const Store = () => {
           </div>
         </section>
       );
-    } else if (section.type === "productListing") {
+    } else if (section.type === 'productListing') {
       // Use API product listings instead of demo data
-      const listing = productListings.find((l) => l.id === section.itemId && l.is_active);
+      const listing = productListings.find((l) => l.id === section.item_id && l.is_active) || section.item;
       if (!listing) return null;
       
       // Convert API listing format to expected format
@@ -98,10 +96,10 @@ const Store = () => {
         title: listing.title,
         subtitle: listing.subtitle,
         type: listing.type,
-        maxProducts: listing.max_products,
+        maxProducts: listing.max_products || listing.maxProducts,
         layout: listing.layout,
-        showTitle: listing.show_title,
-        isActive: listing.is_active,
+        showTitle: listing.show_title !== undefined ? listing.show_title : listing.showTitle,
+        isActive: listing.is_active !== undefined ? listing.is_active : listing.isActive,
         order: listing.order
       };
       
@@ -115,7 +113,7 @@ const Store = () => {
   };
 
   // Show loading state while data is loading
-  if (bannersLoading || productListingsLoading) {
+  if (bannersLoading || productListingsLoading || homeSectionsLoading) {
     return (
       <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
         <StoreLayout>
@@ -128,8 +126,9 @@ const Store = () => {
     );
   }
 
+  console.log('Store: Home sections from API:', homeSections);
   console.log('Store: Product listings from API:', productListings);
-  console.log('Store: Home sections:', homeSections);
+  console.log('Store: Banners from API:', banners);
 
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
@@ -192,13 +191,16 @@ const Store = () => {
           <ShopByCategory />
         </div>
 
-        {/* Dynamic Home Sections from Dashboard */}
+        {/* Dynamic Home Sections from API */}
         <div className="w-full overflow-hidden bg-white">
-          {homeSections.map((section) => getSectionContent(section))}
+          {homeSections
+            .filter(section => section.is_active)
+            .sort((a, b) => a.order - b.order)
+            .map((section) => getSectionContent(section))}
         </div>
 
         {/* Fallback Best Sellers if no sections are configured */}
-        {homeSections.length === 0 && (
+        {homeSections.filter(s => s.is_active).length === 0 && (
           <section className="py-8 md:py-16 bg-white overflow-hidden">
             <div className="w-full max-w-full px-2 md:px-4">
               <div className="max-w-7xl mx-auto">

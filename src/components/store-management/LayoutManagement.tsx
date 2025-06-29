@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,114 +16,81 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { 
-  getHomeSections, 
-  updateHomeSection,
-  deleteHomeSection,
-  reorderHomeSections,
-  addHomeSection,
-  HomeSection
-} from "@/data/storeData";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
+import { 
+  useHomeSections, 
+  useCreateHomeSection, 
+  useUpdateHomeSection, 
+  useDeleteHomeSection, 
+  useReorderHomeSections 
+} from "@/hooks/useHomeSections";
 
 export function LayoutManagement() {
-  const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
   const { toast } = useToast();
   
+  const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: listingsLoading } = useProductListings();
+  
+  const createHomeSection = useCreateHomeSection();
+  const updateHomeSection = useUpdateHomeSection();
+  const deleteHomeSection = useDeleteHomeSection();
+  const reorderHomeSections = useReorderHomeSections();
 
-  useEffect(() => {
-    refreshData();
-  }, []);
-
-  const refreshData = () => {
-    setHomeSections(getHomeSections());
-  };
-
-  const getSectionItem = (section: HomeSection) => {
+  const getSectionItem = (section: any) => {
     if (section.type === 'banner') {
-      return banners.find(b => b.id === section.itemId);
+      return banners.find(b => b.id === section.item_id) || section.item;
     } else {
-      return productListings.find(p => p.id === section.itemId);
+      return productListings.find(p => p.id === section.item_id) || section.item;
     }
   };
 
   const handleToggleActive = (sectionId: number) => {
     const section = homeSections.find(s => s.id === sectionId);
     if (section) {
-      updateHomeSection(sectionId, { isActive: !section.isActive });
-      refreshData();
-      toast({
-        title: "Success",
-        description: "Section status updated"
+      updateHomeSection.mutate({
+        id: sectionId,
+        data: { is_active: !section.is_active }
       });
     }
   };
 
   const handleMoveUp = (index: number) => {
     if (index > 0) {
-      const newSections = [...homeSections];
-      [newSections[index], newSections[index - 1]] = [newSections[index - 1], newSections[index]];
-      reorderHomeSections(newSections);
-      refreshData();
-      toast({
-        title: "Success",
-        description: "Section order updated"
-      });
+      const newOrder = [...homeSections];
+      [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
+      const orderIds = newOrder.map(s => s.id);
+      reorderHomeSections.mutate(orderIds);
     }
   };
 
   const handleMoveDown = (index: number) => {
     if (index < homeSections.length - 1) {
-      const newSections = [...homeSections];
-      [newSections[index], newSections[index + 1]] = [newSections[index + 1], newSections[index]];
-      reorderHomeSections(newSections);
-      refreshData();
-      toast({
-        title: "Success",
-        description: "Section order updated"
-      });
+      const newOrder = [...homeSections];
+      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
+      const orderIds = newOrder.map(s => s.id);
+      reorderHomeSections.mutate(orderIds);
     }
   };
 
   const handleDeleteSection = (sectionId: number) => {
-    deleteHomeSection(sectionId);
-    refreshData();
-    toast({
-      title: "Success",
-      description: "Section removed from home page"
-    });
+    deleteHomeSection.mutate(sectionId);
   };
 
   const handleAddBannerSection = (bannerId: number) => {
-    const maxOrder = Math.max(...homeSections.map(s => s.order), 0);
-    addHomeSection({
+    createHomeSection.mutate({
       type: 'banner',
-      itemId: bannerId,
-      order: maxOrder + 1,
-      isActive: true
-    });
-    refreshData();
-    toast({
-      title: "Success",
-      description: "Banner added to home page"
+      item_id: bannerId,
+      is_active: true
     });
   };
 
   const handleAddProductSection = (listingId: number) => {
-    const maxOrder = Math.max(...homeSections.map(s => s.order), 0);
-    addHomeSection({
+    createHomeSection.mutate({
       type: 'productListing',
-      itemId: listingId,
-      order: maxOrder + 1,
-      isActive: true
-    });
-    refreshData();
-    toast({
-      title: "Success",
-      description: "Product section added to home page"
+      item_id: listingId,
+      is_active: true
     });
   };
 
@@ -140,10 +108,10 @@ export function LayoutManagement() {
     );
   };
 
-  const availableBanners = banners.filter(b => b.isActive && !homeSections.some(s => s.type === 'banner' && s.itemId === b.id));
-  const availableListings = productListings.filter(p => p.is_active && !homeSections.some(s => s.type === 'productListing' && s.itemId === p.id));
+  const availableBanners = banners.filter(b => b.isActive && !homeSections.some(s => s.type === 'banner' && s.item_id === b.id));
+  const availableListings = productListings.filter(p => p.is_active && !homeSections.some(s => s.type === 'productListing' && s.item_id === p.id));
 
-  if (bannersLoading || listingsLoading) {
+  if (bannersLoading || listingsLoading || homeSectionsLoading) {
     return (
       <div className="space-y-6">
         <Card>
@@ -242,8 +210,8 @@ export function LayoutManagement() {
                           </td>
                           <td className="p-4">{getTypeBadge(section.type)}</td>
                           <td className="p-4">
-                            <Badge variant={section.isActive ? "default" : "secondary"}>
-                              {section.isActive ? "Active" : "Inactive"}
+                            <Badge variant={section.is_active ? "default" : "secondary"}>
+                              {section.is_active ? "Active" : "Inactive"}
                             </Badge>
                           </td>
                           <td className="p-4">
@@ -252,9 +220,9 @@ export function LayoutManagement() {
                                 variant="ghost" 
                                 size="sm" 
                                 onClick={() => handleToggleActive(section.id)}
-                                title={section.isActive ? "Hide" : "Show"}
+                                title={section.is_active ? "Hide" : "Show"}
                               >
-                                {section.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                {section.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                               </Button>
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>

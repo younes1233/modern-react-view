@@ -2,9 +2,10 @@
 import { authService } from './authService';
 import { bannerService } from './bannerService';
 import { productListingService } from './productListingService';
+import { homeSectionService } from './homeSectionService';
 
 // Export all services
-export { authService, bannerService, productListingService };
+export { authService, bannerService, productListingService, homeSectionService };
 
 // Legacy compatibility - combine all services into one object
 class ApiService {
@@ -104,17 +105,40 @@ class ApiService {
     return productListingService.getProductListingProducts(productListingId, countryId, currencyId);
   }
 
+  // Home Section methods
+  async getHomeSections() {
+    return homeSectionService.getHomeSections();
+  }
+
+  async createHomeSection(data: any) {
+    return homeSectionService.createHomeSection(data);
+  }
+
+  async updateHomeSection(id: number, data: any) {
+    return homeSectionService.updateHomeSection(id, data);
+  }
+
+  async deleteHomeSection(id: number) {
+    return homeSectionService.deleteHomeSection(id);
+  }
+
+  async reorderHomeSections(order: number[]) {
+    return homeSectionService.reorderHomeSections(order);
+  }
+
   // Token management
   setToken(token: string) {
     authService.setToken(token);
     bannerService.setToken(token);
     productListingService.setToken(token);
+    homeSectionService.setToken(token);
   }
 
   removeToken() {
     authService.removeToken();
     bannerService.removeToken();
     productListingService.removeToken();
+    homeSectionService.removeToken();
   }
 
   getToken() {
