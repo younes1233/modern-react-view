@@ -49,27 +49,27 @@ export interface ProductListingWithProducts {
 class ProductListingService extends BaseApiService {
   // Get all product listings
   async getProductListings(): Promise<ApiResponse<{ product_listings: ProductListingAPI[] }>> {
-    return this.get('/api/product-listings');
+    return this.get('/product-listings');
   }
 
   // Create a new product listing
   async createProductListing(data: CreateProductListingRequest): Promise<ApiResponse<{ product_listing: ProductListingAPI }>> {
-    return this.post('/api/product-listings', data);
+    return this.post('/product-listings', data);
   }
 
   // Update a product listing
   async updateProductListing(id: number, data: UpdateProductListingRequest): Promise<ApiResponse<{ product_listing: ProductListingAPI }>> {
-    return this.put(`/api/product-listings/${id}`, data);
+    return this.put(`/product-listings/${id}`, data);
   }
 
   // Delete a product listing
   async deleteProductListing(id: number): Promise<ApiResponse<{ product_listing: ProductListingAPI }>> {
-    return this.delete(`/api/product-listings/${id}`);
+    return this.delete(`/product-listings/${id}`);
   }
 
   // Reorder product listings
   async reorderProductListings(orders: number[]): Promise<ApiResponse<{ product_listings: ProductListingAPI[] }>> {
-    return this.put('/api/product-listings/reorder', { orders });
+    return this.put('/product-listings/reorder', { orders });
   }
 
   // Get products for a specific listing
@@ -78,7 +78,7 @@ class ProductListingService extends BaseApiService {
     countryId: number = 1, 
     currencyId: number = 1
   ): Promise<ApiResponse<ProductListingWithProducts>> {
-    return this.get(`/api/product-listings/${productListingId}/products?country_id=${countryId}&currency_id=${currencyId}`);
+    return this.get(`/product-listings/${productListingId}/products?country_id=${countryId}&currency_id=${currencyId}`);
   }
 }
 
