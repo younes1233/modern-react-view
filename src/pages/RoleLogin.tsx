@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,9 +13,21 @@ const RoleLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { login, isLoading } = useRoleAuth();
+  const { user, login, isLoading } = useRoleAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect if user is already signed in
+  useEffect(() => {
+    if (user && !isLoading) {
+      // Redirect based on user role
+      if (user.role === 'customer') {
+        navigate('/store', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [user, isLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,7 +48,7 @@ const RoleLogin = () => {
         title: 'Success',
         description: 'Login successful!',
       });
-      navigate('/');
+      // Navigation will be handled by the useEffect above
     } else {
       toast({
         title: 'Error',
@@ -45,6 +57,20 @@ const RoleLogin = () => {
       });
     }
   };
+
+  // Show loading while checking authentication status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't render the login form if user is already authenticated
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 p-4">

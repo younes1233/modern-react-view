@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
-import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowLeft } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, User, Phone, ArrowLeft, X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/sonner';
 
@@ -252,7 +252,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-12 text-base"
             required
           />
         </div>
@@ -266,14 +266,14 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
         </div>
       )}
       
-      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={isLoading} size="lg">
+      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 h-12 text-base font-medium" disabled={isLoading}>
         {isLoading ? 'Sending...' : 'Send OTP'}
       </Button>
       
       <Button
         type="button"
         variant="ghost"
-        className="w-full"
+        className="w-full h-12 text-base"
         onClick={() => switchMode('signin')}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -283,36 +283,40 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
   );
 
   const renderForgotOtpForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="space-y-2">
-        <Label>Enter 6-digit OTP</Label>
-        <p className="text-sm text-gray-600">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <Label className="text-base font-medium">Enter 6-digit OTP</Label>
+        <p className="text-sm text-gray-600 leading-relaxed">
           We've sent a verification code to {email}
         </p>
-        <InputOTP
-          maxLength={6}
-          value={otp}
-          onChange={(value) => setOtp(value)}
-        >
-          <InputOTPGroup>
-            <InputOTPSlot index={0} />
-            <InputOTPSlot index={1} />
-            <InputOTPSlot index={2} />
-            <InputOTPSlot index={3} />
-            <InputOTPSlot index={4} />
-            <InputOTPSlot index={5} />
-          </InputOTPGroup>
-        </InputOTP>
+        <div className="flex justify-center">
+          <InputOTP
+            maxLength={6}
+            value={otp}
+            onChange={(value) => setOtp(value)}
+            className="gap-2"
+          >
+            <InputOTPGroup className="gap-2">
+              {[0, 1, 2, 3, 4, 5].map((index) => (
+                <InputOTPSlot 
+                  key={index} 
+                  index={index} 
+                  className="w-12 h-12 text-lg font-semibold border-2 rounded-lg focus:border-cyan-500"
+                />
+              ))}
+            </InputOTPGroup>
+          </InputOTP>
+        </div>
       </div>
       
-      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={isLoading} size="lg">
+      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 h-12 text-base font-medium" disabled={isLoading}>
         {isLoading ? 'Verifying...' : 'Verify OTP'}
       </Button>
       
       <Button
         type="button"
         variant="ghost"
-        className="w-full"
+        className="w-full h-12 text-base"
         onClick={() => setMode('forgot-email')}
       >
         <ArrowLeft className="w-4 h-4 mr-2" />
@@ -333,7 +337,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             placeholder="Enter new password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="pl-10 pr-10"
+            className="pl-10 pr-12 h-12 text-base"
             required
           />
           <Button
@@ -362,13 +366,13 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             placeholder="Confirm new password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
-            className="pl-10"
+            className="pl-10 h-12 text-base"
             required
           />
         </div>
       </div>
       
-      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700" disabled={isLoading} size="lg">
+      <Button type="submit" className="w-full bg-cyan-600 hover:bg-cyan-700 h-12 text-base font-medium" disabled={isLoading}>
         {isLoading ? 'Resetting...' : 'Reset Password'}
       </Button>
     </form>
@@ -383,7 +387,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
       <form onSubmit={handleSubmit} className="space-y-4">
         {mode === 'signup' && (
           <>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="firstName">First Name *</Label>
                 <div className="relative">
@@ -394,7 +398,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                     placeholder="First name"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-12 text-base"
                     required
                   />
                 </div>
@@ -410,7 +414,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                     placeholder="Last name"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="pl-10"
+                    className="pl-10 h-12 text-base"
                     required
                   />
                 </div>
@@ -427,7 +431,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                   placeholder="+96170123456"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="pl-10"
+                  className="pl-10 h-12 text-base"
                 />
               </div>
             </div>
@@ -435,7 +439,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             <div className="space-y-2">
               <Label htmlFor="gender">Gender</Label>
               <Select value={gender} onValueChange={setGender}>
-                <SelectTrigger>
+                <SelectTrigger className="h-12 text-base">
                   <SelectValue placeholder="Select gender (optional)" />
                 </SelectTrigger>
                 <SelectContent>
@@ -455,6 +459,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                 value={dateOfBirth}
                 onChange={(e) => setDateOfBirth(e.target.value)}
                 max={new Date().toISOString().split('T')[0]}
+                className="h-12 text-base"
               />
             </div>
           </>
@@ -470,7 +475,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10"
+              className="pl-10 h-12 text-base"
               required
             />
           </div>
@@ -486,7 +491,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 pr-10"
+              className="pl-10 pr-12 h-12 text-base"
               required
             />
             <Button
@@ -516,7 +521,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
                 placeholder="Confirm your password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-12 text-base"
                 required
               />
             </div>
@@ -528,7 +533,7 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
             <button
               type="button"
               onClick={() => switchMode('forgot-email')}
-              className="text-sm text-cyan-600 hover:text-cyan-500"
+              className="text-sm text-cyan-600 hover:text-cyan-500 font-medium"
             >
               Forgot your password?
             </button>
@@ -537,9 +542,8 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
         
         <Button 
           type="submit" 
-          className="w-full bg-cyan-600 hover:bg-cyan-700" 
+          className="w-full bg-cyan-600 hover:bg-cyan-700 h-12 text-base font-medium" 
           disabled={isLoading}
-          size="lg"
         >
           {isLoading ? 'Please wait...' : mode === 'signin' ? 'Sign In' : 'Create Account'}
         </Button>
@@ -549,24 +553,37 @@ export function AuthModal({ open, onOpenChange, defaultMode = 'signin' }: AuthMo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="sr-only">
+      <DialogContent className="max-w-md max-h-[95vh] overflow-y-auto p-0 gap-0 sm:rounded-lg">
+        <DialogHeader className="sr-only">
+          <DialogTitle>
             {getTitle()}
           </DialogTitle>
         </DialogHeader>
         
+        {/* Mobile-optimized header */}
+        <div className="sticky top-0 z-10 bg-white border-b px-6 py-4 flex items-center justify-between sm:hidden">
+          <h2 className="text-lg font-semibold">{getTitle()}</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => onOpenChange(false)}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+        
         <Card className="border-0 shadow-none">
-          <CardHeader className="text-center pb-4">
-            <CardTitle className="text-2xl font-bold">
+          <CardHeader className="text-center pb-4 px-6 pt-6 sm:pt-6">
+            <CardTitle className="text-xl sm:text-2xl font-bold">
               {getTitle()}
             </CardTitle>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
               {getDescription()}
             </p>
           </CardHeader>
           
-          <CardContent>
+          <CardContent className="px-6 pb-6">
             {renderMainForm()}
             
             {(mode === 'signin' || mode === 'signup') && (
