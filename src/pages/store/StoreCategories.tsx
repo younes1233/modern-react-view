@@ -36,7 +36,10 @@ const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
     })),
     description: apiProduct.short_description,
     stock: apiProduct.inventory.stock ? parseInt(apiProduct.inventory.stock) : 0,
-    isAvailable: apiProduct.inventory.is_available
+    isAvailable: apiProduct.inventory.is_available,
+    // Add missing required properties
+    inStock: apiProduct.inventory.is_available,
+    variations: [] // Default to empty array since API doesn't provide variations in this format
   };
 };
 
