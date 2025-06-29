@@ -1,9 +1,10 @@
 
 import { authService } from './authService';
 import { bannerService } from './bannerService';
+import { productListingService } from './productListingService';
 
 // Export all services
-export { authService, bannerService };
+export { authService, bannerService, productListingService };
 
 // Legacy compatibility - combine all services into one object
 class ApiService {
@@ -78,15 +79,42 @@ class ApiService {
     return bannerService.reorderBanners(bannerIds);
   }
 
+  // Product Listing methods
+  async getProductListings() {
+    return productListingService.getProductListings();
+  }
+
+  async createProductListing(listingData: any) {
+    return productListingService.createProductListing(listingData);
+  }
+
+  async updateProductListing(id: number, listingData: any) {
+    return productListingService.updateProductListing(id, listingData);
+  }
+
+  async deleteProductListing(id: number) {
+    return productListingService.deleteProductListing(id);
+  }
+
+  async reorderProductListings(orders: number[]) {
+    return productListingService.reorderProductListings(orders);
+  }
+
+  async getProductListingProducts(productListingId: number, countryId?: number, currencyId?: number) {
+    return productListingService.getProductListingProducts(productListingId, countryId, currencyId);
+  }
+
   // Token management
   setToken(token: string) {
     authService.setToken(token);
     bannerService.setToken(token);
+    productListingService.setToken(token);
   }
 
   removeToken() {
     authService.removeToken();
     bannerService.removeToken();
+    productListingService.removeToken();
   }
 
   getToken() {

@@ -4,34 +4,31 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
-import { ProductListing, getProducts } from "@/data/storeData";
+import { ProductListingAPI, CreateProductListingRequest, UpdateProductListingRequest } from "@/services/productListingService";
+import { getProducts } from "@/data/storeData";
 
 interface ProductListingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (listing: Omit<ProductListing, 'id'>) => void;
-  listing: ProductListing | null;
+  onSave: (listing: CreateProductListingRequest | UpdateProductListingRequest) => void;
+  listing: ProductListingAPI | null;
   mode: 'add' | 'edit';
 }
 
 export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: ProductListingModalProps) {
-  const [formData, setFormData] = useState<Omit<ProductListing, 'id'>>({
+  const [formData, setFormData] = useState<CreateProductListingRequest>({
     title: '',
     subtitle: '',
     type: 'featured',
-    categoryFilter: '',
-    productIds: [],
-    maxProducts: 8,
+    max_products: 8,
     layout: 'grid',
-    showTitle: true,
-    isActive: true,
-    order: 1
+    show_title: true,
+    is_active: true
   });
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -43,26 +40,22 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
         title: listing.title,
         subtitle: listing.subtitle || '',
         type: listing.type,
-        categoryFilter: listing.categoryFilter || '',
-        productIds: listing.productIds || [],
-        maxProducts: listing.maxProducts,
+        category_id: listing.category_id,
+        products: listing.products?.map(p => p.id) || [],
+        max_products: listing.max_products,
         layout: listing.layout,
-        showTitle: listing.showTitle,
-        isActive: listing.isActive,
-        order: listing.order
+        show_title: listing.show_title,
+        is_active: listing.is_active
       });
     } else {
       setFormData({
         title: '',
         subtitle: '',
         type: 'featured',
-        categoryFilter: '',
-        productIds: [],
-        maxProducts: 8,
+        max_products: 8,
         layout: 'grid',
-        showTitle: true,
-        isActive: true,
-        order: 1
+        show_title: true,
+        is_active: true
       });
     }
     setSearchTerm('');
@@ -71,12 +64,11 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
-    onClose();
   };
 
-  const updateField = <K extends keyof Omit<ProductListing, 'id'>>(
+  const updateField = <K extends keyof CreateProductListingRequest>(
     field: K,
-    value: Omit<ProductListing, 'id'>[K]
+    value: CreateProductListingRequest[K]
   ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -85,33 +77,25 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     if (checked) {
       setFormData(prev => ({
         ...prev,
-        productIds: [...(prev.productIds || []), productId]
+        products: [...(prev.products || []), productId]
       }));
     } else {
       setFormData(prev => ({
         ...prev,
-        productIds: (prev.productIds || []).filter(id => id !== productId)
+        products: (prev.products || []).filter(id => id !== productId)
       }));
     }
   };
 
   const categories = [
-    { value: 'all', label: 'All Products' },
-    { value: 'electronics', label: 'Electronics' },
-    { value: 'furniture', label: 'Furniture' },
-    { value: 'fashion', label: 'Fashion' },
-    { value: 'home', label: 'Home & Tools' }
+    { value: 1, label: 'Electronics' },
+    { value: 2, label: 'Furniture' },
+    { value: 3, label: 'Fashion' },
+    { value: 4, label: 'Home & Tools' }
   ];
 
   const getFilteredProducts = () => {
     let filteredProducts = products;
-    
-    // Filter by category if applicable
-    if (formData.type === 'category' && formData.categoryFilter) {
-      filteredProducts = products.filter(product => 
-        formData.categoryFilter === 'all' ? true : product.category === formData.categoryFilter
-      );
-    }
     
     // Filter by search term
     if (searchTerm.trim()) {
@@ -177,13 +161,13 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
           {formData.type === 'category' && (
             <div>
               <Label htmlFor="categoryFilter">Category</Label>
-              <Select value={formData.categoryFilter} onValueChange={(value) => updateField('categoryFilter', value)}>
+              <Select value={formData.category_id?.toString()} onValueChange={(value) => updateField('category_id', parseInt(value))}>
                 <SelectTrigger>
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
                   {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value}>
+                    <SelectItem key={category.value} value={category.value.toString()}>
                       {category.label}
                     </SelectItem>
                   ))}
@@ -211,7 +195,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                   {getFilteredProducts().map((product) => (
                     <div key={product.id} className="flex items-center space-x-3 p-2 border rounded hover:bg-gray-50">
                       <Checkbox
-                        checked={(formData.productIds || []).includes(product.id)}
+                        checked={(formData.products || []).includes(product.id)}
                         onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
                       />
                       <img 
@@ -236,17 +220,17 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                 </div>
               </div>
               <p className="text-sm text-gray-500">
-                Selected: {formData.productIds?.length || 0} products
+                Selected: {formData.products?.length || 0} products
               </p>
             </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label>Maximum Products: {formData.maxProducts}</Label>
+              <Label>Maximum Products: {formData.max_products}</Label>
               <Slider
-                value={[formData.maxProducts]}
-                onValueChange={(value) => updateField('maxProducts', value[0])}
+                value={[formData.max_products]}
+                onValueChange={(value) => updateField('max_products', value[0])}
                 min={2}
                 max={20}
                 step={2}
@@ -276,8 +260,8 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
             <Label htmlFor="showTitle">Show Section Title</Label>
             <Switch
               id="showTitle"
-              checked={formData.showTitle}
-              onCheckedChange={(checked) => updateField('showTitle', checked)}
+              checked={formData.show_title}
+              onCheckedChange={(checked) => updateField('show_title', checked)}
             />
           </div>
 
@@ -285,8 +269,8 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
             <Label htmlFor="isActive">Active</Label>
             <Switch
               id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => updateField('isActive', checked)}
+              checked={formData.is_active}
+              onCheckedChange={(checked) => updateField('is_active', checked)}
             />
           </div>
 

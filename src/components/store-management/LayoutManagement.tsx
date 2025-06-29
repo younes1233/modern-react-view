@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,22 +17,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { 
   getHomeSections, 
-  getProductListings,
   updateHomeSection,
   deleteHomeSection,
   reorderHomeSections,
   addHomeSection,
-  HomeSection,
-  ProductListing
+  HomeSection
 } from "@/data/storeData";
 import { useBanners, Banner } from "@/hooks/useBanners";
+import { useProductListings } from "@/hooks/useProductListings";
 
 export function LayoutManagement() {
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [productListings, setProductListings] = useState<ProductListing[]>([]);
   const { toast } = useToast();
   
   const { banners, isLoading: bannersLoading } = useBanners();
+  const { productListings, isLoading: listingsLoading } = useProductListings();
 
   useEffect(() => {
     refreshData();
@@ -41,7 +39,6 @@ export function LayoutManagement() {
 
   const refreshData = () => {
     setHomeSections(getHomeSections());
-    setProductListings(getProductListings());
   };
 
   const getSectionItem = (section: HomeSection) => {
@@ -144,9 +141,9 @@ export function LayoutManagement() {
   };
 
   const availableBanners = banners.filter(b => b.isActive && !homeSections.some(s => s.type === 'banner' && s.itemId === b.id));
-  const availableListings = productListings.filter(p => p.isActive && !homeSections.some(s => s.type === 'productListing' && s.itemId === p.id));
+  const availableListings = productListings.filter(p => p.is_active && !homeSections.some(s => s.type === 'productListing' && s.itemId === p.id));
 
-  if (bannersLoading) {
+  if (bannersLoading || listingsLoading) {
     return (
       <div className="space-y-6">
         <Card>
