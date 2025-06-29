@@ -17,7 +17,7 @@ import {
 // Convert API product to legacy format for ProductCard
 const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
   return {
-    id: apiProduct.id.toString(),
+    id: apiProduct.id, // Keep as number, don't convert to string
     name: apiProduct.name,
     slug: apiProduct.slug,
     image: apiProduct.media.cover_image,

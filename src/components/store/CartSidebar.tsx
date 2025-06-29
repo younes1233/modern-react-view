@@ -65,19 +65,22 @@ export function CartSidebar() {
                     alt={item.product.name}
                     className="w-16 h-16 object-cover rounded-md cursor-pointer"
                     onClick={() => {
-                      navigate(`/store/product/${item.product.id}`);
+                      navigate(`/store/product/${item.product.slug}`);
                       setIsOpen(false);
                     }}
                   />
                   <div className="flex-1">
                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-cyan-600 transition-colors"
                         onClick={() => {
-                          navigate(`/store/product/${item.product.id}`);
+                          navigate(`/store/product/${item.product.slug}`);
                           setIsOpen(false);
                         }}>
                       {item.product.name}
                     </h4>
                     <p className="text-sm text-gray-600">${item.product.price.toFixed(2)}</p>
+                    {item.product.sku && (
+                      <p className="text-xs text-gray-500">SKU: {item.product.sku}</p>
+                    )}
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center space-x-2">
                         <Button
