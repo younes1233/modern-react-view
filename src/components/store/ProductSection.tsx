@@ -1,46 +1,59 @@
 
 import { useState, useEffect } from "react";
-import { ProductListing, getProductsForListing, getDisplaySettings } from "@/data/storeData";
+import { useProductListingProducts } from "@/hooks/useProductListings";
 import { ProductCard } from "./ProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ProductSectionProps {
-  listing: ProductListing;
+  listing: {
+    id: number;
+    title: string;
+    subtitle?: string;
+    type: string;
+    maxProducts: number;
+    layout: string;
+    showTitle: boolean;
+    isActive: boolean;
+    order: number;
+  };
 }
 
 export function ProductSection({ listing }: ProductSectionProps) {
-  const [products, setProducts] = useState(() => getProductsForListing(listing));
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [displaySettings, setDisplaySettings] = useState(() => getDisplaySettings());
   const isMobile = useIsMobile();
 
-  useEffect(() => {
-    const refreshData = () => {
-      console.log("Refreshing products for listing:", listing.title);
-      setProducts(getProductsForListing(listing));
-      setDisplaySettings(getDisplaySettings());
-    };
+  // Use the API to get products for this listing
+  const { data: listingData, isLoading, error } = useProductListingProducts(listing.id);
+  
+  console.log(`ProductSection for "${listing.title}":`, {
+    listing,
+    listingData,
+    isLoading,
+    error
+  });
 
-    refreshData();
+  const products = listingData?.products || [];
 
-    // Listen for data updates
-    const handleDataUpdate = () => {
-      refreshData();
-    };
+  if (!listing.isActive || isLoading) {
+    if (isLoading) {
+      return (
+        <section className="py-2 md:py-4 bg-white overflow-hidden">
+          <div className="w-full max-w-full px-2 md:px-4">
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
+              <p className="ml-4 text-gray-600">Loading products...</p>
+            </div>
+          </div>
+        </section>
+      );
+    }
+    return null;
+  }
 
-    window.addEventListener('storeDataUpdated', handleDataUpdate);
-
-    return () => {
-      window.removeEventListener('storeDataUpdated', handleDataUpdate);
-    };
-  }, [listing]);
-
-  console.log(`ProductSection for "${listing.title}" has ${products.length} products`);
-
-  if (!listing.isActive || products.length === 0) {
-    console.log(`ProductSection "${listing.title}" not showing: active=${listing.isActive}, products=${products.length}`);
+  if (error || products.length === 0) {
+    console.log(`ProductSection "${listing.title}" not showing: error=${error}, products=${products.length}`);
     return null;
   }
 
@@ -85,7 +98,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
             {isMobile ? (
               <div className="overflow-x-auto scrollbar-hide">
                 <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
-                  {products.map((product) => (
+                  {products.map((product: any) => (
                     <div
                       key={product.id}
                       className="flex-shrink-0"
@@ -113,7 +126,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
                         className="w-full flex-shrink-0"
                       >
                         <div className="grid gap-2 grid-cols-6">
-                          {slideProducts.map((product) => (
+                          {slideProducts.map((product: any) => (
                             <ProductCard key={product.id} product={product} />
                           ))}
                         </div>

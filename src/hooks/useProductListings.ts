@@ -15,13 +15,31 @@ export const useProductListings = () => {
     refetch
   } = useQuery({
     queryKey: ['productListings'],
-    queryFn: productListingService.getProductListings,
-    select: (data) => data.details?.product_listings || []
+    queryFn: async () => {
+      console.log('useProductListings: Calling API...');
+      const response = await productListingService.getProductListings();
+      console.log('useProductListings: Raw API response:', response);
+      return response;
+    },
+    select: (data) => {
+      console.log('useProductListings: Selecting data from response:', data);
+      // Handle both success and error cases
+      if (data && data.details && data.details.product_listings) {
+        console.log('useProductListings: Found product listings:', data.details.product_listings);
+        return data.details.product_listings;
+      }
+      console.log('useProductListings: No product listings found in response');
+      return [];
+    }
   });
 
   const createMutation = useMutation({
-    mutationFn: (data: CreateProductListingRequest) => productListingService.createProductListing(data),
+    mutationFn: (data: CreateProductListingRequest) => {
+      console.log('Creating product listing mutation:', data);
+      return productListingService.createProductListing(data);
+    },
     onSuccess: (data) => {
+      console.log('Create mutation success:', data);
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
       toast({
         title: "Success",
@@ -29,6 +47,7 @@ export const useProductListings = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Create mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create product listing",
@@ -38,9 +57,12 @@ export const useProductListings = () => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateProductListingRequest }) => 
-      productListingService.updateProductListing(id, data),
+    mutationFn: ({ id, data }: { id: number; data: UpdateProductListingRequest }) => {
+      console.log('Updating product listing mutation:', id, data);
+      return productListingService.updateProductListing(id, data);
+    },
     onSuccess: (data) => {
+      console.log('Update mutation success:', data);
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
       toast({
         title: "Success",
@@ -48,6 +70,7 @@ export const useProductListings = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Update mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update product listing",
@@ -57,8 +80,12 @@ export const useProductListings = () => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => productListingService.deleteProductListing(id),
+    mutationFn: (id: number) => {
+      console.log('Deleting product listing mutation:', id);
+      return productListingService.deleteProductListing(id);
+    },
     onSuccess: (data) => {
+      console.log('Delete mutation success:', data);
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
       toast({
         title: "Success",
@@ -66,6 +93,7 @@ export const useProductListings = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Delete mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete product listing",
@@ -75,8 +103,12 @@ export const useProductListings = () => {
   });
 
   const reorderMutation = useMutation({
-    mutationFn: (orders: number[]) => productListingService.reorderProductListings(orders),
+    mutationFn: (orders: number[]) => {
+      console.log('Reordering product listings mutation:', orders);
+      return productListingService.reorderProductListings(orders);
+    },
     onSuccess: (data) => {
+      console.log('Reorder mutation success:', data);
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
       toast({
         title: "Success",
@@ -84,12 +116,19 @@ export const useProductListings = () => {
       });
     },
     onError: (error: any) => {
+      console.error('Reorder mutation error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to reorder product listings",
         variant: "destructive"
       });
     }
+  });
+
+  console.log('useProductListings: Current state:', {
+    productListings: productListingsResponse || [],
+    isLoading,
+    error
   });
 
   return {
@@ -111,11 +150,25 @@ export const useProductListings = () => {
 export const useProductListingProducts = (productListingId: number, countryId: number = 1, currencyId: number = 1) => {
   return useQuery({
     queryKey: ['productListingProducts', productListingId, countryId, currencyId],
-    queryFn: () => productListingService.getProductListingProducts(productListingId, countryId, currencyId),
+    queryFn: async () => {
+      console.log('useProductListingProducts: Calling API for listing:', productListingId);
+      const response = await productListingService.getProductListingProducts(productListingId, countryId, currencyId);
+      console.log('useProductListingProducts: API response:', response);
+      return response;
+    },
     enabled: !!productListingId,
-    select: (data) => ({
-      productListing: data.details?.product_listing,
-      products: data.details?.products || []
-    })
+    select: (data) => {
+      console.log('useProductListingProducts: Selecting data:', data);
+      if (data && data.details) {
+        return {
+          productListing: data.details.product_listing,
+          products: data.details.products || []
+        };
+      }
+      return {
+        productListing: null,
+        products: []
+      };
+    }
   });
 };

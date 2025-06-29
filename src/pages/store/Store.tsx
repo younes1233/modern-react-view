@@ -13,28 +13,26 @@ import {
   getFeaturedProducts,
   getNewArrivals,
   getProductsOnSale,
-  getProductListings,
   getHeroSection,
   getActiveHomeSections,
   HeroSection,
   HomeSection,
-  ProductListing,
 } from "@/data/storeData";
 import { useBanners, Banner } from "@/hooks/useBanners";
+import { useProductListings } from "@/hooks/useProductListings";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
   const [homeSections, setHomeSections] = useState<HomeSection[]>([]);
-  const [productListings, setProductListings] = useState<ProductListing[]>([]);
   
   const { banners, isLoading: bannersLoading } = useBanners();
+  const { productListings, isLoading: productListingsLoading } = useProductListings();
 
   useEffect(() => {
     const loadData = () => {
       setHeroSection(getHeroSection());
       setHomeSections(getActiveHomeSections());
-      setProductListings(getProductListings());
     };
     loadData();
 
@@ -90,19 +88,34 @@ const Store = () => {
         </section>
       );
     } else if (section.type === "productListing") {
-      const listing = productListings.find((l) => l.id === section.itemId);
+      // Use API product listings instead of demo data
+      const listing = productListings.find((l) => l.id === section.itemId && l.is_active);
       if (!listing) return null;
+      
+      // Convert API listing format to expected format
+      const convertedListing = {
+        id: listing.id,
+        title: listing.title,
+        subtitle: listing.subtitle,
+        type: listing.type,
+        maxProducts: listing.max_products,
+        layout: listing.layout,
+        showTitle: listing.show_title,
+        isActive: listing.is_active,
+        order: listing.order
+      };
+      
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white">
-          <ProductSection listing={listing} />
+          <ProductSection listing={convertedListing} />
         </section>
       );
     }
     return null;
   };
 
-  // Show loading state while banners are loading
-  if (bannersLoading) {
+  // Show loading state while data is loading
+  if (bannersLoading || productListingsLoading) {
     return (
       <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
         <StoreLayout>
@@ -114,6 +127,9 @@ const Store = () => {
       </div>
     );
   }
+
+  console.log('Store: Product listings from API:', productListings);
+  console.log('Store: Home sections:', homeSections);
 
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
