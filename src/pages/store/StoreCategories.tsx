@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
@@ -9,6 +8,7 @@ import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Grid, List, Filter, X } from 'lucide-react';
 import { useSearch } from '@/contexts/SearchContext';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   getProducts, 
   getDisplaySettings,
@@ -23,6 +23,7 @@ const StoreCategories = () => {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const isMobile = useIsMobile();
 
   const {
     searchQuery,
@@ -105,6 +106,9 @@ const StoreCategories = () => {
   const displayedProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
 
   const getGridColumns = () => {
+    // Force 2 columns on mobile
+    if (isMobile) return 'grid-cols-2';
+    
     const cols = displaySettings?.gridColumns || 3;
     switch (cols) {
       case 2: return 'grid-cols-1 md:grid-cols-2';
@@ -117,27 +121,27 @@ const StoreCategories = () => {
 
   return (
     <StoreLayout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Shop by Category</h1>
-          <p className="text-gray-600">Discover our wide range of products</p>
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">Shop by Category</h1>
+          <p className="text-gray-600 text-sm sm:text-base">Discover our wide range of products</p>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-8">
           {/* Sidebar Filters */}
           <div className={`lg:w-64 flex-shrink-0 ${showFilters ? 'block' : 'hidden lg:block'}`}>
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Categories */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Categories</h3>
-                  <div className="space-y-2">
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Categories</h3>
+                  <div className="space-y-1 sm:space-y-2">
                     {categories.map((category) => (
                       <Button
                         key={category.id}
                         variant={selectedCategory === category.id ? "default" : "ghost"}
-                        className={`w-full justify-between ${
+                        className={`w-full justify-between text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 h-auto ${
                           selectedCategory === category.id 
                             ? 'bg-cyan-500 hover:bg-cyan-600 text-white' 
                             : 'text-gray-700 hover:bg-gray-100'
@@ -145,7 +149,7 @@ const StoreCategories = () => {
                         onClick={() => setSelectedCategory(category.id)}
                       >
                         <span>{category.name}</span>
-                        <Badge variant="secondary" className="ml-2">
+                        <Badge variant="secondary" className="ml-1 sm:ml-2 text-xs">
                           {category.count}
                         </Badge>
                       </Button>
@@ -156,9 +160,9 @@ const StoreCategories = () => {
 
               {/* Price Range */}
               <Card>
-                <CardContent className="p-6">
-                  <h3 className="font-semibold text-gray-900 mb-4">Price Range</h3>
-                  <div className="space-y-4">
+                <CardContent className="p-4 sm:p-6">
+                  <h3 className="font-semibold text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Price Range</h3>
+                  <div className="space-y-3 sm:space-y-4">
                     <Slider
                       value={priceRange}
                       onValueChange={(value) => setPriceRange(value as [number, number])}
@@ -167,7 +171,7 @@ const StoreCategories = () => {
                       step={10}
                       className="w-full"
                     />
-                    <div className="flex items-center justify-between text-sm text-gray-600">
+                    <div className="flex items-center justify-between text-xs sm:text-sm text-gray-600">
                       <span>${priceRange[0]}</span>
                       <span>${priceRange[1]}</span>
                     </div>
@@ -179,9 +183,9 @@ const StoreCategories = () => {
               <Button 
                 variant="outline" 
                 onClick={clearFilters}
-                className="w-full"
+                className="w-full text-xs sm:text-sm py-2"
               >
-                <X className="w-4 h-4 mr-2" />
+                <X className="w-3 sm:w-4 h-3 sm:h-4 mr-1 sm:mr-2" />
                 Clear Filters
               </Button>
             </div>
@@ -190,26 +194,26 @@ const StoreCategories = () => {
           {/* Main Content */}
           <div className="flex-1">
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-              <div className="flex items-center gap-4">
-                <div className="text-gray-600">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 gap-3 sm:gap-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="text-gray-600 text-xs sm:text-sm">
                   Showing {displayedProducts.length} of {filteredProducts.length} products
                 </div>
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => setShowFilters(!showFilters)}
-                  className="lg:hidden"
+                  className="lg:hidden text-xs px-2 py-1.5"
                 >
-                  <Filter className="w-4 h-4 mr-2" />
+                  <Filter className="w-3 h-3 mr-1" />
                   Filters
                 </Button>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3 sm:space-x-4">
                 {/* Sort */}
                 <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger className="w-48">
+                  <SelectTrigger className="w-40 sm:w-48 text-xs sm:text-sm h-8 sm:h-10">
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
                   <SelectContent>
@@ -221,39 +225,41 @@ const StoreCategories = () => {
                   </SelectContent>
                 </Select>
 
-                {/* View Mode */}
-                <div className="flex items-center space-x-2">
-                  <Button
-                    variant={viewMode === 'grid' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('grid')}
-                    className={viewMode === 'grid' ? 'bg-cyan-500 hover:bg-cyan-600' : ''}
-                  >
-                    <Grid className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant={viewMode === 'list' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setViewMode('list')}
-                    className={viewMode === 'list' ? 'bg-cyan-500 hover:bg-cyan-600' : ''}
-                  >
-                    <List className="w-4 h-4" />
-                  </Button>
-                </div>
+                {/* View Mode - Hidden on mobile */}
+                {!isMobile && (
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      variant={viewMode === 'grid' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('grid')}
+                      className={`${viewMode === 'grid' ? 'bg-cyan-500 hover:bg-cyan-600' : ''} h-8 w-8 p-0`}
+                    >
+                      <Grid className="w-4 h-4" />
+                    </Button>
+                    <Button
+                      variant={viewMode === 'list' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setViewMode('list')}
+                      className={`${viewMode === 'list' ? 'bg-cyan-500 hover:bg-cyan-600' : ''} h-8 w-8 p-0`}
+                    >
+                      <List className="w-4 h-4" />
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
 
             {/* Products Grid/List */}
             {displayedProducts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-600 text-lg">No products found matching your criteria.</p>
+                <p className="text-gray-600 text-base sm:text-lg">No products found matching your criteria.</p>
                 <Button onClick={clearFilters} className="mt-4 bg-cyan-600 hover:bg-cyan-700">
                   Clear Filters
                 </Button>
               </div>
             ) : (
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' ? getGridColumns() : 'grid-cols-1'
+              <div className={`grid gap-3 sm:gap-6 ${
+                isMobile || viewMode === 'grid' ? getGridColumns() : 'grid-cols-1'
               }`}>
                 {displayedProducts.map((product) => (
                   <ProductCard key={product.id} product={product} />
@@ -263,11 +269,12 @@ const StoreCategories = () => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-center space-x-2 mt-8">
+              <div className="flex items-center justify-center space-x-1 sm:space-x-2 mt-6 sm:mt-8">
                 <Button
                   variant="outline"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
+                  className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
                 >
                   Previous
                 </Button>
@@ -277,7 +284,9 @@ const StoreCategories = () => {
                     key={page}
                     variant={page === currentPage ? "default" : "outline"}
                     onClick={() => setCurrentPage(page)}
-                    className={page === currentPage ? "bg-cyan-500 hover:bg-cyan-600" : ""}
+                    className={`text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 min-w-[32px] sm:min-w-[36px] ${
+                      page === currentPage ? "bg-cyan-500 hover:bg-cyan-600" : ""
+                    }`}
                   >
                     {page}
                   </Button>
@@ -287,6 +296,7 @@ const StoreCategories = () => {
                   variant="outline"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
+                  className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2"
                 >
                   Next
                 </Button>
