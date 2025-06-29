@@ -50,7 +50,7 @@ class ProductListingService extends BaseApiService {
   // Get all product listings
   async getProductListings(): Promise<ApiResponse<{ product_listings: ProductListingAPI[] }>> {
     console.log('Fetching product listings from API...');
-    const response = await this.get('/product-listings');
+    const response = await this.get<ApiResponse<{ product_listings: ProductListingAPI[] }>>('/product-listings');
     console.log('Product listings API response:', response);
     return response;
   }
@@ -58,7 +58,7 @@ class ProductListingService extends BaseApiService {
   // Create a new product listing
   async createProductListing(data: CreateProductListingRequest): Promise<ApiResponse<{ product_listing: ProductListingAPI }>> {
     console.log('Creating product listing:', data);
-    const response = await this.post('/product-listings', data);
+    const response = await this.post<ApiResponse<{ product_listing: ProductListingAPI }>>('/product-listings', data);
     console.log('Create product listing response:', response);
     return response;
   }
@@ -66,7 +66,7 @@ class ProductListingService extends BaseApiService {
   // Update a product listing
   async updateProductListing(id: number, data: UpdateProductListingRequest): Promise<ApiResponse<{ product_listing: ProductListingAPI }>> {
     console.log('Updating product listing:', id, data);
-    const response = await this.put(`/product-listings/${id}`, data);
+    const response = await this.put<ApiResponse<{ product_listing: ProductListingAPI }>>(`/product-listings/${id}`, data);
     console.log('Update product listing response:', response);
     return response;
   }
@@ -74,7 +74,7 @@ class ProductListingService extends BaseApiService {
   // Delete a product listing
   async deleteProductListing(id: number): Promise<ApiResponse<{ product_listing: ProductListingAPI }>> {
     console.log('Deleting product listing:', id);
-    const response = await this.delete(`/product-listings/${id}`);
+    const response = await this.delete<ApiResponse<{ product_listing: ProductListingAPI }>>(`/product-listings/${id}`);
     console.log('Delete product listing response:', response);
     return response;
   }
@@ -82,7 +82,7 @@ class ProductListingService extends BaseApiService {
   // Reorder product listings
   async reorderProductListings(orders: number[]): Promise<ApiResponse<{ product_listings: ProductListingAPI[] }>> {
     console.log('Reordering product listings:', orders);
-    const response = await this.put('/product-listings/reorder', { orders });
+    const response = await this.put<ApiResponse<{ product_listings: ProductListingAPI[] }>>('/product-listings/reorder', { orders });
     console.log('Reorder product listings response:', response);
     return response;
   }
@@ -94,7 +94,7 @@ class ProductListingService extends BaseApiService {
     currencyId: number = 1
   ): Promise<ApiResponse<ProductListingWithProducts>> {
     console.log('Fetching products for listing:', productListingId, 'country:', countryId, 'currency:', currencyId);
-    const response = await this.get(`/product-listings/${productListingId}/products?country_id=${countryId}&currency_id=${currencyId}`);
+    const response = await this.get<ApiResponse<ProductListingWithProducts>>(`/product-listings/${productListingId}/products?country_id=${countryId}&currency_id=${currencyId}`);
     console.log('Product listing products response:', response);
     return response;
   }

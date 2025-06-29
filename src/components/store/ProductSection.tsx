@@ -5,6 +5,7 @@ import { ProductCard } from "./ProductCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { ProductAPI } from "@/services/productService";
 
 interface ProductSectionProps {
   listing: {
@@ -20,12 +21,39 @@ interface ProductSectionProps {
   };
 }
 
+// Convert API product to legacy format for ProductCard
+const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
+  return {
+    id: apiProduct.id.toString(),
+    name: apiProduct.name,
+    slug: apiProduct.slug,
+    image: apiProduct.media.cover_image,
+    price: apiProduct.pricing.final.price,
+    originalPrice: apiProduct.pricing.final.original_price,
+    category: apiProduct.category.name.toLowerCase(),
+    rating: apiProduct.rating.average,
+    reviews: apiProduct.rating.count,
+    isOnSale: apiProduct.flags.on_sale,
+    isFeatured: apiProduct.flags.is_featured,
+    isNewArrival: apiProduct.flags.is_new_arrival,
+    sku: apiProduct.identifiers.sku,
+    thumbnails: apiProduct.media.thumbnails.map(thumb => ({
+      url: thumb.image,
+      alt: thumb.alt_text
+    })),
+    description: apiProduct.short_description,
+    stock: apiProduct.inventory.stock ? parseInt(apiProduct.inventory.stock) : 0,
+    isAvailable: apiProduct.inventory.is_available
+  };
+};
+
 export function ProductSection({ listing }: ProductSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
 
   // Use the API to get products for this listing
-  const { data: listingData, isLoading, error } = useProductListingProducts(listing.id);
+  // Default to Lebanon (1) and USD (1) for now
+  const { data: listingData, isLoading, error } = useProductListingProducts(listing.id, 1, 1);
   
   console.log(`ProductSection for "${listing.title}":`, {
     listing,
@@ -34,7 +62,8 @@ export function ProductSection({ listing }: ProductSectionProps) {
     error
   });
 
-  const products = listingData?.products || [];
+  const apiProducts = listingData?.products || [];
+  const products = apiProducts.map(convertAPIProductToLegacy);
 
   if (!listing.isActive || isLoading) {
     if (isLoading) {

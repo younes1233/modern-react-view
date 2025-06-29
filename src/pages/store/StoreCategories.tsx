@@ -7,16 +7,40 @@ import { ProductGrid } from '@/components/store/ProductGrid';
 import { ProductPagination } from '@/components/store/ProductPagination';
 import { useSearch } from '@/contexts/SearchContext';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useProducts, useProductSearch } from '@/hooks/useProducts';
+import { ProductAPI } from '@/services/productService';
 import { 
-  getProducts, 
   getDisplaySettings,
-  Product,
   DisplaySettings 
 } from '@/data/storeData';
 
+// Convert API product to legacy format for ProductCard
+const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
+  return {
+    id: apiProduct.id.toString(),
+    name: apiProduct.name,
+    slug: apiProduct.slug,
+    image: apiProduct.media.cover_image,
+    price: apiProduct.pricing.final.price,
+    originalPrice: apiProduct.pricing.final.original_price,
+    category: apiProduct.category.name.toLowerCase(),
+    rating: apiProduct.rating.average,
+    reviews: apiProduct.rating.count,
+    isOnSale: apiProduct.flags.on_sale,
+    isFeatured: apiProduct.flags.is_featured,
+    isNewArrival: apiProduct.flags.is_new_arrival,
+    sku: apiProduct.identifiers.sku,
+    thumbnails: apiProduct.media.thumbnails.map(thumb => ({
+      url: thumb.image,
+      alt: thumb.alt_text
+    })),
+    description: apiProduct.short_description,
+    stock: apiProduct.inventory.stock ? parseInt(apiProduct.inventory.stock) : 0,
+    isAvailable: apiProduct.inventory.is_available
+  };
+};
+
 const StoreCategories = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [displaySettings, setDisplaySettings] = useState<DisplaySettings | null>(null);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,74 +58,83 @@ const StoreCategories = () => {
     clearFilters
   } = useSearch();
 
+  // Default to Lebanon (1) and USD (1)
+  const countryId = 1;
+  const currencyId = 1;
+
+  const productsPerPage = displaySettings?.productsPerPage || 12;
+
+  // Use products API instead of mock data
+  const { data: productsData, isLoading: productsLoading } = useProducts(
+    countryId,
+    currencyId,
+    currentPage,
+    productsPerPage
+  );
+
+  // Use search API when there's a search query
+  const { data: searchData, isLoading: searchLoading } = useProductSearch(
+    searchQuery,
+    countryId,
+    currencyId,
+    {
+      category: selectedCategory !== 'all' ? selectedCategory : undefined,
+      min_price: priceRange[0],
+      max_price: priceRange[1],
+      sort: sortBy === 'price-low' ? 'price_asc' : 
+            sortBy === 'price-high' ? 'price_desc' : 
+            sortBy === 'rating' ? 'rating' : 
+            sortBy === 'newest' ? 'newest' : 'featured',
+      page: currentPage,
+      limit: productsPerPage
+    }
+  );
+
+  const isLoading = productsLoading || searchLoading;
+  const currentData = searchQuery ? searchData : productsData;
+  const apiProducts = currentData?.products || [];
+  const pagination = currentData?.pagination;
+
+  // Convert API products to legacy format
+  const products = apiProducts.map(convertAPIProductToLegacy);
+
   useEffect(() => {
-    const allProducts = getProducts();
-    setProducts(allProducts);
     setDisplaySettings(getDisplaySettings());
     if (getDisplaySettings()) {
       setViewMode(getDisplaySettings().layout);
     }
   }, []);
 
-  // Filter and sort products
+  // Reset to page 1 when filters change
   useEffect(() => {
-    let filtered = [...products];
-
-    // Filter by search query
-    if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (product.sku && product.sku.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // Filter by category
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
-
-    // Filter by price range
-    filtered = filtered.filter(product => 
-      product.price >= priceRange[0] && product.price <= priceRange[1]
-    );
-
-    // Sort products
-    switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
-        break;
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        filtered.sort((a, b) => (b.isNewArrival ? 1 : 0) - (a.isNewArrival ? 1 : 0));
-        break;
-      case 'featured':
-      default:
-        filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
-        break;
-    }
-
-    setFilteredProducts(filtered);
     setCurrentPage(1);
-  }, [products, searchQuery, selectedCategory, priceRange, sortBy]);
+  }, [searchQuery, selectedCategory, priceRange, sortBy]);
 
+  // Create categories from API data (simplified for now)
   const categories = [
-    { id: 'all', name: 'All Products', count: products.length },
-    { id: 'electronics', name: 'Electronics', count: products.filter(p => p.category === 'electronics').length },
-    { id: 'furniture', name: 'Furniture', count: products.filter(p => p.category === 'furniture').length },
-    { id: 'fashion', name: 'Fashion', count: products.filter(p => p.category === 'fashion').length },
-    { id: 'home', name: 'Home & Tools', count: products.filter(p => p.category === 'home').length },
+    { id: 'all', name: 'All Products', count: pagination?.total || 0 },
+    { id: 'audio', name: 'Audio', count: 0 },
+    { id: 'home-office', name: 'Home Office', count: 0 },
+    { id: 'electronics', name: 'Electronics', count: 0 },
+    { id: 'furniture', name: 'Furniture', count: 0 },
+    { id: 'fashion', name: 'Fashion', count: 0 },
+    { id: 'home', name: 'Home & Tools', count: 0 },
   ];
 
-  const productsPerPage = displaySettings?.productsPerPage || 12;
-  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
-  const startIndex = (currentPage - 1) * productsPerPage;
-  const displayedProducts = filteredProducts.slice(startIndex, startIndex + productsPerPage);
+  const totalPages = pagination?.totalPages || 1;
+
+  if (isLoading) {
+    return (
+      <StoreLayout>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+            <p className="ml-4 text-gray-600">Loading products...</p>
+          </div>
+        </div>
+      </StoreLayout>
+    );
+  }
 
   return (
     <StoreLayout>
@@ -128,8 +161,8 @@ const StoreCategories = () => {
           <div className="flex-1">
             {/* Toolbar */}
             <ProductToolbar
-              totalProducts={filteredProducts.length}
-              displayedCount={displayedProducts.length}
+              totalProducts={pagination?.total || 0}
+              displayedCount={products.length}
               showFilters={showFilters}
               onToggleFilters={() => setShowFilters(!showFilters)}
               sortBy={sortBy}
@@ -141,7 +174,7 @@ const StoreCategories = () => {
 
             {/* Products Grid */}
             <ProductGrid
-              products={displayedProducts}
+              products={products}
               viewMode={viewMode}
               displaySettings={displaySettings}
               isMobile={isMobile}
