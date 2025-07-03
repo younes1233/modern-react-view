@@ -15,13 +15,13 @@ class BaseApiService {
     this.token = localStorage.getItem('auth_token');
   }
 
-  // Set authentication token
+  // Set authentication token - make it public so child classes can access it
   setToken(token: string) {
     this.token = token;
     localStorage.setItem('auth_token', token);
   }
 
-  // Remove authentication token
+  // Remove authentication token - make it public so child classes can access it
   removeToken() {
     this.token = null;
     localStorage.removeItem('auth_token');

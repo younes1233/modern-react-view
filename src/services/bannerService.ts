@@ -31,6 +31,15 @@ interface BannerAPIData {
 }
 
 class BannerService extends BaseApiService {
+  // Add token management methods
+  setToken(token: string) {
+    super.setToken(token);
+  }
+
+  removeToken() {
+    super.removeToken();
+  }
+
   async getBanners(): Promise<BannerResponse> {
     return this.get<BannerResponse>('/banners');
   }

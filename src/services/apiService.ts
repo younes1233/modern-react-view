@@ -126,7 +126,7 @@ class ApiService {
     return homeSectionService.reorderHomeSections(order);
   }
 
-  // Token management
+  // Token management - ensure all services get the token
   setToken(token: string) {
     authService.setToken(token);
     bannerService.setToken(token);
