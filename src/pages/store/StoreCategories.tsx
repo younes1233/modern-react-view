@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { CategoryFilters } from '@/components/store/CategoryFilters';
@@ -30,7 +29,8 @@ const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
     isFeatured: apiProduct.flags.is_featured,
     isNewArrival: apiProduct.flags.is_new_arrival,
     sku: apiProduct.identifiers.sku,
-    thumbnails: apiProduct.media.thumbnails.map(thumb => ({
+    thumbnails: apiProduct.media.thumbnails.map((thumb, index) => ({
+      id: index + 1, // Add missing id property
       url: thumb.image,
       alt: thumb.alt_text
     })),

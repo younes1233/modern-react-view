@@ -3,19 +3,8 @@ import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, ArrowUp, ArrowDown, Image, Package } from "lucide-react";
+import { Plus, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { 
@@ -25,6 +14,22 @@ import {
   useDeleteHomeSection, 
   useReorderHomeSections 
 } from "@/hooks/useHomeSections";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import { DraggableLayoutRow } from './DraggableLayoutRow';
 
 export function LayoutManagement() {
   const { toast } = useToast();
@@ -38,11 +43,32 @@ export function LayoutManagement() {
   const deleteHomeSection = useDeleteHomeSection();
   const reorderHomeSections = useReorderHomeSections();
 
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   const getSectionItem = (section: any) => {
     if (section.type === 'banner') {
       return banners.find(b => b.id === section.item_id) || section.item;
     } else {
       return productListings.find(p => p.id === section.item_id) || section.item;
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = homeSections.findIndex(section => section.id === active.id);
+      const newIndex = homeSections.findIndex(section => section.id === over.id);
+      
+      const newOrder = arrayMove(homeSections, oldIndex, newIndex);
+      const orderIds = newOrder.map(s => s.id);
+      
+      reorderHomeSections.mutate(orderIds);
     }
   };
 
@@ -53,24 +79,6 @@ export function LayoutManagement() {
         id: sectionId,
         data: { is_active: !section.is_active }
       });
-    }
-  };
-
-  const handleMoveUp = (index: number) => {
-    if (index > 0) {
-      const newOrder = [...homeSections];
-      [newOrder[index], newOrder[index - 1]] = [newOrder[index - 1], newOrder[index]];
-      const orderIds = newOrder.map(s => s.id);
-      reorderHomeSections.mutate(orderIds);
-    }
-  };
-
-  const handleMoveDown = (index: number) => {
-    if (index < homeSections.length - 1) {
-      const newOrder = [...homeSections];
-      [newOrder[index], newOrder[index + 1]] = [newOrder[index + 1], newOrder[index]];
-      const orderIds = newOrder.map(s => s.id);
-      reorderHomeSections.mutate(orderIds);
     }
   };
 
@@ -92,20 +100,6 @@ export function LayoutManagement() {
       item_id: listingId,
       is_active: true
     });
-  };
-
-  const getTypeBadge = (type: string) => {
-    return type === 'banner' ? (
-      <Badge className="bg-blue-100 text-blue-800">
-        <Image className="w-3 h-3 mr-1" />
-        Banner
-      </Badge>
-    ) : (
-      <Badge className="bg-green-100 text-green-800">
-        <Package className="w-3 h-3 mr-1" />
-        Products
-      </Badge>
-    );
   };
 
   const availableBanners = banners.filter(b => b.isActive && !homeSections.some(s => s.type === 'banner' && s.item_id === b.id));
@@ -131,7 +125,7 @@ export function LayoutManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Home Page Layout</h2>
-          <p className="text-gray-600 dark:text-gray-400">Manage the order and visibility of sections on your store's home page</p>
+          <p className="text-gray-600 dark:text-gray-400">Drag and drop to reorder sections on your store's home page</p>
         </div>
       </div>
 
@@ -155,101 +149,29 @@ export function LayoutManagement() {
                     </tr>
                   </thead>
                   <tbody>
-                    {homeSections.map((section, index) => {
-                      const item = getSectionItem(section);
-                      return (
-                        <tr key={section.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <GripVertical className="w-4 h-4 text-gray-400" />
-                              <div className="flex flex-col gap-1">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleMoveUp(index)}
-                                  disabled={index === 0}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ArrowUp className="w-3 h-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleMoveDown(index)}
-                                  disabled={index === homeSections.length - 1}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <ArrowDown className="w-3 h-3" />
-                                </Button>
-                              </div>
-                              <span className="font-medium">{section.order}</span>
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              {item && (
-                                <>
-                                  <img 
-                                    src={section.type === 'banner' ? (item as Banner).image : '/placeholder.svg'} 
-                                    alt={(item as any).title} 
-                                    className="w-16 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
-                                  />
-                                  <div>
-                                    <span className="font-medium text-gray-900 dark:text-gray-100">
-                                      {(item as any).title}
-                                    </span>
-                                    {(item as any).subtitle && (
-                                      <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        {(item as any).subtitle}
-                                      </p>
-                                    )}
-                                  </div>
-                                </>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">{getTypeBadge(section.type)}</td>
-                          <td className="p-4">
-                            <Badge variant={section.is_active ? "default" : "secondary"}>
-                              {section.is_active ? "Active" : "Inactive"}
-                            </Badge>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => handleToggleActive(section.id)}
-                                title={section.is_active ? "Hide" : "Show"}
-                              >
-                                {section.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Remove Section</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to remove this section from the home page?
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteSection(section.id)}>
-                                      Remove
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    <DndContext
+                      sensors={sensors}
+                      collisionDetection={closestCenter}
+                      onDragEnd={handleDragEnd}
+                    >
+                      <SortableContext
+                        items={homeSections.map(s => s.id)}
+                        strategy={verticalListSortingStrategy}
+                      >
+                        {homeSections.map((section) => {
+                          const item = getSectionItem(section);
+                          return (
+                            <DraggableLayoutRow
+                              key={section.id}
+                              section={section}
+                              item={item}
+                              onToggleActive={handleToggleActive}
+                              onDeleteSection={handleDeleteSection}
+                            />
+                          );
+                        })}
+                      </SortableContext>
+                    </DndContext>
                   </tbody>
                 </table>
               </div>
