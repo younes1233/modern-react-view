@@ -17,15 +17,16 @@ export const useAdminProducts = (
     queryKey: ['admin-products', filters],
     queryFn: async () => {
       try {
+        console.log('useAdminProducts: Starting API call with filters:', filters);
         const response = await adminProductService.getAdminProducts(filters);
-        console.log('useAdminProducts response:', response);
+        console.log('useAdminProducts: Raw API response:', response);
         return response;
       } catch (error: any) {
-        console.error('useAdminProducts error:', error);
-        // Return empty structure instead of throwing to prevent UI crashes
+        console.error('useAdminProducts: API call failed:', error);
+        // Return a safe fallback structure
         return {
           error: false,
-          message: "No data available",
+          message: "Using fallback data",
           details: {
             products: [],
             pagination: {
@@ -39,27 +40,59 @@ export const useAdminProducts = (
       }
     },
     select: (data) => {
-      console.log('useAdminProducts select data:', data);
-      if (data && data.details) {
-        return {
-          products: data.details.products || [],
-          pagination: data.details.pagination || {
-            total: 0,
-            current_page: 1,
-            per_page: 10,
-            last_page: 1
-          }
-        };
-      }
-      return {
+      console.log('useAdminProducts: Processing data in select:', data);
+      
+      // Ensure we always return a safe structure
+      const safeResponse = {
         products: [],
         pagination: {
           total: 0,
           current_page: 1,
-          per_page: 10,
+          per_page: 25,
           last_page: 1
         }
       };
+
+      // Handle different response structures safely
+      if (!data) {
+        console.warn('useAdminProducts: No data received');
+        return safeResponse;
+      }
+
+      if (data.error) {
+        console.warn('useAdminProducts: API returned error:', data.message);
+        return safeResponse;
+      }
+
+      if (!data.details) {
+        console.warn('useAdminProducts: No details in response');
+        return safeResponse;
+      }
+
+      // Safely extract products - ensure it's always an array
+      let products = [];
+      if (data.details.products) {
+        if (Array.isArray(data.details.products)) {
+          products = data.details.products;
+        } else if (data.details.products.data && Array.isArray(data.details.products.data)) {
+          products = data.details.products.data;
+        }
+      }
+
+      // Safely extract pagination
+      let pagination = safeResponse.pagination;
+      if (data.details.pagination) {
+        pagination = {
+          total: data.details.pagination.total || 0,
+          current_page: data.details.pagination.current_page || 1,
+          per_page: data.details.pagination.per_page || 25,
+          last_page: data.details.pagination.last_page || 1
+        };
+      }
+
+      const result = { products, pagination };
+      console.log('useAdminProducts: Final processed result:', result);
+      return result;
     },
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes

@@ -46,7 +46,8 @@ const Products = () => {
     limit: 25
   });
 
-  const products = productsData?.products || [];
+  // Ensure products is always an array
+  const products = Array.isArray(productsData?.products) ? productsData.products : [];
   const pagination = productsData?.pagination;
 
   const handleSearch = (term: string) => {
@@ -95,6 +96,7 @@ const Products = () => {
     }
   };
 
+  // Safely filter products
   const activeProducts = products.filter(p => p.status === "active").length;
   const inactiveProducts = products.filter(p => p.status === "inactive").length;
   const draftProducts = products.filter(p => p.status === "draft").length;
