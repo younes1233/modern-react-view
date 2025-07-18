@@ -16,10 +16,30 @@ export const useAdminProducts = (
   return useQuery({
     queryKey: ['admin-products', filters],
     queryFn: async () => {
-      const response = await adminProductService.getAdminProducts(filters);
-      return response;
+      try {
+        const response = await adminProductService.getAdminProducts(filters);
+        console.log('useAdminProducts response:', response);
+        return response;
+      } catch (error: any) {
+        console.error('useAdminProducts error:', error);
+        // Return empty structure instead of throwing to prevent UI crashes
+        return {
+          error: false,
+          message: "No data available",
+          details: {
+            products: [],
+            pagination: {
+              total: 0,
+              current_page: 1,
+              per_page: 25,
+              last_page: 1
+            }
+          }
+        };
+      }
     },
     select: (data) => {
+      console.log('useAdminProducts select data:', data);
       if (data && data.details) {
         return {
           products: data.details.products || [],
@@ -40,7 +60,9 @@ export const useAdminProducts = (
           last_page: 1
         }
       };
-    }
+    },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 };
 
@@ -57,7 +79,8 @@ export const useAdminProduct = (id: number) => {
       }
       return null;
     },
-    enabled: !!id
+    enabled: !!id,
+    retry: 1,
   });
 };
 
@@ -74,7 +97,8 @@ export const useAdminProductBySku = (sku: string) => {
       }
       return null;
     },
-    enabled: !!sku
+    enabled: !!sku,
+    retry: 1,
   });
 };
 
@@ -92,6 +116,7 @@ export const useCreateProduct = () => {
       });
     },
     onError: (error: Error) => {
+      console.error('Create product error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to create product",
@@ -115,6 +140,7 @@ export const useDeleteProduct = () => {
       });
     },
     onError: (error: Error) => {
+      console.error('Delete product error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete product",
