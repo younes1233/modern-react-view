@@ -133,7 +133,7 @@ export const useCreateProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast({
         title: "Success",
-        description: "Product created successfully"
+        description: data.message || "Product created successfully"
       });
     },
     onError: (error: Error) => {
@@ -159,7 +159,7 @@ export const useUpdateProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-product'] });
       toast({
         title: "Success",
-        description: "Product updated successfully"
+        description: data.message || "Product updated successfully"
       });
     },
     onError: (error: Error) => {
@@ -179,11 +179,11 @@ export const useDeleteProduct = () => {
 
   return useMutation({
     mutationFn: (id: number) => adminProductService.deleteProduct(id),
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast({
         title: "Success",
-        description: "Product deleted successfully"
+        description: data.message || "Product deleted successfully"
       });
     },
     onError: (error: Error) => {
