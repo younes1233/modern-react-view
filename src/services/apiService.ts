@@ -1,11 +1,11 @@
-
 import { authService } from './authService';
 import { bannerService } from './bannerService';
 import { productListingService } from './productListingService';
 import { homeSectionService } from './homeSectionService';
+import { roleService } from './roleService';
 
 // Export all services
-export { authService, bannerService, productListingService, homeSectionService };
+export { authService, bannerService, productListingService, homeSectionService, roleService };
 
 // Legacy compatibility - combine all services into one object
 class ApiService {
@@ -126,12 +126,46 @@ class ApiService {
     return homeSectionService.reorderHomeSections(order);
   }
 
+  // Role methods
+  async getRoles() {
+    return roleService.getRoles();
+  }
+
+  async createRole(name: string, description?: string, permissions?: string[]) {
+    return roleService.createRole(name, description, permissions);
+  }
+
+  async updateRole(roleId: number, name: string, description?: string, permissions?: string[]) {
+    return roleService.updateRole(roleId, name, description, permissions);
+  }
+
+  async deleteRole(roleId: number) {
+    return roleService.deleteRole(roleId);
+  }
+
+  async getRolePermissions(roleId: number) {
+    return roleService.getRolePermissions(roleId);
+  }
+
+  async getAssignableRoles() {
+    return roleService.getAssignableRoles();
+  }
+
+  async getAssignableRolesAndPermissions() {
+    return roleService.getAssignableRolesAndPermissions();
+  }
+
+  async assignRoleToUser(userId: number, role: string) {
+    return roleService.assignRoleToUser(userId, role);
+  }
+
   // Token management - ensure all services get the token
   setToken(token: string) {
     authService.setToken(token);
     bannerService.setToken(token);
     productListingService.setToken(token);
     homeSectionService.setToken(token);
+    roleService.setToken(token);
   }
 
   removeToken() {
@@ -139,6 +173,7 @@ class ApiService {
     bannerService.removeToken();
     productListingService.removeToken();
     homeSectionService.removeToken();
+    roleService.removeToken();
   }
 
   getToken() {
