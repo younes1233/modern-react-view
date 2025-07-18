@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { ExportButton } from "@/components/ui/export-button";
-import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye, Star, Image } from "lucide-react";
+import { AdminProductModal } from "@/components/AdminProductModal";
+import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { exportToExcel } from "@/utils/exportUtils";
-import { useAdminProducts, useDeleteProduct } from "@/hooks/useAdminProducts";
-import { AdminProductAPI } from "@/services/adminProductService";
+import { useAdminProducts, useDeleteProduct, useCreateProduct, useUpdateProduct } from "@/hooks/useAdminProducts";
+import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,10 +36,17 @@ const Products = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [selectedProduct, setSelectedProduct] = useState<AdminProductAPI | null>(null);
   const { toast } = useToast();
-  const deleteProductMutation = useDeleteProduct();
 
-  // Use the new admin products API
+  // Mutations
+  const deleteProductMutation = useDeleteProduct();
+  const createProductMutation = useCreateProduct();
+  const updateProductMutation = useUpdateProduct();
+
+  // Use the admin products API
   const { data: productsData, isLoading, error } = useAdminProducts({
     q: searchQuery || undefined,
     status: statusFilter as 'active' | 'inactive' | 'draft' || undefined,
@@ -46,7 +54,6 @@ const Products = () => {
     limit: 25
   });
 
-  // Ensure products is always an array
   const products = Array.isArray(productsData?.products) ? productsData.products : [];
   const pagination = productsData?.pagination;
 
@@ -69,7 +76,6 @@ const Products = () => {
       'Has Variants': product.has_variants ? 'Yes' : 'No',
       'Is Featured': product.is_featured ? 'Yes' : 'No',
       'Is On Sale': product.is_on_sale ? 'Yes' : 'No',
-      'Created At': new Date().toLocaleDateString() // We don't have created_at in admin API
     }));
     
     exportToExcel(exportData, 'admin-products-export', 'Admin Products');
@@ -81,6 +87,30 @@ const Products = () => {
 
   const handleDeleteProduct = (productId: number) => {
     deleteProductMutation.mutate(productId);
+  };
+
+  const handleAddProduct = () => {
+    setSelectedProduct(null);
+    setModalMode('add');
+    setIsModalOpen(true);
+  };
+
+  const handleEditProduct = (product: AdminProductAPI) => {
+    setSelectedProduct(product);
+    setModalMode('edit');
+    setIsModalOpen(true);
+  };
+
+  const handleSaveProduct = (productData: CreateProductData) => {
+    if (modalMode === 'add') {
+      createProductMutation.mutate(productData);
+    } else if (selectedProduct) {
+      updateProductMutation.mutate({
+        id: selectedProduct.id,
+        data: productData
+      });
+    }
+    setIsModalOpen(false);
   };
 
   const getStatusBadge = (status: string) => {
@@ -96,7 +126,6 @@ const Products = () => {
     }
   };
 
-  // Safely filter products
   const activeProducts = products.filter(p => p.status === "active").length;
   const inactiveProducts = products.filter(p => p.status === "inactive").length;
   const draftProducts = products.filter(p => p.status === "draft").length;
@@ -151,6 +180,7 @@ const Products = () => {
                 <p className="text-gray-600 dark:text-gray-400">Manage your product inventory</p>
               </div>
               <Button 
+                onClick={handleAddProduct}
                 className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200"
               >
                 <Plus className="w-4 h-4" />
@@ -277,7 +307,11 @@ const Products = () => {
                           </td>
                           <td className="p-4">
                             <div className="flex gap-1">
-                              <Button variant="ghost" size="sm">
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleEditProduct(product)}
+                              >
                                 <Edit className="w-4 h-4" />
                               </Button>
                               <Button variant="ghost" size="sm">
@@ -340,6 +374,15 @@ const Products = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Product Modal */}
+            <AdminProductModal
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+              onSave={handleSaveProduct}
+              product={selectedProduct}
+              mode={modalMode}
+            />
           </div>
         </main>
       </div>

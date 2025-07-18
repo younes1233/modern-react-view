@@ -23,7 +23,6 @@ export const useAdminProducts = (
         return response;
       } catch (error: any) {
         console.error('useAdminProducts: API call failed:', error);
-        // Return a safe fallback structure
         return {
           error: false,
           message: "Using fallback data",
@@ -42,7 +41,6 @@ export const useAdminProducts = (
     select: (data) => {
       console.log('useAdminProducts: Processing data in select:', data);
       
-      // Ensure we always return a safe structure
       const safeResponse = {
         products: [] as AdminProductAPI[],
         pagination: {
@@ -53,33 +51,23 @@ export const useAdminProducts = (
         }
       };
 
-      // Handle different response structures safely
-      if (!data) {
-        console.warn('useAdminProducts: No data received');
+      if (!data || data.error || !data.details) {
+        console.warn('useAdminProducts: Invalid data structure');
         return safeResponse;
       }
 
-      if (data.error) {
-        console.warn('useAdminProducts: API returned error:', data.message);
-        return safeResponse;
-      }
-
-      if (!data.details) {
-        console.warn('useAdminProducts: No details in response');
-        return safeResponse;
-      }
-
-      // Safely extract products - ensure it's always an array
       let products: AdminProductAPI[] = [];
       if (data.details.products) {
         if (Array.isArray(data.details.products)) {
           products = data.details.products;
-        } else if (typeof data.details.products === 'object' && 'data' in data.details.products && Array.isArray(data.details.products.data)) {
-          products = data.details.products.data;
+        } else if (data.details.products && typeof data.details.products === 'object' && 'data' in data.details.products) {
+          const productsData = data.details.products as any;
+          if (Array.isArray(productsData.data)) {
+            products = productsData.data;
+          }
         }
       }
 
-      // Safely extract pagination
       let pagination = safeResponse.pagination;
       if (data.details.pagination) {
         pagination = {
@@ -95,7 +83,7 @@ export const useAdminProducts = (
       return result;
     },
     retry: 1,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
   });
 };
 
@@ -153,6 +141,32 @@ export const useCreateProduct = () => {
       toast({
         title: "Error",
         description: error.message || "Failed to create product",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+export const useUpdateProduct = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<CreateProductData> }) => 
+      adminProductService.updateProduct(id, data),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-product'] });
+      toast({
+        title: "Success",
+        description: "Product updated successfully"
+      });
+    },
+    onError: (error: Error) => {
+      console.error('Update product error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update product",
         variant: "destructive"
       });
     }

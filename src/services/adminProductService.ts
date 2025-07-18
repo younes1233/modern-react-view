@@ -89,6 +89,10 @@ export interface CreateProductData {
   }>;
 }
 
+export interface UpdateProductData extends Partial<CreateProductData> {
+  id: number;
+}
+
 class AdminProductService extends BaseApiService {
   // Get all admin products with filters
   async getAdminProducts(
@@ -112,39 +116,26 @@ class AdminProductService extends BaseApiService {
       });
 
       const queryString = params.toString();
-      // Try different possible endpoints
-      let endpoint = `/admins/products${queryString ? `?${queryString}` : ''}`;
+      const endpoints = [
+        `/admins/products${queryString ? `?${queryString}` : ''}`,
+        `/products${queryString ? `?${queryString}` : ''}`,
+        `/admin/products${queryString ? `?${queryString}` : ''}`
+      ];
       
-      console.log('Trying endpoint:', endpoint);
-      
-      try {
-        const response = await this.get<ApiResponse<AdminProductsResponse>>(endpoint);
-        console.log('Admin products API response:', response);
-        return response;
-      } catch (error: any) {
-        console.log('First endpoint failed, trying alternative...');
-        
-        // Try alternative endpoint without /admins prefix
-        endpoint = `/products${queryString ? `?${queryString}` : ''}`;
-        console.log('Trying alternative endpoint:', endpoint);
-        
+      for (const endpoint of endpoints) {
         try {
+          console.log('Trying endpoint:', endpoint);
           const response = await this.get<ApiResponse<AdminProductsResponse>>(endpoint);
-          console.log('Admin products API response (alternative):', response);
+          console.log('Admin products API response:', response);
           return response;
-        } catch (alternativeError: any) {
-          console.log('Alternative endpoint also failed, trying admin/products...');
-          
-          // Try with admin (singular)
-          endpoint = `/admin/products${queryString ? `?${queryString}` : ''}`;
-          const response = await this.get<ApiResponse<AdminProductsResponse>>(endpoint);
-          console.log('Admin products API response (admin):', response);
-          return response;
+        } catch (error) {
+          console.log(`Endpoint ${endpoint} failed, trying next...`);
         }
       }
+      
+      throw new Error('All endpoints failed');
     } catch (error: any) {
       console.error('All admin product endpoints failed:', error);
-      // Return mock data for now to prevent UI crashes
       return {
         error: false,
         message: "Mock data - API endpoint not available",
@@ -166,7 +157,6 @@ class AdminProductService extends BaseApiService {
     console.log('Fetching admin product by ID:', id);
     
     try {
-      // Try different possible endpoints
       const endpoints = [`/admins/products/${id}`, `/products/${id}`, `/admin/products/${id}`];
       
       for (const endpoint of endpoints) {
@@ -192,7 +182,6 @@ class AdminProductService extends BaseApiService {
     console.log('Fetching admin product by SKU:', sku);
     
     try {
-      // Try different possible endpoints
       const endpoints = [`/admins/products/sku/${sku}`, `/products/sku/${sku}`, `/admin/products/sku/${sku}`];
       
       for (const endpoint of endpoints) {
@@ -218,7 +207,6 @@ class AdminProductService extends BaseApiService {
     console.log('Creating product:', productData);
     
     try {
-      // Try different possible endpoints
       const endpoints = ['/admins/products', '/products', '/admin/products'];
       
       for (const endpoint of endpoints) {
@@ -239,12 +227,36 @@ class AdminProductService extends BaseApiService {
     }
   }
 
+  // Update product
+  async updateProduct(id: number, productData: Partial<CreateProductData>): Promise<ApiResponse<{ product: AdminProductAPI }>> {
+    console.log('Updating product:', id, productData);
+    
+    try {
+      const endpoints = [`/admins/products/${id}`, `/products/${id}`, `/admin/products/${id}`];
+      
+      for (const endpoint of endpoints) {
+        try {
+          console.log('Trying endpoint:', endpoint);
+          const response = await this.put<ApiResponse<{ product: AdminProductAPI }>>(endpoint, productData);
+          console.log('Update product API response:', response);
+          return response;
+        } catch (error) {
+          console.log(`Endpoint ${endpoint} failed, trying next...`);
+        }
+      }
+      
+      throw new Error('All endpoints failed');
+    } catch (error: any) {
+      console.error('Update product failed:', error);
+      throw new Error(`Failed to update product: ${error.message}`);
+    }
+  }
+
   // Delete product
   async deleteProduct(id: number): Promise<ApiResponse<{}>> {
     console.log('Deleting product with ID:', id);
     
     try {
-      // Try different possible endpoints
       const endpoints = [`/admins/products/${id}`, `/products/${id}`, `/admin/products/${id}`];
       
       for (const endpoint of endpoints) {
