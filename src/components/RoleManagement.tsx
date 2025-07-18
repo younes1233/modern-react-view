@@ -235,7 +235,7 @@ export const RoleManagement = () => {
     setNewRole({
       name: role.name,
       description: role.description || '',
-      permissions: role.permissions || []
+      permissions: Array.isArray(role.permissions) ? role.permissions : []
     });
   };
 
@@ -246,6 +246,35 @@ export const RoleManagement = () => {
   const resetForm = () => {
     setNewRole({ name: '', description: '', permissions: [] });
     setEditingRole(null);
+  };
+
+  // Helper function to safely render permissions
+  const renderPermissions = (permissions: string[] | undefined) => {
+    if (!permissions || !Array.isArray(permissions)) {
+      return <span className="text-gray-500">No permissions</span>;
+    }
+
+    if (permissions.length === 0) {
+      return <span className="text-gray-500">No permissions</span>;
+    }
+
+    return (
+      <div className="flex flex-wrap gap-1">
+        {permissions.slice(0, 3).map((permission, index) => (
+          <span
+            key={`${permission}-${index}`}
+            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+          >
+            {String(permission)}
+          </span>
+        ))}
+        {permissions.length > 3 && (
+          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+            +{permissions.length - 3} more
+          </span>
+        )}
+      </div>
+    );
   };
 
   console.log('RoleManagement: Rendering component', { loading, error, roles: roles.length, availablePermissions: availablePermissions.length });
@@ -383,21 +412,7 @@ export const RoleManagement = () => {
                     <TableCell className="font-medium">{role.name}</TableCell>
                     <TableCell>{role.description || '-'}</TableCell>
                     <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {(role.permissions || []).slice(0, 3).map((permission) => (
-                          <span
-                            key={permission}
-                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-                          >
-                            {permission}
-                          </span>
-                        ))}
-                        {(role.permissions || []).length > 3 && (
-                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                            +{(role.permissions || []).length - 3} more
-                          </span>
-                        )}
-                      </div>
+                      {renderPermissions(role.permissions)}
                     </TableCell>
                     <TableCell>
                       <div className="flex gap-2">
