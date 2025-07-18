@@ -25,7 +25,9 @@ import {
   UserPlus, 
   Edit, 
   Trash2, 
-  Shield
+  Shield,
+  Eye,
+  RefreshCw
 } from "lucide-react";
 import { roleService, Role } from "@/services/roleService";
 import { useToast } from "@/hooks/use-toast";
@@ -38,6 +40,7 @@ export const RoleManagement = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [viewingPermissionsRole, setViewingPermissionsRole] = useState<Role | null>(null);
   const [newRole, setNewRole] = useState({
     name: '',
     description: '',
@@ -57,22 +60,31 @@ export const RoleManagement = () => {
     try {
       console.log('RoleManagement: Fetching roles...');
       setError(null);
+      setLoading(true);
+      
       const response = await roleService.getRoles();
       console.log('RoleManagement: Roles response:', response);
       
-      if (!response.error) {
+      if (!response.error && response.details && response.details.roles) {
         setRoles(response.details.roles);
         console.log('RoleManagement: Roles set successfully:', response.details.roles);
       } else {
-        setError(response.message);
-        console.error('RoleManagement: Error in roles response:', response.message);
+        const errorMessage = response.message || 'Failed to fetch roles';
+        setError(errorMessage);
+        console.error('RoleManagement: Error in roles response:', errorMessage);
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive"
+        });
       }
     } catch (error) {
       console.error('RoleManagement: Failed to fetch roles:', error);
-      setError('Failed to fetch roles');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch roles';
+      setError(errorMessage);
       toast({
         title: "Error",
-        description: "Failed to fetch roles",
+        description: "Failed to fetch roles. Please check your connection and try again.",
         variant: "destructive"
       });
     } finally {
@@ -86,7 +98,7 @@ export const RoleManagement = () => {
       const response = await roleService.getAssignableRolesAndPermissions();
       console.log('RoleManagement: Permissions response:', response);
       
-      if (!response.error) {
+      if (!response.error && response.details && response.details.permissions) {
         setAvailablePermissions(response.details.permissions);
         console.log('RoleManagement: Permissions set successfully:', response.details.permissions);
       }
@@ -270,7 +282,7 @@ export const RoleManagement = () => {
   };
 
   // Helper function to safely render permissions
-  const renderPermissions = (permissions: any) => {
+  const renderPermissions = (permissions: any, showViewAll: boolean = true) => {
     console.log('RoleManagement: Rendering permissions:', permissions);
     
     if (!permissions || !Array.isArray(permissions)) {
@@ -298,10 +310,13 @@ export const RoleManagement = () => {
             {permission}
           </span>
         ))}
-        {permissionNames.length > 3 && (
-          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+        {permissionNames.length > 3 && showViewAll && (
+          <button
+            onClick={() => setViewingPermissionsRole({ permissions } as Role)}
+            className="px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs rounded transition-colors cursor-pointer"
+          >
             +{permissionNames.length - 3} more
-          </span>
+          </button>
         )}
       </div>
     );
@@ -319,8 +334,12 @@ export const RoleManagement = () => {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-64">
+      <div className="flex flex-col justify-center items-center h-64 space-y-4">
         <div className="text-lg text-red-600">Error: {error}</div>
+        <Button onClick={fetchRoles} className="gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Retry
+        </Button>
       </div>
     );
   }
@@ -407,6 +426,37 @@ export const RoleManagement = () => {
           </DialogContent>
         </Dialog>
       </div>
+
+      {/* View All Permissions Modal */}
+      <Dialog open={!!viewingPermissionsRole} onOpenChange={(open) => {
+        if (!open) setViewingPermissionsRole(null);
+      }}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Eye className="w-5 h-5" />
+              All Permissions
+            </DialogTitle>
+            <DialogDescription>
+              Complete list of permissions for this role
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {viewingPermissionsRole && (
+              <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                {extractPermissionNames(viewingPermissionsRole.permissions).map((permission, index) => (
+                  <span
+                    key={`${permission}-${index}`}
+                    className="px-3 py-2 bg-blue-100 text-blue-800 text-sm rounded"
+                  >
+                    {permission}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <div className="flex justify-between items-center">
         <Input
