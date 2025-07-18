@@ -44,7 +44,7 @@ export const useAdminProducts = (
       
       // Ensure we always return a safe structure
       const safeResponse = {
-        products: [],
+        products: [] as AdminProductAPI[],
         pagination: {
           total: 0,
           current_page: 1,
@@ -70,11 +70,11 @@ export const useAdminProducts = (
       }
 
       // Safely extract products - ensure it's always an array
-      let products = [];
+      let products: AdminProductAPI[] = [];
       if (data.details.products) {
         if (Array.isArray(data.details.products)) {
           products = data.details.products;
-        } else if (data.details.products.data && Array.isArray(data.details.products.data)) {
+        } else if (typeof data.details.products === 'object' && 'data' in data.details.products && Array.isArray(data.details.products.data)) {
           products = data.details.products.data;
         }
       }
