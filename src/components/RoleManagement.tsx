@@ -23,18 +23,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { 
-  Tabs, 
-  TabsContent, 
-  TabsList, 
-  TabsTrigger 
-} from "@/components/ui/tabs";
-import { 
   UserPlus, 
   Edit, 
   Trash2, 
-  Shield, 
-  Users,
-  Settings
+  Shield
 } from "lucide-react";
 import { roleService, Role } from "@/services/roleService";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +35,7 @@ export const RoleManagement = () => {
   const [roles, setRoles] = useState<Role[]>([]);
   const [availablePermissions, setAvailablePermissions] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingRole, setEditingRole] = useState<Role | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
@@ -56,17 +49,28 @@ export const RoleManagement = () => {
   const protectedRoles = ['super_admin', 'seller', 'user'];
 
   useEffect(() => {
+    console.log('RoleManagement: Component mounted, fetching data...');
     fetchRoles();
     fetchAvailablePermissions();
   }, []);
 
   const fetchRoles = async () => {
     try {
+      console.log('RoleManagement: Fetching roles...');
+      setError(null);
       const response = await roleService.getRoles();
+      console.log('RoleManagement: Roles response:', response);
+      
       if (!response.error) {
         setRoles(response.details.roles);
+        console.log('RoleManagement: Roles set successfully:', response.details.roles);
+      } else {
+        setError(response.message);
+        console.error('RoleManagement: Error in roles response:', response.message);
       }
     } catch (error) {
+      console.error('RoleManagement: Failed to fetch roles:', error);
+      setError('Failed to fetch roles');
       toast({
         title: "Error",
         description: "Failed to fetch roles",
@@ -79,12 +83,16 @@ export const RoleManagement = () => {
 
   const fetchAvailablePermissions = async () => {
     try {
+      console.log('RoleManagement: Fetching available permissions...');
       const response = await roleService.getAssignableRolesAndPermissions();
+      console.log('RoleManagement: Permissions response:', response);
+      
       if (!response.error) {
         setAvailablePermissions(response.details.permissions);
+        console.log('RoleManagement: Permissions set successfully:', response.details.permissions);
       }
     } catch (error) {
-      console.error('Failed to fetch available permissions:', error);
+      console.error('RoleManagement: Failed to fetch available permissions:', error);
     }
   };
 
@@ -99,11 +107,14 @@ export const RoleManagement = () => {
     }
 
     try {
+      console.log('RoleManagement: Creating role:', newRole);
       const response = await roleService.createRole(
         newRole.name.trim(),
         newRole.description.trim() || undefined,
         newRole.permissions.length > 0 ? newRole.permissions : undefined
       );
+      
+      console.log('RoleManagement: Create role response:', response);
       
       if (!response.error) {
         setRoles(prev => [...prev, response.details.role]);
@@ -113,8 +124,15 @@ export const RoleManagement = () => {
           title: "Success",
           description: "Role created successfully",
         });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive"
+        });
       }
     } catch (error) {
+      console.error('RoleManagement: Failed to create role:', error);
       toast({
         title: "Error",
         description: "Failed to create role",
@@ -127,12 +145,15 @@ export const RoleManagement = () => {
     if (!editingRole || !newRole.name.trim()) return;
 
     try {
+      console.log('RoleManagement: Updating role:', editingRole.id, newRole);
       const response = await roleService.updateRole(
         editingRole.id,
         newRole.name.trim(),
         newRole.description.trim() || undefined,
         newRole.permissions.length > 0 ? newRole.permissions : undefined
       );
+      
+      console.log('RoleManagement: Update role response:', response);
       
       if (!response.error) {
         setRoles(prev => prev.map(role => 
@@ -144,8 +165,15 @@ export const RoleManagement = () => {
           title: "Success",
           description: "Role updated successfully",
         });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive"
+        });
       }
     } catch (error) {
+      console.error('RoleManagement: Failed to update role:', error);
       toast({
         title: "Error",
         description: "Failed to update role",
@@ -165,15 +193,25 @@ export const RoleManagement = () => {
     }
 
     try {
+      console.log('RoleManagement: Deleting role:', roleId);
       const response = await roleService.deleteRole(roleId);
+      console.log('RoleManagement: Delete role response:', response);
+      
       if (!response.error) {
         setRoles(prev => prev.filter(role => role.id !== roleId));
         toast({
           title: "Success",
           description: "Role deleted successfully",
         });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message,
+          variant: "destructive"
+        });
       }
     } catch (error) {
+      console.error('RoleManagement: Failed to delete role:', error);
       toast({
         title: "Error",
         description: "Failed to delete role",
@@ -192,11 +230,12 @@ export const RoleManagement = () => {
   };
 
   const startEditing = (role: Role) => {
+    console.log('RoleManagement: Starting to edit role:', role);
     setEditingRole(role);
     setNewRole({
       name: role.name,
       description: role.description || '',
-      permissions: role.permissions
+      permissions: role.permissions || []
     });
   };
 
@@ -209,8 +248,22 @@ export const RoleManagement = () => {
     setEditingRole(null);
   };
 
+  console.log('RoleManagement: Rendering component', { loading, error, roles: roles.length, availablePermissions: availablePermissions.length });
+
   if (loading) {
-    return <div className="flex justify-center items-center h-64">Loading...</div>;
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg">Loading roles...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-lg text-red-600">Error: {error}</div>
+      </div>
+    );
   }
 
   return (
@@ -307,68 +360,74 @@ export const RoleManagement = () => {
 
       <Card>
         <CardHeader>
-          <CardTitle>Roles</CardTitle>
+          <CardTitle>Roles ({filteredRoles.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Role Name</TableHead>
-                <TableHead>Description</TableHead>
-                <TableHead>Permissions</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredRoles.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell className="font-medium">{role.name}</TableCell>
-                  <TableCell>{role.description || '-'}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {role.permissions.slice(0, 3).map((permission) => (
-                        <span
-                          key={permission}
-                          className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
-                        >
-                          {permission}
-                        </span>
-                      ))}
-                      {role.permissions.length > 3 && (
-                        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-                          +{role.permissions.length - 3} more
-                        </span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => startEditing(role)}
-                        className="gap-1"
-                      >
-                        <Edit className="w-3 h-3" />
-                        Edit
-                      </Button>
-                      {!protectedRoles.includes(role.name) && (
+          {filteredRoles.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              No roles found
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Role Name</TableHead>
+                  <TableHead>Description</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredRoles.map((role) => (
+                  <TableRow key={role.id}>
+                    <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell>{role.description || '-'}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-wrap gap-1">
+                        {(role.permissions || []).slice(0, 3).map((permission) => (
+                          <span
+                            key={permission}
+                            className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
+                          >
+                            {permission}
+                          </span>
+                        ))}
+                        {(role.permissions || []).length > 3 && (
+                          <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                            +{(role.permissions || []).length - 3} more
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleDeleteRole(role.id, role.name)}
-                          className="gap-1 text-red-600 hover:text-red-700"
+                          onClick={() => startEditing(role)}
+                          className="gap-1"
                         >
-                          <Trash2 className="w-3 h-3" />
-                          Delete
+                          <Edit className="w-3 h-3" />
+                          Edit
                         </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                        {!protectedRoles.includes(role.name) && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteRole(role.id, role.name)}
+                            className="gap-1 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            Delete
+                          </Button>
+                        )}
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>
