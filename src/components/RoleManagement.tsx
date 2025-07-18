@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -232,10 +231,14 @@ export const RoleManagement = () => {
   const startEditing = (role: Role) => {
     console.log('RoleManagement: Starting to edit role:', role);
     setEditingRole(role);
+    
+    // Extract permission names from objects if needed
+    const extractedPermissions = extractPermissionNames(role.permissions);
+    
     setNewRole({
       name: role.name,
       description: role.description || '',
-      permissions: Array.isArray(role.permissions) ? role.permissions : []
+      permissions: extractedPermissions
     });
   };
 
@@ -248,8 +251,28 @@ export const RoleManagement = () => {
     setEditingRole(null);
   };
 
+  // Helper function to extract permission names from objects or strings
+  const extractPermissionNames = (permissions: any): string[] => {
+    if (!permissions || !Array.isArray(permissions)) {
+      return [];
+    }
+
+    return permissions.map(permission => {
+      if (typeof permission === 'string') {
+        return permission;
+      } else if (typeof permission === 'object' && permission.name) {
+        return permission.name;
+      } else {
+        console.warn('Unknown permission format:', permission);
+        return String(permission);
+      }
+    });
+  };
+
   // Helper function to safely render permissions
-  const renderPermissions = (permissions: string[] | undefined) => {
+  const renderPermissions = (permissions: any) => {
+    console.log('RoleManagement: Rendering permissions:', permissions);
+    
     if (!permissions || !Array.isArray(permissions)) {
       return <span className="text-gray-500">No permissions</span>;
     }
@@ -258,19 +281,26 @@ export const RoleManagement = () => {
       return <span className="text-gray-500">No permissions</span>;
     }
 
+    // Extract permission names from objects
+    const permissionNames = extractPermissionNames(permissions);
+    
+    if (permissionNames.length === 0) {
+      return <span className="text-gray-500">No permissions</span>;
+    }
+
     return (
       <div className="flex flex-wrap gap-1">
-        {permissions.slice(0, 3).map((permission, index) => (
+        {permissionNames.slice(0, 3).map((permission, index) => (
           <span
             key={`${permission}-${index}`}
             className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded"
           >
-            {String(permission)}
+            {permission}
           </span>
         ))}
-        {permissions.length > 3 && (
+        {permissionNames.length > 3 && (
           <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
-            +{permissions.length - 3} more
+            +{permissionNames.length - 3} more
           </span>
         )}
       </div>
