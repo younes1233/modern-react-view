@@ -3,9 +3,10 @@ import { bannerService } from './bannerService';
 import { productListingService } from './productListingService';
 import { homeSectionService } from './homeSectionService';
 import { roleService } from './roleService';
+import { adminProductService } from './adminProductService';
 
 // Export all services
-export { authService, bannerService, productListingService, homeSectionService, roleService };
+export { authService, bannerService, productListingService, homeSectionService, roleService, adminProductService };
 
 // Legacy compatibility - combine all services into one object
 class ApiService {
@@ -159,6 +160,27 @@ class ApiService {
     return roleService.assignRoleToUser(userId, role);
   }
 
+  // Admin Product methods
+  async getAdminProducts(filters: any = {}) {
+    return adminProductService.getAdminProducts(filters);
+  }
+
+  async getAdminProduct(id: number) {
+    return adminProductService.getAdminProduct(id);
+  }
+
+  async getAdminProductBySku(sku: string) {
+    return adminProductService.getAdminProductBySku(sku);
+  }
+
+  async createProduct(productData: any) {
+    return adminProductService.createProduct(productData);
+  }
+
+  async deleteProduct(id: number) {
+    return adminProductService.deleteProduct(id);
+  }
+
   // Token management - ensure all services get the token
   setToken(token: string) {
     authService.setToken(token);
@@ -166,6 +188,7 @@ class ApiService {
     productListingService.setToken(token);
     homeSectionService.setToken(token);
     roleService.setToken(token);
+    adminProductService.setToken(token);
   }
 
   removeToken() {
@@ -174,6 +197,7 @@ class ApiService {
     productListingService.removeToken();
     homeSectionService.removeToken();
     roleService.removeToken();
+    adminProductService.removeToken();
   }
 
   getToken() {
