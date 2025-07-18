@@ -1,5 +1,5 @@
 
-import { BaseApiService } from './baseApiService';
+import BaseApiService from './baseApiService';
 
 export interface Role {
   id: number;
