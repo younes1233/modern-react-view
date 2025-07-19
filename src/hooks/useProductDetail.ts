@@ -13,14 +13,19 @@ export const useProductDetail = (
     queryFn: async () => {
       console.log('useProductDetail: Calling API with params:', { productSlug, countryId, currencyId, storeId });
       
-      if (!productSlug || productSlug.trim() === '') {
+      if (!productSlug || productSlug.trim() === '' || productSlug === ':slug') {
+        console.log('useProductDetail: Invalid slug detected:', productSlug);
         throw new Error('Invalid product slug');
       }
       
-      const response = await productService.getProductBySlug(productSlug, countryId, currencyId, storeId);
-      
-      console.log('useProductDetail: API response:', response);
-      return response;
+      try {
+        const response = await productService.getProductBySlug(productSlug, countryId, currencyId, storeId);
+        console.log('useProductDetail: API response:', response);
+        return response;
+      } catch (error) {
+        console.error('useProductDetail: API error:', error);
+        throw error;
+      }
     },
     enabled: !!productSlug && productSlug !== ':slug',
     select: (data) => {

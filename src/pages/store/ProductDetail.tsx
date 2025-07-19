@@ -28,7 +28,11 @@ const ProductDetail = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
   // Fetch product from API - now using slug directly
+  console.log('ProductDetail: slug from params:', slug);
   const { data: product, isLoading, error } = useProductDetail(slug || '');
+  
+  // Debug logging
+  console.log('ProductDetail: useProductDetail result:', { product, isLoading, error });
 
   // Scroll to top when component mounts or slug changes
   useEffect(() => {
