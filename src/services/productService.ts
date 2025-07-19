@@ -242,7 +242,7 @@ class ProductService extends BaseApiService {
     countryId: number = 1,
     currencyId?: number,
     storeId?: number
-  ): Promise<ApiResponse<{ product: ProductAPI }>> {
+  ): Promise<ApiResponse<ProductDetailResponse>> {
     console.log('Fetching product by ID:', { productId, countryId, currencyId, storeId });
     
     const params = new URLSearchParams({
@@ -252,9 +252,8 @@ class ProductService extends BaseApiService {
     if (currencyId) params.append('currency_id', currencyId.toString());
     if (storeId) params.append('store_id', storeId.toString());
 
-    // Use the public API endpoint that doesn't require authentication
-    const response = await this.get<ApiResponse<{ product: ProductAPI }>>(
-      `/api/products/${productId}?${params.toString()}`
+    const response = await this.get<ApiResponse<ProductDetailResponse>>(
+      `/products/${productId}?${params.toString()}`
     );
     console.log('Product detail API response:', response);
     return response;
