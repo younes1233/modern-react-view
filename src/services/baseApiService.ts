@@ -1,4 +1,3 @@
-
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 interface ApiResponse<T> {
@@ -20,17 +19,6 @@ class BaseApiService {
         'Content-Type': 'application/json',
       },
     });
-
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        const token = this.getToken();
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
 
     this.axiosInstance.interceptors.response.use(
       (response) => response,
@@ -75,23 +63,6 @@ class BaseApiService {
 
   protected async patch<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     return this.request<T>('PATCH', endpoint, data, config);
-  }
-
-  // Token management methods
-  setToken(token: string): void {
-    localStorage.setItem('token', token);
-  }
-
-  getToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
-  removeToken(): void {
-    localStorage.removeItem('token');
-  }
-
-  isAuthenticated(): boolean {
-    return !!this.getToken();
   }
 }
 
