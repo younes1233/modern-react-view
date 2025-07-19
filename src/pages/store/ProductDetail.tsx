@@ -26,7 +26,7 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Fetch product from API
+  // Fetch product from API - now using ID directly
   const { data: product, isLoading, error } = useProductDetail(id || '');
 
   const handleTouchStart = (e: React.TouchEvent) => {
