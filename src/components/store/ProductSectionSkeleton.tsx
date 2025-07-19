@@ -11,7 +11,7 @@ export function ProductSectionSkeleton({ showTitle = true, isMobile = false }: P
   const productsCount = isMobile ? 4 : 6;
 
   return (
-    <section className="py-2 md:py-4 bg-white overflow-hidden">
+    <section className="py-2 md:py-4 bg-white overflow-hidden animate-pulse">
       <div className="w-full max-w-full px-2 md:px-4">
         <div className="mx-auto">
           {/* Header Section Skeleton */}

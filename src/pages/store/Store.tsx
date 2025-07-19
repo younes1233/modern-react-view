@@ -33,6 +33,9 @@ const Store = () => {
   const { productListings, isLoading: productListingsLoading } = useProductListings();
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
 
+  // Unified loading state for smooth transitions
+  const isGlobalLoading = bannersLoading || productListingsLoading || homeSectionsLoading;
+
   useEffect(() => {
     const loadData = () => {
       setHeroLoading(true);
@@ -63,8 +66,8 @@ const Store = () => {
     if (!section.is_active) return null;
 
     if (section.type === 'banner') {
-      // Show banner skeleton while loading
-      if (bannersLoading) {
+      // Use unified loading state for consistent behavior
+      if (isGlobalLoading) {
         return <BannerSkeleton key={`banner-skeleton-${section.id}`} />;
       }
 
@@ -72,13 +75,13 @@ const Store = () => {
       const banner = banners.find((b) => b.id === section.item_id && b.isActive) || section.item;
       if (!banner) return null;
       return (
-        <section key={section.id} className="py-1 md:py-2 bg-white">
+        <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
           <div className="w-full max-w-full overflow-hidden bg-white">
             <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white">
               <img
                 src={banner.image}
                 alt={banner.title}
-                className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover"
+                className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover transition-all duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
                 <div className="p-3 sm:p-4 md:p-8 text-white">
@@ -87,7 +90,7 @@ const Store = () => {
                     <p className="text-sm sm:text-base md:text-lg mb-2 sm:mb-3 md:mb-4 opacity-90">{banner.subtitle}</p>
                   )}
                   {banner.ctaText && banner.ctaLink && (
-                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-full text-sm md:text-base">
+                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-full text-sm md:text-base transition-all duration-200 hover-scale">
                       {banner.ctaText}
                     </Button>
                   )}
@@ -98,8 +101,8 @@ const Store = () => {
         </section>
       );
     } else if (section.type === 'productListing') {
-      // Show product section skeleton while loading
-      if (productListingsLoading) {
+      // Use unified loading state for consistent behavior
+      if (isGlobalLoading) {
         return <ProductSectionSkeleton key={`product-skeleton-${section.id}`} />;
       }
 
@@ -121,8 +124,8 @@ const Store = () => {
       };
       
       return (
-        <section key={section.id} className="py-1 md:py-2 bg-white">
-          <ProductSection listing={convertedListing} />
+        <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
+          <ProductSection listing={convertedListing} disableIndividualLoading />
         </section>
       );
     }
@@ -195,32 +198,36 @@ const Store = () => {
 
         {/* Shop by Category with Loading */}
         <div className="w-full overflow-hidden">
-          {bannersLoading || productListingsLoading || homeSectionsLoading ? (
+          {isGlobalLoading ? (
             <ShopByCategorySkeleton />
           ) : (
-            <ShopByCategory />
+            <div className="animate-fade-in">
+              <ShopByCategory />
+            </div>
           )}
         </div>
 
         {/* Dynamic Home Sections from API with Loading */}
         <div className="w-full overflow-hidden bg-white">
-          {homeSectionsLoading ? (
+          {isGlobalLoading ? (
             // Show skeleton sections while loading
-            <>
+            <div className="animate-fade-in">
               <BannerSkeleton />
               <ProductSectionSkeleton />
               <BannerSkeleton />
-            </>
+            </div>
           ) : (
-            homeSections
-              .filter(section => section.is_active)
-              .sort((a, b) => a.order - b.order)
-              .map((section) => getSectionContent(section))
+            <div className="animate-fade-in">
+              {homeSections
+                .filter(section => section.is_active)
+                .sort((a, b) => a.order - b.order)
+                .map((section) => getSectionContent(section))}
+            </div>
           )}
         </div>
 
         {/* Fallback Best Sellers if no sections are configured */}
-        {!homeSectionsLoading && homeSections.filter(s => s.is_active).length === 0 && (
+        {!isGlobalLoading && homeSections.filter(s => s.is_active).length === 0 && (
           <section className="py-8 md:py-16 bg-white overflow-hidden">
             <div className="w-full max-w-full px-2 md:px-4">
               <div className="max-w-7xl mx-auto">

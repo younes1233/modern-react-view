@@ -19,6 +19,7 @@ interface ProductSectionProps {
     isActive: boolean;
     order: number;
   };
+  disableIndividualLoading?: boolean;
 }
 
 // Convert API product to legacy format for ProductCard
@@ -50,7 +51,7 @@ const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
   };
 };
 
-export function ProductSection({ listing }: ProductSectionProps) {
+export function ProductSection({ listing, disableIndividualLoading = false }: ProductSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
 
@@ -72,7 +73,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
     return null;
   }
 
-  if (isLoading) {
+  if (isLoading && !disableIndividualLoading) {
     return <ProductSectionSkeleton showTitle={listing.showTitle} isMobile={isMobile} />;
   }
 
@@ -98,7 +99,7 @@ export function ProductSection({ listing }: ProductSectionProps) {
   };
 
   return (
-    <section className="py-2 md:py-4 bg-white overflow-hidden">
+    <section className="py-2 md:py-4 bg-white overflow-hidden animate-fade-in transition-all duration-300">
       <div className="w-full max-w-full px-2 md:px-4">
         <div className="mx-auto">
           {/* Header Section */}
