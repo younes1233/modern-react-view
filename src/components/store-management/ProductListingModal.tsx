@@ -225,14 +225,14 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                           onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
                         />
                         <img 
-                          src={product.media?.cover_image.image || '/placeholder.svg'} 
+                          src={product.media?.cover_image || '/placeholder.svg'} 
                           alt={product.name} 
                           className="w-12 h-12 object-cover rounded"
                         />
                         <div className="flex-1">
                           <p className="font-medium text-sm">{product.name}</p>
                           <p className="text-sm text-gray-500">
-                            {product.pricing?.currency?.symbol || '$'}{product.pricing?.price || 0}
+                            {product.pricing?.final?.currency?.symbol || '$'}{product.pricing?.final?.price || 0}
                           </p>
                           {product.identifiers?.sku && (
                             <p className="text-xs text-gray-400">SKU: {product.identifiers.sku}</p>

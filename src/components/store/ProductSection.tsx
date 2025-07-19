@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useProductListingProducts } from "@/hooks/useProductListings";
 import { ProductCard } from "./ProductCard";
@@ -26,9 +27,9 @@ const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
     id: apiProduct.id, // Keep as number, don't convert to string
     name: apiProduct.name,
     slug: apiProduct.slug,
-    image: apiProduct.media.cover_image.image, // Extract image URL from object
-    price: apiProduct.pricing.price, // Use direct price, not final.price
-    originalPrice: apiProduct.pricing.original_price, // Use direct original_price
+    image: apiProduct.media.cover_image,
+    price: apiProduct.pricing.final.price,
+    originalPrice: apiProduct.pricing.final.original_price,
     category: apiProduct.category.name.toLowerCase(),
     rating: apiProduct.rating.average,
     reviews: apiProduct.rating.count,
@@ -42,9 +43,9 @@ const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
     })),
     description: apiProduct.short_description,
     stock: apiProduct.inventory.stock ? parseInt(apiProduct.inventory.stock) : 0,
-    isAvailable: parseInt(apiProduct.inventory.stock) > 0, // Calculate availability from stock
+    isAvailable: apiProduct.inventory.is_available,
     // Add missing required properties
-    inStock: parseInt(apiProduct.inventory.stock) > 0, // Calculate from stock
+    inStock: apiProduct.inventory.is_available,
     variations: [] // Default to empty array since API doesn't provide variations in this format
   };
 };
