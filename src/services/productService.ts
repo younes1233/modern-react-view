@@ -1,4 +1,3 @@
-
 import BaseApiService, { ApiResponse } from './baseApiService';
 
 export interface ProductAPI {
@@ -6,64 +5,86 @@ export interface ProductAPI {
   name: string;
   slug: string;
   short_description: string;
+  description: string;
   category: {
     id: number;
     name: string;
     slug: string;
-    path: Array<{ id: number; name: string }>;
+    level: number;
+    path: Array<{ id: number; name: string; level: number; slug: string }>;
   };
   store: {
     id: number;
-    name: string;
+    store_name: string;
     slug: string;
+    description: string;
+    image: string;
+    store_type: string;
+    status: string;
+    working_hours: string;
+    contact: any[];
+    legal: any[];
+    average_rating: number;
+    created_at: string;
+    updated_at: string;
   };
   media: {
-    cover_image: string;
+    cover_image: {
+      id: number;
+      image: string;
+      alt_text: string;
+      is_cover: boolean;
+      order: number;
+      created_at: string;
+      updated_at: string;
+    };
     thumbnails: Array<{
       id: number;
       image: string;
       alt_text: string;
-      is_cover: number;
+      is_cover: boolean;
+      order: number;
+      created_at: string;
+      updated_at: string;
     }>;
   };
   identifiers: {
     sku: string;
     barcode: string;
+    qr_code: string;
+    serial_number: string;
   };
   flags: {
     on_sale: boolean;
     is_featured: boolean;
     is_new_arrival: boolean;
-    is_seller_product: boolean;
-    has_variants: boolean;
+    is_best_seller: boolean;
+    is_vat_exempt: boolean;
+    seller_product_status: string;
   };
   pricing: {
-    final: {
-      original_price: number;
-      price: number;
-      currency_id: number;
-      currency: {
-        code: string;
-        symbol: string;
-      };
-      applied_discounts: Array<{
-        label: string;
-        type: string;
-        value: string;
-        amount_value: number;
-        max_discount: number | null;
-      }>;
+    original_price: number;
+    price: number;
+    currency_id: number;
+    currency: {
+      code: string;
+      symbol: string;
     };
-    variant_price_range?: {
-      min: string;
-      max: string;
-      currency: string;
-      currency_symbol: string;
-    } | null;
+    applied_discounts: Array<{
+      label: string;
+      type: string;
+      value: string;
+      amount_value: number;
+      max_discount: number | null;
+      scope: string;
+    }>;
+    vat: {
+      rate: number;
+      amount: number;
+    };
   };
   inventory: {
-    is_available: boolean;
-    stock: string | null;
+    stock: string;
   };
   rating: {
     average: number;
@@ -75,6 +96,21 @@ export interface ProductAPI {
     created_at: string;
     updated_at: string;
   };
+  variants: any[];
+  specifications: Array<{
+    name: string;
+    value: string;
+  }>;
+  reviews: Array<{
+    id: number;
+    user: {
+      id: number;
+      name: string | null;
+    };
+    rating: number;
+    comment: string;
+    created_at: string;
+  }>;
 }
 
 export interface ProductsResponse {
@@ -87,6 +123,10 @@ export interface ProductsResponse {
     last_page: number;
     total: number;
   };
+}
+
+export interface ProductDetailResponse {
+  product: ProductAPI;
 }
 
 class ProductService extends BaseApiService {
@@ -193,6 +233,52 @@ class ProductService extends BaseApiService {
       `/products/search?${params.toString()}`
     );
     console.log('Search products response:', response);
+    return response;
+  }
+
+  // Get product by ID
+  async getProductById(
+    productId: number,
+    countryId: number = 1,
+    currencyId?: number,
+    storeId?: number
+  ): Promise<ApiResponse<ProductDetailResponse>> {
+    console.log('Fetching product by ID:', { productId, countryId, currencyId, storeId });
+    
+    const params = new URLSearchParams({
+      country_id: countryId.toString(),
+    });
+
+    if (currencyId) params.append('currency_id', currencyId.toString());
+    if (storeId) params.append('store_id', storeId.toString());
+
+    const response = await this.get<ApiResponse<ProductDetailResponse>>(
+      `/products/${productId}?${params.toString()}`
+    );
+    console.log('Product detail API response:', response);
+    return response;
+  }
+
+  // Get product by slug
+  async getProductBySlug(
+    slug: string,
+    countryId: number = 1,
+    currencyId?: number,
+    storeId?: number
+  ): Promise<ApiResponse<ProductDetailResponse>> {
+    console.log('Fetching product by slug:', { slug, countryId, currencyId, storeId });
+    
+    const params = new URLSearchParams({
+      country_id: countryId.toString(),
+    });
+
+    if (currencyId) params.append('currency_id', currencyId.toString());
+    if (storeId) params.append('store_id', storeId.toString());
+
+    const response = await this.get<ApiResponse<ProductDetailResponse>>(
+      `/products/slug/${slug}?${params.toString()}`
+    );
+    console.log('Product by slug API response:', response);
     return response;
   }
 }

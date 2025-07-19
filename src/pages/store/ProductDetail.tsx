@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
@@ -9,17 +10,15 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { Star, Heart, ShoppingCart, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
-import { getProducts, getProductBySlug, Product, ProductVariation, calculateVariationPrice } from '@/data/storeData';
-import { ProductVariations } from '@/components/store/ProductVariations';
 import { ImageZoom } from '@/components/store/ImageZoom';
+import { useProductDetail } from '@/hooks/useProductDetail';
+import { ProductAPI } from '@/services/productService';
 
 const ProductDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [selectedVariations, setSelectedVariations] = useState<ProductVariation[]>([]);
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -28,17 +27,8 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  useEffect(() => {
-    if (id) {
-      // Try to find by slug first, then by ID
-      let foundProduct = getProductBySlug(id);
-      if (!foundProduct) {
-        const products = getProducts();
-        foundProduct = products.find(p => p.id === parseInt(id)) || null;
-      }
-      setProduct(foundProduct);
-    }
-  }, [id]);
+  // Fetch product from API
+  const { data: product, isLoading, error } = useProductDetail(id || '');
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -55,8 +45,8 @@ const ProductDetail = () => {
     // Only handle horizontal swipes (ignore vertical scrolling)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
       const allImages = [
-        { url: product.image, alt: product.name },
-        ...product.thumbnails.map(thumb => ({ url: thumb.url, alt: thumb.alt }))
+        { url: product.media.cover_image.image, alt: product.media.cover_image.alt_text },
+        ...product.media.thumbnails.map(thumb => ({ url: thumb.image, alt: thumb.alt_text }))
       ];
       
       if (deltaX > 0 && selectedImage > 0) {
@@ -108,7 +98,20 @@ const ProductDetail = () => {
     };
   }, []);
 
-  if (!product) {
+  if (isLoading) {
+    return (
+      <StoreLayout>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading product...</p>
+          </div>
+        </div>
+      </StoreLayout>
+    );
+  }
+
+  if (error || !product) {
     return (
       <StoreLayout>
         <div className="min-h-screen bg-white flex items-center justify-center px-4">
@@ -123,33 +126,78 @@ const ProductDetail = () => {
     );
   }
 
-  const currentPrice = calculateVariationPrice(product.price, selectedVariations);
+  const currentPrice = product.pricing.price;
+  const originalPrice = product.pricing.original_price;
+  const inStock = parseInt(product.inventory.stock) > 0;
+  
   const allImages = [
-    { url: product.image, alt: product.name },
-    ...product.thumbnails.map(thumb => ({ url: thumb.url, alt: thumb.alt }))
+    { url: product.media.cover_image.image, alt: product.media.cover_image.alt_text },
+    ...product.media.thumbnails.map(thumb => ({ url: thumb.image, alt: thumb.alt_text }))
   ];
 
   const handleAddToCart = () => {
-    addToCart(product, quantity);
+    // Convert API product to cart format
+    const cartProduct = {
+      id: product.id,
+      name: product.name,
+      price: currentPrice,
+      originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
+      image: product.media.cover_image.image,
+      category: product.category.name,
+      inStock,
+      rating: product.rating.average,
+      reviews: product.rating.count,
+      isFeatured: product.flags.is_featured,
+      isNewArrival: product.flags.is_new_arrival,
+      isOnSale: product.flags.on_sale,
+      sku: product.identifiers.sku,
+      description: product.description,
+      thumbnails: product.media.thumbnails.map(thumb => ({
+        id: thumb.id, 
+        url: thumb.image, 
+        alt: thumb.alt_text
+      })),
+      variations: []
+    };
+    addToCart(cartProduct, quantity);
   };
 
   const handleWishlistToggle = () => {
+    const wishlistProduct = {
+      id: product.id,
+      name: product.name,
+      price: currentPrice,
+      originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
+      image: product.media.cover_image.image,
+      category: product.category.name,
+      inStock,
+      rating: product.rating.average,
+      reviews: product.rating.count,
+      isFeatured: product.flags.is_featured,
+      isNewArrival: product.flags.is_new_arrival,
+      isOnSale: product.flags.on_sale,
+      sku: product.identifiers.sku,
+      description: product.description,
+      thumbnails: product.media.thumbnails.map(thumb => ({
+        id: thumb.id, 
+        url: thumb.image, 
+        alt: thumb.alt_text
+      })),
+      variations: []
+    };
+
     if (isInWishlist(product.id)) {
       removeFromWishlist(product.id);
     } else {
-      addToWishlist(product);
+      addToWishlist(wishlistProduct);
     }
-  };
-
-  const handleVariationChange = (variations: ProductVariation[]) => {
-    setSelectedVariations(variations);
   };
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star
         key={i}
-        className={`w-4 h-4 ${i < rating ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
+        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
       />
     ));
   };
@@ -157,9 +205,10 @@ const ProductDetail = () => {
   // Breadcrumb data
   const breadcrumbs = [
     { label: 'Home', path: '/store' },
-    { label: 'Electronics & Mobiles', path: '/store/categories' },
-    { label: 'Mobiles & Accessories', path: '/store/categories' },
-    { label: 'Mobile Phones', path: '/store/categories' },
+    ...product.category.path.map(cat => ({
+      label: cat.name,
+      path: `/store/categories/${cat.slug}`,
+    })),
     { label: product.name, path: '', current: true }
   ];
 
@@ -257,7 +306,7 @@ const ProductDetail = () => {
                 
                 {/* Mobile: Stock badge */}
                 <div className="lg:hidden absolute top-4 left-4">
-                  {product.inStock ? (
+                  {inStock ? (
                     <Badge className="bg-green-500 text-white">In Stock</Badge>
                   ) : (
                     <Badge variant="destructive">Out of Stock</Badge>
@@ -379,10 +428,16 @@ const ProductDetail = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Badge variant="secondary" className="capitalize text-xs">
-                    {product.category}
+                    {product.category.name}
                   </Badge>
-                  {product.isFeatured && (
+                  {product.flags.is_featured && (
                     <Badge className="bg-cyan-500 text-xs">Featured</Badge>
+                  )}
+                  {product.flags.is_new_arrival && (
+                    <Badge className="bg-emerald-500 text-xs">New</Badge>
+                  )}
+                  {product.flags.on_sale && (
+                    <Badge className="bg-red-500 text-xs">Sale</Badge>
                   )}
                 </div>
                 <div className="hidden lg:flex items-center space-x-2">
@@ -405,15 +460,16 @@ const ProductDetail = () => {
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {product.name}
                 </h1>
+                <p className="text-gray-600 mt-2">{product.short_description}</p>
               </div>
               
               {/* Rating */}
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-1">
-                  {renderStars(product.rating)}
+                  {renderStars(product.rating.average)}
                 </div>
                 <span className="text-sm text-gray-600">
-                  {product.rating} ({Math.floor(Math.random() * 1000 + 100)}k reviews)
+                  {product.rating.average.toFixed(1)} ({product.rating.count} reviews)
                 </span>
               </div>
 
@@ -421,41 +477,51 @@ const ProductDetail = () => {
               <div className="space-y-2">
                 <div className="flex items-baseline space-x-3">
                   <span className="text-3xl lg:text-4xl font-bold text-gray-900">
-                    ${currentPrice.toFixed(2)}
+                    {product.pricing.currency.symbol}{currentPrice.toFixed(2)}
                   </span>
-                  {currentPrice !== product.price && (
+                  {originalPrice > currentPrice && (
                     <span className="text-lg text-gray-500 line-through">
-                      ${product.price.toFixed(2)}
+                      {product.pricing.currency.symbol}{originalPrice.toFixed(2)}
                     </span>
                   )}
-                  {currentPrice !== product.price && (
+                  {originalPrice > currentPrice && (
                     <Badge className="bg-red-500 text-white">
-                      {Math.round(((product.price - currentPrice) / product.price) * 100)}% Off
+                      {Math.round(((originalPrice - currentPrice) / originalPrice) * 100)}% Off
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-gray-600">Inclusive of VAT</p>
+                {product.pricing.applied_discounts.length > 0 && (
+                  <div className="flex flex-wrap gap-2">
+                    {product.pricing.applied_discounts.map((discount, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {discount.label}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
+                <p className="text-sm text-gray-600">
+                  Inclusive of VAT ({product.pricing.currency.code})
+                </p>
               </div>
 
               {/* Desktop Stock Status */}
               <div className="hidden lg:block">
-                {product.inStock ? (
-                  <Badge className="bg-green-500 text-white">In Stock</Badge>
+                {inStock ? (
+                  <div className="flex items-center space-x-2">
+                    <Badge className="bg-green-500 text-white">In Stock</Badge>
+                    <span className="text-sm text-gray-600">
+                      {product.inventory.stock} available
+                    </span>
+                  </div>
                 ) : (
                   <Badge variant="destructive">Out of Stock</Badge>
                 )}
               </div>
 
-              {/* Product Variations */}
-              {product.variations.length > 0 && (
-                <div className="space-y-4">
-                  <ProductVariations
-                    variations={product.variations}
-                    basePrice={product.price}
-                    onVariationChange={handleVariationChange}
-                  />
-                </div>
-              )}
+              {/* SKU Info */}
+              <div className="text-sm text-gray-600">
+                <span>SKU: {product.identifiers.sku}</span>
+              </div>
 
               {/* Quantity & Actions */}
               <div className="space-y-4">
@@ -475,7 +541,7 @@ const ProductDetail = () => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setQuantity(quantity + 1)}
+                      onClick={() => setQuantity(Math.min(parseInt(product.inventory.stock), quantity + 1))}
                       className="w-10 h-10 p-0 hover:bg-gray-50"
                     >
                       <Plus className="w-4 h-4" />
@@ -486,7 +552,7 @@ const ProductDetail = () => {
                 {/* Action Button */}
                 <Button
                   onClick={handleAddToCart}
-                  disabled={!product.inStock}
+                  disabled={!inStock}
                   className="w-full bg-cyan-600 hover:bg-cyan-700 text-white h-14 text-lg font-semibold rounded-xl transition-all duration-200 hover:shadow-lg disabled:opacity-50"
                   size="lg"
                 >
@@ -532,7 +598,7 @@ const ProductDetail = () => {
                 <Card className="border-0 shadow-sm">
                   <CardContent className="p-6">
                     <p className="text-gray-700 leading-relaxed">
-                      {product.description || `Discover the amazing features of ${product.name}. This high-quality product combines style, functionality, and durability to meet all your needs. Whether you're looking for everyday use or special occasions, this product delivers exceptional performance and value.`}
+                      {product.description}
                     </p>
                   </CardContent>
                 </Card>
@@ -545,30 +611,24 @@ const ProductDetail = () => {
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="font-medium text-gray-900">SKU:</span>
-                          <span className="text-gray-600">{product.sku}</span>
+                          <span className="text-gray-600">{product.identifiers.sku}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="font-medium text-gray-900">Barcode:</span>
+                          <span className="text-gray-600">{product.identifiers.barcode}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="font-medium text-gray-900">Category:</span>
-                          <span className="text-gray-600 capitalize">{product.category}</span>
+                          <span className="text-gray-600">{product.category.name}</span>
                         </div>
-                        {product.variations.length > 0 && (
-                          <div className="flex justify-between">
-                            <span className="font-medium text-gray-900">Available Options:</span>
-                            <span className="text-gray-600">
-                              {Array.from(new Set(product.variations.map(v => v.type))).join(', ')}
-                            </span>
-                          </div>
-                        )}
                       </div>
                       <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-900">Weight:</span>
-                          <span className="text-gray-600">2.5 lbs</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-900">Dimensions:</span>
-                          <span className="text-gray-600">10" x 8" x 6"</span>
-                        </div>
+                        {product.specifications.map((spec, index) => (
+                          <div key={index} className="flex justify-between">
+                            <span className="font-medium text-gray-900">{spec.name}:</span>
+                            <span className="text-gray-600">{spec.value}</span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </CardContent>
@@ -583,32 +643,31 @@ const ProductDetail = () => {
                         <h3 className="text-lg font-semibold">Customer Reviews</h3>
                         <div className="flex items-center space-x-2">
                           <div className="flex items-center space-x-1">
-                            {renderStars(product.rating)}
+                            {renderStars(product.rating.average)}
                           </div>
-                          <span className="text-sm text-gray-600">({product.rating} out of 5)</span>
+                          <span className="text-sm text-gray-600">
+                            ({product.rating.average.toFixed(1)} out of 5)
+                          </span>
                         </div>
                       </div>
                       
                       <div className="space-y-4">
-                        <div className="border-b border-gray-100 pb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">John D.</span>
-                            <div className="flex items-center space-x-1">
-                              {renderStars(5)}
+                        {product.reviews.map((review) => (
+                          <div key={review.id} className="border-b border-gray-100 pb-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="font-medium">
+                                {review.user.name || `User ${review.user.id}`}
+                              </span>
+                              <div className="flex items-center space-x-1">
+                                {renderStars(review.rating)}
+                              </div>
                             </div>
+                            <p className="text-gray-700">{review.comment}</p>
+                            <p className="text-sm text-gray-500 mt-1">
+                              {new Date(review.created_at).toLocaleDateString()}
+                            </p>
                           </div>
-                          <p className="text-gray-700">Amazing product! Exactly what I was looking for. Great quality and fast shipping.</p>
-                        </div>
-                        
-                        <div className="border-b border-gray-100 pb-4">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="font-medium">Sarah M.</span>
-                            <div className="flex items-center space-x-1">
-                              {renderStars(4)}
-                            </div>
-                          </div>
-                          <p className="text-gray-700">Very satisfied with this purchase. Good value for money and excellent customer service.</p>
-                        </div>
+                        ))}
                       </div>
                     </div>
                   </CardContent>
