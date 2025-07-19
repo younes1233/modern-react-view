@@ -10,7 +10,8 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { ProductListingAPI, CreateProductListingRequest, UpdateProductListingRequest } from "@/services/productListingService";
-import { getProducts } from "@/data/storeData";
+import { useQuery } from "@tanstack/react-query";
+import { productService, ProductAPI } from "@/services/productService";
 
 interface ProductListingModalProps {
   isOpen: boolean;
@@ -32,7 +33,37 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   });
   const [searchTerm, setSearchTerm] = useState('');
 
-  const products = getProducts();
+  // Fetch products from API
+  const { data: productsResponse, isLoading: isLoadingProducts } = useQuery({
+    queryKey: ['products', searchTerm],
+    queryFn: async () => {
+      console.log('Fetching products for product listing modal...');
+      if (searchTerm.trim()) {
+        // Use search when there's a search term
+        return await productService.searchProducts(searchTerm, 1, 1, {
+          limit: 50 // Get more products for better suggestions
+        });
+      } else {
+        // Get general products list
+        return await productService.getProducts(1, 1, 1, 50);
+      }
+    },
+    select: (data) => {
+      console.log('Processing products data:', data);
+      if (data && data.details && data.details.products) {
+        if (Array.isArray(data.details.products.data)) {
+          return data.details.products.data;
+        } else if (Array.isArray(data.details.products)) {
+          return data.details.products;
+        }
+      }
+      return [];
+    },
+    enabled: isOpen, // Only fetch when modal is open
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+  });
+
+  const products: ProductAPI[] = productsResponse || [];
 
   useEffect(() => {
     if (mode === 'edit' && listing) {
@@ -95,18 +126,8 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   ];
 
   const getFilteredProducts = () => {
-    let filteredProducts = products;
-    
-    // Filter by search term
-    if (searchTerm.trim()) {
-      filteredProducts = filteredProducts.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (product.sku && product.sku.toLowerCase().includes(searchTerm.toLowerCase()))
-      );
-    }
-    
-    return filteredProducts;
+    // Products are already filtered by the API search
+    return products;
   };
 
   return (
@@ -191,33 +212,42 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
               </div>
               
               <div className="border rounded-lg p-4 max-h-60 overflow-y-auto">
-                <div className="grid grid-cols-1 gap-3">
-                  {getFilteredProducts().map((product) => (
-                    <div key={product.id} className="flex items-center space-x-3 p-2 border rounded hover:bg-gray-50">
-                      <Checkbox
-                        checked={(formData.products || []).includes(product.id)}
-                        onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
-                      />
-                      <img 
-                        src={product.image} 
-                        alt={product.name} 
-                        className="w-12 h-12 object-cover rounded"
-                      />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{product.name}</p>
-                        <p className="text-sm text-gray-500">${product.price}</p>
-                        {product.sku && (
-                          <p className="text-xs text-gray-400">SKU: {product.sku}</p>
-                        )}
+                {isLoadingProducts ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Loading products...</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-3">
+                    {getFilteredProducts().map((product) => (
+                      <div key={product.id} className="flex items-center space-x-3 p-2 border rounded hover:bg-gray-50">
+                        <Checkbox
+                          checked={(formData.products || []).includes(product.id)}
+                          onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
+                        />
+                        <img 
+                          src={product.media?.cover_image || '/placeholder.svg'} 
+                          alt={product.name} 
+                          className="w-12 h-12 object-cover rounded"
+                        />
+                        <div className="flex-1">
+                          <p className="font-medium text-sm">{product.name}</p>
+                          <p className="text-sm text-gray-500">
+                            {product.pricing?.final?.currency?.symbol || '$'}{product.pricing?.final?.price || 0}
+                          </p>
+                          {product.identifiers?.sku && (
+                            <p className="text-xs text-gray-400">SKU: {product.identifiers.sku}</p>
+                          )}
+                          <p className="text-xs text-gray-400">{product.category?.name}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                  {getFilteredProducts().length === 0 && (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No products found matching your search.</p>
-                    </div>
-                  )}
-                </div>
+                    ))}
+                    {!isLoadingProducts && getFilteredProducts().length === 0 && (
+                      <div className="text-center py-8 text-gray-500">
+                        <p>No products found matching your search.</p>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <p className="text-sm text-gray-500">
                 Selected: {formData.products?.length || 0} products
