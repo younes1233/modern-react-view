@@ -30,6 +30,11 @@ const ProductDetail = () => {
   // Fetch product from API - now using slug directly
   const { data: product, isLoading, error } = useProductDetail(slug || '');
 
+  // Scroll to top when component mounts or slug changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
+
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
     touchStartRef.current = { x: touch.clientX, y: touch.clientY };
