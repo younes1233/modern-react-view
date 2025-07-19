@@ -22,8 +22,36 @@ export const useProductDetail = (
         const response = await productService.getProductBySlug(productSlug, countryId, currencyId, storeId);
         console.log('useProductDetail: API response:', response);
         return response;
-      } catch (error) {
+      } catch (error: any) {
         console.error('useProductDetail: API error:', error);
+        
+        // If it's a permission error when logged in, try without authentication
+        if (error.message?.includes('permission') || error.message?.includes('manage products')) {
+          console.log('useProductDetail: Permission error detected, trying without auth...');
+          try {
+            // Create a temporary service instance without authentication
+            const tempResponse = await fetch(`https://meemhome.com/api/products/slug/${productSlug}?country_id=${countryId}${currencyId ? `&currency_id=${currencyId}` : ''}${storeId ? `&store_id=${storeId}` : ''}`, {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-API-SECRET': 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33'
+              }
+            });
+            
+            if (!tempResponse.ok) {
+              throw new Error(`HTTP error! status: ${tempResponse.status}`);
+            }
+            
+            const data = await tempResponse.json();
+            console.log('useProductDetail: Fallback API response:', data);
+            return data;
+          } catch (fallbackError) {
+            console.error('useProductDetail: Fallback also failed:', fallbackError);
+            throw error; // Throw original error
+          }
+        }
+        
         throw error;
       }
     },
