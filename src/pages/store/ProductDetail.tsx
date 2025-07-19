@@ -11,7 +11,6 @@ import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { ImageZoom } from '@/components/store/ImageZoom';
 import { useProductDetail } from '@/hooks/useProductDetail';
-import { ProductDetailSkeleton } from '@/components/store/ProductDetailSkeleton';
 import { ProductAPI } from '@/services/productService';
 
 const ProductDetail = () => {
@@ -27,7 +26,7 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Fetch product from API - now using ID directly
+  // Fetch product from API
   const { data: product, isLoading, error } = useProductDetail(id || '');
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -99,7 +98,16 @@ const ProductDetail = () => {
   }, []);
 
   if (isLoading) {
-    return <ProductDetailSkeleton />;
+    return (
+      <StoreLayout>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading product...</p>
+          </div>
+        </div>
+      </StoreLayout>
+    );
   }
 
   if (error || !product) {

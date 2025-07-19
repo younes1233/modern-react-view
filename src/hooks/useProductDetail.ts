@@ -13,31 +13,26 @@ export const useProductDetail = (
     queryFn: async () => {
       console.log('useProductDetail: Calling API with params:', { productId, countryId, currencyId, storeId });
       
-      // Parse as number - the API expects product ID, not slug
+      // Try to parse as number first, if fails try as slug
       const numericId = parseInt(productId);
+      let response;
       
-      if (isNaN(numericId)) {
-        throw new Error('Invalid product ID');
+      if (!isNaN(numericId)) {
+        response = await productService.getProductById(numericId, countryId, currencyId, storeId);
+      } else {
+        response = await productService.getProductBySlug(productId, countryId, currencyId, storeId);
       }
-      
-      const response = await productService.getProductById(numericId, countryId, currencyId, storeId);
       
       console.log('useProductDetail: API response:', response);
       return response;
     },
-    enabled: !!productId && productId !== ':id',
+    enabled: !!productId,
     select: (data) => {
       console.log('useProductDetail: Selecting data:', data);
-      // Handle the API response structure: { error: false, message: "...", details: { product: {...} } }
       if (data && data.details && data.details.product) {
         return data.details.product;
       }
-      // Fallback - return null if no product found
       return null;
-    },
-    retry: (failureCount, error) => {
-      console.error('Product fetch error:', error);
-      return failureCount < 2; // Only retry twice
     }
   });
 };
