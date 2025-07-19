@@ -19,10 +19,15 @@ import {
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { useHomeSections } from "@/hooks/useHomeSections";
+import { HeroSkeleton } from "@/components/store/HeroSkeleton";
+import { BannerSkeleton } from "@/components/store/BannerSkeleton";
+import { ShopByCategorySkeleton } from "@/components/store/ShopByCategorySkeleton";
+import { ProductSectionSkeleton } from "@/components/store/ProductSectionSkeleton";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
+  const [heroLoading, setHeroLoading] = useState(true);
   
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: productListingsLoading } = useProductListings();
@@ -30,7 +35,9 @@ const Store = () => {
 
   useEffect(() => {
     const loadData = () => {
+      setHeroLoading(true);
       setHeroSection(getHeroSection());
+      setHeroLoading(false);
     };
     loadData();
 
@@ -56,6 +63,11 @@ const Store = () => {
     if (!section.is_active) return null;
 
     if (section.type === 'banner') {
+      // Show banner skeleton while loading
+      if (bannersLoading) {
+        return <BannerSkeleton key={`banner-skeleton-${section.id}`} />;
+      }
+
       // Use API banners instead of demo data
       const banner = banners.find((b) => b.id === section.item_id && b.isActive) || section.item;
       if (!banner) return null;
@@ -86,6 +98,11 @@ const Store = () => {
         </section>
       );
     } else if (section.type === 'productListing') {
+      // Show product section skeleton while loading
+      if (productListingsLoading) {
+        return <ProductSectionSkeleton key={`product-skeleton-${section.id}`} />;
+      }
+
       // Use API product listings instead of demo data
       const listing = productListings.find((l) => l.id === section.item_id && l.is_active) || section.item;
       if (!listing) return null;
@@ -112,20 +129,6 @@ const Store = () => {
     return null;
   };
 
-  // Show loading state while data is loading
-  if (bannersLoading || productListingsLoading || homeSectionsLoading) {
-    return (
-      <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
-        <StoreLayout>
-          <div className="flex items-center justify-center min-h-screen">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
-            <p className="ml-4 text-gray-600">Loading store...</p>
-          </div>
-        </StoreLayout>
-      </div>
-    );
-  }
-
   console.log('Store: Home sections from API:', homeSections);
   console.log('Store: Product listings from API:', productListings);
   console.log('Store: Banners from API:', banners);
@@ -133,74 +136,91 @@ const Store = () => {
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
       <StoreLayout>
-        {/* Fixed Hero Section for iPhone */}
-        {heroSection && heroSection.isActive && (
-          <section className="relative w-full overflow-hidden z-10" style={{
-            height: 'clamp(400px, 50vh, 600px)',
-            minHeight: '400px',
-            maxHeight: '600px'
-          }}>
-            <div className="absolute inset-0">
-              <img
-                src={heroSection.backgroundImage}
-                alt="Hero Background"
-                className="w-full h-full object-cover"
-                style={{
-                  objectPosition: 'center center',
-                  transform: 'scale(1.02)', // Slight scale to prevent gaps on iOS
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
-            </div>
+        {/* Hero Section with Loading */}
+        {heroLoading ? (
+          <HeroSkeleton />
+        ) : (
+          heroSection && heroSection.isActive && (
+            <section className="relative w-full overflow-hidden z-10" style={{
+              height: 'clamp(400px, 50vh, 600px)',
+              minHeight: '400px',
+              maxHeight: '600px'
+            }}>
+              <div className="absolute inset-0">
+                <img
+                  src={heroSection.backgroundImage}
+                  alt="Hero Background"
+                  className="w-full h-full object-cover"
+                  style={{
+                    objectPosition: 'center center',
+                    transform: 'scale(1.02)', // Slight scale to prevent gaps on iOS
+                  }}
+                />
+                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
+              </div>
 
-            <div className="relative z-20 h-full flex items-center rounded-md mx-0">
-              <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
-                {/* Left side: title + subtitle */}
-                <div className="max-w-2xl text-white">
-                  <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 md:mb-6">
-                    ✨ Premium Quality
+              <div className="relative z-20 h-full flex items-center rounded-md mx-0">
+                <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
+                  {/* Left side: title + subtitle */}
+                  <div className="max-w-2xl text-white">
+                    <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 md:mb-6">
+                      ✨ Premium Quality
+                    </div>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-3 sm:mb-4 md:mb-6">
+                      {heroSection.title}
+                    </h1>
+                    <p className="text-sm sm:text-base md:text-lg text-gray-200 leading-relaxed mb-4 sm:mb-6 md:mb-8 max-w-xl">
+                      {heroSection.subtitle}
+                    </p>
                   </div>
-                  <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-3 sm:mb-4 md:mb-6">
-                    {heroSection.title}
-                  </h1>
-                  <p className="text-sm sm:text-base md:text-lg text-gray-200 leading-relaxed mb-4 sm:mb-6 md:mb-8 max-w-xl">
-                    {heroSection.subtitle}
-                  </p>
-                </div>
 
-                {/* Bottom right: button + contact info with small left margin */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-8 self-end">
-                  <Button
-                    size="lg"
-                    className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-sm sm:text-base md:text-lg font-semibold shadow-xl"
-                  >
-                    {heroSection.ctaText}
-                  </Button>
-                  <div className="text-left">
-                    <div className="text-base sm:text-lg md:text-xl font-bold text-white">961 76591765</div>
-                    <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
+                  {/* Bottom right: button + contact info with small left margin */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-8 self-end">
+                    <Button
+                      size="lg"
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-sm sm:text-base md:text-lg font-semibold shadow-xl"
+                    >
+                      {heroSection.ctaText}
+                    </Button>
+                    <div className="text-left">
+                      <div className="text-base sm:text-lg md:text-xl font-bold text-white">961 76591765</div>
+                      <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
+            </section>
+          )
         )}
 
-        {/* Shop by Category */}
+        {/* Shop by Category with Loading */}
         <div className="w-full overflow-hidden">
-          <ShopByCategory />
+          {bannersLoading || productListingsLoading || homeSectionsLoading ? (
+            <ShopByCategorySkeleton />
+          ) : (
+            <ShopByCategory />
+          )}
         </div>
 
-        {/* Dynamic Home Sections from API */}
+        {/* Dynamic Home Sections from API with Loading */}
         <div className="w-full overflow-hidden bg-white">
-          {homeSections
-            .filter(section => section.is_active)
-            .sort((a, b) => a.order - b.order)
-            .map((section) => getSectionContent(section))}
+          {homeSectionsLoading ? (
+            // Show skeleton sections while loading
+            <>
+              <BannerSkeleton />
+              <ProductSectionSkeleton />
+              <BannerSkeleton />
+            </>
+          ) : (
+            homeSections
+              .filter(section => section.is_active)
+              .sort((a, b) => a.order - b.order)
+              .map((section) => getSectionContent(section))
+          )}
         </div>
 
         {/* Fallback Best Sellers if no sections are configured */}
-        {homeSections.filter(s => s.is_active).length === 0 && (
+        {!homeSectionsLoading && homeSections.filter(s => s.is_active).length === 0 && (
           <section className="py-8 md:py-16 bg-white overflow-hidden">
             <div className="w-full max-w-full px-2 md:px-4">
               <div className="max-w-7xl mx-auto">
