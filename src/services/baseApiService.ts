@@ -21,6 +21,7 @@ class BaseApiService {
       },
     });
 
+    // Add token to requests if available
     this.axiosInstance.interceptors.request.use(
       (config) => {
         const token = this.getToken();
@@ -79,19 +80,20 @@ class BaseApiService {
 
   // Token management methods
   setToken(token: string): void {
-    localStorage.setItem('token', token);
+    localStorage.setItem('authToken', token);
   }
 
   getToken(): string | null {
-    return localStorage.getItem('token');
+    return localStorage.getItem('authToken');
   }
 
   removeToken(): void {
-    localStorage.removeItem('token');
+    localStorage.removeItem('authToken');
   }
 
   isAuthenticated(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+    return !!token;
   }
 }
 

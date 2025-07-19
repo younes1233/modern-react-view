@@ -1,5 +1,6 @@
 
 import { ProductCard } from './ProductCard';
+import { ProductGridSkeleton } from './ProductGridSkeleton';
 import { Button } from '@/components/ui/button';
 import { Product, DisplaySettings } from '@/data/storeData';
 
@@ -9,6 +10,7 @@ interface ProductGridProps {
   displaySettings: DisplaySettings | null;
   isMobile: boolean;
   onClearFilters: () => void;
+  isLoading?: boolean;
 }
 
 export function ProductGrid({
@@ -16,7 +18,8 @@ export function ProductGrid({
   viewMode,
   displaySettings,
   isMobile,
-  onClearFilters
+  onClearFilters,
+  isLoading = false
 }: ProductGridProps) {
   const getGridColumns = () => {
     // Force 2 columns on mobile
@@ -31,6 +34,10 @@ export function ProductGrid({
       default: return 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4';
     }
   };
+
+  if (isLoading) {
+    return <ProductGridSkeleton count={12} isMobile={isMobile} />;
+  }
 
   if (products.length === 0) {
     return (
