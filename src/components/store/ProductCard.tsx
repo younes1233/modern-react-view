@@ -44,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   const handleProductClick = () => {
-    navigate(`/store/product/${product.id}`);
+    navigate(`/store/product/${product.slug}`);
   };
 
   const currentImage = hoveredThumbnail !== null 

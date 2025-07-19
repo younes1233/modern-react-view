@@ -95,8 +95,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     setShowMobileSearchResults(value.length > 0);
   };
 
-  const handleSearchResultClick = (productId: number) => {
-    navigate(`/store/product/${productId}`);
+  const handleSearchResultClick = (productSlug: string) => {
+    navigate(`/store/product/${productSlug}`);
     setShowSearchResults(false);
     setShowMobileSearchResults(false);
     setSearchQuery('');
@@ -496,7 +496,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 {searchResults.slice(0, 6).map((product) => (
                   <button
                     key={product.id}
-                    onClick={() => handleSearchResultClick(product.id)}
+                    onClick={() => handleSearchResultClick(product.slug)}
                     className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
                   >
                     <img
@@ -556,7 +556,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 {searchResults.slice(0, 6).map((product) => (
                   <button
                     key={product.id}
-                    onClick={() => handleSearchResultClick(product.id)}
+                    onClick={() => handleSearchResultClick(product.slug)}
                     className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
                   >
                     <img
