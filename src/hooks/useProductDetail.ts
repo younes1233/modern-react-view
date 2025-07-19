@@ -1,4 +1,3 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { productService, ProductAPI } from '@/services/productService';
 
@@ -13,15 +12,14 @@ export const useProductDetail = (
     queryFn: async () => {
       console.log('useProductDetail: Calling API with params:', { productId, countryId, currencyId, storeId });
       
-      // Try to parse as number first, if fails try as slug
+      // Parse as number - the API expects product ID, not slug
       const numericId = parseInt(productId);
-      let response;
       
-      if (!isNaN(numericId)) {
-        response = await productService.getProductById(numericId, countryId, currencyId, storeId);
-      } else {
-        response = await productService.getProductBySlug(productId, countryId, currencyId, storeId);
+      if (isNaN(numericId)) {
+        throw new Error('Invalid product ID');
       }
+      
+      const response = await productService.getProductById(numericId, countryId, currencyId, storeId);
       
       console.log('useProductDetail: API response:', response);
       return response;
