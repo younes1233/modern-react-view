@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,7 +44,7 @@ export function ProductCard({ product }: ProductCardProps) {
   };
 
   const handleProductClick = () => {
-    navigate(`/store/product/${product.slug}`);
+    navigate(`/store/product/${product.id}`);
   };
 
   const currentImage = hoveredThumbnail !== null 

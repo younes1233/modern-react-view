@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useProductListingProducts } from "@/hooks/useProductListings";
 import { ProductCard } from "./ProductCard";
+import { ProductSectionSkeleton } from "./ProductSectionSkeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -67,20 +68,12 @@ export function ProductSection({ listing }: ProductSectionProps) {
   const apiProducts = listingData?.products || [];
   const products = apiProducts.map(convertAPIProductToLegacy);
 
-  if (!listing.isActive || isLoading) {
-    if (isLoading) {
-      return (
-        <section className="py-2 md:py-4 bg-white overflow-hidden">
-          <div className="w-full max-w-full px-2 md:px-4">
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-500"></div>
-              <p className="ml-4 text-gray-600">Loading products...</p>
-            </div>
-          </div>
-        </section>
-      );
-    }
+  if (!listing.isActive) {
     return null;
+  }
+
+  if (isLoading) {
+    return <ProductSectionSkeleton showTitle={listing.showTitle} isMobile={isMobile} />;
   }
 
   if (error || products.length === 0) {

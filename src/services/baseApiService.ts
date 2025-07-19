@@ -1,104 +1,101 @@
 
-export interface ApiResponse<T = any> {
+import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
+
+interface ApiResponse<T> {
   error: boolean;
   message: string;
-  details?: T;
+  details: T;
 }
 
 class BaseApiService {
-  protected baseURL = 'https://meemhome.com/api';
-  private token: string | null = null;
-  private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
+  private baseURL: string;
+  private axiosInstance: AxiosInstance;
 
   constructor() {
-    // Get token from localStorage on initialization
-    this.token = localStorage.getItem('auth_token');
-  }
-
-  // Set authentication token - make it public so child classes can access it
-  setToken(token: string) {
-    this.token = token;
-    localStorage.setItem('auth_token', token);
-  }
-
-  // Remove authentication token - make it public so child classes can access it
-  removeToken() {
-    this.token = null;
-    localStorage.removeItem('auth_token');
-  }
-
-  // Generic request method
-  protected async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const url = `${this.baseURL}${endpoint}`;
-    
-    const config: RequestInit = {
+    this.baseURL = import.meta.env.VITE_API_URL || 'https://backend.monostore.my';
+    this.axiosInstance = axios.create({
+      baseURL: this.baseURL,
+      timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-API-SECRET': this.apiSecret,
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
-        ...options.headers,
       },
-      ...options,
-    };
+    });
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    // Add token to requests if available
+    this.axiosInstance.interceptors.request.use(
+      (config) => {
+        const token = this.getToken();
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => Promise.reject(error)
+    );
+
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        console.error('API Error:', error);
+        console.error('API Error Response:', error.response);
+        return Promise.reject(error);
       }
+    );
+  }
 
-      return await response.json();
-    } catch (error) {
-      console.error('API Request failed:', error);
+  private async request<T>(method: string, endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    try {
+      const response: AxiosResponse<T> = await this.axiosInstance.request<T>({
+        method,
+        url: endpoint,
+        data,
+        ...config,
+      });
+      return response.data;
+    } catch (error: any) {
+      console.error(`API request failed for ${method} ${endpoint}:`, error);
       throw error;
     }
   }
 
-  // GET request
   protected async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'GET',
-    });
+    return this.request<T>('GET', endpoint);
   }
 
-  // POST request
-  protected async post<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  protected async post<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('POST', endpoint, data, config);
   }
 
-  // PUT request
-  protected async put<T>(endpoint: string, data?: any): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: data ? JSON.stringify(data) : undefined,
-    });
+  protected async put<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('PUT', endpoint, data, config);
   }
 
-  // DELETE request
-  protected async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'DELETE',
-    });
+  protected async delete<T>(endpoint: string, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('DELETE', endpoint, undefined, config);
   }
 
-  // Get current token
+  protected async patch<T>(endpoint: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
+    return this.request<T>('PATCH', endpoint, data, config);
+  }
+
+  // Token management methods
+  setToken(token: string): void {
+    localStorage.setItem('authToken', token);
+  }
+
   getToken(): string | null {
-    return this.token;
+    return localStorage.getItem('authToken');
   }
 
-  // Check if user is authenticated
+  removeToken(): void {
+    localStorage.removeItem('authToken');
+  }
+
   isAuthenticated(): boolean {
-    return !!this.token;
+    const token = this.getToken();
+    return !!token;
   }
 }
 
 export default BaseApiService;
+export type { ApiResponse };
