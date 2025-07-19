@@ -1,3 +1,4 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { productService, ProductAPI } from '@/services/productService';
 
@@ -27,6 +28,7 @@ export const useProductDetail = (
     enabled: !!productId,
     select: (data) => {
       console.log('useProductDetail: Selecting data:', data);
+      // The API response structure is: { error: false, message: "...", details: { product: {...} } }
       if (data && data.details && data.details.product) {
         return data.details.product;
       }
