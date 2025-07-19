@@ -8,11 +8,12 @@ interface ApiResponse<T> {
 }
 
 class BaseApiService {
-  private baseURL: string;
+  protected baseURL = 'https://meemhome.com/api';
+  private token: string | null = null;
+  private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
   private axiosInstance: AxiosInstance;
 
   constructor() {
-    this.baseURL = import.meta.env.VITE_API_URL || 'https://backend.monostore.my';
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
       timeout: 10000,
