@@ -32,10 +32,7 @@ export const useProductDetail = (
       if (data && data.details && data.details.product) {
         return data.details.product;
       }
-      // Fallback for direct product response
-      if (data && data.product) {
-        return data.product;
-      }
+      // Fallback - return null if no product found
       return null;
     },
     retry: (failureCount, error) => {
