@@ -15,7 +15,7 @@ import { ProductDetailSkeleton } from '@/components/store/ProductDetailSkeleton'
 import { ProductAPI } from '@/services/productService';
 
 const ProductDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
@@ -27,8 +27,8 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
 
-  // Fetch product from API - now using ID directly
-  const { data: product, isLoading, error } = useProductDetail(id || '');
+  // Fetch product from API - now using slug directly
+  const { data: product, isLoading, error } = useProductDetail(slug || '');
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];

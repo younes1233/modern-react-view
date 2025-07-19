@@ -3,29 +3,26 @@ import { useQuery } from '@tanstack/react-query';
 import { productService, ProductAPI } from '@/services/productService';
 
 export const useProductDetail = (
-  productId: string,
+  productSlug: string,
   countryId: number = 1,
   currencyId?: number,
   storeId?: number
 ) => {
   return useQuery({
-    queryKey: ['product', productId, countryId, currencyId, storeId],
+    queryKey: ['product', productSlug, countryId, currencyId, storeId],
     queryFn: async () => {
-      console.log('useProductDetail: Calling API with params:', { productId, countryId, currencyId, storeId });
+      console.log('useProductDetail: Calling API with params:', { productSlug, countryId, currencyId, storeId });
       
-      // Parse as number - the API expects product ID, not slug
-      const numericId = parseInt(productId);
-      
-      if (isNaN(numericId)) {
-        throw new Error('Invalid product ID');
+      if (!productSlug || productSlug.trim() === '') {
+        throw new Error('Invalid product slug');
       }
       
-      const response = await productService.getProductById(numericId, countryId, currencyId, storeId);
+      const response = await productService.getProductBySlug(productSlug, countryId, currencyId, storeId);
       
       console.log('useProductDetail: API response:', response);
       return response;
     },
-    enabled: !!productId && productId !== ':id',
+    enabled: !!productSlug && productSlug !== ':slug',
     select: (data) => {
       console.log('useProductDetail: Selecting data:', data);
       // Handle the API response structure: { error: false, message: "...", details: { product: {...} } }

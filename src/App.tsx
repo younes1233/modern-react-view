@@ -64,7 +64,7 @@ const App = () => (
                       {/* Store routes (accessible to customers and everyone) */}
                       <Route path="/store" element={<Store />} />
                       <Route path="/store/categories" element={<StoreCategories />} />
-                      <Route path="/store/product/:id" element={<ProductDetail />} />
+                      <Route path="/store/product/:slug" element={<ProductDetail />} />
                       <Route path="/store/wishlist" element={<Wishlist />} />
                       <Route path="/store/checkout" element={<Checkout />} />
                       <Route path="/store/returns" element={<StoreReturns />} />
