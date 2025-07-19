@@ -1,8 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { CategoryFilters } from '@/components/store/CategoryFilters';
 import { ProductToolbar } from '@/components/store/ProductToolbar';
 import { ProductGrid } from '@/components/store/ProductGrid';
+import { ProductGridSkeleton } from '@/components/store/ProductGridSkeleton';
 import { ProductPagination } from '@/components/store/ProductPagination';
 import { useSearch } from '@/contexts/SearchContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -130,9 +132,53 @@ const StoreCategories = () => {
     return (
       <StoreLayout>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-          <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
-            <p className="ml-4 text-gray-600">Loading products...</p>
+          {/* Header Skeleton */}
+          <div className="mb-6 sm:mb-8">
+            <div className="animate-pulse space-y-2">
+              <div className="h-8 bg-gray-200 rounded w-64"></div>
+              <div className="h-4 bg-gray-200 rounded w-48"></div>
+            </div>
+          </div>
+
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-8">
+            {/* Sidebar Filters Skeleton */}
+            <div className="w-full lg:w-64 space-y-4">
+              <div className="animate-pulse space-y-4">
+                <div className="h-6 bg-gray-200 rounded w-32"></div>
+                <div className="space-y-2">
+                  {Array.from({ length: 6 }).map((_, i) => (
+                    <div key={i} className="h-4 bg-gray-200 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Main Content */}
+            <div className="flex-1">
+              {/* Toolbar Skeleton */}
+              <div className="flex items-center justify-between mb-6 p-4 bg-white border border-gray-200 rounded-lg">
+                <div className="animate-pulse flex items-center space-x-4">
+                  <div className="h-4 bg-gray-200 rounded w-32"></div>
+                  <div className="h-8 bg-gray-200 rounded w-24"></div>
+                </div>
+                <div className="animate-pulse flex items-center space-x-2">
+                  <div className="h-8 bg-gray-200 rounded w-32"></div>
+                  <div className="h-8 bg-gray-200 rounded w-16"></div>
+                </div>
+              </div>
+
+              {/* Products Grid Skeleton */}
+              <ProductGridSkeleton count={12} isMobile={isMobile} />
+
+              {/* Pagination Skeleton */}
+              <div className="flex justify-center mt-8">
+                <div className="animate-pulse flex space-x-2">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="h-8 w-8 bg-gray-200 rounded"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </StoreLayout>
@@ -182,6 +228,7 @@ const StoreCategories = () => {
               displaySettings={displaySettings}
               isMobile={isMobile}
               onClearFilters={clearFilters}
+              isLoading={isLoading}
             />
 
             {/* Pagination */}
