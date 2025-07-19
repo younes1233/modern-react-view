@@ -25,22 +25,14 @@ export const useProductDetail = (
       console.log('useProductDetail: API response:', response);
       return response;
     },
-    enabled: !!productId && productId !== ':id',
+    enabled: !!productId,
     select: (data) => {
       console.log('useProductDetail: Selecting data:', data);
-      // Handle the API response structure: { error: false, message: "...", details: { product: {...} } }
+      // The API response structure is: { error: false, message: "...", details: { product: {...} } }
       if (data && data.details && data.details.product) {
         return data.details.product;
       }
-      // Fallback for direct product response
-      if (data && data.product) {
-        return data.product;
-      }
       return null;
-    },
-    retry: (failureCount, error) => {
-      console.error('Product fetch error:', error);
-      return failureCount < 2; // Only retry twice
     }
   });
 };
