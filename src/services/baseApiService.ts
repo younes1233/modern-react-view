@@ -7,23 +7,25 @@ export interface ApiResponse<T = any> {
 
 class BaseApiService {
   protected baseURL = 'https://meemhome.com/api';
-  private token: string | null = null;
+  private static token: string | null = null;
   private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
 
   constructor() {
-    // Get token from localStorage on initialization
-    this.token = localStorage.getItem('auth_token');
+    // Get token from localStorage on initialization if not already loaded
+    if (!BaseApiService.token) {
+      BaseApiService.token = localStorage.getItem('auth_token');
+    }
   }
 
   // Set authentication token - make it public so child classes can access it
   setToken(token: string) {
-    this.token = token;
+    BaseApiService.token = token;
     localStorage.setItem('auth_token', token);
   }
 
   // Remove authentication token - make it public so child classes can access it
   removeToken() {
-    this.token = null;
+    BaseApiService.token = null;
     localStorage.removeItem('auth_token');
   }
 
@@ -39,7 +41,7 @@ class BaseApiService {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
         'X-API-SECRET': this.apiSecret,
-        ...(this.token && { Authorization: `Bearer ${this.token}` }),
+        ...(BaseApiService.token && { Authorization: `Bearer ${BaseApiService.token}` }),
         ...options.headers,
       },
       ...options,
@@ -92,12 +94,12 @@ class BaseApiService {
 
   // Get current token
   getToken(): string | null {
-    return this.token;
+    return BaseApiService.token;
   }
 
   // Check if user is authenticated
   isAuthenticated(): boolean {
-    return !!this.token;
+    return !!BaseApiService.token;
   }
 }
 
