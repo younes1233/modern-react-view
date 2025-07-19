@@ -178,16 +178,24 @@ export const useDeleteProduct = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (id: number) => adminProductService.deleteProduct(id),
-    onSuccess: (data) => {
+    mutationFn: (id: number) => {
+      console.log('useDeleteProduct: Calling delete for product ID:', id);
+      return adminProductService.deleteProduct(id);
+    },
+    onSuccess: (data, variables) => {
+      console.log('useDeleteProduct: Delete successful:', data);
+      
+      // Invalidate and refetch products
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      
+      // Show success toast
       toast({
         title: "Success",
-        description: data.message || "Product deleted successfully"
+        description: data.message || `Product deleted successfully`
       });
     },
-    onError: (error: Error) => {
-      console.error('Delete product error:', error);
+    onError: (error: Error, variables) => {
+      console.error('useDeleteProduct: Delete failed:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to delete product",
