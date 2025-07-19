@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
@@ -140,6 +139,7 @@ const ProductDetail = () => {
     const cartProduct = {
       id: product.id,
       name: product.name,
+      slug: product.slug,
       price: currentPrice,
       originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
       image: product.media.cover_image.image,
@@ -166,6 +166,7 @@ const ProductDetail = () => {
     const wishlistProduct = {
       id: product.id,
       name: product.name,
+      slug: product.slug,
       price: currentPrice,
       originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
       image: product.media.cover_image.image,
