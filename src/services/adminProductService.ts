@@ -354,13 +354,6 @@ class AdminProductService extends BaseApiService {
         }
       };
 
-      return {
-        error: false,
-        message: "Product created successfully",
-        details: {
-          product: mockProduct
-        }
-      };
     }
   }
 
@@ -386,33 +379,30 @@ class AdminProductService extends BaseApiService {
     } catch (error: any) {
       console.log('Simulating product update due to API unavailability');
       
-      const mockProduct: AdminProductAPI = {
-        id: id,
-        name: productData.name || 'Updated Product',
-        slug: productData.slug || 'updated-product',
-        sku: productData.sku || 'UPD-001',
-        status: productData.status || 'active',
-        has_variants: productData.has_variants || false,
-        category_id: productData.category_id || 1,
-        short_description: productData.short_description,
-        long_description: productData.long_description,
-        is_seller_product: productData.is_seller_product,
-        is_on_sale: productData.is_on_sale,
-        is_featured: productData.is_featured,
-        is_new_arrival: productData.is_new_arrival,
-        store_id: productData.store_id,
-        product_prices: productData.product_prices,
-        specifications: productData.specifications,
-        variants: productData.variants
-      };
-
       return {
         error: false,
-        message: "Product updated successfully",
+        message: "Product updated successfully (mock)",
         details: {
-          product: mockProduct
+          product: {
+            id: id,
+            name: productData.name || 'Updated Product',
+            slug: productData.slug || 'updated-product',
+            description: productData.description || '',
+            status: productData.status || 'active',
+            variants: [],
+            pricing: [],
+            flags: {
+              on_sale: productData.is_on_sale || false,
+              is_featured: productData.is_featured || false,
+              is_new_arrival: productData.is_new_arrival || false,
+              is_best_seller: false,
+              is_vat_exempt: false,
+              seller_product_status: 'draft'
+            }
+          } as AdminProductAPI
         }
       };
+
     }
   }
 

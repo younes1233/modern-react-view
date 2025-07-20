@@ -94,7 +94,16 @@ export default function Products() {
       product.variants?.length > 0 ? 'Yes' : 'No',
     ]);
 
-    const headers = ['ID', 'Name', 'SKU', 'Status', 'Category', 'Store', 'Has Variants'];
+    const headers = [
+      { header: 'ID', dataKey: 'id' },
+      { header: 'Name', dataKey: 'name' },
+      { header: 'SKU', dataKey: 'sku' },
+      { header: 'Status', dataKey: 'status' },
+      { header: 'Category', dataKey: 'category' },
+      { header: 'Store', dataKey: 'store' },
+      { header: 'Has Variants', dataKey: 'hasVariants' }
+    ];
+
     exportToPDF(exportData, 'products', 'Products Report', headers);
   };
 
@@ -552,7 +561,7 @@ export default function Products() {
       <MassUploadModal
         isOpen={isMassUploadModalOpen}
         onClose={() => setIsMassUploadModalOpen(false)}
-        onComplete={handleMassUploadComplete}
+        onUploadComplete={handleMassUploadComplete}
         type="products"
       />
     </SidebarProvider>
