@@ -67,7 +67,8 @@ const Categories = () => {
         status: statusFilter === "all" ? undefined : statusFilter as "active" | "inactive"
       };
       
-      const response = await categoryService.getCategoryTree();
+      // Use getCategories instead of getCategoryTree to get all categories
+      const response = await categoryService.getCategories();
       if (!response.error) {
         // Ensure we always set an array, regardless of API response structure
         let categoriesData: Category[] = [];

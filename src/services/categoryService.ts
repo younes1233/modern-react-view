@@ -33,6 +33,14 @@ export interface CategoryFilters {
 }
 
 class CategoryService extends BaseApiService {
+  constructor() {
+    super();
+    // Ensure token is loaded from localStorage if available
+    const token = localStorage.getItem('auth_token');
+    if (token && !this.getToken()) {
+      this.setToken(token);
+    }
+  }
   
   // Get all categories with hierarchy
   async getCategories(filters: CategoryFilters = {}): Promise<ApiResponse<Category[]>> {

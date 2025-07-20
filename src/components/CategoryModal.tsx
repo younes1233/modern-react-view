@@ -116,21 +116,49 @@ export function CategoryModal({
 
   // Get root categories for parent selection (exclude current category and its descendants)
   const getAvailableParentCategories = () => {
+    // Flatten categories to get all categories including nested ones
+    const flattenCategories = (cats: Category[]): Category[] => {
+      const result: Category[] = [];
+      cats.forEach(cat => {
+        result.push(cat);
+        if (cat.children) {
+          result.push(...flattenCategories(cat.children));
+        }
+      });
+      return result;
+    };
+
+    const allCategories = flattenCategories(categories);
+    
     if (mode === 'edit' && category?.id) {
       // When editing, exclude the current category and its descendants to prevent circular references
-      return categories.filter(cat => 
+      return allCategories.filter(cat => 
         cat.id !== category.id && 
-        !isDescendantOf(cat, category.id) &&
-        !cat.parent_id // Only root categories can be parents for now, or implement level limits
+        cat.id !== undefined && // Ensure ID exists
+        !isDescendantOf(cat, category.id)
       );
     }
-    // When adding, show all root categories
-    return categories.filter(cat => !cat.parent_id);
+    // When adding, show all categories that have valid IDs
+    return allCategories.filter(cat => cat.id !== undefined);
   };
 
   const isDescendantOf = (category: Category, ancestorId: number): boolean => {
     if (category.parent_id === ancestorId) return true;
-    const parent = categories.find(cat => cat.id === category.parent_id);
+    
+    // Flatten categories to search through all levels
+    const flattenCategories = (cats: Category[]): Category[] => {
+      const result: Category[] = [];
+      cats.forEach(cat => {
+        result.push(cat);
+        if (cat.children) {
+          result.push(...flattenCategories(cat.children));
+        }
+      });
+      return result;
+    };
+    
+    const allCategories = flattenCategories(categories);
+    const parent = allCategories.find(cat => cat.id === category.parent_id);
     return parent ? isDescendantOf(parent, ancestorId) : false;
   };
 
@@ -284,11 +312,13 @@ export function CategoryModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No Parent (Root Category)</SelectItem>
-                {parentCategories.map((cat) => (
-                  <SelectItem key={cat.id} value={cat.id!.toString()}>
-                    {cat.name}
-                  </SelectItem>
-                ))}
+                {parentCategories
+                  .filter(cat => cat.id !== undefined)
+                  .map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id!.toString()}>
+                      {cat.level && cat.level > 0 ? `${' '.repeat(cat.level * 2)}└ ${cat.name}` : cat.name}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             {formData.parent_id && (
