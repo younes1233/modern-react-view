@@ -12,6 +12,7 @@ import { Search } from "lucide-react";
 import { ProductListingAPI, CreateProductListingRequest, UpdateProductListingRequest } from "@/services/productListingService";
 import { useQuery } from "@tanstack/react-query";
 import { productService, ProductAPI } from "@/services/productService";
+import { useFlatCategories } from "@/hooks/useCategories";
 
 interface ProductListingModalProps {
   isOpen: boolean;
@@ -32,6 +33,9 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     is_active: true
   });
   const [searchTerm, setSearchTerm] = useState('');
+
+  // Fetch categories from API
+  const { data: categories = [], isLoading: isLoadingCategories } = useFlatCategories();
 
   // Fetch products from API
   const { data: productsResponse, isLoading: isLoadingProducts } = useQuery({
@@ -118,12 +122,6 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     }
   };
 
-  const categories = [
-    { value: 1, label: 'Electronics' },
-    { value: 2, label: 'Furniture' },
-    { value: 3, label: 'Fashion' },
-    { value: 4, label: 'Home & Tools' }
-  ];
 
   const getFilteredProducts = () => {
     // Products are already filtered by the API search
@@ -187,11 +185,15 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.value} value={category.value.toString()}>
-                      {category.label}
-                    </SelectItem>
-                  ))}
+                  {isLoadingCategories ? (
+                    <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                  ) : (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id.toString()}>
+                        {category.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
