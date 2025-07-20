@@ -312,7 +312,7 @@ class AdminProductService extends BaseApiService {
     console.log('Creating product:', productData);
     
     try {
-      const endpoints = ['/admins/products', '/products', '/admin/products'];
+      const endpoints = ['/admin/products'];
       
       for (const endpoint of endpoints) {
         try {
@@ -362,7 +362,7 @@ class AdminProductService extends BaseApiService {
     console.log('Updating product:', id, productData);
     
     try {
-      const endpoints = [`/admins/products/${id}`, `/products/${id}`, `/admin/products/${id}`];
+      const endpoints = [`/admin/products/${id}`];
       
       for (const endpoint of endpoints) {
         try {
@@ -411,7 +411,7 @@ class AdminProductService extends BaseApiService {
     console.log('Deleting product with ID:', id);
     
     try {
-      const endpoints = [`/admins/products/${id}`, `/products/${id}`, `/admin/products/${id}`];
+      const endpoints = [`/admin/products/${id}`];
       
       for (const endpoint of endpoints) {
         try {
