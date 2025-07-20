@@ -251,17 +251,13 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categoriesLoading ? (
-                        <SelectItem value="" disabled>Loading categories...</SelectItem>
-                      ) : categories.length > 0 ? (
+                      {!categoriesLoading && categories.length > 0 ? (
                         categories.map((category) => (
                           <SelectItem key={category.id} value={category.name}>
                             {category.name}
                           </SelectItem>
                         ))
-                      ) : (
-                        <SelectItem value="" disabled>No categories available</SelectItem>
-                      )}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>
