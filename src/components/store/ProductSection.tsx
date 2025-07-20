@@ -66,7 +66,8 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
     error
   });
 
-  const apiProducts = listingData?.products || [];
+  // Ensure apiProducts is always an array, even if API call fails
+  const apiProducts = Array.isArray(listingData?.products) ? listingData.products : [];
   const products = apiProducts.map(convertAPIProductToLegacy);
 
   if (!listing.isActive) {
