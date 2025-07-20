@@ -36,16 +36,37 @@ class BaseApiService {
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
-    const config: RequestInit = {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'X-API-SECRET': this.apiSecret,
-        ...(BaseApiService.token && { Authorization: `Bearer ${BaseApiService.token}` }),
-        ...options.headers,
-      },
-      ...options,
+    // Build headers with required API secret and optional Bearer token
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'X-API-SECRET': this.apiSecret,
     };
+
+    // Add Bearer token if available
+    if (BaseApiService.token) {
+      headers['Authorization'] = `Bearer ${BaseApiService.token}`;
+    }
+
+    // Merge with any additional headers
+    if (options.headers) {
+      Object.assign(headers, options.headers);
+    }
+    
+    const config: RequestInit = {
+      ...options,
+      headers,
+    };
+
+    console.log('API Request:', {
+      method: config.method || 'GET',
+      url,
+      headers: {
+        ...headers,
+        'X-API-SECRET': '[HIDDEN]', // Don't log the actual secret
+        'Authorization': BaseApiService.token ? '[HIDDEN]' : 'Not set'
+      }
+    });
 
     try {
       const response = await fetch(url, config);

@@ -1,4 +1,3 @@
-
 import BaseApiService, { ApiResponse } from './baseApiService';
 
 export interface Category {
@@ -14,6 +13,7 @@ export interface Category {
   level?: number;
   products?: number;
   revenue?: number;
+  isExpanded?: boolean;
 }
 
 export interface CategoryFilters {

@@ -129,11 +129,11 @@ const Categories = () => {
   const handleAddSubcategory = (parentCategory: Category) => {
     setModalMode('add');
     setSelectedCategory({
-      ...parentCategory,
-      parentId: parentCategory.id,
       name: '',
       description: '',
-      level: (parentCategory.level || 0) + 1
+      parentId: parentCategory.id,
+      level: (parentCategory.level || 0) + 1,
+      status: 'active'
     } as Category);
     setIsAddDialogOpen(true);
   };
@@ -152,7 +152,7 @@ const Categories = () => {
           title: "Success",
           description: "Category deleted successfully",
         });
-        loadCategories(); // Reload categories
+        loadCategories();
       } else {
         toast({
           title: "Error",
@@ -185,7 +185,7 @@ const Categories = () => {
           title: "Success",
           description: `Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`
         });
-        loadCategories(); // Reload categories
+        loadCategories();
       } else {
         toast({
           title: "Error",
