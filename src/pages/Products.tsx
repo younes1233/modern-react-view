@@ -1,64 +1,49 @@
+import React, { useState } from 'react';
+import { useAdminProducts, useDeleteProduct, useCreateProduct, useUpdateProduct } from '@/hooks/useAdminProducts';
+import { AdminProductAPI, CreateProductData } from '@/services/adminProductService';
+import { toast } from 'sonner';
+import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
+import { AppSidebar } from '@/components/dashboard/AppSidebar';
+import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AdminProductModal } from '@/components/AdminProductModal';
+import { MassUploadModal } from '@/components/MassUploadModal';
+import { Plus, MoreHorizontal, Edit, Trash, Upload, Search, Filter, Download, Package, TrendingUp, AlertTriangle } from 'lucide-react';
+import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 
-import { useState } from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/dashboard/AppSidebar";
-import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
-import { ExportButton } from "@/components/ui/export-button";
-import { AdminProductModal } from "@/components/AdminProductModal";
-import { MassUploadModal } from "@/components/MassUploadModal";
-import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye, Upload } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { exportToExcel, exportToPDF } from "@/utils/exportUtils";
-import { useAdminProducts, useDeleteProduct, useCreateProduct, useUpdateProduct } from "@/hooks/useAdminProducts";
-import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-
-const statusOptions = [
-  { value: "active", label: "Active" },
-  { value: "inactive", label: "Inactive" },
-  { value: "draft", label: "Draft" },
-];
-
-const Products = () => {
+export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [selectedProduct, setSelectedProduct] = useState<AdminProductAPI | null>(null);
-  const [isMassUploadOpen, setIsMassUploadOpen] = useState(false);
-  const { toast } = useToast();
+  const [isMassUploadModalOpen, setIsMassUploadModalOpen] = useState(false);
+
+  // Fetch products data
+  const { data: productsData, isLoading, error, refetch } = useAdminProducts({
+    q: searchQuery || undefined,
+    status: statusFilter as any || undefined,
+    page: currentPage,
+    limit: 25,
+  });
 
   // Mutations
   const deleteProductMutation = useDeleteProduct();
   const createProductMutation = useCreateProduct();
   const updateProductMutation = useUpdateProduct();
 
-  // Use the admin products API
-  const { data: productsData, isLoading, error } = useAdminProducts({
-    q: searchQuery || undefined,
-    status: statusFilter as 'active' | 'inactive' | 'draft' || undefined,
-    page: currentPage,
-    limit: 25
-  });
-
-  const products = Array.isArray(productsData?.products) ? productsData.products : [];
+  const products = productsData?.products || [];
   const pagination = productsData?.pagination;
 
+  // Event handlers
   const handleSearch = (term: string) => {
     setSearchQuery(term);
     setCurrentPage(1);
@@ -70,68 +55,62 @@ const Products = () => {
   };
 
   const handleExportExcel = () => {
-    const exportData = products.map(product => {
-      const basePrice = product.product_prices?.[0]?.net_price || 0;
-      return {
-        'Name': product.name,
-        'SKU': product.sku,
-        'Slug': product.slug,
-        'Status': product.status,
-        'Short Description': product.short_description || '',
-        'Long Description': product.long_description || '',
-        'Category ID': product.category_id || '',
-        'Store ID': product.store_id || '',
-        'Base Price': basePrice,
-        'Has Variants': product.has_variants ? 'true' : 'false',
-        'Is Featured': product.is_featured ? 'true' : 'false',
-        'Is On Sale': product.is_on_sale ? 'true' : 'false',
-        'Is New Arrival': product.is_new_arrival ? 'true' : 'false',
-        'Is Seller Product': product.is_seller_product ? 'true' : 'false',
-        'Cover Image': product.cover_image || '',
-        'Available Countries': product.variants?.[0]?.available_countries?.join(',') || '',
-        'Specifications': product.specifications?.map(s => `${s.name}:${s.value}`).join(';') || ''
-      };
-    });
-    
-    exportToExcel(exportData, 'admin-products-export', 'Admin Products');
-    toast({
-      title: "Export Successful",
-      description: "Products data has been exported to Excel file"
-    });
+    if (products.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
+
+    const exportData = products.map((product) => ({
+      ID: product.id,
+      Name: product.name,
+      SKU: product.identifiers?.sku || 'N/A',
+      Status: product.status,
+      Category: product.category?.name || 'N/A',
+      Store: product.store?.store_name || 'N/A',
+      'Has Variants': product.variants?.length > 0 ? 'Yes' : 'No',
+      'On Sale': product.flags?.on_sale ? 'Yes' : 'No',
+      Featured: product.flags?.is_featured ? 'Yes' : 'No',
+      'New Arrival': product.flags?.is_new_arrival ? 'Yes' : 'No',
+      'Seller Product': product.flags?.seller_product_status || 'N/A',
+      'Created At': new Date(product.meta?.created_at || Date.now()).toLocaleDateString(),
+    }));
+
+    exportToExcel(exportData, 'products');
   };
 
   const handleExportPDF = () => {
-    const exportData = products.map(product => ({
-      name: product.name,
-      sku: product.sku,
-      status: product.status,
-      price: product.product_prices?.[0]?.net_price?.toString() || '0',
-      type: product.has_variants ? 'Variable' : 'Simple',
-      featured: product.is_featured ? 'Yes' : 'No',
-      sale: product.is_on_sale ? 'Yes' : 'No'
-    }));
+    if (products.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
 
-    const columns = [
-      { header: 'Product Name', dataKey: 'name' },
-      { header: 'SKU', dataKey: 'sku' },
-      { header: 'Status', dataKey: 'status' },
-      { header: 'Price', dataKey: 'price' },
-      { header: 'Type', dataKey: 'type' },
-      { header: 'Featured', dataKey: 'featured' },
-      { header: 'On Sale', dataKey: 'sale' }
-    ];
+    const exportData = products.map((product) => [
+      product.id.toString(),
+      product.name,
+      product.identifiers?.sku || 'N/A',
+      product.status,
+      product.category?.name || 'N/A',
+      product.store?.store_name || 'N/A',
+      product.variants?.length > 0 ? 'Yes' : 'No',
+    ]);
 
-    exportToPDF(exportData, 'admin-products-export', 'Products Report', columns);
-    toast({
-      title: "Export Successful",
-      description: "Products data has been exported to PDF file"
-    });
+    const headers = ['ID', 'Name', 'SKU', 'Status', 'Category', 'Store', 'Has Variants'];
+    exportToPDF(exportData, 'products', 'Products Report', headers);
   };
 
   const handleDeleteProduct = (productId: number) => {
-    deleteProductMutation.mutate(productId);
+    deleteProductMutation.mutate(productId, {
+      onSuccess: () => {
+        toast.success('Product deleted successfully');
+        refetch();
+      },
+      onError: (error: any) => {
+        toast.error(error.message || 'Failed to delete product');
+      },
+    });
   };
 
+  // Modal handlers
   const handleAddProduct = () => {
     setSelectedProduct(null);
     setModalMode('add');
@@ -146,155 +125,147 @@ const Products = () => {
 
   const handleSaveProduct = (productData: CreateProductData) => {
     if (modalMode === 'add') {
-      createProductMutation.mutate(productData);
-    } else if (selectedProduct) {
-      updateProductMutation.mutate({
-        id: selectedProduct.id,
-        data: productData
+      createProductMutation.mutate(productData, {
+        onSuccess: () => {
+          toast.success('Product created successfully');
+          setIsModalOpen(false);
+          refetch();
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to create product');
+        },
       });
+    } else if (modalMode === 'edit' && selectedProduct) {
+      updateProductMutation.mutate(
+        { id: selectedProduct.id, data: productData },
+        {
+          onSuccess: () => {
+            toast.success('Product updated successfully');
+            setIsModalOpen(false);
+            refetch();
+          },
+          onError: (error: any) => {
+            toast.error(error.message || 'Failed to update product');
+          },
+        }
+      );
     }
-    setIsModalOpen(false);
   };
 
   const handleMassUpload = () => {
-    setIsMassUploadOpen(true);
+    setIsMassUploadModalOpen(true);
   };
 
   const handleMassUploadComplete = async (data: any[]) => {
     try {
-      // Process each product in the uploaded data
-      const promises = data.map(async (productData) => {
-        const createData: CreateProductData = {
-          name: productData.name,
-          slug: productData.slug || productData.name.toLowerCase().replace(/\s+/g, '-'),
-          sku: productData.sku,
-          short_description: productData.short_description || '',
-          long_description: productData.long_description || '',
-          status: productData.status || 'draft',
-          category_id: parseInt(productData.category_id) || 1,
-          store_id: productData.store_id ? parseInt(productData.store_id) : undefined,
-          has_variants: productData.has_variants === 'true' || productData.has_variants === true,
-          is_featured: productData.is_featured === 'true' || productData.is_featured === true,
-          is_on_sale: productData.is_on_sale === 'true' || productData.is_on_sale === true,
-          is_new_arrival: productData.is_new_arrival === 'true' || productData.is_new_arrival === true,
-          is_seller_product: productData.is_seller_product === 'true' || productData.is_seller_product === true,
-          available_countries: productData.available_countries ? 
-            productData.available_countries.split(',').map((id: string) => parseInt(id.trim())) : 
-            [1], // Default to country ID 1
-          product_prices: productData.base_price ? [{
-            country_id: 1,
-            net_price: parseFloat(productData.base_price),
-            cost: parseFloat(productData.cost || productData.base_price) * 0.7, // 70% of price as cost
-            vat_percentage: parseFloat(productData.vat_percentage || '20')
-          }] : undefined,
-          specifications: productData.specifications ? 
-            productData.specifications.split(';').map((spec: string) => {
-              const [name, value] = spec.split(':');
-              return { name: name?.trim() || '', value: value?.trim() || '' };
-            }).filter((spec: any) => spec.name && spec.value) : 
-            undefined
-        };
-
-        return createProductMutation.mutateAsync(createData);
-      });
+      const promises = data.map((item) =>
+        createProductMutation.mutateAsync({
+          name: item.name,
+          slug: item.slug || item.name.toLowerCase().replace(/\s+/g, '-'),
+          sku: item.sku,
+          description: item.description || '',
+          status: item.status || 'active',
+          category_id: parseInt(item.category_id),
+          has_variants: Boolean(item.has_variants),
+          is_seller_product: Boolean(item.is_seller_product),
+          is_on_sale: Boolean(item.is_on_sale),
+          is_featured: Boolean(item.is_featured),
+          is_new_arrival: Boolean(item.is_new_arrival),
+        })
+      );
 
       await Promise.all(promises);
-      
-      toast({
-        title: "Mass Upload Successful",
-        description: `Successfully uploaded ${data.length} products`
-      });
-      setIsMassUploadOpen(false);
-    } catch (error) {
-      console.error('Mass upload error:', error);
-      toast({
-        title: "Upload Error",
-        description: "Some products failed to upload. Please check the data and try again.",
-        variant: "destructive"
-      });
+      toast.success(`Successfully uploaded ${data.length} products`);
+      setIsMassUploadModalOpen(false);
+      refetch();
+    } catch (error: any) {
+      toast.error('Failed to upload some products');
     }
   };
 
+  // Utility functions
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "active":
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">Active</Badge>;
-      case "inactive":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Inactive</Badge>;
-      case "draft":
-        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Draft</Badge>;
-      default:
-        return <Badge variant="secondary">Unknown</Badge>;
-    }
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      active: 'default',
+      inactive: 'secondary',
+      draft: 'outline',
+    };
+
+    return (
+      <Badge variant={variants[status] || 'outline'}>
+        {status}
+      </Badge>
+    );
   };
+
+  const getSellerStatusBadge = (status: string) => {
+    const variants: Record<string, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      approved: 'default',
+      pending: 'secondary',
+      rejected: 'destructive',
+      draft: 'outline',
+    };
+
+    return (
+      <Badge variant={variants[status] || 'outline'}>
+        {status}
+      </Badge>
+    );
+  };
+
+  if (error) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <AppSidebar />
+          <div className="flex-1">
+            <DashboardHeader />
+            <div className="flex items-center justify-center h-screen">
+              <div className="text-center">
+                <p className="text-lg font-semibold text-red-600">Error loading products</p>
+                <p className="text-gray-600">{error.message}</p>
+                <Button onClick={() => refetch()} className="mt-4">
+                  Try Again
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   const activeProducts = products.filter(p => p.status === "active").length;
   const inactiveProducts = products.filter(p => p.status === "inactive").length;
   const draftProducts = products.filter(p => p.status === "draft").length;
 
-  if (isLoading) {
-    return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-          <AppSidebar />
-          <main className="flex-1 flex flex-col overflow-hidden">
-            <DashboardHeader />
-            <div className="flex-1 overflow-auto p-4 lg:p-6 space-y-6">
-              <div className="flex items-center justify-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-                <p className="ml-4 text-gray-600">Loading products...</p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    );
-  }
-
-  if (error) {
-    return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
-          <AppSidebar />
-          <main className="flex-1 flex flex-col overflow-hidden">
-            <DashboardHeader />
-            <div className="flex-1 overflow-auto p-4 lg:p-6 space-y-6">
-              <div className="flex items-center justify-center py-12">
-                <p className="text-red-600">Error loading products: {error.message}</p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
-    );
-  }
-
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+      <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1">
           <DashboardHeader />
-          <div className="flex-1 overflow-auto p-4 lg:p-6 space-y-6">
-            <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center gap-4">
+          <div className="flex-1 space-y-4 p-4 md:p-8">
+            <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">Products</h1>
-                <p className="text-gray-600 dark:text-gray-400">Manage your product inventory</p>
+                <h1 className="text-3xl font-bold tracking-tight">Products</h1>
+                <p className="text-muted-foreground">Manage your product inventory</p>
               </div>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={handleMassUpload}
-                  variant="outline"
-                  className="gap-2"
-                >
-                  <Upload className="w-4 h-4" />
+              <div className="flex items-center space-x-2">
+                <Button variant="outline" onClick={handleExportExcel}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export Excel
+                </Button>
+                <Button variant="outline" onClick={handleExportPDF}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Export PDF
+                </Button>
+                <Button variant="outline" onClick={handleMassUpload}>
+                  <Upload className="h-4 w-4 mr-2" />
                   Mass Upload
                 </Button>
-                <Button 
-                  onClick={handleAddProduct}
-                  className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200"
-                >
-                  <Plus className="w-4 h-4" />
+                <Button onClick={handleAddProduct}>
+                  <Plus className="h-4 w-4 mr-2" />
                   Add Product
                 </Button>
               </div>
@@ -351,133 +322,212 @@ const Products = () => {
               </Card>
             </div>
 
-            {/* Advanced Filters */}
-            <AdvancedFilterBar
-              searchPlaceholder="Search products by name, SKU..."
-              statusOptions={statusOptions}
-              onSearch={handleSearch}
-              onStatusFilter={handleStatusFilter}
-              onExportExcel={handleExportExcel}
-              showStatusFilter
-              showExcelExport={false}
-              exportLabel="Export"
-              exportButton={<ExportButton onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} />}
-            />
-
-            {/* Products Table */}
-            <Card className="shadow-lg border-0">
-              <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700 border-b">
-                <CardTitle className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                  Product List ({products.length})
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Filter className="h-5 w-5 mr-2" />
+                  Filters
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 dark:bg-gray-800 border-b">
-                      <tr className="text-left">
-                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Product</th>
-                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300 hidden lg:table-cell">SKU</th>
-                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300 hidden sm:table-cell">Type</th>
-                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Flags</th>
-                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {products.map((product: AdminProductAPI) => (
-                        <tr key={product.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="relative">
-                                <img 
-                                  src={product.cover_image || "/placeholder.svg"} 
-                                  alt={product.name} 
-                                  className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
-                                />
-                              </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-gray-900 dark:text-gray-100">{product.name}</span>
-                                </div>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 lg:hidden">SKU: {product.sku}</p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="p-4 text-gray-600 dark:text-gray-400 hidden lg:table-cell">{product.sku}</td>
-                          <td className="p-4">{getStatusBadge(product.status)}</td>
-                          <td className="p-4 text-gray-600 dark:text-gray-400 hidden sm:table-cell">
-                            {product.has_variants ? 'Variable' : 'Simple'}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-1 flex-wrap">
-                              {product.is_featured && <Badge className="bg-blue-100 text-blue-800 text-xs">Featured</Badge>}
-                              {product.is_on_sale && <Badge className="bg-green-100 text-green-800 text-xs">Sale</Badge>}
-                              {product.is_new_arrival && <Badge className="bg-purple-100 text-purple-800 text-xs">New</Badge>}
-                              {product.is_seller_product && <Badge className="bg-orange-100 text-orange-800 text-xs">Seller</Badge>}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex gap-1">
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                onClick={() => handleEditProduct(product)}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                              <Button variant="ghost" size="sm">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Delete Product</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to delete "{product.name}"? This action cannot be undone.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>
-                                      Delete
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              <CardContent>
+                <div className="flex space-x-4">
+                  <div className="flex-1">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search products..."
+                        value={searchQuery}
+                        onChange={(e) => handleSearch(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
+                  <Select value={statusFilter} onValueChange={handleStatusFilter}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="draft">Draft</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Products Table */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Products ({pagination?.total || 0})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-32">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <div className="rounded-md border">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Image</TableHead>
+                          <TableHead>Product</TableHead>
+                          <TableHead>SKU</TableHead>
+                          <TableHead>Category</TableHead>
+                          <TableHead>Store</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Seller Status</TableHead>
+                          <TableHead>Variants</TableHead>
+                          <TableHead>Pricing</TableHead>
+                          <TableHead>Flags</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {products.map((product) => (
+                          <TableRow key={product.id}>
+                            <TableCell>
+                              {product.media?.cover_image ? (
+                                <img
+                                  src={product.media.cover_image.image}
+                                  alt={product.media.cover_image.alt_text}
+                                  className="h-12 w-12 rounded-md object-cover"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                                  <span className="text-xs text-muted-foreground">No image</span>
+                                </div>
+                              )}
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{product.name}</div>
+                                <div className="text-sm text-muted-foreground truncate max-w-xs">
+                                  {product.description}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell className="font-mono text-sm">
+                              {product.identifiers?.sku || 'N/A'}
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {product.category?.path?.map((cat, index) => (
+                                  <span key={cat.id}>
+                                    {index > 0 && ' > '}
+                                    {cat.name}
+                                  </span>
+                                )) || product.category?.name || 'N/A'}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div>
+                                <div className="font-medium">{product.store?.store_name || 'N/A'}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {product.store?.store_type || 'N/A'}
+                                </div>
+                              </div>
+                            </TableCell>
+                            <TableCell>{getStatusBadge(product.status)}</TableCell>
+                            <TableCell>
+                              {getSellerStatusBadge(product.flags?.seller_product_status || 'N/A')}
+                            </TableCell>
+                            <TableCell>
+                              <Badge variant="outline">
+                                {product.variants?.length || 0} variants
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="text-sm">
+                                {product.pricing && product.pricing.length > 0 && (
+                                  <div>
+                                    {product.pricing[0].currency.symbol}
+                                    {product.pricing[0].net_price}
+                                    {product.pricing.length > 1 && (
+                                      <span className="text-muted-foreground"> +{product.pricing.length - 1} more</span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex flex-wrap gap-1">
+                                {product.flags?.on_sale && <Badge variant="secondary" className="text-xs">Sale</Badge>}
+                                {product.flags?.is_featured && <Badge variant="default" className="text-xs">Featured</Badge>}
+                                {product.flags?.is_new_arrival && <Badge variant="outline" className="text-xs">New</Badge>}
+                                {product.flags?.is_best_seller && <Badge variant="destructive" className="text-xs">Bestseller</Badge>}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem onClick={() => handleEditProduct(product)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <AlertDialog>
+                                    <AlertDialogTrigger asChild>
+                                      <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                        <Trash className="h-4 w-4 mr-2" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    <AlertDialogContent>
+                                      <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                          This action cannot be undone. This will permanently delete the product.
+                                        </AlertDialogDescription>
+                                      </AlertDialogHeader>
+                                      <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => handleDeleteProduct(product.id)}>
+                                          Delete
+                                        </AlertDialogAction>
+                                      </AlertDialogFooter>
+                                    </AlertDialogContent>
+                                  </AlertDialog>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
 
                 {/* Pagination */}
-                {pagination && pagination.last_page > 1 && (
-                  <div className="flex items-center justify-between px-4 py-3 border-t">
-                    <div className="text-sm text-gray-500">
-                      Showing {((pagination.current_page - 1) * pagination.per_page) + 1} to {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of {pagination.total} results
+                {pagination && pagination.total > 0 && (
+                  <div className="flex items-center justify-between space-x-2 py-4">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {((pagination.current_page - 1) * pagination.per_page) + 1} to {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of {pagination.total} products
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex items-center space-x-2">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setCurrentPage(pagination.current_page - 1)}
-                        disabled={pagination.current_page <= 1}
+                        disabled={pagination.current_page === 1}
                       >
                         Previous
                       </Button>
+                      <div className="text-sm">
+                        Page {pagination.current_page} of {pagination.last_page}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setCurrentPage(pagination.current_page + 1)}
-                        disabled={pagination.current_page >= pagination.last_page}
+                        disabled={pagination.current_page === pagination.last_page}
                       >
                         Next
                       </Button>
@@ -486,28 +536,25 @@ const Products = () => {
                 )}
               </CardContent>
             </Card>
-
-            {/* Product Modal */}
-            <AdminProductModal
-              isOpen={isModalOpen}
-              onClose={() => setIsModalOpen(false)}
-              onSave={handleSaveProduct}
-              product={selectedProduct}
-              mode={modalMode}
-            />
-
-            {/* Mass Upload Modal */}
-            <MassUploadModal
-              isOpen={isMassUploadOpen}
-              onClose={() => setIsMassUploadOpen(false)}
-              type="products"
-              onUploadComplete={handleMassUploadComplete}
-            />
           </div>
-        </main>
+        </div>
       </div>
+
+      {/* Modals */}
+      <AdminProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveProduct}
+        mode={modalMode}
+        product={selectedProduct}
+      />
+
+      <MassUploadModal
+        isOpen={isMassUploadModalOpen}
+        onClose={() => setIsMassUploadModalOpen(false)}
+        onComplete={handleMassUploadComplete}
+        type="products"
+      />
     </SidebarProvider>
   );
-};
-
-export default Products;
+}

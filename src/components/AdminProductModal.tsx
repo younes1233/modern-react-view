@@ -26,8 +26,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     name: '',
     slug: '',
     sku: '',
-    short_description: '',
-    long_description: '',
+    description: '',
     status: 'active',
     has_variants: false,
     category_id: 1,
@@ -47,28 +46,22 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       setFormData({
         name: product.name,
         slug: product.slug,
-        sku: product.sku,
-        short_description: product.short_description || '',
-        long_description: product.long_description || '',
+        sku: product.identifiers?.sku || '',
+        description: product.description || '',
         status: product.status,
-        has_variants: product.has_variants,
-        category_id: product.category_id || 1,
-        is_seller_product: product.is_seller_product || false,
-        is_on_sale: product.is_on_sale || false,
-        is_featured: product.is_featured || false,
-        is_new_arrival: product.is_new_arrival || false,
-        store_id: product.store_id,
-        product_prices: product.product_prices,
-        specifications: product.specifications,
-        variants: product.variants,
+        has_variants: product.variants?.length > 0,
+        category_id: product.category?.id || 1,
+        is_seller_product: product.flags?.seller_product_status === 'approved',
+        is_on_sale: product.flags?.on_sale || false,
+        is_featured: product.flags?.is_featured || false,
+        is_new_arrival: product.flags?.is_new_arrival || false,
       });
     } else {
       setFormData({
         name: '',
         slug: '',
         sku: '',
-        short_description: '',
-        long_description: '',
+        description: '',
         status: 'active',
         has_variants: false,
         category_id: 1,
@@ -186,23 +179,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           </div>
 
           <div>
-            <Label htmlFor="short_description">Short Description</Label>
+            <Label htmlFor="description">Description</Label>
             <Textarea
-              id="short_description"
-              value={formData.short_description}
-              onChange={(e) => updateField('short_description', e.target.value)}
-              placeholder="Brief product description"
-              rows={2}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="long_description">Long Description</Label>
-            <Textarea
-              id="long_description"
-              value={formData.long_description}
-              onChange={(e) => updateField('long_description', e.target.value)}
-              placeholder="Detailed product description"
+              id="description"
+              value={formData.description}
+              onChange={(e) => updateField('description', e.target.value)}
+              placeholder="Product description"
               rows={4}
             />
           </div>

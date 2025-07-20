@@ -69,12 +69,13 @@ export const useAdminProducts = (
       }
 
       let pagination = safeResponse.pagination;
-      if (data.details.pagination) {
+      if (data.details.products && typeof data.details.products === 'object' && 'total' in data.details.products) {
+        const productsData = data.details.products as any;
         pagination = {
-          total: data.details.pagination.total || 0,
-          current_page: data.details.pagination.current_page || 1,
-          per_page: data.details.pagination.per_page || 25,
-          last_page: data.details.pagination.last_page || 1
+          total: productsData.total || 0,
+          current_page: productsData.current_page || 1,
+          per_page: productsData.per_page || 25,
+          last_page: productsData.last_page || 1
         };
       }
 

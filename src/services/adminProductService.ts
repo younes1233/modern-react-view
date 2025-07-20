@@ -5,49 +5,170 @@ export interface AdminProductAPI {
   id: number;
   name: string;
   slug: string;
-  sku: string;
-  cover_image?: string;
+  description: string;
+  category: {
+    id: number;
+    name: string;
+    level: number;
+    slug: string;
+    path: Array<{
+      id: number;
+      name: string;
+      level: number;
+      slug: string;
+    }>;
+  };
+  store: {
+    id: number;
+    store_name: string;
+    slug: string;
+    description: string | null;
+    image: string | null;
+    store_type: string;
+    status: string;
+    working_hours: string;
+    contact: {
+      email: string;
+      phone: string;
+    };
+    legal: {
+      trn: string | null;
+    };
+    owner: {
+      id: number;
+      name: string | null;
+    };
+    average_rating: number;
+    created_at: string;
+    updated_at: string;
+  };
+  identifiers: {
+    sku: string;
+    barcode: string;
+    qr_code: string;
+    serial_number: string;
+  };
+  media: {
+    cover_image: {
+      id: number;
+      image: string;
+      alt_text: string;
+      is_cover: boolean;
+      order: number;
+      created_at: string;
+      updated_at: string;
+    } | null;
+    thumbnails: Array<{
+      id: number;
+      image: string;
+      alt_text: string;
+      is_cover: boolean;
+      order: number;
+      created_at: string;
+      updated_at: string;
+    }>;
+  };
   status: 'active' | 'inactive' | 'draft';
-  has_variants: boolean;
-  store_id?: number;
-  category_id?: number;
-  short_description?: string;
-  long_description?: string;
-  is_seller_product?: boolean;
-  is_on_sale?: boolean;
-  is_featured?: boolean;
-  is_new_arrival?: boolean;
-  product_prices?: Array<{
-    country_id: number;
-    net_price: number;
-    cost: number;
-    vat_percentage: number;
+  flags: {
+    on_sale: boolean;
+    is_featured: boolean;
+    is_new_arrival: boolean;
+    is_best_seller: boolean;
+    is_vat_exempt: boolean;
+    seller_product_status: string;
+  };
+  is_vat_exempt: boolean;
+  pricing: Array<{
+    id: number;
+    country: {
+      id: number;
+      name: string;
+      iso_code: string;
+    };
+    variant_id: number;
+    cost: string;
+    net_price: string;
+    vat_percentage: number | null;
+    currency: {
+      id: number;
+      code: string;
+      symbol: string;
+    };
+  }>;
+  variants: Array<{
+    id: number;
+    identifiers: {
+      sku: string;
+      barcode: string;
+      qr_code: string;
+      serial_number: string;
+    };
+    image: string;
+    status: string | null;
+    prices?: Array<{
+      id: number;
+      country: {
+        id: number;
+        name: string;
+        iso_code: string;
+      };
+      cost: string;
+      net_price: string;
+      vat_percentage: number | null;
+      currency: any;
+    }>;
+    stock?: Array<{
+      id: number;
+      warehouse_id: number;
+      warehouse_country_id: number;
+      stock: number;
+    }>;
+    variations: Array<{
+      attribute: string;
+      type: string;
+      value: string;
+      slug: string;
+      hex_color: string | null;
+      image: string | null;
+    }>;
+    created_at: string;
+    updated_at: string;
   }>;
   specifications?: Array<{
+    id: number;
+    product_id: number;
     name: string;
     value: string;
+    created_at: string;
+    updated_at: string;
   }>;
-  variants?: Array<{
-    id?: number;
-    name: string;
-    sku: string;
-    product_variant_prices?: Array<{
-      country_id: number;
-      net_price: number;
-      cost: number;
-      vat_percentage: number;
-    }>;
-    available_countries?: number[];
-  }>;
+  meta: {
+    seo_title: string;
+    seo_description: string;
+    created_at: string;
+    updated_at: string;
+  };
 }
 
 export interface AdminProductsResponse {
-  products: AdminProductAPI[];
-  pagination: {
-    total: number;
+  products: {
     current_page: number;
-    per_page: number;
+    data: AdminProductAPI[];
+    first_page_url: string;
+    from: number;
     last_page: number;
+    last_page_url: string;
+    links: Array<{
+      url: string | null;
+      label: string;
+      active: boolean;
+    }>;
+    next_page_url: string | null;
+    path: string;
+    per_page: number;
+    prev_page_url: string | null;
+    to: number;
+    total: number;
   };
 }
 
@@ -55,38 +176,14 @@ export interface CreateProductData {
   name: string;
   slug: string;
   sku: string;
-  short_description?: string;
-  long_description?: string;
+  description?: string;
   status: 'active' | 'inactive' | 'draft';
   has_variants: boolean;
-  store_id?: number;
   category_id: number;
   is_seller_product?: boolean;
   is_on_sale?: boolean;
   is_featured?: boolean;
   is_new_arrival?: boolean;
-  available_countries?: number[];
-  product_prices?: Array<{
-    country_id: number;
-    net_price: number;
-    cost: number;
-    vat_percentage: number;
-  }>;
-  variants?: Array<{
-    name: string;
-    sku: string;
-    product_variant_prices?: Array<{
-      country_id: number;
-      net_price: number;
-      cost: number;
-      vat_percentage: number;
-    }>;
-    available_countries?: number[];
-  }>;
-  specifications?: Array<{
-    name: string;
-    value: string;
-  }>;
 }
 
 export interface UpdateProductData extends Partial<CreateProductData> {
@@ -117,9 +214,9 @@ class AdminProductService extends BaseApiService {
 
       const queryString = params.toString();
       const endpoints = [
+        `/admin/products${queryString ? `?${queryString}` : ''}`,
         `/admins/products${queryString ? `?${queryString}` : ''}`,
-        `/products${queryString ? `?${queryString}` : ''}`,
-        `/admin/products${queryString ? `?${queryString}` : ''}`
+        `/products${queryString ? `?${queryString}` : ''}`
       ];
       
       for (const endpoint of endpoints) {
@@ -136,19 +233,27 @@ class AdminProductService extends BaseApiService {
       throw new Error('All endpoints failed');
     } catch (error: any) {
       console.error('All admin product endpoints failed:', error);
-      return {
-        error: false,
-        message: "Mock data - API endpoint not available",
-        details: {
-          products: [],
-          pagination: {
-            total: 0,
-            current_page: 1,
-            per_page: 25,
-            last_page: 1
+        return {
+          error: false,
+          message: "Mock data - API endpoint not available",
+          details: {
+            products: {
+              current_page: 1,
+              data: [],
+              first_page_url: "",
+              from: 0,
+              last_page: 1,
+              last_page_url: "",
+              links: [],
+              next_page_url: null,
+              path: "",
+              per_page: 25,
+              prev_page_url: null,
+              to: 0,
+              total: 0
+            }
           }
-        }
-      };
+        };
     }
   }
 
@@ -224,24 +329,29 @@ class AdminProductService extends BaseApiService {
     } catch (error: any) {
       console.log('Simulating product creation due to API unavailability');
       
-      const mockProduct: AdminProductAPI = {
-        id: Math.floor(Math.random() * 10000),
-        name: productData.name,
-        slug: productData.slug,
-        sku: productData.sku,
-        status: productData.status,
-        has_variants: productData.has_variants,
-        category_id: productData.category_id,
-        short_description: productData.short_description,
-        long_description: productData.long_description,
-        is_seller_product: productData.is_seller_product,
-        is_on_sale: productData.is_on_sale,
-        is_featured: productData.is_featured,
-        is_new_arrival: productData.is_new_arrival,
-        store_id: productData.store_id,
-        product_prices: productData.product_prices,
-        specifications: productData.specifications,
-        variants: productData.variants
+      // Mock product creation - return simple success message
+      return {
+        error: false,
+        message: "Product created successfully (mock)",
+        details: {
+          product: {
+            id: Math.floor(Math.random() * 10000),
+            name: productData.name,
+            slug: productData.slug,
+            description: productData.description || '',
+            status: productData.status,
+            variants: [],
+            pricing: [],
+            flags: {
+              on_sale: productData.is_on_sale || false,
+              is_featured: productData.is_featured || false,
+              is_new_arrival: productData.is_new_arrival || false,
+              is_best_seller: false,
+              is_vat_exempt: false,
+              seller_product_status: 'draft'
+            }
+          } as AdminProductAPI
+        }
       };
 
       return {
