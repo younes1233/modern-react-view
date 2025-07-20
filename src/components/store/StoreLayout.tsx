@@ -24,7 +24,9 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const { searchQuery, setSearchQuery, clearSearch, searchResults } = useSearch();
   const { items: wishlistItems } = useWishlist();
   const { getTotalItems } = useCart();
-  const { user, logout } = useAuth();
+  const auth = useAuth();
+  const user = auth?.user || null;
+  const logout = auth?.logout;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showMobileSearchResults, setShowMobileSearchResults] = useState(false);
@@ -114,8 +116,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/store');
+    if (logout) {
+      logout();
+      navigate('/store');
+    }
   };
 
   const getSearchDropdownPosition = (inputRef: HTMLInputElement | null) => {
