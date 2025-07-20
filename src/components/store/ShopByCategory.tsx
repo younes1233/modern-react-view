@@ -4,17 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { getCategories, Category } from '@/data/storeData';
+import { useStoreCategories } from '@/hooks/useStoreCategories';
+import { Category } from '@/services/categoryService';
 import { useSearch } from '@/contexts/SearchContext';
 
 export function ShopByCategory() {
-  const [categories, setCategories] = useState<Category[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const { setSelectedCategory } = useSearch();
-
-  useEffect(() => {
-    setCategories(getCategories());
-  }, []);
+  
+  // Use API data instead of mock data
+  const { categories, loading } = useStoreCategories();
 
   const handleCategoryClick = (categorySlug: string) => {
     setSelectedCategory(categorySlug);
@@ -83,7 +82,11 @@ export function ShopByCategory() {
 
                           {/* Icon */}
                           <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                            <span className="text-xl text-white">{category.icon}</span>
+                            {category.icon && category.icon.startsWith('http') ? (
+                              <img src={category.icon} alt={`${category.name} icon`} className="w-6 h-6 object-contain" />
+                            ) : (
+                              <span className="text-xl text-white">{category.icon || '📦'}</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -128,11 +131,15 @@ export function ShopByCategory() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                       <div className="absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
-                        <div className="flex justify-center">
-                          <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                            <span className="text-xs sm:text-sm md:text-base">{category.icon}</span>
-                          </div>
-                        </div>
+                         <div className="flex justify-center">
+                           <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
+                             {category.icon && category.icon.startsWith('http') ? (
+                               <img src={category.icon} alt={`${category.name} icon`} className="w-3 h-3 sm:w-4 sm:h-4 object-contain" />
+                             ) : (
+                               <span className="text-xs sm:text-sm md:text-base">{category.icon || '📦'}</span>
+                             )}
+                           </div>
+                         </div>
                         <div className="text-center text-white">
                           <h3 className="font-bold text-xs leading-tight">
                             {category.name}
