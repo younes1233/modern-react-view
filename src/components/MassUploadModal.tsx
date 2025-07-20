@@ -32,7 +32,7 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
   const [uploadProgress, setUploadProgress] = useState(0);
   const { toast } = useToast();
 
-  const requiredFieldsProducts = ['name', 'category', 'price', 'stock', 'sku'];
+  const requiredFieldsProducts = ['name', 'sku', 'base_price', 'category_id'];
   const requiredFieldsCategories = ['name', 'description'];
   const requiredFields = type === 'products' ? requiredFieldsProducts : requiredFieldsCategories;
 
@@ -150,20 +150,33 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
 
       // Type-specific validations
       if (type === 'products') {
-        const price = parseFloat(validatedRow.price);
-        const stock = parseInt(validatedRow.stock);
+        const basePrice = parseFloat(validatedRow.base_price);
+        const categoryId = parseInt(validatedRow.category_id);
 
-        if (isNaN(price) || price < 0) {
-          errors.push(`Row ${rowNumber}: Invalid price value`);
+        if (isNaN(basePrice) || basePrice < 0) {
+          errors.push(`Row ${rowNumber}: Invalid base price value`);
         }
-        if (isNaN(stock) || stock < 0) {
-          errors.push(`Row ${rowNumber}: Invalid stock value`);
+        if (isNaN(categoryId) || categoryId <= 0) {
+          errors.push(`Row ${rowNumber}: Invalid category ID`);
         }
 
-        validatedRow.price = price;
-        validatedRow.stock = stock;
-        validatedRow.status = stock > 0 ? 'active' : 'out_of_stock';
-        validatedRow.image = findValueByFieldName(row, 'image') || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop';
+        validatedRow.base_price = basePrice;
+        validatedRow.category_id = categoryId;
+        validatedRow.slug = findValueByFieldName(row, 'slug') || validatedRow.name.toLowerCase().replace(/\s+/g, '-');
+        validatedRow.status = findValueByFieldName(row, 'status') || 'draft';
+        validatedRow.short_description = findValueByFieldName(row, 'short_description') || '';
+        validatedRow.long_description = findValueByFieldName(row, 'long_description') || '';
+        validatedRow.store_id = findValueByFieldName(row, 'store_id') || '';
+        validatedRow.has_variants = findValueByFieldName(row, 'has_variants') || 'false';
+        validatedRow.is_featured = findValueByFieldName(row, 'is_featured') || 'false';
+        validatedRow.is_on_sale = findValueByFieldName(row, 'is_on_sale') || 'false';
+        validatedRow.is_new_arrival = findValueByFieldName(row, 'is_new_arrival') || 'false';
+        validatedRow.is_seller_product = findValueByFieldName(row, 'is_seller_product') || 'false';
+        validatedRow.cover_image = findValueByFieldName(row, 'cover_image') || '';
+        validatedRow.available_countries = findValueByFieldName(row, 'available_countries') || '1';
+        validatedRow.cost = findValueByFieldName(row, 'cost') || '';
+        validatedRow.vat_percentage = findValueByFieldName(row, 'vat_percentage') || '20';
+        validatedRow.specifications = findValueByFieldName(row, 'specifications') || '';
       }
 
       if (errors.length === 0 || !errors.some(e => e.includes(`Row ${rowNumber}`))) {
@@ -219,7 +232,50 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
 
   const downloadTemplate = () => {
     const templateData = type === 'products' 
-      ? [{ name: 'Sample Product', category: 'Electronics', price: 99.99, stock: 50, sku: 'SP001', image: 'https://example.com/image.jpg' }]
+      ? [
+          { 
+            name: 'Sample Product 1', 
+            sku: 'PROD001', 
+            slug: 'sample-product-1',
+            base_price: 29.99,
+            category_id: 1,
+            store_id: '',
+            status: 'active',
+            short_description: 'Brief product description',
+            long_description: 'Detailed product description',
+            has_variants: 'false',
+            is_featured: 'false',
+            is_on_sale: 'false',
+            is_new_arrival: 'true',
+            is_seller_product: 'false',
+            cover_image: 'https://example.com/image1.jpg',
+            available_countries: '1,2,3',
+            cost: 20.99,
+            vat_percentage: 20,
+            specifications: 'Color:Red;Size:Large;Material:Cotton'
+          },
+          { 
+            name: 'Sample Product 2', 
+            sku: 'PROD002', 
+            slug: 'sample-product-2',
+            base_price: 49.99,
+            category_id: 2,
+            store_id: '',
+            status: 'draft',
+            short_description: 'Another brief description',
+            long_description: 'Another detailed description',
+            has_variants: 'true',
+            is_featured: 'true',
+            is_on_sale: 'true',
+            is_new_arrival: 'false',
+            is_seller_product: 'false',
+            cover_image: 'https://example.com/image2.jpg',
+            available_countries: '1',
+            cost: 34.99,
+            vat_percentage: 15,
+            specifications: 'Color:Blue;Weight:2kg'
+          }
+        ]
       : [{ name: 'Sample Category', description: 'Sample description for category' }];
 
     const ws = XLSX.utils.json_to_sheet(templateData);

@@ -9,9 +9,10 @@ import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { ExportButton } from "@/components/ui/export-button";
 import { AdminProductModal } from "@/components/AdminProductModal";
-import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye } from "lucide-react";
+import { MassUploadModal } from "@/components/MassUploadModal";
+import { Plus, Package, TrendingUp, AlertTriangle, Edit, Trash2, Eye, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { exportToExcel } from "@/utils/exportUtils";
+import { exportToExcel, exportToPDF } from "@/utils/exportUtils";
 import { useAdminProducts, useDeleteProduct, useCreateProduct, useUpdateProduct } from "@/hooks/useAdminProducts";
 import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
 import {
@@ -39,6 +40,7 @@ const Products = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [selectedProduct, setSelectedProduct] = useState<AdminProductAPI | null>(null);
+  const [isMassUploadOpen, setIsMassUploadOpen] = useState(false);
   const { toast } = useToast();
 
   // Mutations
@@ -68,20 +70,61 @@ const Products = () => {
   };
 
   const handleExportExcel = () => {
-    const exportData = products.map(product => ({
-      'ID': product.id,
-      'SKU': product.sku,
-      'Product Name': product.name,
-      'Status': product.status.toUpperCase(),
-      'Has Variants': product.has_variants ? 'Yes' : 'No',
-      'Is Featured': product.is_featured ? 'Yes' : 'No',
-      'Is On Sale': product.is_on_sale ? 'Yes' : 'No',
-    }));
+    const exportData = products.map(product => {
+      const basePrice = product.product_prices?.[0]?.net_price || 0;
+      return {
+        'Name': product.name,
+        'SKU': product.sku,
+        'Slug': product.slug,
+        'Status': product.status,
+        'Short Description': product.short_description || '',
+        'Long Description': product.long_description || '',
+        'Category ID': product.category_id || '',
+        'Store ID': product.store_id || '',
+        'Base Price': basePrice,
+        'Has Variants': product.has_variants ? 'true' : 'false',
+        'Is Featured': product.is_featured ? 'true' : 'false',
+        'Is On Sale': product.is_on_sale ? 'true' : 'false',
+        'Is New Arrival': product.is_new_arrival ? 'true' : 'false',
+        'Is Seller Product': product.is_seller_product ? 'true' : 'false',
+        'Cover Image': product.cover_image || '',
+        'Available Countries': product.variants?.[0]?.available_countries?.join(',') || '',
+        'Specifications': product.specifications?.map(s => `${s.name}:${s.value}`).join(';') || ''
+      };
+    });
     
     exportToExcel(exportData, 'admin-products-export', 'Admin Products');
     toast({
       title: "Export Successful",
       description: "Products data has been exported to Excel file"
+    });
+  };
+
+  const handleExportPDF = () => {
+    const exportData = products.map(product => ({
+      name: product.name,
+      sku: product.sku,
+      status: product.status,
+      price: product.product_prices?.[0]?.net_price?.toString() || '0',
+      type: product.has_variants ? 'Variable' : 'Simple',
+      featured: product.is_featured ? 'Yes' : 'No',
+      sale: product.is_on_sale ? 'Yes' : 'No'
+    }));
+
+    const columns = [
+      { header: 'Product Name', dataKey: 'name' },
+      { header: 'SKU', dataKey: 'sku' },
+      { header: 'Status', dataKey: 'status' },
+      { header: 'Price', dataKey: 'price' },
+      { header: 'Type', dataKey: 'type' },
+      { header: 'Featured', dataKey: 'featured' },
+      { header: 'On Sale', dataKey: 'sale' }
+    ];
+
+    exportToPDF(exportData, 'admin-products-export', 'Products Report', columns);
+    toast({
+      title: "Export Successful",
+      description: "Products data has been exported to PDF file"
     });
   };
 
@@ -111,6 +154,65 @@ const Products = () => {
       });
     }
     setIsModalOpen(false);
+  };
+
+  const handleMassUpload = () => {
+    setIsMassUploadOpen(true);
+  };
+
+  const handleMassUploadComplete = async (data: any[]) => {
+    try {
+      // Process each product in the uploaded data
+      const promises = data.map(async (productData) => {
+        const createData: CreateProductData = {
+          name: productData.name,
+          slug: productData.slug || productData.name.toLowerCase().replace(/\s+/g, '-'),
+          sku: productData.sku,
+          short_description: productData.short_description || '',
+          long_description: productData.long_description || '',
+          status: productData.status || 'draft',
+          category_id: parseInt(productData.category_id) || 1,
+          store_id: productData.store_id ? parseInt(productData.store_id) : undefined,
+          has_variants: productData.has_variants === 'true' || productData.has_variants === true,
+          is_featured: productData.is_featured === 'true' || productData.is_featured === true,
+          is_on_sale: productData.is_on_sale === 'true' || productData.is_on_sale === true,
+          is_new_arrival: productData.is_new_arrival === 'true' || productData.is_new_arrival === true,
+          is_seller_product: productData.is_seller_product === 'true' || productData.is_seller_product === true,
+          available_countries: productData.available_countries ? 
+            productData.available_countries.split(',').map((id: string) => parseInt(id.trim())) : 
+            [1], // Default to country ID 1
+          product_prices: productData.base_price ? [{
+            country_id: 1,
+            net_price: parseFloat(productData.base_price),
+            cost: parseFloat(productData.cost || productData.base_price) * 0.7, // 70% of price as cost
+            vat_percentage: parseFloat(productData.vat_percentage || '20')
+          }] : undefined,
+          specifications: productData.specifications ? 
+            productData.specifications.split(';').map((spec: string) => {
+              const [name, value] = spec.split(':');
+              return { name: name?.trim() || '', value: value?.trim() || '' };
+            }).filter((spec: any) => spec.name && spec.value) : 
+            undefined
+        };
+
+        return createProductMutation.mutateAsync(createData);
+      });
+
+      await Promise.all(promises);
+      
+      toast({
+        title: "Mass Upload Successful",
+        description: `Successfully uploaded ${data.length} products`
+      });
+      setIsMassUploadOpen(false);
+    } catch (error) {
+      console.error('Mass upload error:', error);
+      toast({
+        title: "Upload Error",
+        description: "Some products failed to upload. Please check the data and try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -179,13 +281,23 @@ const Products = () => {
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 dark:text-gray-100">Products</h1>
                 <p className="text-gray-600 dark:text-gray-400">Manage your product inventory</p>
               </div>
-              <Button 
-                onClick={handleAddProduct}
-                className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200"
-              >
-                <Plus className="w-4 h-4" />
-                Add Product
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  onClick={handleMassUpload}
+                  variant="outline"
+                  className="gap-2"
+                >
+                  <Upload className="w-4 h-4" />
+                  Mass Upload
+                </Button>
+                <Button 
+                  onClick={handleAddProduct}
+                  className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add Product
+                </Button>
+              </div>
             </div>
 
             {/* Stats Cards */}
@@ -249,7 +361,7 @@ const Products = () => {
               showStatusFilter
               showExcelExport={false}
               exportLabel="Export"
-              exportButton={<ExportButton onExportExcel={handleExportExcel} />}
+              exportButton={<ExportButton onExportExcel={handleExportExcel} onExportPDF={handleExportPDF} />}
             />
 
             {/* Products Table */}
@@ -382,6 +494,14 @@ const Products = () => {
               onSave={handleSaveProduct}
               product={selectedProduct}
               mode={modalMode}
+            />
+
+            {/* Mass Upload Modal */}
+            <MassUploadModal
+              isOpen={isMassUploadOpen}
+              onClose={() => setIsMassUploadOpen(false)}
+              type="products"
+              onUploadComplete={handleMassUploadComplete}
             />
           </div>
         </main>
