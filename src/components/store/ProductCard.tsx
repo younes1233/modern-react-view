@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -103,46 +104,56 @@ export function ProductCard({ product }: ProductCardProps) {
 
         <CardContent className="p-3 md:p-4 flex flex-col justify-between flex-1" onClick={handleProductClick}>
           <div className="space-y-1 md:space-y-1.5 flex-1">
-            {/* Product Name - Smaller text, more compact */}
-            <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[1.5rem] md:min-h-[2rem]">
+            {/* Product Name - 2 lines with ellipsis */}
+            <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2rem] md:min-h-[2.5rem]">
               {product.name}
             </h3>
 
-            {/* Price Section - More compact */}
-            <div className="flex items-center gap-1 md:gap-1.5 mb-1 md:mb-2">
-              <span className="text-sm md:text-base font-bold text-gray-900">
+            {/* Product Description - 2 lines with ellipsis */}
+            <p className="text-xs text-gray-600 line-clamp-2 leading-tight min-h-[1.5rem] mb-2">
+              {product.description || 'High-quality product with excellent features and reliable performance for everyday use.'}
+            </p>
+
+            {/* Price Section - Updated layout */}
+            <div className="flex items-center gap-1.5 mb-2">
+              <span className="text-lg md:text-xl font-bold text-gray-900">
                 ${product.price}
               </span>
               {product.isOnSale && (
                 <>
-                  <span className="text-xs text-gray-500 line-through">
+                  <span className="text-sm text-gray-500 line-through">
                     ${originalPrice}
                   </span>
-                  {/* <>
-                  <span className="text-xs text-red-500 font-medium">
+                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                     -{discountPercentage}%
                   </span>
-                  </> */}
                 </>
               )}
             </div>
 
-            {/* Bottom Section with Express and Add to Cart - More compact */}
+            {/* Sales count - if available */}
+            {product.reviews && product.reviews > 0 && (
+              <div className="text-xs text-gray-500 mb-2">
+                {product.reviews}+ Sold
+              </div>
+            )}
+
+            {/* Bottom Section with Express and Add to Cart */}
             <div className="flex items-center justify-between mt-auto">
               {/* Express Badge */}
-               <div className="flex items-center">
-  <div
-    className="flex items-center bg-red-600 text-white text-[10px] pl-1.5 pr-2 py-[2px] gap-[2px]"
-    style={{
-      clipPath: 'polygon(0 0, 88% 0, 100% 50%, 88% 95%, 0 100%)',
-      borderTopLeftRadius: '9999px',
-      borderBottomLeftRadius: '9999px'
-    }}
-  >
-    <Package size={10} className="text-white" />
-    <span>express</span>
-  </div>
-</div>
+              <div className="flex items-center">
+                <div
+                  className="flex items-center bg-red-600 text-white text-[10px] pl-1.5 pr-2 py-[2px] gap-[2px]"
+                  style={{
+                    clipPath: 'polygon(0 0, 88% 0, 100% 50%, 88% 95%, 0 100%)',
+                    borderTopLeftRadius: '9999px',
+                    borderBottomLeftRadius: '9999px'
+                  }}
+                >
+                  <Package size={10} className="text-white" />
+                  <span>express</span>
+                </div>
+              </div>
               {/* Add to Cart Button - Only icon, no text */}
               <Button
                 size="sm"
