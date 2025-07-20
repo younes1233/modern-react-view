@@ -7,8 +7,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
+import { useFlatCategories } from "@/hooks/useCategories";
 import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
+import { X } from "lucide-react";
 
 interface AdminProductModalProps {
   isOpen: boolean;
@@ -34,7 +37,10 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     is_new_arrival: false,
   });
 
+  const [mainImage, setMainImage] = useState<string>('');
+  const [thumbnails, setThumbnails] = useState<{ id: number; url: string; alt: string }[]>([]);
   const { toast } = useToast();
+  const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
 
   useEffect(() => {
     if (product && mode === 'edit') {
@@ -96,6 +102,26 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     value: CreateProductData[K]
   ) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleMainImageUpload = (files: File[]) => {
+    if (files.length > 0) {
+      const url = URL.createObjectURL(files[0]);
+      setMainImage(url);
+    }
+  };
+
+  const handleThumbnailUpload = (files: File[]) => {
+    const newThumbnails = files.map((file, index) => ({
+      id: Date.now() + index,
+      url: URL.createObjectURL(file),
+      alt: file.name
+    }));
+    setThumbnails(prev => [...prev, ...newThumbnails]);
+  };
+
+  const removeThumbnail = (id: number) => {
+    setThumbnails(prev => prev.filter(t => t.id !== id));
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -200,13 +226,20 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               <Label htmlFor="category_id">Category</Label>
               <Select value={formData.category_id?.toString()} onValueChange={(value) => updateField('category_id', parseInt(value))}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Select category" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1">Electronics</SelectItem>
-                  <SelectItem value="2">Furniture</SelectItem>
-                  <SelectItem value="3">Fashion</SelectItem>
-                  <SelectItem value="4">Home & Tools</SelectItem>
+                  {categoriesLoading ? (
+                    <SelectItem value="" disabled>Loading categories...</SelectItem>
+                  ) : categories.length > 0 ? (
+                    categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id?.toString() || ''}>
+                        {category.name}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <SelectItem value="" disabled>No categories available</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -260,6 +293,63 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   onCheckedChange={(checked) => updateField('is_seller_product', checked)}
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Product Images */}
+          <div className="space-y-4">
+            <Label>Product Images</Label>
+            
+            <div>
+              <Label className="text-sm">Main Product Image</Label>
+              <FileUpload
+                onFileSelect={handleMainImageUpload}
+                maxFiles={1}
+                placeholder="Upload main product image"
+                className="mt-2"
+              />
+              {mainImage && (
+                <div className="mt-4">
+                  <img 
+                    src={mainImage} 
+                    alt="Main product" 
+                    className="w-32 h-32 object-cover rounded-lg border"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div>
+              <Label className="text-sm">Additional Images</Label>
+              <FileUpload
+                onFileSelect={handleThumbnailUpload}
+                maxFiles={5}
+                placeholder="Upload additional product images"
+                className="mt-2"
+              />
+              
+              {thumbnails.length > 0 && (
+                <div className="grid grid-cols-3 gap-4 mt-4">
+                  {thumbnails.map((thumbnail) => (
+                    <div key={thumbnail.id} className="relative group">
+                      <img 
+                        src={thumbnail.url} 
+                        alt={thumbnail.alt}
+                        className="w-full h-24 object-cover rounded-lg border"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        className="absolute -top-2 -right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => removeThumbnail(thumbnail.id)}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 

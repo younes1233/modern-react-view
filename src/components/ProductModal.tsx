@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
+import { useFlatCategories } from "@/hooks/useCategories";
 import { Plus, X, Star } from "lucide-react";
 
 interface ProductThumbnail {
@@ -74,6 +75,7 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
   const [newThumbnail, setNewThumbnail] = useState({ url: '', alt: '' });
   const [newVariation, setNewVariation] = useState({ type: '', value: '', priceAdjustment: 0, inStock: true });
   const { toast } = useToast();
+  const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
 
   useEffect(() => {
     if (product && mode === 'edit') {
@@ -249,12 +251,17 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Electronics">Electronics</SelectItem>
-                      <SelectItem value="Accessories">Accessories</SelectItem>
-                      <SelectItem value="Clothing">Clothing</SelectItem>
-                      <SelectItem value="Home">Home</SelectItem>
-                      <SelectItem value="Sports">Sports</SelectItem>
-                      <SelectItem value="Books">Books</SelectItem>
+                      {categoriesLoading ? (
+                        <SelectItem value="" disabled>Loading categories...</SelectItem>
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.name}>
+                            {category.name}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="" disabled>No categories available</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
