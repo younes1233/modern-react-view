@@ -214,9 +214,7 @@ class AdminProductService extends BaseApiService {
 
       const queryString = params.toString();
       const endpoints = [
-        `/admin/products${queryString ? `?${queryString}` : ''}`,
-        `/admins/products${queryString ? `?${queryString}` : ''}`,
-        `/products${queryString ? `?${queryString}` : ''}`
+        `/admin/products${queryString ? `?${queryString}` : ''}`
       ];
       
       for (const endpoint of endpoints) {
@@ -262,7 +260,7 @@ class AdminProductService extends BaseApiService {
     console.log('Fetching admin product by ID:', id);
     
     try {
-      const endpoints = [`/admins/products/${id}`, `/products/${id}`, `/admin/products/${id}`];
+      const endpoints = [`/admin/products/${id}`];
       
       for (const endpoint of endpoints) {
         try {
@@ -287,7 +285,7 @@ class AdminProductService extends BaseApiService {
     console.log('Fetching admin product by SKU:', sku);
     
     try {
-      const endpoints = [`/admins/products/sku/${sku}`, `/products/sku/${sku}`, `/admin/products/sku/${sku}`];
+      const endpoints = [`/admin/products/sku/${sku}`];
       
       for (const endpoint of endpoints) {
         try {
