@@ -130,10 +130,15 @@ const Categories = () => {
     setModalMode('add');
     setSelectedCategory({
       name: '',
+      slug: '',
+      image: '',
+      icon: '',
       description: '',
-      parentId: parentCategory.id,
-      level: (parentCategory.level || 0) + 1,
-      status: 'active'
+      order: 0,
+      is_active: true,
+      featured: false,
+      parent_id: parentCategory.id,
+      level: (parentCategory.level || 0) + 1
     } as Category);
     setIsAddDialogOpen(true);
   };
@@ -213,7 +218,7 @@ const Categories = () => {
   const getCategoryPath = (category: Category): string => {
     if (category.level === 0) return category.name;
     
-    const parent = flattenCategories(categories).find(cat => cat.id === category.parentId);
+    const parent = flattenCategories(categories).find(cat => cat.id === category.parent_id);
     if (!parent) return category.name;
     
     return `${getCategoryPath(parent)} > ${category.name}`;
@@ -259,8 +264,8 @@ const Categories = () => {
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-gray-900">{category.name}</h3>
                 {category.level === 0 && <Star className="w-4 h-4 text-yellow-500" />}
-                <Badge className={category.status === "active" ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                  {category.status}
+                <Badge className={category.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
+                  {category.is_active ? 'active' : 'inactive'}
                 </Badge>
               </div>
               <p className="text-sm text-gray-600">{category.description}</p>
@@ -571,13 +576,13 @@ const Categories = () => {
                                 <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                               )}
                             </div>
-                            <Badge className={category.status === "active" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"}>
-                              {category.status}
+                            <Badge className={category.is_active ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"}>
+                              {category.is_active ? 'active' : 'inactive'}
                             </Badge>
                           </div>
                           <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{category.name}</h3>
                           <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{category.description}</p>
-                          {category.parentId && (
+                          {category.parent_id && (
                             <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
                               📁 {getCategoryPath(category)}
                             </p>

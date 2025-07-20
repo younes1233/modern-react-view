@@ -32,9 +32,13 @@ export function CategoryModal({
   const { toast } = useToast();
   const [formData, setFormData] = useState<Category>({
     name: '',
+    slug: '',
+    image: '',
+    icon: '',
     description: '',
-    status: 'active',
-    image: ''
+    order: 0,
+    is_active: true,
+    featured: false
   });
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
 
@@ -48,10 +52,14 @@ export function CategoryModal({
       // If we're adding a subcategory, set the parent ID
       setFormData({
         name: '',
-        description: '',
-        status: 'active',
+        slug: '',
         image: '',
-        parentId: category?.parentId || undefined
+        icon: '',
+        description: '',
+        order: 0,
+        is_active: true,
+        featured: false,
+        parent_id: category?.parent_id || undefined
       });
       setUploadedImages([]);
     }
@@ -60,6 +68,7 @@ export function CategoryModal({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate required fields according to API specification
     if (!formData.name.trim()) {
       toast({
         title: "Validation Error",
@@ -69,9 +78,27 @@ export function CategoryModal({
       return;
     }
 
+    if (!formData.slug.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Slug is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!formData.icon.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Icon is required",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const categoryData = {
       ...formData,
-      image: uploadedImages[0] || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop'
+      image: uploadedImages[0] || formData.image || 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=300&h=300&fit=crop'
     };
 
     onSave(categoryData);
@@ -94,16 +121,16 @@ export function CategoryModal({
       return categories.filter(cat => 
         cat.id !== category.id && 
         !isDescendantOf(cat, category.id) &&
-        !cat.parentId // Only root categories can be parents for now, or implement level limits
+        !cat.parent_id // Only root categories can be parents for now, or implement level limits
       );
     }
     // When adding, show all root categories
-    return categories.filter(cat => !cat.parentId);
+    return categories.filter(cat => !cat.parent_id);
   };
 
   const isDescendantOf = (category: Category, ancestorId: number): boolean => {
-    if (category.parentId === ancestorId) return true;
-    const parent = categories.find(cat => cat.id === category.parentId);
+    if (category.parent_id === ancestorId) return true;
+    const parent = categories.find(cat => cat.id === category.parent_id);
     return parent ? isDescendantOf(parent, ancestorId) : false;
   };
 
@@ -133,11 +160,45 @@ export function CategoryModal({
             </div>
 
             <div className="space-y-2">
+              <Label htmlFor="slug">Slug *</Label>
+              <Input
+                id="slug"
+                value={formData.slug}
+                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                placeholder="category-slug"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="icon">Icon *</Label>
+              <Input
+                id="icon"
+                value={formData.icon}
+                onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                placeholder="icon-name or URL"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="order">Order *</Label>
+              <Input
+                id="order"
+                type="number"
+                value={formData.order}
+                onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
+                placeholder="Display order"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
               <Label htmlFor="status">Status</Label>
               <Select 
-                value={formData.status} 
+                value={formData.is_active ? "active" : "inactive"} 
                 onValueChange={(value: "active" | "inactive") => 
-                  setFormData(prev => ({ ...prev, status: value }))
+                  setFormData(prev => ({ ...prev, is_active: value === "active" }))
                 }
               >
                 <SelectTrigger>
@@ -149,15 +210,59 @@ export function CategoryModal({
                 </SelectContent>
               </Select>
             </div>
+
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="featured"
+                checked={formData.featured}
+                onChange={(e) => setFormData(prev => ({ ...prev, featured: e.target.checked }))}
+                className="rounded"
+              />
+              <Label htmlFor="featured">Featured Category</Label>
+            </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>
             <Textarea
               id="description"
-              value={formData.description}
+              value={formData.description || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
               placeholder="Enter category description"
+              rows={3}
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="category_image">Category Image</Label>
+              <Input
+                id="category_image"
+                value={formData.category_image || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, category_image: e.target.value }))}
+                placeholder="Category image URL"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="seo_title">SEO Title</Label>
+              <Input
+                id="seo_title"
+                value={formData.seo_title || ''}
+                onChange={(e) => setFormData(prev => ({ ...prev, seo_title: e.target.value }))}
+                placeholder="SEO title"
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="seo_description">SEO Description</Label>
+            <Textarea
+              id="seo_description"
+              value={formData.seo_description || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, seo_description: e.target.value }))}
+              placeholder="SEO description"
               rows={3}
             />
           </div>
@@ -166,11 +271,11 @@ export function CategoryModal({
           <div className="space-y-2">
             <Label htmlFor="parent">Parent Category (Optional)</Label>
             <Select 
-              value={formData.parentId?.toString() || 'none'} 
+              value={formData.parent_id?.toString() || 'none'} 
               onValueChange={(value) => 
                 setFormData(prev => ({ 
                   ...prev, 
-                  parentId: value === 'none' ? undefined : parseInt(value) 
+                  parent_id: value === 'none' ? undefined : parseInt(value) 
                 }))
               }
             >
@@ -186,7 +291,7 @@ export function CategoryModal({
                 ))}
               </SelectContent>
             </Select>
-            {formData.parentId && (
+            {formData.parent_id && (
               <p className="text-sm text-gray-500">
                 This will create a subcategory under the selected parent.
               </p>

@@ -3,12 +3,19 @@ import BaseApiService, { ApiResponse } from './baseApiService';
 export interface Category {
   id?: number;
   name: string;
-  description: string;
-  parentId?: number;
-  image?: string;
-  status: "active" | "inactive";
-  created?: string;
-  updated?: string;
+  slug: string;
+  image: string;
+  icon: string;
+  description?: string;
+  category_image?: string;
+  order: number;
+  is_active: boolean;
+  featured: boolean;
+  seo_title?: string;
+  seo_description?: string;
+  parent_id?: number;
+  created_at?: string;
+  updated_at?: string;
   children?: Category[];
   level?: number;
   products?: number;
@@ -18,8 +25,8 @@ export interface Category {
 
 export interface CategoryFilters {
   search?: string;
-  status?: "active" | "inactive";
-  parentId?: number;
+  is_active?: boolean;
+  parent_id?: number;
   level?: number;
   page?: number;
   limit?: number;
@@ -32,8 +39,8 @@ class CategoryService extends BaseApiService {
     const queryParams = new URLSearchParams();
     
     if (filters.search) queryParams.append('search', filters.search);
-    if (filters.status) queryParams.append('status', filters.status);
-    if (filters.parentId) queryParams.append('parent_id', filters.parentId.toString());
+    if (filters.is_active !== undefined) queryParams.append('is_active', filters.is_active.toString());
+    if (filters.parent_id) queryParams.append('parent_id', filters.parent_id.toString());
     if (filters.level) queryParams.append('level', filters.level.toString());
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
@@ -68,13 +75,20 @@ class CategoryService extends BaseApiService {
   }
 
   // Create new category
-  async createCategory(categoryData: Omit<Category, 'id' | 'created' | 'updated'>): Promise<ApiResponse<Category>> {
+  async createCategory(categoryData: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Category>> {
     const payload = {
       name: categoryData.name,
-      description: categoryData.description,
-      parent_id: categoryData.parentId || null,
-      image: categoryData.image || null,
-      status: categoryData.status || 'active'
+      slug: categoryData.slug,
+      image: categoryData.image,
+      icon: categoryData.icon,
+      description: categoryData.description || null,
+      category_image: categoryData.category_image || null,
+      order: categoryData.order,
+      is_active: categoryData.is_active,
+      featured: categoryData.featured,
+      seo_title: categoryData.seo_title || null,
+      seo_description: categoryData.seo_description || null,
+      parent_id: categoryData.parent_id || null
     };
 
     return this.post<ApiResponse<Category>>('/admin/categories', payload);
@@ -85,10 +99,17 @@ class CategoryService extends BaseApiService {
     const payload: any = {};
     
     if (categoryData.name) payload.name = categoryData.name;
-    if (categoryData.description !== undefined) payload.description = categoryData.description;
-    if (categoryData.parentId !== undefined) payload.parent_id = categoryData.parentId;
+    if (categoryData.slug) payload.slug = categoryData.slug;
     if (categoryData.image !== undefined) payload.image = categoryData.image;
-    if (categoryData.status) payload.status = categoryData.status;
+    if (categoryData.icon) payload.icon = categoryData.icon;
+    if (categoryData.description !== undefined) payload.description = categoryData.description;
+    if (categoryData.category_image !== undefined) payload.category_image = categoryData.category_image;
+    if (categoryData.order !== undefined) payload.order = categoryData.order;
+    if (categoryData.is_active !== undefined) payload.is_active = categoryData.is_active;
+    if (categoryData.featured !== undefined) payload.featured = categoryData.featured;
+    if (categoryData.seo_title !== undefined) payload.seo_title = categoryData.seo_title;
+    if (categoryData.seo_description !== undefined) payload.seo_description = categoryData.seo_description;
+    if (categoryData.parent_id !== undefined) payload.parent_id = categoryData.parent_id;
 
     return this.put<ApiResponse<Category>>(`/admin/categories/${id}`, payload);
   }
@@ -143,10 +164,10 @@ class CategoryService extends BaseApiService {
   }
 
   // Bulk operations
-  async bulkUpdateStatus(categoryIds: number[], status: "active" | "inactive"): Promise<ApiResponse<{ message: string }>> {
+  async bulkUpdateStatus(categoryIds: number[], is_active: boolean): Promise<ApiResponse<{ message: string }>> {
     const payload = {
       category_ids: categoryIds,
-      status: status
+      is_active: is_active
     };
 
     return this.post<ApiResponse<{ message: string }>>('/admin/categories/bulk/status', payload);
@@ -165,8 +186,8 @@ class CategoryService extends BaseApiService {
     const queryParams = new URLSearchParams();
     queryParams.append('q', query);
     
-    if (filters.status) queryParams.append('status', filters.status);
-    if (filters.parentId) queryParams.append('parent_id', filters.parentId.toString());
+    if (filters.is_active !== undefined) queryParams.append('is_active', filters.is_active.toString());
+    if (filters.parent_id) queryParams.append('parent_id', filters.parent_id.toString());
     if (filters.level) queryParams.append('level', filters.level.toString());
 
     return this.get<ApiResponse<Category[]>>(`/admin/categories/search?${queryParams.toString()}`);

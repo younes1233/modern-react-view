@@ -243,8 +243,8 @@ class ApiService {
     return categoryService.getCategoryStats();
   }
 
-  async bulkUpdateCategoryStatus(categoryIds: number[], status: "active" | "inactive") {
-    return categoryService.bulkUpdateStatus(categoryIds, status);
+  async bulkUpdateCategoryStatus(categoryIds: number[], is_active: boolean) {
+    return categoryService.bulkUpdateStatus(categoryIds, is_active);
   }
 
   async bulkDeleteCategories(categoryIds: number[]) {
