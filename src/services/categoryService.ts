@@ -139,7 +139,7 @@ class CategoryService extends BaseApiService {
 
   // Get category tree/hierarchy
   async getCategoryTree(): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>('/admin/categories/tree');
+    return this.get<ApiResponse<Category[]>>('/admin/categories');
   }
 
   // Get category with all descendants
@@ -160,7 +160,7 @@ class CategoryService extends BaseApiService {
     rootCategories: number;
     deepestLevel: number;
   }>> {
-    return this.get<ApiResponse<any>>('/admin/categories/stats');
+    return this.get<ApiResponse<any>>('/admin/categories');
   }
 
   // Bulk operations
