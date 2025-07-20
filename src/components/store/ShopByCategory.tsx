@@ -52,7 +52,7 @@ export function ShopByCategory() {
                   onClick={() => handleCategoryClick(category.slug)}
                   className="group flex-shrink-0"
                 >
-                  <Card className="w-[135px] h-[420px] border-0 shadow-lg hover:shadow-xl transition-all duration-500 transform hover:scale-105 bg-white overflow-hidden relative rounded-3xl group-hover:w-[200px]">
+                  <Card className="w-[135px] h-[420px] border-0 shadow-lg hover:shadow-xl transition-all duration-500 transform hover:scale-105 bg-white overflow-hidden relative rounded-3xl group-hover:w-[250px]">
                     <CardContent className="p-0 h-full">
                       <div className="relative h-full overflow-hidden">
                         <img
