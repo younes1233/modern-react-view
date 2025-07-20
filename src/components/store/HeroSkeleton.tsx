@@ -3,7 +3,7 @@ export function HeroSkeleton() {
   return (
     <section className="relative w-full overflow-hidden z-10 animate-pulse" style={{
       height: 'clamp(300px, 40vh, 600px)', // Reduced from 50vh to 40vh and min from 400px to 300px
-      minHeight: '300px', // Reduced from 400px to 300px
+      minHeight: '400px', // Reduced from 400px to 300px
       maxHeight: '600px'
     }}>
       <div className="absolute inset-0">
