@@ -153,24 +153,6 @@ export function ShopByCategory() {
             ))}
           </div>
 
-          {/* Navigation Dots on right with hidden slides count */}
-          <div className="flex justify-end items-center mt-4 space-x-3 pr-4">
-            <div className="flex space-x-2">
-              {Array.from({ length: Math.ceil(categories.length / 7) }).map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentSlide(index)}
-                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                    index === currentSlide ? 'bg-cyan-500' : 'bg-gray-300'
-                  }`}
-                />
-              ))}
-            </div>
-            {/* Number of hidden slides */}
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {Math.max(0, (Math.ceil(categories.length / 7) - 1 - currentSlide))} more
-            </span>
-          </div>
         </div>
       </div>
     </section>
