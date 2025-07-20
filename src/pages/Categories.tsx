@@ -69,7 +69,16 @@ const Categories = () => {
       
       const response = await categoryService.getCategoryTree();
       if (!response.error) {
-        setCategories(response.details || []);
+        // Ensure we always set an array, regardless of API response structure
+        let categoriesData: Category[] = [];
+        
+        if (Array.isArray(response.details)) {
+          categoriesData = response.details;
+        } else if (response.details && typeof response.details === 'object' && Array.isArray((response.details as any).categories)) {
+          categoriesData = (response.details as any).categories;
+        }
+        
+        setCategories(categoriesData);
       } else {
         toast({
           title: "Error",
@@ -79,6 +88,8 @@ const Categories = () => {
       }
     } catch (error) {
       console.error('Error loading categories:', error);
+      // Ensure categories stays as an array even on error
+      setCategories([]);
       toast({
         title: "Error",
         description: "Failed to load categories",
@@ -385,12 +396,14 @@ const Categories = () => {
     return result;
   };
 
+  // Ensure categories is always an array before filtering
+  const validCategories = Array.isArray(categories) ? categories : [];
   const filteredCategories = searchTerm 
-    ? categories.filter(category =>
-        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        category.description.toLowerCase().includes(searchTerm.toLowerCase())
+    ? validCategories.filter(category =>
+        category.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.description?.toLowerCase().includes(searchTerm.toLowerCase())
       )
-    : categories;
+    : validCategories;
 
   if (loading) {
     return (
