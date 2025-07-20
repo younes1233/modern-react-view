@@ -13,7 +13,11 @@ class BaseApiService {
   constructor() {
     // Get token from localStorage on initialization if not already loaded
     if (!BaseApiService.token) {
-      BaseApiService.token = localStorage.getItem('auth_token');
+      const storedToken = localStorage.getItem('auth_token');
+      if (storedToken) {
+        BaseApiService.token = storedToken;
+        console.log('Token loaded from localStorage on service initialization');
+      }
     }
   }
 

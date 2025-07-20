@@ -88,6 +88,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.error && response.details?.user && response.details?.token) {
         setUser(response.details.user);
         localStorage.setItem('user', JSON.stringify(response.details.user));
+        // Set the token in the API service for authenticated requests
+        apiService.setToken(response.details.token);
         setIsLoading(false);
         return true;
       } else {
@@ -128,6 +130,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (!response.error && response.details?.user && response.details?.token) {
         setUser(response.details.user);
         localStorage.setItem('user', JSON.stringify(response.details.user));
+        // Set the token in the API service for authenticated requests
+        apiService.setToken(response.details.token);
         setIsLoading(false);
         return { success: true, message: response.message };
       } else {
@@ -153,6 +157,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       localStorage.removeItem('user');
+      // Remove token from API service
+      apiService.removeToken();
       setIsLoading(false);
     }
   };
