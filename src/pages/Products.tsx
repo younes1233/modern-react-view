@@ -21,7 +21,7 @@ import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 export default function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [selectedProduct, setSelectedProduct] = useState<AdminProductAPI | null>(null);
@@ -30,7 +30,7 @@ export default function Products() {
   // Fetch products data
   const { data: productsData, isLoading, error, refetch } = useAdminProducts({
     q: searchQuery || undefined,
-    status: statusFilter as any || undefined,
+    status: statusFilter === 'all' ? undefined : (statusFilter as any) || undefined,
     page: currentPage,
     limit: 25,
   });
@@ -50,7 +50,7 @@ export default function Products() {
   };
 
   const handleStatusFilter = (status: string) => {
-    setStatusFilter(status);
+    setStatusFilter(status === 'all' ? '' : status);
     setCurrentPage(1);
   };
 
@@ -357,7 +357,7 @@ export default function Products() {
                       <SelectValue placeholder="Filter by status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="active">Active</SelectItem>
                       <SelectItem value="inactive">Inactive</SelectItem>
                       <SelectItem value="draft">Draft</SelectItem>
