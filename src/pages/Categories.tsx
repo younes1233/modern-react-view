@@ -599,7 +599,7 @@ const Categories = () => {
                             <Button 
                               variant="ghost" 
                               size="sm"
-                              onClick={() => handleAddSubcategory(category.id)}
+                              onClick={() => handleAddSubcategory(category)}
                             >
                               <Plus className="w-4 h-4" />
                             </Button>
