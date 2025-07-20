@@ -139,14 +139,14 @@ const Store = () => {
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
       <StoreLayout>
-        {/* Hero Section with Loading */}
+        {/* Hero Section with Loading - Reduced height on mobile */}
         {heroLoading ? (
           <HeroSkeleton />
         ) : (
           heroSection && heroSection.isActive && (
             <section className="relative w-full overflow-hidden z-10" style={{
-              height: 'clamp(400px, 50vh, 600px)',
-              minHeight: '400px',
+              height: 'clamp(300px, 40vh, 600px)', // Reduced from 50vh to 40vh and min from 400px to 300px
+              minHeight: '300px', // Reduced from 400px to 300px
               maxHeight: '600px'
             }}>
               <div className="absolute inset-0">
@@ -166,27 +166,27 @@ const Store = () => {
                 <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
                   {/* Left side: title + subtitle */}
                   <div className="max-w-2xl text-white">
-                    <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-3 sm:mb-4 md:mb-6">
+                    <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
                       ✨ Premium Quality
                     </div>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-5xl xl:text-6xl font-bold leading-tight mb-3 sm:mb-4 md:mb-6">
+                    <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-2 sm:mb-3 md:mb-4">
                       {heroSection.title}
                     </h1>
-                    <p className="text-sm sm:text-base md:text-lg text-gray-200 leading-relaxed mb-4 sm:mb-6 md:mb-8 max-w-xl">
+                    <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-3 sm:mb-4 md:mb-6 max-w-xl">
                       {heroSection.subtitle}
                     </p>
                   </div>
 
                   {/* Bottom right: button + contact info with small left margin */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-8 self-end">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-6 self-end">
                     <Button
                       size="lg"
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 md:py-4 rounded-full text-sm sm:text-base md:text-lg font-semibold shadow-xl"
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
                     >
                       {heroSection.ctaText}
                     </Button>
                     <div className="text-left">
-                      <div className="text-base sm:text-lg md:text-xl font-bold text-white">961 76591765</div>
+                      <div className="text-sm sm:text-base md:text-lg font-bold text-white">961 76591765</div>
                       <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
                     </div>
                   </div>
