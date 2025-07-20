@@ -17,7 +17,17 @@ export const useFlatCategories = () => {
     queryKey: ['categories', 'flat'],
     queryFn: async () => {
       const response = await categoryService.getFlatCategories();
-      return response.details || [];
+      // Handle both single category and array responses
+      if (response.details) {
+        if (Array.isArray(response.details)) {
+          return response.details;
+        } else if ((response.details as any).categories) {
+          return (response.details as any).categories;
+        } else if ((response.details as any).category) {
+          return [(response.details as any).category];
+        }
+      }
+      return [];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

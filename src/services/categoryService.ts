@@ -51,7 +51,7 @@ class CategoryService extends BaseApiService {
 
   // Get flat list of categories (for dropdowns, etc.)
   async getFlatCategories(): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>('/admin/categories/flat');
+    return this.get<ApiResponse<Category[]>>('/admin/categories');
   }
 
   // Get categories by parent ID
