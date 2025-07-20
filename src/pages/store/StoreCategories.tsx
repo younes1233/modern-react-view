@@ -9,6 +9,7 @@ import { ProductPagination } from '@/components/store/ProductPagination';
 import { useSearch } from '@/contexts/SearchContext';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useProducts, useProductSearch } from '@/hooks/useProducts';
+import { useStoreCategories } from '@/hooks/useStoreCategories';
 import { ProductAPI } from '@/services/productService';
 import { 
   getDisplaySettings,
@@ -110,20 +111,22 @@ const StoreCategories = () => {
     }
   }, []);
 
+  // Fetch store categories from API
+  const { categories: apiCategories, loading: categoriesLoading } = useStoreCategories();
+
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchQuery, selectedCategory, priceRange, sortBy]);
 
-  // Create categories from API data (simplified for now)
+  // Convert API categories to filter format, add "All Products" option
   const categories = [
     { id: 'all', name: 'All Products', count: pagination?.total || 0 },
-    { id: 'audio', name: 'Audio', count: 0 },
-    { id: 'home-office', name: 'Home Office', count: 0 },
-    { id: 'electronics', name: 'Electronics', count: 0 },
-    { id: 'furniture', name: 'Furniture', count: 0 },
-    { id: 'fashion', name: 'Fashion', count: 0 },
-    { id: 'home', name: 'Home & Tools', count: 0 },
+    ...apiCategories.map(cat => ({
+      id: cat.slug,
+      name: cat.name,
+      count: cat.products || 0
+    }))
   ];
 
   const totalPages = pagination?.totalPages || 1;

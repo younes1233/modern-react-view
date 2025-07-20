@@ -192,6 +192,11 @@ class CategoryService extends BaseApiService {
 
     return this.get<ApiResponse<Category[]>>(`/admin/categories/search?${queryParams.toString()}`);
   }
+
+  // Store API: Get all active categories for store frontend
+  async getStoreCategories(): Promise<ApiResponse<{ categories: Category[] }>> {
+    return this.get<ApiResponse<{ categories: Category[] }>>('/categories');
+  }
 }
 
 // Create and export singleton instance
