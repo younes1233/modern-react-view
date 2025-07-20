@@ -4,9 +4,10 @@ import { productListingService } from './productListingService';
 import { homeSectionService } from './homeSectionService';
 import { roleService } from './roleService';
 import { adminProductService } from './adminProductService';
+import { categoryService } from './categoryService';
 
 // Export all services
-export { authService, bannerService, productListingService, homeSectionService, roleService, adminProductService };
+export { authService, bannerService, productListingService, homeSectionService, roleService, adminProductService, categoryService };
 
 // Legacy compatibility - combine all services into one object
 class ApiService {
@@ -181,6 +182,79 @@ class ApiService {
     return adminProductService.deleteProduct(id);
   }
 
+  // Category methods
+  async getCategories(filters = {}) {
+    return categoryService.getCategories(filters);
+  }
+
+  async getFlatCategories() {
+    return categoryService.getFlatCategories();
+  }
+
+  async getCategoriesByParent(parentId: number) {
+    return categoryService.getCategoriesByParent(parentId);
+  }
+
+  async getRootCategories() {
+    return categoryService.getRootCategories();
+  }
+
+  async getCategory(id: number) {
+    return categoryService.getCategory(id);
+  }
+
+  async getCategoryBySlug(slug: string) {
+    return categoryService.getCategoryBySlug(slug);
+  }
+
+  async createCategory(categoryData: any) {
+    return categoryService.createCategory(categoryData);
+  }
+
+  async updateCategory(id: number, categoryData: any) {
+    return categoryService.updateCategory(id, categoryData);
+  }
+
+  async deleteCategory(id: number) {
+    return categoryService.deleteCategory(id);
+  }
+
+  async moveCategory(id: number, newParentId?: number) {
+    return categoryService.moveCategory(id, newParentId);
+  }
+
+  async reorderCategories(categoryOrders: { id: number; order: number }[]) {
+    return categoryService.reorderCategories(categoryOrders);
+  }
+
+  async getCategoryTree() {
+    return categoryService.getCategoryTree();
+  }
+
+  async getCategoryWithDescendants(id: number) {
+    return categoryService.getCategoryWithDescendants(id);
+  }
+
+  async getCategoryPath(id: number) {
+    return categoryService.getCategoryPath(id);
+  }
+
+  async getCategoryStats() {
+    return categoryService.getCategoryStats();
+  }
+
+  async bulkUpdateCategoryStatus(categoryIds: number[], status: "active" | "inactive") {
+    return categoryService.bulkUpdateStatus(categoryIds, status);
+  }
+
+  async bulkDeleteCategories(categoryIds: number[]) {
+    return categoryService.bulkDelete(categoryIds);
+  }
+
+  async searchCategories(query: string, filters = {}) {
+    return categoryService.searchCategories(query, filters);
+  }
+
   // Token management - ensure all services get the token
   setToken(token: string) {
     authService.setToken(token);
@@ -189,6 +263,7 @@ class ApiService {
     homeSectionService.setToken(token);
     roleService.setToken(token);
     adminProductService.setToken(token);
+    categoryService.setToken(token);
   }
 
   removeToken() {
@@ -198,6 +273,7 @@ class ApiService {
     homeSectionService.removeToken();
     roleService.removeToken();
     adminProductService.removeToken();
+    categoryService.removeToken();
   }
 
   getToken() {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -25,117 +25,85 @@ import {
   TrendingUp,
   MoreHorizontal,
   Edit,
-  Trash2
+  Trash2,
+  Loader2
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-
-interface Category {
-  id: number;
-  name: string;
-  description: string;
-  products: number;
-  revenue: number;
-  status: "active" | "inactive";
-  created: string;
-  parentId?: number;
-  children?: Category[];
-  isExpanded?: boolean;
-  level: number;
-  image?: string;
-}
-
-// TODO: Replace with API call to fetch hierarchical categories
-const mockCategories: Category[] = [
-  {
-    id: 1,
-    name: "Electronics",
-    description: "Electronic devices and gadgets",
-    products: 156,
-    revenue: 45230,
-    status: "active",
-    created: "2023-08-15",
-    level: 0,
-    isExpanded: true,
-    children: [
-      {
-        id: 2,
-        name: "Smartphones",
-        description: "Mobile phones and accessories",
-        products: 45,
-        revenue: 15670,
-        status: "active",
-        created: "2023-09-01",
-        parentId: 1,
-        level: 1,
-        isExpanded: false,
-        children: [
-          {
-            id: 3,
-            name: "iPhone",
-            description: "Apple iPhone series",
-            products: 25,
-            revenue: 12000,
-            status: "active",
-            created: "2023-09-10",
-            parentId: 2,
-            level: 2
-          },
-          {
-            id: 4,
-            name: "Samsung",
-            description: "Samsung Galaxy series",
-            products: 20,
-            revenue: 8500,
-            status: "active",
-            created: "2023-09-12",
-            parentId: 2,
-            level: 2
-          }
-        ]
-      },
-      {
-        id: 5,
-        name: "Laptops",
-        description: "Portable computers",
-        products: 35,
-        revenue: 18900,
-        status: "active",
-        created: "2023-09-05",
-        parentId: 1,
-        level: 1
-      }
-    ]
-  },
-  {
-    id: 6,
-    name: "Home & Garden",
-    description: "Home improvement and garden supplies",
-    products: 67,
-    revenue: 12340,
-    status: "active",
-    created: "2023-06-10",
-    level: 0
-  },
-  {
-    id: 7,
-    name: "Sports & Outdoors",
-    description: "Sports equipment and outdoor gear",
-    products: 34,
-    revenue: 8900,
-    status: "active",
-    created: "2023-07-18",
-    level: 0
-  }
-];
+import { categoryService, Category } from "@/services/categoryService";
 
 const Categories = () => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [categories, setCategories] = useState(mockCategories);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [viewMode, setViewMode] = useState<"tree" | "grid">("tree");
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
+  const [loading, setLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [stats, setStats] = useState({
+    totalCategories: 0,
+    activeCategories: 0,
+    products: 0,
+    revenue: 0
+  });
   const { toast } = useToast();
+
+  // Load categories on component mount
+  useEffect(() => {
+    loadCategories();
+    loadStats();
+  }, []);
+
+  // Load categories with current filters
+  useEffect(() => {
+    loadCategories();
+  }, [searchTerm, statusFilter]);
+
+  const loadCategories = async () => {
+    try {
+      setLoading(true);
+      const filters = {
+        search: searchTerm || undefined,
+        status: statusFilter === "all" ? undefined : statusFilter as "active" | "inactive"
+      };
+      
+      const response = await categoryService.getCategoryTree();
+      if (!response.error) {
+        setCategories(response.details || []);
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to load categories",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load categories",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadStats = async () => {
+    try {
+      const response = await categoryService.getCategoryStats();
+      if (!response.error) {
+        setStats({
+          totalCategories: response.details?.totalCategories || 0,
+          activeCategories: response.details?.activeCategories || 0,
+          products: 0, // This would come from product API
+          revenue: 0   // This would come from analytics API
+        });
+      }
+    } catch (error) {
+      console.error('Error loading stats:', error);
+    }
+  };
 
   const toggleExpand = (categoryId: number) => {
     const updateCategories = (cats: Category[]): Category[] => {
@@ -158,20 +126,15 @@ const Categories = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleAddSubcategory = (parentId: number) => {
+  const handleAddSubcategory = (parentCategory: Category) => {
     setModalMode('add');
-    const parentCategory = flattenCategories(categories).find(cat => cat.id === parentId);
-    if (parentCategory) {
-      setSelectedCategory({ 
-        ...parentCategory,
-        parentId,
-        name: '',
-        description: '',
-        products: 0,
-        revenue: 0,
-        level: parentCategory.level + 1
-      } as Category);
-    }
+    setSelectedCategory({
+      ...parentCategory,
+      parentId: parentCategory.id,
+      name: '',
+      description: '',
+      level: (parentCategory.level || 0) + 1
+    } as Category);
     setIsAddDialogOpen(true);
   };
 
@@ -181,86 +144,70 @@ const Categories = () => {
     setIsAddDialogOpen(true);
   };
 
-  const handleDeleteCategory = (categoryId: number) => {
-    const deleteFromCategories = (cats: Category[]): Category[] => {
-      return cats.filter(cat => {
-        if (cat.id === categoryId) {
-          return false;
-        }
-        if (cat.children) {
-          cat.children = deleteFromCategories(cat.children);
-        }
-        return true;
+  const handleDeleteCategory = async (categoryId: number) => {
+    try {
+      const response = await categoryService.deleteCategory(categoryId);
+      if (!response.error) {
+        toast({
+          title: "Success",
+          description: "Category deleted successfully",
+        });
+        loadCategories(); // Reload categories
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to delete category",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error deleting category:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete category",
+        variant: "destructive"
       });
-    };
-    
-    setCategories(deleteFromCategories(categories));
-    toast({
-      title: "Category Deleted",
-      description: "The category has been successfully deleted",
-    });
+    }
   };
 
-  const handleSaveCategory = (categoryData: Category) => {
-    if (modalMode === 'add') {
-      const newCategory = {
-        ...categoryData,
-        id: Date.now(),
-        level: categoryData.parentId ? selectedCategory?.level || 1 : 0,
-        products: 0,
-        revenue: 0,
-        created: new Date().toISOString().split('T')[0]
-      };
-
-      if (categoryData.parentId) {
-        // Add as subcategory
-        const addToParent = (cats: Category[]): Category[] => {
-          return cats.map(cat => {
-            if (cat.id === categoryData.parentId) {
-              return {
-                ...cat,
-                children: [...(cat.children || []), newCategory]
-              };
-            }
-            if (cat.children) {
-              return { ...cat, children: addToParent(cat.children) };
-            }
-            return cat;
-          });
-        };
-        setCategories(addToParent(categories));
-      } else {
-        // Add as root category
-        setCategories(prev => [...prev, newCategory]);
+  const handleSaveCategory = async (categoryData: Category) => {
+    try {
+      let response;
+      
+      if (modalMode === 'add') {
+        response = await categoryService.createCategory(categoryData);
+      } else if (selectedCategory?.id) {
+        response = await categoryService.updateCategory(selectedCategory.id, categoryData);
       }
-    } else if (selectedCategory) {
-      const updateCategories = (cats: Category[]): Category[] => {
-        return cats.map(cat => {
-          if (cat.id === selectedCategory.id) {
-            return { ...cat, ...categoryData };
-          }
-          if (cat.children) {
-            return { ...cat, children: updateCategories(cat.children) };
-          }
-          return cat;
+
+      if (response && !response.error) {
+        toast({
+          title: "Success",
+          description: `Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`
         });
-      };
-      setCategories(updateCategories(categories));
+        loadCategories(); // Reload categories
+      } else {
+        toast({
+          title: "Error",
+          description: response?.message || `Failed to ${modalMode} category`,
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error(`Error ${modalMode} category:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to ${modalMode} category`,
+        variant: "destructive"
+      });
     }
   };
 
   const handleExportExcel = () => {
-    // Implementation for Excel export
     toast({
       title: "Export Started",
       description: "Categories are being exported to Excel"
     });
-  };
-
-  const getParentCategoryName = (parentId?: number): string => {
-    if (!parentId) return "";
-    const parent = flattenCategories(categories).find(cat => cat.id === parentId);
-    return parent ? parent.name : "";
   };
 
   const getCategoryPath = (category: Category): string => {
@@ -269,21 +216,12 @@ const Categories = () => {
     const parent = flattenCategories(categories).find(cat => cat.id === category.parentId);
     if (!parent) return category.name;
     
-    if (parent.level === 0) {
-      return `${parent.name} > ${category.name}`;
-    }
-    
-    const grandParent = flattenCategories(categories).find(cat => cat.id === parent.parentId);
-    if (grandParent) {
-      return `${grandParent.name} > ${parent.name} > ${category.name}`;
-    }
-    
-    return `${parent.name} > ${category.name}`;
+    return `${getCategoryPath(parent)} > ${category.name}`;
   };
 
   const renderCategoryRow = (category: Category) => {
     const hasChildren = category.children && category.children.length > 0;
-    const indentLevel = category.level * 24;
+    const indentLevel = (category.level || 0) * 24;
 
     return (
       <div key={category.id}>
@@ -297,7 +235,7 @@ const Categories = () => {
                 variant="ghost"
                 size="sm"
                 className="p-0 w-6 h-6"
-                onClick={() => toggleExpand(category.id)}
+                onClick={() => toggleExpand(category.id!)}
               >
                 {category.isExpanded ? (
                   <ChevronDown className="w-4 h-4" />
@@ -310,7 +248,11 @@ const Categories = () => {
             )}
             
             <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-              <Package className="w-6 h-6 text-blue-600" />
+              {category.image ? (
+                <img src={category.image} alt={category.name} className="w-8 h-8 rounded object-cover" />
+              ) : (
+                <Package className="w-6 h-6 text-blue-600" />
+              )}
             </div>
             
             <div className="flex-1">
@@ -322,9 +264,11 @@ const Categories = () => {
                 </Badge>
               </div>
               <p className="text-sm text-gray-600">{category.description}</p>
-              <p className="text-xs text-gray-500">
-                {category.level > 0 ? `Electronics > ${category.name}` : category.name}
-              </p>
+              {category.level && category.level > 0 && (
+                <p className="text-xs text-gray-500">
+                  {getCategoryPath(category)}
+                </p>
+              )}
             </div>
           </div>
 
@@ -332,14 +276,14 @@ const Categories = () => {
             <div className="text-right">
               <div className="flex items-center gap-1">
                 <Package className="w-4 h-4 text-gray-400" />
-                <span className="font-medium">{category.products}</span>
+                <span className="font-medium">{category.products || 0}</span>
               </div>
             </div>
             
             <div className="text-right">
               <div className="flex items-center gap-1 text-green-600">
                 <DollarSign className="w-4 h-4" />
-                <span className="font-bold">${category.revenue.toLocaleString()}</span>
+                <span className="font-bold">${(category.revenue || 0).toLocaleString()}</span>
               </div>
             </div>
 
@@ -347,7 +291,7 @@ const Categories = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => handleAddSubcategory(category.id)}
+                onClick={() => handleAddSubcategory(category)}
                 className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
               >
                 <Plus className="w-4 h-4" />
@@ -374,13 +318,13 @@ const Categories = () => {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Category</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete "{category.name}"? This action cannot be undone.
+                      Are you sure you want to delete "{category.name}"? This action cannot be undone and will also delete all subcategories.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel>Cancel</AlertDialogCancel>
                     <AlertDialogAction 
-                      onClick={() => handleDeleteCategory(category.id)}
+                      onClick={() => handleDeleteCategory(category.id!)}
                       className="bg-red-600 hover:bg-red-700"
                     >
                       Delete
@@ -403,12 +347,12 @@ const Categories = () => {
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddSubcategory(category.id)}>
+                  <DropdownMenuItem onClick={() => handleAddSubcategory(category)}>
                     <Plus className="w-4 h-4 mr-2" />
                     Add Subcategory
                   </DropdownMenuItem>
                   <DropdownMenuItem 
-                    onClick={() => handleDeleteCategory(category.id)}
+                    onClick={() => handleDeleteCategory(category.id!)}
                     className="text-red-600"
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -436,10 +380,31 @@ const Categories = () => {
     return result;
   };
 
-  const filteredCategories = categories.filter(category =>
-    category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCategories = searchTerm 
+    ? categories.filter(category =>
+        category.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        category.description.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : categories;
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
+          <AppSidebar />
+          <main className="flex-1 flex flex-col overflow-hidden">
+            <DashboardHeader />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="flex items-center gap-2">
+                <Loader2 className="w-6 h-6 animate-spin" />
+                <span>Loading categories...</span>
+              </div>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -489,7 +454,7 @@ const Categories = () => {
                 />
               </div>
               <div className="flex gap-2">
-                <Select defaultValue="all">
+                <Select value={statusFilter} onValueChange={(value: "all" | "active" | "inactive") => setStatusFilter(value)}>
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
@@ -515,11 +480,11 @@ const Categories = () => {
                     <div className="p-3 rounded-lg bg-white/20">
                       <Package className="w-6 h-6" />
                     </div>
-                    <span className="text-2xl font-bold">24</span>
+                    <span className="text-2xl font-bold">{stats.totalCategories}</span>
                   </div>
                   <div>
                     <h3 className="font-semibold mb-1">Total Categories</h3>
-                    <p className="text-pink-100 text-sm">+3 this month</p>
+                    <p className="text-pink-100 text-sm">{stats.activeCategories} active</p>
                   </div>
                 </CardContent>
               </Card>
@@ -581,6 +546,17 @@ const Categories = () => {
                 {viewMode === "tree" ? (
                   <div className="divide-y divide-gray-100 dark:divide-gray-700">
                     {filteredCategories.map(category => renderCategoryRow(category))}
+                    {filteredCategories.length === 0 && (
+                      <div className="text-center py-12 text-muted-foreground">
+                        <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                        <h3 className="text-xl font-semibold mb-2">No Categories Found</h3>
+                        <p>Get started by creating your first category.</p>
+                        <Button onClick={handleAddCategory} className="mt-4">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Category
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -9,15 +10,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Package, Image, X } from "lucide-react";
-
-interface Category {
-  id?: number;
-  name: string;
-  description: string;
-  parentId?: number;
-  image?: string;
-  status: "active" | "inactive";
-}
+import { Category } from "@/services/categoryService";
 
 interface CategoryModalProps {
   isOpen: boolean;
@@ -51,12 +44,14 @@ export function CategoryModal({
       if (category.image) {
         setUploadedImages([category.image]);
       }
-    } else {
+    } else if (mode === 'add') {
+      // If we're adding a subcategory, set the parent ID
       setFormData({
         name: '',
         description: '',
         status: 'active',
-        image: ''
+        image: '',
+        parentId: category?.parentId || undefined
       });
       setUploadedImages([]);
     }
@@ -80,10 +75,6 @@ export function CategoryModal({
     };
 
     onSave(categoryData);
-    toast({
-      title: "Success",
-      description: `Category ${mode === 'add' ? 'created' : 'updated'} successfully`
-    });
     onClose();
   };
 
@@ -96,7 +87,27 @@ export function CategoryModal({
     setUploadedImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const parentCategories = categories.filter(cat => !cat.parentId);
+  // Get root categories for parent selection (exclude current category and its descendants)
+  const getAvailableParentCategories = () => {
+    if (mode === 'edit' && category?.id) {
+      // When editing, exclude the current category and its descendants to prevent circular references
+      return categories.filter(cat => 
+        cat.id !== category.id && 
+        !isDescendantOf(cat, category.id) &&
+        !cat.parentId // Only root categories can be parents for now, or implement level limits
+      );
+    }
+    // When adding, show all root categories
+    return categories.filter(cat => !cat.parentId);
+  };
+
+  const isDescendantOf = (category: Category, ancestorId: number): boolean => {
+    if (category.parentId === ancestorId) return true;
+    const parent = categories.find(cat => cat.id === category.parentId);
+    return parent ? isDescendantOf(parent, ancestorId) : false;
+  };
+
+  const parentCategories = getAvailableParentCategories();
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -151,32 +162,36 @@ export function CategoryModal({
             />
           </div>
 
-          {parentCategories.length > 0 && (
-            <div className="space-y-2">
-              <Label htmlFor="parent">Parent Category (Optional)</Label>
-              <Select 
-                value={formData.parentId?.toString() || 'none'} 
-                onValueChange={(value) => 
-                  setFormData(prev => ({ 
-                    ...prev, 
-                    parentId: value === 'none' ? undefined : parseInt(value) 
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select parent category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">No Parent</SelectItem>
-                  {parentCategories.map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id!.toString()}>
-                      {cat.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+          {/* Parent Category Selection */}
+          <div className="space-y-2">
+            <Label htmlFor="parent">Parent Category (Optional)</Label>
+            <Select 
+              value={formData.parentId?.toString() || 'none'} 
+              onValueChange={(value) => 
+                setFormData(prev => ({ 
+                  ...prev, 
+                  parentId: value === 'none' ? undefined : parseInt(value) 
+                }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select parent category" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">No Parent (Root Category)</SelectItem>
+                {parentCategories.map((cat) => (
+                  <SelectItem key={cat.id} value={cat.id!.toString()}>
+                    {cat.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {formData.parentId && (
+              <p className="text-sm text-gray-500">
+                This will create a subcategory under the selected parent.
+              </p>
+            )}
+          </div>
 
           <div className="space-y-4">
             <Label className="flex items-center gap-2">
