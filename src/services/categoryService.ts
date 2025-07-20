@@ -38,33 +38,33 @@ class CategoryService extends BaseApiService {
     if (filters.page) queryParams.append('page', filters.page.toString());
     if (filters.limit) queryParams.append('limit', filters.limit.toString());
 
-    const endpoint = `/categories${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const endpoint = `/admin/categories${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     return this.get<ApiResponse<Category[]>>(endpoint);
   }
 
   // Get flat list of categories (for dropdowns, etc.)
   async getFlatCategories(): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>('/categories/flat');
+    return this.get<ApiResponse<Category[]>>('/admin/categories/flat');
   }
 
   // Get categories by parent ID
   async getCategoriesByParent(parentId: number): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>(`/categories/parent/${parentId}`);
+    return this.get<ApiResponse<Category[]>>(`/admin/categories/parent/${parentId}`);
   }
 
   // Get root categories only
   async getRootCategories(): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>('/categories/root');
+    return this.get<ApiResponse<Category[]>>('/admin/categories/root');
   }
 
   // Get single category by ID
   async getCategory(id: number): Promise<ApiResponse<Category>> {
-    return this.get<ApiResponse<Category>>(`/categories/${id}`);
+    return this.get<ApiResponse<Category>>(`/admin/categories/${id}`);
   }
 
   // Get category by slug (if implementing slugs)
   async getCategoryBySlug(slug: string): Promise<ApiResponse<Category>> {
-    return this.get<ApiResponse<Category>>(`/categories/slug/${slug}`);
+    return this.get<ApiResponse<Category>>(`/admin/categories/slug/${slug}`);
   }
 
   // Create new category
@@ -77,7 +77,7 @@ class CategoryService extends BaseApiService {
       status: categoryData.status || 'active'
     };
 
-    return this.post<ApiResponse<Category>>('/categories', payload);
+    return this.post<ApiResponse<Category>>('/admin/categories', payload);
   }
 
   // Update category
@@ -90,12 +90,12 @@ class CategoryService extends BaseApiService {
     if (categoryData.image !== undefined) payload.image = categoryData.image;
     if (categoryData.status) payload.status = categoryData.status;
 
-    return this.put<ApiResponse<Category>>(`/categories/${id}`, payload);
+    return this.put<ApiResponse<Category>>(`/admin/categories/${id}`, payload);
   }
 
   // Delete category
   async deleteCategory(id: number): Promise<ApiResponse<{ message: string }>> {
-    return this.delete<ApiResponse<{ message: string }>>(`/categories/${id}`);
+    return this.delete<ApiResponse<{ message: string }>>(`/admin/categories/${id}`);
   }
 
   // Move category to different parent
@@ -104,7 +104,7 @@ class CategoryService extends BaseApiService {
       parent_id: newParentId || null
     };
 
-    return this.put<ApiResponse<Category>>(`/categories/${id}/move`, payload);
+    return this.put<ApiResponse<Category>>(`/admin/categories/${id}/move`, payload);
   }
 
   // Reorder categories within same parent
@@ -113,22 +113,22 @@ class CategoryService extends BaseApiService {
       orders: categoryOrders
     };
 
-    return this.post<ApiResponse<{ message: string }>>('/categories/reorder', payload);
+    return this.post<ApiResponse<{ message: string }>>('/admin/categories/reorder', payload);
   }
 
   // Get category tree/hierarchy
   async getCategoryTree(): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>('/categories/tree');
+    return this.get<ApiResponse<Category[]>>('/admin/categories/tree');
   }
 
   // Get category with all descendants
   async getCategoryWithDescendants(id: number): Promise<ApiResponse<Category>> {
-    return this.get<ApiResponse<Category>>(`/categories/${id}/descendants`);
+    return this.get<ApiResponse<Category>>(`/admin/categories/${id}/descendants`);
   }
 
   // Get category path (breadcrumb)
   async getCategoryPath(id: number): Promise<ApiResponse<Category[]>> {
-    return this.get<ApiResponse<Category[]>>(`/categories/${id}/path`);
+    return this.get<ApiResponse<Category[]>>(`/admin/categories/${id}/path`);
   }
 
   // Get category statistics
@@ -139,7 +139,7 @@ class CategoryService extends BaseApiService {
     rootCategories: number;
     deepestLevel: number;
   }>> {
-    return this.get<ApiResponse<any>>('/categories/stats');
+    return this.get<ApiResponse<any>>('/admin/categories/stats');
   }
 
   // Bulk operations
@@ -149,7 +149,7 @@ class CategoryService extends BaseApiService {
       status: status
     };
 
-    return this.post<ApiResponse<{ message: string }>>('/categories/bulk/status', payload);
+    return this.post<ApiResponse<{ message: string }>>('/admin/categories/bulk/status', payload);
   }
 
   async bulkDelete(categoryIds: number[]): Promise<ApiResponse<{ message: string }>> {
@@ -157,7 +157,7 @@ class CategoryService extends BaseApiService {
       category_ids: categoryIds
     };
 
-    return this.post<ApiResponse<{ message: string }>>('/categories/bulk/delete', payload);
+    return this.post<ApiResponse<{ message: string }>>('/admin/categories/bulk/delete', payload);
   }
 
   // Search categories
@@ -169,7 +169,7 @@ class CategoryService extends BaseApiService {
     if (filters.parentId) queryParams.append('parent_id', filters.parentId.toString());
     if (filters.level) queryParams.append('level', filters.level.toString());
 
-    return this.get<ApiResponse<Category[]>>(`/categories/search?${queryParams.toString()}`);
+    return this.get<ApiResponse<Category[]>>(`/admin/categories/search?${queryParams.toString()}`);
   }
 }
 
