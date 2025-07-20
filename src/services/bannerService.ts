@@ -41,7 +41,7 @@ class BannerService extends BaseApiService {
   }
 
   async getBanners(): Promise<BannerResponse> {
-    return this.get<BannerResponse>('/banners');
+    return this.get<BannerResponse>('/admin/banners');
   }
 
   async createBanner(bannerData: {
@@ -54,7 +54,7 @@ class BannerService extends BaseApiService {
     position: 'hero' | 'secondary' | 'sidebar';
     is_active?: boolean;
   }): Promise<BannerCreateResponse> {
-    return this.post<BannerCreateResponse>('/banners', bannerData);
+    return this.post<BannerCreateResponse>('/admin/banners', bannerData);
   }
 
   async updateBanner(
@@ -70,15 +70,15 @@ class BannerService extends BaseApiService {
       is_active: boolean;
     }>
   ): Promise<BannerCreateResponse> {
-    return this.put<BannerCreateResponse>(`/banners/${id}`, bannerData);
+    return this.put<BannerCreateResponse>(`/admin/banners/${id}`, bannerData);
   }
 
   async deleteBanner(id: number): Promise<BannerResponse> {
-    return this.delete<BannerResponse>(`/banners/${id}`);
+    return this.delete<BannerResponse>(`/admin/banners/${id}`);
   }
 
   async reorderBanners(bannerIds: number[]): Promise<BannerResponse> {
-    return this.put<BannerResponse>('/banners/reorder', bannerIds);
+    return this.put<BannerResponse>('/admin/banners/reorder', bannerIds);
   }
 }
 
