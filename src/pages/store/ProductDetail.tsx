@@ -399,7 +399,7 @@ const ProductDetail = () => {
                   }`}>
                     <div className="flex justify-center">
                       <div className="max-w-sm overflow-x-auto scrollbar-hide">
-                        <div className="flex gap-3 pb-2 px-4 justify-center">
+                        <div className="flex gap-2 pb-2 px-4 justify-center">
                           {allImages.map((image, index) => (
                             <button
                               key={index}
@@ -407,14 +407,14 @@ const ProductDetail = () => {
                                 handleImageChange(index);
                                 setShowThumbnails(false);
                               }}
-                              className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-lg transform ${
+                              className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-md transform ${
                                 thumbnailsVisible 
                                   ? `translate-y-0 opacity-100` 
                                   : 'translate-y-4 opacity-0'
                               } ${
                                 index === selectedImage
-                                  ? 'w-16 h-16 shadow-lg ring-2 ring-cyan-500 scale-110'
-                                  : 'w-14 h-14 hover:scale-105'
+                                  ? 'w-12 h-12 shadow-md ring-2 ring-cyan-500 scale-110'
+                                  : 'w-10 h-10 hover:scale-105'
                               }`}
                               style={{
                                 transitionDelay: `${index * 50}ms`
@@ -427,7 +427,7 @@ const ProductDetail = () => {
                                 <img
                                   src={image.url}
                                   alt={image.alt}
-                                  className="w-full h-full object-cover transition-transform duration-200"
+                                  className="w-full h-full object-cover transition-all duration-300"
                                   onLoad={() => handleThumbnailLoad(index)}
                                   style={{
                                     opacity: thumbnailsLoaded[index] ? 1 : 0,
@@ -443,21 +443,21 @@ const ProductDetail = () => {
                   </div>
 
                   {/* Desktop: Animated thumbnails with reserved space */}
-                  <div className="hidden lg:block mt-6" style={{ minHeight: '96px' }}>
+                  <div className="hidden lg:block mt-6" style={{ minHeight: '60px' }}>
                     <ScrollArea className="w-full whitespace-nowrap">
-                      <div className="flex gap-4 pb-2 justify-center lg:justify-start">
+                      <div className="flex gap-3 pb-2 justify-center lg:justify-start">
                         {allImages.map((image, index) => (
                           <button
                             key={index}
                             onClick={() => setSelectedImage(index)}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-lg transform ${
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-md transform ${
                               thumbnailsVisible 
                                 ? `translate-y-0 opacity-100` 
                                 : 'translate-y-6 opacity-0'
                             } ${
                               index === selectedImage
-                                ? 'w-24 h-24 scale-110 shadow-lg ring-2 ring-cyan-500'
-                                : 'w-20 h-20 hover:scale-105'
+                                ? 'w-16 h-16 scale-110 shadow-md ring-2 ring-cyan-500'
+                                : 'w-14 h-14 hover:scale-105'
                             }`}
                             style={{ 
                               transformOrigin: 'center',
@@ -471,7 +471,7 @@ const ProductDetail = () => {
                               <img
                                 src={image.url}
                                 alt={image.alt}
-                                className="w-full h-full object-cover transition-transform duration-200"
+                                className="w-full h-full object-cover transition-all duration-300"
                                 onLoad={() => handleThumbnailLoad(index)}
                                 style={{
                                   opacity: thumbnailsLoaded[index] ? 1 : 0,
