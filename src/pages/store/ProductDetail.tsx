@@ -21,6 +21,7 @@ const ProductDetail = () => {
   const [selectedImage, setSelectedImage] = useState(0);
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
+  const [thumbnailsVisible, setThumbnailsVisible] = useState(false);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const thumbnailTimeoutRef = useRef<NodeJS.Timeout>();
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -38,6 +39,17 @@ const ProductDetail = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [slug]);
+
+  // Initialize thumbnail visibility after product loads
+  useEffect(() => {
+    if (product) {
+      // Small delay to ensure DOM is ready
+      const timer = setTimeout(() => {
+        setThumbnailsVisible(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [product]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -361,7 +373,7 @@ const ProductDetail = () => {
                 )}
               </div>
               
-              {/* Enhanced Thumbnail Navigation */}
+              {/* Enhanced Thumbnail Navigation with Animation */}
               {allImages.length > 1 && (
                 <>
                   {/* Mobile: Conditional thumbnails - show only when not on first image or when showThumbnails is true */}
@@ -377,11 +389,18 @@ const ProductDetail = () => {
                               handleImageChange(index);
                               setShowThumbnails(false);
                             }}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
+                              thumbnailsVisible 
+                                ? `translate-y-0 opacity-100` 
+                                : 'translate-y-4 opacity-0'
+                            } ${
                               index === selectedImage
                                 ? 'w-12 h-12 shadow-lg ring-2 ring-cyan-500'
                                 : 'w-10 h-10 hover:scale-105'
                             }`}
+                            style={{
+                              transitionDelay: `${index * 50}ms`
+                            }}
                           >
                             <img
                               src={image.url}
@@ -394,7 +413,7 @@ const ProductDetail = () => {
                     </div>
                   </div>
 
-                  {/* Desktop: Always visible thumbnails */}
+                  {/* Desktop: Always visible animated thumbnails */}
                   <div className="hidden lg:block mt-4">
                     <ScrollArea className="w-full whitespace-nowrap">
                       <div className="flex gap-3 pb-2">
@@ -402,12 +421,19 @@ const ProductDetail = () => {
                           <button
                             key={index}
                             onClick={() => setSelectedImage(index)}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-md transform ${
+                              thumbnailsVisible 
+                                ? `translate-y-0 opacity-100` 
+                                : 'translate-y-6 opacity-0'
+                            } ${
                               index === selectedImage
-                                ? 'w-20 h-20 scale-110 shadow-lg'
+                                ? 'w-20 h-20 scale-110 shadow-lg ring-2 ring-cyan-500'
                                 : 'w-16 h-16 hover:scale-105'
                             }`}
-                            style={{ transformOrigin: 'center' }}
+                            style={{ 
+                              transformOrigin: 'center',
+                              transitionDelay: `${index * 80}ms`
+                            }}
                           >
                             <img
                               src={image.url}
