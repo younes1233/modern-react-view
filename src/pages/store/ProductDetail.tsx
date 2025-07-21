@@ -376,12 +376,12 @@ const ProductDetail = () => {
               {/* Enhanced Thumbnail Navigation with Animation - No Layout Impact */}
               {allImages.length > 1 && (
                 <div className="relative">
-                  {/* Mobile: Conditional thumbnails with absolute positioning */}
-                  <div className={`lg:hidden absolute top-4 left-4 right-4 z-10 transition-all duration-300 ${
+                  {/* Mobile: Conditional thumbnails with absolute positioning and centering */}
+                  <div className={`lg:hidden absolute -top-2 left-1/2 transform -translate-x-1/2 z-10 transition-all duration-300 ${
                     (showThumbnails || selectedImage > 0) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                   }`}>
-                    <div className="w-full overflow-x-auto scrollbar-hide">
-                      <div className="flex gap-2 pb-1 pt-1">
+                    <div className="max-w-xs overflow-x-auto scrollbar-hide">
+                      <div className="flex gap-2 pb-1 pt-1 justify-center">
                         {allImages.map((image, index) => (
                           <button
                             key={index}
@@ -414,9 +414,9 @@ const ProductDetail = () => {
                   </div>
 
                   {/* Desktop: Animated thumbnails with reserved space */}
-                  <div className="hidden lg:block mt-4" style={{ minHeight: '88px' }}>
+                  <div className="hidden lg:block mt-6" style={{ minHeight: '88px' }}>
                     <ScrollArea className="w-full whitespace-nowrap">
-                      <div className="flex gap-3 pb-2">
+                      <div className="flex gap-3 pb-2 justify-center lg:justify-start">
                         {allImages.map((image, index) => (
                           <button
                             key={index}
@@ -451,7 +451,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Product Info */}
-            <div className="px-4 py-6 lg:px-0 lg:py-0 space-y-6">
+            <div className={`px-4 lg:px-0 lg:py-0 space-y-6 ${allImages.length > 1 ? 'pt-8 pb-6 lg:pt-0' : 'py-6'}`}>
               {/* Brand & Category */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
