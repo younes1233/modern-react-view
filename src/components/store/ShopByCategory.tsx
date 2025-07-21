@@ -74,6 +74,7 @@ export function ShopByCategory() {
                                 textShadow: '2px 2px 4px rgba(0, 0, 0, 0.6)',
                                 transform: 'rotate(-90deg)',
                                 transformOrigin: 'center center',
+                                transition: 'transform 0.5s ease-in-out, color 0.5s ease-in-out, font-size 0.5s ease-in-out',
                               }}
                             >
                               {category.name}
@@ -154,6 +155,12 @@ export function ShopByCategory() {
           </div>
         </div>
       </div>
+
+      <style jsx>{`
+        .group:hover h3 {
+          transform: rotate(0deg) !important;
+        }
+      `}</style>
     </section>
   );
 }
