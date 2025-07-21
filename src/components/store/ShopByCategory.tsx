@@ -68,15 +68,7 @@ export function ShopByCategory() {
                         <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center px-4">
                           {/* Text wrapper with animation */}
                           <div className="flex justify-center items-center w-[120px] h-[110px] mb-2 overflow-visible group-hover:w-[170px] transition-all duration-500">
-                            <h3
-                              className="text-base font-bold text-white group-hover:text-blue-200 transition-all duration-500 whitespace-nowrap group-hover:text-lg"
-                              style={{
-                                textShadow: '2px 2px 4px rgba(0, 0, 0, 0.6)',
-                                transform: 'rotate(-90deg)',
-                                transformOrigin: 'center center',
-                                transition: 'transform 0.5s ease-in-out, color 0.5s ease-in-out, font-size 0.5s ease-in-out',
-                              }}
-                            >
+                            <h3 className="text-base font-bold text-white group-hover:text-blue-200 transition-all duration-500 whitespace-nowrap group-hover:text-lg -rotate-90 group-hover:rotate-0 origin-center">
                               {category.name}
                             </h3>
                           </div>
@@ -155,12 +147,6 @@ export function ShopByCategory() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .group:hover h3 {
-          transform: rotate(0deg) !important;
-        }
-      `}</style>
     </section>
   );
 }
