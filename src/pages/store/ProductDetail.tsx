@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [showThumbnails, setShowThumbnails] = useState(false);
   const [thumbnailsVisible, setThumbnailsVisible] = useState(false);
+  const [thumbnailsLoaded, setThumbnailsLoaded] = useState<boolean[]>([]);
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const thumbnailTimeoutRef = useRef<NodeJS.Timeout>();
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
@@ -40,9 +41,17 @@ const ProductDetail = () => {
     window.scrollTo(0, 0);
   }, [slug]);
 
-  // Initialize thumbnail visibility after product loads
+  // Initialize thumbnail visibility and loading states after product loads
   useEffect(() => {
     if (product) {
+      const allImages = [
+        { url: product.media.cover_image.image, alt: product.media.cover_image.alt_text },
+        ...product.media.thumbnails.map(thumb => ({ url: thumb.image, alt: thumb.alt_text }))
+      ];
+      
+      // Initialize loading states
+      setThumbnailsLoaded(new Array(allImages.length).fill(false));
+      
       // Small delay to ensure DOM is ready
       const timer = setTimeout(() => {
         setThumbnailsVisible(true);
@@ -50,6 +59,14 @@ const ProductDetail = () => {
       return () => clearTimeout(timer);
     }
   }, [product]);
+
+  const handleThumbnailLoad = (index: number) => {
+    setThumbnailsLoaded(prev => {
+      const newState = [...prev];
+      newState[index] = true;
+      return newState;
+    });
+  };
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -373,73 +390,95 @@ const ProductDetail = () => {
                 )}
               </div>
               
-              {/* Enhanced Thumbnail Navigation with Animation - No Layout Impact */}
+              {/* Enhanced Thumbnail Navigation with Animation and proper spacing */}
               {allImages.length > 1 && (
                 <div className="relative">
-                  {/* Mobile: Conditional thumbnails with absolute positioning and centering */}
-                  <div className={`lg:hidden absolute -top-2 left-1/2 transform -translate-x-1/2 z-10 transition-all duration-300 ${
+                  {/* Mobile: Conditional thumbnails positioned below main image */}
+                  <div className={`lg:hidden mt-4 transition-all duration-300 ${
                     (showThumbnails || selectedImage > 0) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                   }`}>
-                    <div className="max-w-xs overflow-x-auto scrollbar-hide">
-                      <div className="flex gap-2 pb-1 pt-1 justify-center">
-                        {allImages.map((image, index) => (
-                          <button
-                            key={index}
-                            onClick={() => {
-                              handleImageChange(index);
-                              setShowThumbnails(false);
-                            }}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
-                              thumbnailsVisible 
-                                ? `translate-y-0 opacity-100` 
-                                : 'translate-y-4 opacity-0'
-                            } ${
-                              index === selectedImage
-                                ? 'w-12 h-12 shadow-lg ring-2 ring-cyan-500'
-                                : 'w-10 h-10 hover:scale-105'
-                            }`}
-                            style={{
-                              transitionDelay: `${index * 50}ms`
-                            }}
-                          >
-                            <img
-                              src={image.url}
-                              alt={image.alt}
-                              className="w-full h-full object-cover transition-transform duration-200"
-                            />
-                          </button>
-                        ))}
+                    <div className="flex justify-center">
+                      <div className="max-w-sm overflow-x-auto scrollbar-hide">
+                        <div className="flex gap-3 pb-2 px-4 justify-center">
+                          {allImages.map((image, index) => (
+                            <button
+                              key={index}
+                              onClick={() => {
+                                handleImageChange(index);
+                                setShowThumbnails(false);
+                              }}
+                              className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-lg transform ${
+                                thumbnailsVisible 
+                                  ? `translate-y-0 opacity-100` 
+                                  : 'translate-y-4 opacity-0'
+                              } ${
+                                index === selectedImage
+                                  ? 'w-16 h-16 shadow-lg ring-2 ring-cyan-500 scale-110'
+                                  : 'w-14 h-14 hover:scale-105'
+                              }`}
+                              style={{
+                                transitionDelay: `${index * 50}ms`
+                              }}
+                            >
+                              <div className="relative w-full h-full">
+                                {!thumbnailsLoaded[index] && (
+                                  <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg" />
+                                )}
+                                <img
+                                  src={image.url}
+                                  alt={image.alt}
+                                  className="w-full h-full object-cover transition-transform duration-200"
+                                  onLoad={() => handleThumbnailLoad(index)}
+                                  style={{
+                                    opacity: thumbnailsLoaded[index] ? 1 : 0,
+                                    transition: 'opacity 0.3s ease-in-out'
+                                  }}
+                                />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
 
                   {/* Desktop: Animated thumbnails with reserved space */}
-                  <div className="hidden lg:block mt-6" style={{ minHeight: '88px' }}>
+                  <div className="hidden lg:block mt-6" style={{ minHeight: '96px' }}>
                     <ScrollArea className="w-full whitespace-nowrap">
-                      <div className="flex gap-3 pb-2 justify-center lg:justify-start">
+                      <div className="flex gap-4 pb-2 justify-center lg:justify-start">
                         {allImages.map((image, index) => (
                           <button
                             key={index}
                             onClick={() => setSelectedImage(index)}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-md transform ${
+                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-500 hover:shadow-lg transform ${
                               thumbnailsVisible 
                                 ? `translate-y-0 opacity-100` 
                                 : 'translate-y-6 opacity-0'
                             } ${
                               index === selectedImage
-                                ? 'w-20 h-20 scale-110 shadow-lg ring-2 ring-cyan-500'
-                                : 'w-16 h-16 hover:scale-105'
+                                ? 'w-24 h-24 scale-110 shadow-lg ring-2 ring-cyan-500'
+                                : 'w-20 h-20 hover:scale-105'
                             }`}
                             style={{ 
                               transformOrigin: 'center',
                               transitionDelay: `${index * 80}ms`
                             }}
                           >
-                            <img
-                              src={image.url}
-                              alt={image.alt}
-                              className="w-full h-full object-cover transition-transform duration-200"
-                            />
+                            <div className="relative w-full h-full">
+                              {!thumbnailsLoaded[index] && (
+                                <div className="absolute inset-0 bg-gray-200 animate-pulse rounded-lg" />
+                              )}
+                              <img
+                                src={image.url}
+                                alt={image.alt}
+                                className="w-full h-full object-cover transition-transform duration-200"
+                                onLoad={() => handleThumbnailLoad(index)}
+                                style={{
+                                  opacity: thumbnailsLoaded[index] ? 1 : 0,
+                                  transition: 'opacity 0.3s ease-in-out'
+                                }}
+                              />
+                            </div>
                           </button>
                         ))}
                       </div>
@@ -451,7 +490,7 @@ const ProductDetail = () => {
             </div>
 
             {/* Product Info */}
-            <div className={`px-4 lg:px-0 lg:py-0 space-y-6 ${allImages.length > 1 ? 'pt-8 pb-6 lg:pt-0' : 'py-6'}`}>
+            <div className={`px-4 lg:px-0 lg:py-0 space-y-6 ${allImages.length > 1 ? 'pt-6 pb-6 lg:pt-0' : 'py-6'}`}>
               {/* Brand & Category */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
