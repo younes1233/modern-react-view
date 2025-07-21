@@ -373,12 +373,12 @@ const ProductDetail = () => {
                 )}
               </div>
               
-              {/* Enhanced Thumbnail Navigation with Animation */}
+              {/* Enhanced Thumbnail Navigation with Animation - No Layout Impact */}
               {allImages.length > 1 && (
-                <>
-                  {/* Mobile: Conditional thumbnails - show only when not on first image or when showThumbnails is true */}
-                  <div className={`lg:hidden mt-4 px-4 transition-all duration-300 ${
-                    (showThumbnails || selectedImage > 0) ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none h-0 overflow-hidden'
+                <div className="relative">
+                  {/* Mobile: Conditional thumbnails with absolute positioning */}
+                  <div className={`lg:hidden absolute top-4 left-4 right-4 z-10 transition-all duration-300 ${
+                    (showThumbnails || selectedImage > 0) ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
                   }`}>
                     <div className="w-full overflow-x-auto scrollbar-hide">
                       <div className="flex gap-2 pb-1 pt-1">
@@ -413,8 +413,8 @@ const ProductDetail = () => {
                     </div>
                   </div>
 
-                  {/* Desktop: Always visible animated thumbnails */}
-                  <div className="hidden lg:block mt-4">
+                  {/* Desktop: Animated thumbnails with reserved space */}
+                  <div className="hidden lg:block mt-4" style={{ minHeight: '88px' }}>
                     <ScrollArea className="w-full whitespace-nowrap">
                       <div className="flex gap-3 pb-2">
                         {allImages.map((image, index) => (
@@ -446,7 +446,7 @@ const ProductDetail = () => {
                       <ScrollBar orientation="horizontal" />
                     </ScrollArea>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
