@@ -44,7 +44,7 @@ export interface UpdateCountryRequest {
 
 class CountryService extends BaseApiService {
   async getCountries(): Promise<ApiResponse<CountriesResponse>> {
-    return this.get<ApiResponse<CountriesResponse>>('/countries');
+    return this.get<ApiResponse<CountriesResponse>>('/admin/countries');
   }
 
   async getCountry(id: number): Promise<ApiResponse<CountryResponse>> {
