@@ -19,53 +19,43 @@ interface Currency {
   code: string;
   name: string;
   symbol: string;
-  exchangeRate: number;
-  isBaseCurrency: boolean;
   isActive: boolean;
-  countries: string[];
+  usedInCountries: string[];
 }
 
-// Mock data
+// Mock data - now currencies are just definitions without exchange rates
 const mockCurrencies: Currency[] = [
   { 
     id: 1, 
     code: "USD", 
     name: "US Dollar", 
     symbol: "$", 
-    exchangeRate: 1.0, 
-    isBaseCurrency: true, 
     isActive: true,
-    countries: ["United States"]
+    usedInCountries: ["United States", "United Kingdom", "Germany"]
   },
   { 
     id: 2, 
     code: "EUR", 
     name: "Euro", 
     symbol: "€", 
-    exchangeRate: 0.85, 
-    isBaseCurrency: false, 
     isActive: true,
-    countries: ["Germany", "France", "Italy"]
+    usedInCountries: ["Germany"]
   },
   { 
     id: 3, 
     code: "GBP", 
     name: "British Pound", 
     symbol: "£", 
-    exchangeRate: 0.73, 
-    isBaseCurrency: false, 
     isActive: true,
-    countries: ["United Kingdom"]
+    usedInCountries: ["United Kingdom"]
   },
   { 
     id: 4, 
     code: "CAD", 
     name: "Canadian Dollar", 
     symbol: "C$", 
-    exchangeRate: 1.35, 
-    isBaseCurrency: false, 
     isActive: false,
-    countries: ["Canada"]
+    usedInCountries: ["Canada"]
   },
 ];
 
@@ -109,8 +99,10 @@ export const CurrencyManagement = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>Currencies</CardTitle>
-              <CardDescription>Manage currencies and exchange rates</CardDescription>
+              <CardTitle>Global Currencies</CardTitle>
+              <CardDescription>
+                Manage available currencies. Exchange rates are set per country in the Countries tab.
+              </CardDescription>
             </div>
             <Button onClick={handleAddCurrency}>
               <Plus className="w-4 h-4 mr-2" />
@@ -125,9 +117,7 @@ export const CurrencyManagement = () => {
                 <TableHead>Code</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Symbol</TableHead>
-                <TableHead>Exchange Rate</TableHead>
-                <TableHead>Countries</TableHead>
-                <TableHead>Type</TableHead>
+                <TableHead>Used in Countries</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -141,21 +131,17 @@ export const CurrencyManagement = () => {
                   <TableCell className="font-medium">{currency.name}</TableCell>
                   <TableCell className="text-lg font-bold">{currency.symbol}</TableCell>
                   <TableCell>
-                    {currency.isBaseCurrency ? "Base" : currency.exchangeRate.toFixed(4)}
-                  </TableCell>
-                  <TableCell>
                     <div className="flex flex-wrap gap-1">
-                      {currency.countries.map((country, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {country}
-                        </Badge>
-                      ))}
+                      {currency.usedInCountries.length > 0 ? (
+                        currency.usedInCountries.map((country, index) => (
+                          <Badge key={index} variant="secondary" className="text-xs">
+                            {country}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-muted-foreground text-sm">Not used</span>
+                      )}
                     </div>
-                  </TableCell>
-                  <TableCell>
-                    {currency.isBaseCurrency && (
-                      <Badge variant="default">Base Currency</Badge>
-                    )}
                   </TableCell>
                   <TableCell>
                     <Badge variant={currency.isActive ? "default" : "secondary"}>
@@ -175,7 +161,7 @@ export const CurrencyManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteCurrency(currency.id)}
-                        disabled={currency.isBaseCurrency}
+                        disabled={currency.usedInCountries.length > 0}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

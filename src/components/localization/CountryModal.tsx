@@ -5,15 +5,22 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+interface CountryCurrency {
+  currencyCode: string;
+  currencyName: string;
+  currencySymbol: string;
+  exchangeRate: number;
+  isBaseCurrency: boolean;
+}
 
 interface Country {
   id: number;
   name: string;
   code: string;
-  currency: string;
   flag: string;
   isActive: boolean;
+  currencies: CountryCurrency[];
 }
 
 interface CountryModalProps {
@@ -23,22 +30,13 @@ interface CountryModalProps {
   country: Country | null;
 }
 
-const currencies = [
-  { code: "USD", name: "US Dollar" },
-  { code: "EUR", name: "Euro" },
-  { code: "GBP", name: "British Pound" },
-  { code: "CAD", name: "Canadian Dollar" },
-  { code: "AUD", name: "Australian Dollar" },
-  { code: "JPY", name: "Japanese Yen" },
-];
-
 export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    currency: "",
     flag: "",
     isActive: true,
+    currencies: [] as CountryCurrency[],
   });
 
   useEffect(() => {
@@ -46,17 +44,17 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
       setFormData({
         name: country.name,
         code: country.code,
-        currency: country.currency,
         flag: country.flag,
         isActive: country.isActive,
+        currencies: country.currencies,
       });
     } else {
       setFormData({
         name: "",
         code: "",
-        currency: "",
         flag: "",
         isActive: true,
+        currencies: [],
       });
     }
   }, [country]);
@@ -106,25 +104,6 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="currency">Currency</Label>
-            <Select
-              value={formData.currency}
-              onValueChange={(value) => setFormData({ ...formData, currency: value })}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {currencies.map((currency) => (
-                  <SelectItem key={currency.code} value={currency.code}>
-                    {currency.code} - {currency.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
           <div className="flex items-center space-x-2">
             <Switch
               id="isActive"
@@ -132,6 +111,9 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
               onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
             />
             <Label htmlFor="isActive">Active</Label>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Note: Use the currency management button to add and configure currencies for this country.
           </div>
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>

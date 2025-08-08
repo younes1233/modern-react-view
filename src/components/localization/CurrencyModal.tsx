@@ -5,17 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 
 interface Currency {
   id: number;
   code: string;
   name: string;
   symbol: string;
-  exchangeRate: number;
-  isBaseCurrency: boolean;
   isActive: boolean;
-  countries: string[];
+  usedInCountries: string[];
 }
 
 interface CurrencyModalProps {
@@ -25,29 +22,13 @@ interface CurrencyModalProps {
   currency: Currency | null;
 }
 
-// Mock countries data
-const availableCountries = [
-  "United States",
-  "United Kingdom", 
-  "Germany",
-  "Canada",
-  "Australia",
-  "Japan",
-  "France",
-  "Italy",
-  "Spain",
-  "Netherlands"
-];
-
 export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyModalProps) => {
   const [formData, setFormData] = useState({
     code: "",
     name: "",
     symbol: "",
-    exchangeRate: 1.0,
-    isBaseCurrency: false,
     isActive: true,
-    countries: [] as string[],
+    usedInCountries: [] as string[],
   });
 
   useEffect(() => {
@@ -56,37 +37,19 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
         code: currency.code,
         name: currency.name,
         symbol: currency.symbol,
-        exchangeRate: currency.exchangeRate,
-        isBaseCurrency: currency.isBaseCurrency,
         isActive: currency.isActive,
-        countries: currency.countries,
+        usedInCountries: currency.usedInCountries,
       });
     } else {
       setFormData({
         code: "",
         name: "",
         symbol: "",
-        exchangeRate: 1.0,
-        isBaseCurrency: false,
         isActive: true,
-        countries: [],
+        usedInCountries: [],
       });
     }
   }, [currency]);
-
-  const handleCountryToggle = (country: string, checked: boolean) => {
-    if (checked) {
-      setFormData({
-        ...formData,
-        countries: [...formData.countries, country]
-      });
-    } else {
-      setFormData({
-        ...formData,
-        countries: formData.countries.filter(c => c !== country)
-      });
-    }
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,7 +58,7 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {currency ? "Edit Currency" : "Add New Currency"}
@@ -133,50 +96,6 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="exchangeRate">Exchange Rate (to base currency)</Label>
-            <Input
-              id="exchangeRate"
-              type="number"
-              step="0.0001"
-              value={formData.exchangeRate}
-              onChange={(e) => setFormData({ ...formData, exchangeRate: parseFloat(e.target.value) || 0 })}
-              placeholder="1.0000"
-              disabled={formData.isBaseCurrency}
-              required
-            />
-          </div>
-          <div className="space-y-3">
-            <Label>Attach to Countries</Label>
-            <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto p-2 border rounded">
-              {availableCountries.map((country) => (
-                <div key={country} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={country}
-                    checked={formData.countries.includes(country)}
-                    onCheckedChange={(checked) => 
-                      handleCountryToggle(country, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={country} className="text-sm">
-                    {country}
-                  </Label>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isBaseCurrency"
-              checked={formData.isBaseCurrency}
-              onCheckedChange={(checked) => setFormData({ 
-                ...formData, 
-                isBaseCurrency: checked,
-                exchangeRate: checked ? 1.0 : formData.exchangeRate
-              })}
-            />
-            <Label htmlFor="isBaseCurrency">Base Currency</Label>
-          </div>
           <div className="flex items-center space-x-2">
             <Switch
               id="isActive"
@@ -184,6 +103,10 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
             />
             <Label htmlFor="isActive">Active</Label>
+          </div>
+          <div className="text-sm text-muted-foreground">
+            Note: This currency will be available for assignment in countries. 
+            Exchange rates are configured per country.
           </div>
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
