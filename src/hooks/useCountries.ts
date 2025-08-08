@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { countryService, Country, CreateCountryRequest, UpdateCountryRequest } from '../services/countryService';
 import { useToast } from '@/hooks/use-toast';
@@ -33,6 +32,7 @@ export const useCountries = () => {
 
   const createCountry = async (countryData: {
     name: string;
+    flag?: string;
     iso_code: string;
     default_vat_percentage: string;
     base_currency_id?: number;
@@ -41,6 +41,7 @@ export const useCountries = () => {
     try {
       const requestData: CreateCountryRequest = {
         name: countryData.name,
+        flag: countryData.flag || getFlagEmoji(countryData.iso_code),
         iso_code: countryData.iso_code,
         base_currency_id: countryData.base_currency_id || 1,
         default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
@@ -72,6 +73,7 @@ export const useCountries = () => {
 
   const updateCountry = async (id: number, countryData: {
     name: string;
+    flag?: string;
     iso_code: string;
     default_vat_percentage: string;
     base_currency_id?: number;
@@ -80,6 +82,7 @@ export const useCountries = () => {
     try {
       const requestData: UpdateCountryRequest = {
         name: countryData.name,
+        flag: countryData.flag || getFlagEmoji(countryData.iso_code),
         iso_code: countryData.iso_code,
         base_currency_id: countryData.base_currency_id || 1,
         default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
@@ -148,6 +151,23 @@ export const useCountries = () => {
       console.error('Error fetching country:', error);
       throw error;
     }
+  };
+
+  const getFlagEmoji = (isoCode: string) => {
+    const flagMap: Record<string, string> = {
+      'US': '🇺🇸',
+      'GB': '🇬🇧', 
+      'DE': '🇩🇪',
+      'CA': '🇨🇦',
+      'FR': '🇫🇷',
+      'AU': '🇦🇺',
+      'JP': '🇯🇵',
+      'CN': '🇨🇳',
+      'IN': '🇮🇳',
+      'LB': '🇱🇧',
+      'SY': '🇸🇾',
+    };
+    return flagMap[isoCode] || '🌍';
   };
 
   useEffect(() => {

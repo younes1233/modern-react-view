@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,7 +80,7 @@ export const CountryManagement = () => {
     id: country.id,
     name: country.name,
     code: country.iso_code,
-    flag: getFlagEmoji(country.iso_code),
+    flag: country.flag || getFlagEmoji(country.iso_code),
     isActive: true,
     currencies: country.currencies.map(currency => ({
       currencyCode: currency.code,
@@ -110,6 +109,8 @@ export const CountryManagement = () => {
       'JP': '🇯🇵',
       'CN': '🇨🇳',
       'IN': '🇮🇳',
+      'LB': '🇱🇧',
+      'SY': '🇸🇾',
     };
     return flagMap[isoCode] || '🌍';
   };
@@ -180,7 +181,7 @@ export const CountryManagement = () => {
               {countries.map((country) => (
                 <TableRow key={country.id}>
                   <TableCell>
-                    <span className="text-2xl">{getFlagEmoji(country.iso_code)}</span>
+                    <span className="text-2xl">{country.flag || getFlagEmoji(country.iso_code)}</span>
                   </TableCell>
                   <TableCell className="font-medium">{country.name}</TableCell>
                   <TableCell>

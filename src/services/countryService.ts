@@ -12,6 +12,7 @@ export interface Currency {
 export interface Country {
   id: number;
   name: string;
+  flag: string;
   iso_code: string;
   default_vat_percentage: string;
   base_currency: Currency;
@@ -28,6 +29,7 @@ export interface CountryResponse {
 
 export interface CreateCountryRequest {
   name: string;
+  flag: string;
   iso_code: string;
   base_currency_id: number;
   default_vat_percentage: number;
@@ -36,6 +38,7 @@ export interface CreateCountryRequest {
 
 export interface UpdateCountryRequest {
   name: string;
+  flag: string;
   iso_code: string;
   base_currency_id: number;
   default_vat_percentage: number;
