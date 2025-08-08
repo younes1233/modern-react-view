@@ -1,4 +1,3 @@
-
 import {
   BarChart3,
   Home,
@@ -163,14 +162,6 @@ export function RoleBasedSidebar() {
     );
   };
 
-  // For super_admin, always show all sections regardless of current route
-  const shouldShowSection = (sectionKey: string) => {
-    if (user.role === 'super_admin') {
-      return true; // Always show all sections for super_admin
-    }
-    return menuItems[sectionKey] && menuItems[sectionKey].length > 0;
-  };
-
   return (
     <Sidebar className="border-r border-border bg-background">
       <SidebarHeader className="p-6 border-b border-border">
@@ -186,37 +177,32 @@ export function RoleBasedSidebar() {
       </SidebarHeader>
 
       <SidebarContent className="px-4 py-4 space-y-6">
-        {shouldShowSection('main') && renderMenuGroup(menuItems.main, "Overview")}
-        
-        {shouldShowSection('catalog') && (
+        {menuItems.main && renderMenuGroup(menuItems.main, "Overview")}
+        {menuItems.catalog && (
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.catalog, "Catalog")}
           </>
         )}
-        
-        {shouldShowSection('business') && (
+        {menuItems.business && (
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.business, "Business")}
           </>
         )}
-        
-        {shouldShowSection('management') && (
+        {menuItems.management && (
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.management, "Management")}
           </>
         )}
-        
-        {shouldShowSection('store') && (
+        {menuItems.store && (
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.store, "Store")}
           </>
         )}
-        
-        {shouldShowSection('analytics') && (
+        {menuItems.analytics && (
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.analytics, "Analytics")}
