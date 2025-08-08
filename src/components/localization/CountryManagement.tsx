@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -54,9 +55,19 @@ export const CountryManagement = () => {
   }) => {
     try {
       if (editingCountry) {
-        await updateCountry(editingCountry.id, countryData);
+        // For updates, convert currencies to string array
+        const updateData = {
+          ...countryData,
+          currencies: countryData.currencies?.map(c => c.toString()) || ["1"]
+        };
+        await updateCountry(editingCountry.id, updateData);
       } else {
-        await createCountry(countryData);
+        // For creation, convert currencies to number array
+        const createData = {
+          ...countryData,
+          currencies: countryData.currencies?.map(c => typeof c === 'string' ? parseInt(c) : c) || [1]
+        };
+        await createCountry(createData);
       }
       setIsModalOpen(false);
       setEditingCountry(null);
