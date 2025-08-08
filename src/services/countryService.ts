@@ -22,25 +22,45 @@ export interface CountriesResponse {
   countries: Country[];
 }
 
+export interface CountryResponse {
+  country: Country;
+}
+
+export interface CreateCountryRequest {
+  name: string;
+  iso_code: string;
+  base_currency_id: number;
+  default_vat_percentage: number;
+  currencies: number[];
+}
+
+export interface UpdateCountryRequest {
+  name: string;
+  iso_code: string;
+  base_currency_id: number;
+  default_vat_percentage: number;
+  currencies: string[];
+}
+
 class CountryService extends BaseApiService {
   async getCountries(): Promise<ApiResponse<CountriesResponse>> {
     return this.get<ApiResponse<CountriesResponse>>('/countries');
   }
 
-  async getCountry(id: number): Promise<ApiResponse<Country>> {
-    return this.get<ApiResponse<Country>>(`/countries/${id}`);
+  async getCountry(id: number): Promise<ApiResponse<CountryResponse>> {
+    return this.get<ApiResponse<CountryResponse>>(`/admin/countries/${id}`);
   }
 
-  async createCountry(data: Partial<Country>): Promise<ApiResponse<Country>> {
-    return this.post<ApiResponse<Country>>('/countries', data);
+  async createCountry(data: CreateCountryRequest): Promise<ApiResponse<CountryResponse>> {
+    return this.post<ApiResponse<CountryResponse>>('/admin/countries', data);
   }
 
-  async updateCountry(id: number, data: Partial<Country>): Promise<ApiResponse<Country>> {
-    return this.put<ApiResponse<Country>>(`/countries/${id}`, data);
+  async updateCountry(id: number, data: UpdateCountryRequest): Promise<ApiResponse<CountryResponse>> {
+    return this.put<ApiResponse<CountryResponse>>(`/admin/countries/${id}`, data);
   }
 
   async deleteCountry(id: number): Promise<ApiResponse<void>> {
-    return this.delete<ApiResponse<void>>(`/countries/${id}`);
+    return this.delete<ApiResponse<void>>(`/admin/countries/${id}`);
   }
 }
 

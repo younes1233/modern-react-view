@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { countryService, Country } from '../services/countryService';
-import { useToast } from '@/components/ui/use-toast';
+import { countryService, Country, CreateCountryRequest, UpdateCountryRequest } from '../services/countryService';
+import { useToast } from '@/hooks/use-toast';
 
 export const useCountries = () => {
   const [countries, setCountries] = useState<Country[]>([]);
@@ -31,17 +31,31 @@ export const useCountries = () => {
     }
   };
 
-  const createCountry = async (countryData: Partial<Country>) => {
+  const createCountry = async (countryData: {
+    name: string;
+    iso_code: string;
+    default_vat_percentage: string;
+    base_currency_id?: number;
+    currencies?: number[];
+  }) => {
     try {
-      const response = await countryService.createCountry(countryData);
+      const requestData: CreateCountryRequest = {
+        name: countryData.name,
+        iso_code: countryData.iso_code,
+        base_currency_id: countryData.base_currency_id || 1,
+        default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
+        currencies: countryData.currencies || [1],
+      };
+
+      const response = await countryService.createCountry(requestData);
       
-      if (!response.error && response.details) {
-        setCountries([...countries, response.details]);
+      if (!response.error && response.details?.country) {
+        setCountries([...countries, response.details.country]);
         toast({
           title: "Success",
           description: "Country created successfully",
         });
-        return response.details;
+        return response.details.country;
       } else {
         toast({
           title: "Error",
@@ -56,19 +70,33 @@ export const useCountries = () => {
     }
   };
 
-  const updateCountry = async (id: number, countryData: Partial<Country>) => {
+  const updateCountry = async (id: number, countryData: {
+    name: string;
+    iso_code: string;
+    default_vat_percentage: string;
+    base_currency_id?: number;
+    currencies?: string[];
+  }) => {
     try {
-      const response = await countryService.updateCountry(id, countryData);
+      const requestData: UpdateCountryRequest = {
+        name: countryData.name,
+        iso_code: countryData.iso_code,
+        base_currency_id: countryData.base_currency_id || 1,
+        default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
+        currencies: countryData.currencies || ["1"],
+      };
+
+      const response = await countryService.updateCountry(id, requestData);
       
-      if (!response.error && response.details) {
+      if (!response.error && response.details?.country) {
         setCountries(countries.map(country => 
-          country.id === id ? response.details! : country
+          country.id === id ? response.details!.country : country
         ));
         toast({
           title: "Success",
           description: "Country updated successfully",
         });
-        return response.details;
+        return response.details.country;
       } else {
         toast({
           title: "Error",
@@ -107,6 +135,21 @@ export const useCountries = () => {
     }
   };
 
+  const getCountry = async (id: number) => {
+    try {
+      const response = await countryService.getCountry(id);
+      
+      if (!response.error && response.details?.country) {
+        return response.details.country;
+      } else {
+        throw new Error(response.message || 'Failed to fetch country');
+      }
+    } catch (error) {
+      console.error('Error fetching country:', error);
+      throw error;
+    }
+  };
+
   useEffect(() => {
     fetchCountries();
   }, []);
@@ -119,5 +162,6 @@ export const useCountries = () => {
     createCountry,
     updateCountry,
     deleteCountry,
+    getCountry,
   };
 };
