@@ -8,16 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Country, Currency } from "@/services/countryService";
 
+interface CountryFormData {
+  name: string;
+  iso_code: string;
+  default_vat_percentage: string;
+  base_currency_id?: number;
+  currencies?: number[] | string[];
+}
+
 interface CountryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (country: {
-    name: string;
-    iso_code: string;
-    default_vat_percentage: string;
-    base_currency_id?: number;
-    currencies?: number[] | string[];
-  }) => void;
+  onSave: (country: CountryFormData) => void;
   country: Country | null;
 }
 
@@ -66,8 +68,11 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
     const currenciesSet = new Set(formData.currencies);
     currenciesSet.add(formData.base_currency_id);
     
-    const submitData = {
-      ...formData,
+    const submitData: CountryFormData = {
+      name: formData.name,
+      iso_code: formData.iso_code,
+      default_vat_percentage: formData.default_vat_percentage,
+      base_currency_id: formData.base_currency_id,
       currencies: country ? Array.from(currenciesSet).map(id => id.toString()) : Array.from(currenciesSet),
     };
     

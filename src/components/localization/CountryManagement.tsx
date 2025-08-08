@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +45,13 @@ export const CountryManagement = () => {
     setIsCurrencyModalOpen(true);
   };
 
-  const handleSaveCountry = async (countryData: Partial<Country>) => {
+  const handleSaveCountry = async (countryData: {
+    name: string;
+    iso_code: string;
+    default_vat_percentage: string;
+    base_currency_id?: number;
+    currencies?: number[] | string[];
+  }) => {
     try {
       if (editingCountry) {
         await updateCountry(editingCountry.id, countryData);
