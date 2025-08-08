@@ -15,6 +15,7 @@ import {
   Tag,
   UserCheck,
   CheckCircle,
+  Globe,
 } from "lucide-react"
 
 import {
@@ -43,6 +44,7 @@ const roleMenuItems = {
     management: [
       { title: "User Management", url: "/user-management", icon: UserCheck, description: "Manage users & roles" },
       { title: "Product Approval", url: "/product-approval", icon: CheckCircle, description: "Review submissions" },
+      { title: "Localization", url: "/localization", icon: Globe, description: "Countries & warehouses" },
     ],
     catalog: [
       { title: "Products", url: "/products", icon: Package, description: "Manage inventory" },

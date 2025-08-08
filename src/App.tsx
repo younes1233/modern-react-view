@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +18,7 @@ import RoleLogin from "./pages/RoleLogin";
 import Unauthorized from "./pages/Unauthorized";
 import UserManagement from "./pages/UserManagement";
 import ProductApproval from "./pages/ProductApproval";
+import Localization from "./pages/Localization";
 import SellerProducts from "./pages/SellerProducts";
 import Products from "./pages/Products";
 import Categories from "./pages/Categories";
@@ -85,6 +85,11 @@ const App = () => (
                       <Route path="/product-approval" element={
                         <RoleProtectedRoute allowedRoles={['super_admin']}>
                           <ProductApproval />
+                        </RoleProtectedRoute>
+                      } />
+                      <Route path="/localization" element={
+                        <RoleProtectedRoute allowedRoles={['super_admin']}>
+                          <Localization />
                         </RoleProtectedRoute>
                       } />
 
