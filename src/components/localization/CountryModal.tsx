@@ -4,57 +4,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-
-interface CountryCurrency {
-  currencyCode: string;
-  currencyName: string;
-  currencySymbol: string;
-  exchangeRate: number;
-  isBaseCurrency: boolean;
-}
-
-interface Country {
-  id: number;
-  name: string;
-  code: string;
-  flag: string;
-  isActive: boolean;
-  currencies: CountryCurrency[];
-}
+import { Country } from "@/services/countryService";
 
 interface CountryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (country: Omit<Country, 'id'>) => void;
+  onSave: (country: Partial<Country>) => void;
   country: Country | null;
 }
 
 export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalProps) => {
   const [formData, setFormData] = useState({
     name: "",
-    code: "",
-    flag: "",
-    isActive: true,
-    currencies: [] as CountryCurrency[],
+    iso_code: "",
+    default_vat_percentage: "0",
   });
 
   useEffect(() => {
     if (country) {
       setFormData({
         name: country.name,
-        code: country.code,
-        flag: country.flag,
-        isActive: country.isActive,
-        currencies: country.currencies,
+        iso_code: country.iso_code,
+        default_vat_percentage: country.default_vat_percentage,
       });
     } else {
       setFormData({
         name: "",
-        code: "",
-        flag: "",
-        isActive: true,
-        currencies: [],
+        iso_code: "",
+        default_vat_percentage: "0",
       });
     }
   }, [country]);
@@ -62,6 +39,13 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
+  };
+
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   return (
@@ -72,50 +56,46 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
             {country ? "Edit Country" : "Add New Country"}
           </DialogTitle>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Country Name</Label>
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="United States"
+              onChange={(e) => handleChange("name", e.target.value)}
+              placeholder="Enter country name"
               required
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="code">Country Code</Label>
+            <Label htmlFor="iso_code">ISO Code</Label>
             <Input
-              id="code"
-              value={formData.code}
-              onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
-              placeholder="US"
+              id="iso_code"
+              value={formData.iso_code}
+              onChange={(e) => handleChange("iso_code", e.target.value.toUpperCase())}
+              placeholder="US, GB, DE..."
               maxLength={2}
               required
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="flag">Flag Emoji</Label>
+            <Label htmlFor="vat">Default VAT Percentage</Label>
             <Input
-              id="flag"
-              value={formData.flag}
-              onChange={(e) => setFormData({ ...formData, flag: e.target.value })}
-              placeholder="🇺🇸"
-              required
+              id="vat"
+              type="number"
+              step="0.01"
+              min="0"
+              max="100"
+              value={formData.default_vat_percentage}
+              onChange={(e) => handleChange("default_vat_percentage", e.target.value)}
+              placeholder="0.00"
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-            />
-            <Label htmlFor="isActive">Active</Label>
-          </div>
-          <div className="text-sm text-muted-foreground">
-            Note: Use the currency management button to add and configure currencies for this country.
-          </div>
-          <div className="flex justify-end space-x-2">
+
+          <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
