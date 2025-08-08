@@ -23,13 +23,11 @@ interface CountryModalProps {
   country: Country | null;
 }
 
-// Mock available currencies - in real app, this would come from an API
+// Available currencies based on the API response
 const availableCurrencies: Currency[] = [
   { id: 1, code: "USD", name: "US Dollar", symbol: "$", is_active: 1 },
   { id: 2, code: "LBP", name: "Lebanese Pound", symbol: "LBP", is_active: 1 },
   { id: 3, code: "SYP", name: "Syrian Pound", symbol: "SYP", is_active: 1 },
-  { id: 4, code: "EUR", name: "Euro", symbol: "€", is_active: 1 },
-  { id: 5, code: "GBP", name: "British Pound", symbol: "£", is_active: 1 },
 ];
 
 export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalProps) => {
@@ -183,7 +181,7 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
 
           <div className="space-y-2">
             <Label>Supported Currencies</Label>
-            <div className="grid grid-cols-2 gap-2 max-h-32 overflow-y-auto border rounded p-2">
+            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded p-2">
               {availableCurrencies.filter(c => c.is_active).map((currency) => (
                 <div key={currency.id} className="flex items-center space-x-2">
                   <Checkbox
