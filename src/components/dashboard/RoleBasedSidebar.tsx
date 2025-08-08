@@ -1,4 +1,3 @@
-
 import {
   BarChart3,
   Home,
@@ -41,11 +40,6 @@ const roleMenuItems = {
     main: [
       { title: "Dashboard", url: "/", icon: Home, description: "Overview & analytics" },
     ],
-    management: [
-      { title: "User Management", url: "/user-management", icon: UserCheck, description: "Manage users & roles" },
-      { title: "Product Approval", url: "/product-approval", icon: CheckCircle, description: "Review submissions" },
-      { title: "Localization", url: "/localization", icon: Globe, description: "Countries & warehouses" },
-    ],
     catalog: [
       { title: "Products", url: "/products", icon: Package, description: "Manage inventory" },
       { title: "Categories", url: "/categories", icon: Settings, description: "Product categories" },
@@ -56,6 +50,11 @@ const roleMenuItems = {
       { title: "Returns", url: "/returns", icon: RotateCcw, description: "Return requests", badge: "3" },
       { title: "Customers", url: "/customers", icon: Users, description: "Customer database" },
       { title: "Coupons", url: "/coupons", icon: Tag, description: "Discount management" },
+    ],
+    management: [
+      { title: "User Management", url: "/user-management", icon: UserCheck, description: "Manage users & roles" },
+      { title: "Product Approval", url: "/product-approval", icon: CheckCircle, description: "Review submissions" },
+      { title: "Localization", url: "/localization", icon: Globe, description: "Countries & warehouses" },
     ],
     store: [
       { title: "Store Management", url: "/store-management", icon: Store, description: "Store settings" },
@@ -179,12 +178,6 @@ export function RoleBasedSidebar() {
 
       <SidebarContent className="px-4 py-4 space-y-6">
         {menuItems.main && renderMenuGroup(menuItems.main, "Overview")}
-        {menuItems.management && (
-          <>
-            <Separator className="my-4" />
-            {renderMenuGroup(menuItems.management, "Management")}
-          </>
-        )}
         {menuItems.catalog && (
           <>
             <Separator className="my-4" />
@@ -195,6 +188,12 @@ export function RoleBasedSidebar() {
           <>
             <Separator className="my-4" />
             {renderMenuGroup(menuItems.business, "Business")}
+          </>
+        )}
+        {menuItems.management && (
+          <>
+            <Separator className="my-4" />
+            {renderMenuGroup(menuItems.management, "Management")}
           </>
         )}
         {menuItems.store && (
