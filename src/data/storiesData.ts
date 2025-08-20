@@ -12,7 +12,7 @@ export const mockStories: Story[] = [
     isActive: true,
     order: 0,
     createdAt: "2025-01-19T10:00:00.000Z",
-    expiresAt: "2025-01-21T10:00:00.000Z"
+    expiresAt: "2025-09-21T10:00:00.000Z"
   },
   {
     id: "2",
@@ -24,7 +24,7 @@ export const mockStories: Story[] = [
     isActive: true,
     order: 1,
     createdAt: "2025-01-19T14:00:00.000Z",
-    expiresAt: "2025-01-21T14:00:00.000Z"
+    expiresAt: "2025-09-21T14:00:00.000Z"
   },
   {
     id: "3",
@@ -36,7 +36,7 @@ export const mockStories: Story[] = [
     isActive: true,
     order: 2,
     createdAt: "2025-01-19T16:00:00.000Z",
-    expiresAt: "2025-01-21T16:00:00.000Z"
+    expiresAt: "2025-09-21T16:00:00.000Z"
   },
   {
     id: "4",
@@ -48,7 +48,7 @@ export const mockStories: Story[] = [
     isActive: true,
     order: 3,
     createdAt: "2025-01-19T18:00:00.000Z",
-    expiresAt: "2025-01-21T18:00:00.000Z"
+    expiresAt: "2025-09-21T18:00:00.000Z"
   },
   {
     id: "5",
@@ -60,7 +60,7 @@ export const mockStories: Story[] = [
     isActive: true,
     order: 4,
     createdAt: "2025-01-19T20:00:00.000Z",
-    expiresAt: "2025-01-22T00:00:00.000Z"
+    expiresAt: "2025-09-22T00:00:00.000Z"
   },
   {
     id: "6",
@@ -72,7 +72,7 @@ export const mockStories: Story[] = [
     isActive: false,
     order: 5,
     createdAt: "2025-01-18T12:00:00.000Z",
-    expiresAt: "2025-01-20T12:00:00.000Z"
+    expiresAt: "2025-09-20T12:00:00.000Z"
   }
 ];
 
