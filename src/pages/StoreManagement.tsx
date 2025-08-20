@@ -7,8 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BannerManagement } from "@/components/store-management/BannerManagement";
 import { ProductDisplay } from "@/components/store-management/ProductDisplay";
 import { HeroManagement } from "@/components/store-management/HeroManagement";
+import { StoriesManagement } from "@/components/store-management/StoriesManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Store, Image, Package, Palette, Zap, Grid3X3, TrendingUp, Star } from "lucide-react";
+import { Store, Image, Package, Palette, Zap, Grid3X3, TrendingUp, Star, Film } from "lucide-react";
 import { LayoutManagement } from "@/components/store-management/LayoutManagement";
 import { ProductListingManagement } from "@/components/store-management/ProductListingManagement";
 import { useCategoryStats } from "@/hooks/useCategoryStats";
@@ -127,10 +128,14 @@ const StoreManagement = () => {
 
             {/* Management Tabs */}
             <Tabs defaultValue="hero" className="space-y-6">
-              <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:grid-cols-5">
+              <TabsList className="grid w-full grid-cols-6 lg:w-auto lg:grid-cols-6">
                 <TabsTrigger value="hero" className="flex items-center gap-2">
                   <Zap className="w-4 h-4" />
                   Hero
+                </TabsTrigger>
+                <TabsTrigger value="stories" className="flex items-center gap-2">
+                  <Film className="w-4 h-4" />
+                  Stories
                 </TabsTrigger>
                 <TabsTrigger value="layout" className="flex items-center gap-2">
                   <Store className="w-4 h-4" />
@@ -152,6 +157,10 @@ const StoreManagement = () => {
 
               <TabsContent value="hero">
                 <HeroManagement />
+              </TabsContent>
+
+              <TabsContent value="stories">
+                <StoriesManagement />
               </TabsContent>
 
               <TabsContent value="layout">

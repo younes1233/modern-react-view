@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
 import { ShopByCategory } from "@/components/store/ShopByCategory";
 import { ProductSection } from "@/components/store/ProductSection";
+import { StoriesRing } from "@/components/store/StoriesRing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -195,6 +195,9 @@ const Store = () => {
             </section>
           )
         )}
+
+        {/* Stories Ring */}
+        <StoriesRing />
 
         {/* Shop by Category with Loading */}
         <div className="w-full overflow-hidden">
