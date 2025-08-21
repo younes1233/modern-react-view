@@ -11,56 +11,14 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import { CurrencyModal } from "./CurrencyModal";
-
-interface Currency {
-  id: number;
-  code: string;
-  name: string;
-  symbol: string;
-  isActive: boolean;
-  usedInCountries: string[];
-}
-
-// Mock data - now currencies are just definitions without exchange rates
-const mockCurrencies: Currency[] = [
-  { 
-    id: 1, 
-    code: "USD", 
-    name: "US Dollar", 
-    symbol: "$", 
-    isActive: true,
-    usedInCountries: ["United States", "United Kingdom", "Germany"]
-  },
-  { 
-    id: 2, 
-    code: "EUR", 
-    name: "Euro", 
-    symbol: "€", 
-    isActive: true,
-    usedInCountries: ["Germany"]
-  },
-  { 
-    id: 3, 
-    code: "GBP", 
-    name: "British Pound", 
-    symbol: "£", 
-    isActive: true,
-    usedInCountries: ["United Kingdom"]
-  },
-  { 
-    id: 4, 
-    code: "CAD", 
-    name: "Canadian Dollar", 
-    symbol: "C$", 
-    isActive: false,
-    usedInCountries: ["Canada"]
-  },
-];
+import { useCurrencies } from "@/hooks/useCurrencies";
+import { Currency } from "@/services/currencyService";
 
 export const CurrencyManagement = () => {
-  const [currencies, setCurrencies] = useState<Currency[]>(mockCurrencies);
+  const { currencies, loading, error, createCurrency, updateCurrency, deleteCurrency } = useCurrencies();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
 
@@ -74,24 +32,68 @@ export const CurrencyManagement = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteCurrency = (id: number) => {
-    setCurrencies(currencies.filter(currency => currency.id !== id));
+  const handleDeleteCurrency = async (id: number) => {
+    if (confirm('Are you sure you want to delete this currency?')) {
+      await deleteCurrency(id);
+    }
   };
 
-  const handleSaveCurrency = (currencyData: Omit<Currency, 'id'>) => {
-    if (editingCurrency) {
-      setCurrencies(currencies.map(currency => 
-        currency.id === editingCurrency.id 
-          ? { ...currencyData, id: editingCurrency.id }
-          : currency
-      ));
-    } else {
-      const newCurrency = { ...currencyData, id: Date.now() };
-      setCurrencies([...currencies, newCurrency]);
+  const handleSaveCurrency = async (currencyData: {
+    code: string;
+    name: string;
+    symbol: string;
+    is_active: boolean;
+  }) => {
+    try {
+      if (editingCurrency) {
+        await updateCurrency(editingCurrency.id, {
+          name: currencyData.name,
+          symbol: currencyData.symbol,
+          is_active: currencyData.is_active,
+        });
+      } else {
+        await createCurrency(currencyData);
+      }
+      setIsModalOpen(false);
+      setEditingCurrency(null);
+    } catch (error) {
+      console.error('Error saving currency:', error);
     }
-    setIsModalOpen(false);
-    setEditingCurrency(null);
   };
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <div className="flex justify-between items-center">
+            <div>
+              <CardTitle>Global Currencies</CardTitle>
+              <CardDescription>Loading currencies...</CardDescription>
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (error) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Global Currencies</CardTitle>
+          <CardDescription className="text-red-600">{error}</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -117,7 +119,6 @@ export const CurrencyManagement = () => {
                 <TableHead>Code</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Symbol</TableHead>
-                <TableHead>Used in Countries</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
@@ -131,21 +132,8 @@ export const CurrencyManagement = () => {
                   <TableCell className="font-medium">{currency.name}</TableCell>
                   <TableCell className="text-lg font-bold">{currency.symbol}</TableCell>
                   <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {currency.usedInCountries.length > 0 ? (
-                        currency.usedInCountries.map((country, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {country}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground text-sm">Not used</span>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={currency.isActive ? "default" : "secondary"}>
-                      {currency.isActive ? "Active" : "Inactive"}
+                    <Badge variant={currency.is_active ? "default" : "secondary"}>
+                      {currency.is_active ? "Active" : "Inactive"}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -161,7 +149,6 @@ export const CurrencyManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleDeleteCurrency(currency.id)}
-                        disabled={currency.usedInCountries.length > 0}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>

@@ -5,20 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-
-interface Currency {
-  id: number;
-  code: string;
-  name: string;
-  symbol: string;
-  isActive: boolean;
-  usedInCountries: string[];
-}
+import { Currency } from "@/services/currencyService";
 
 interface CurrencyModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (currency: Omit<Currency, 'id'>) => void;
+  onSave: (currency: {
+    code: string;
+    name: string;
+    symbol: string;
+    is_active: boolean;
+  }) => void;
   currency: Currency | null;
 }
 
@@ -27,8 +24,7 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
     code: "",
     name: "",
     symbol: "",
-    isActive: true,
-    usedInCountries: [] as string[],
+    is_active: true,
   });
 
   useEffect(() => {
@@ -37,16 +33,14 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
         code: currency.code,
         name: currency.name,
         symbol: currency.symbol,
-        isActive: currency.isActive,
-        usedInCountries: currency.usedInCountries,
+        is_active: currency.is_active,
       });
     } else {
       setFormData({
         code: "",
         name: "",
         symbol: "",
-        isActive: true,
-        usedInCountries: [],
+        is_active: true,
       });
     }
   }, [currency]);
@@ -74,7 +68,11 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               placeholder="USD"
               maxLength={3}
               required
+              disabled={!!currency} // Disable editing code for existing currencies
             />
+            {currency && (
+              <p className="text-sm text-muted-foreground">Currency code cannot be changed</p>
+            )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="name">Currency Name</Label>
@@ -83,6 +81,7 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="US Dollar"
+              maxLength={255}
               required
             />
           </div>
@@ -93,16 +92,17 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               value={formData.symbol}
               onChange={(e) => setFormData({ ...formData, symbol: e.target.value })}
               placeholder="$"
+              maxLength={3}
               required
             />
           </div>
           <div className="flex items-center space-x-2">
             <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+              id="is_active"
+              checked={formData.is_active}
+              onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
             />
-            <Label htmlFor="isActive">Active</Label>
+            <Label htmlFor="is_active">Active</Label>
           </div>
           <div className="text-sm text-muted-foreground">
             Note: This currency will be available for assignment in countries. 
