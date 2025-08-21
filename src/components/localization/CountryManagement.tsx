@@ -53,29 +53,43 @@ export const CountryManagement = () => {
     currencies?: number[] | string[];
   }) => {
     try {
+      console.log('Saving country data:', countryData);
+
       if (editingCountry) {
-        // For updates, convert currencies to string array
+        // Ensure all required fields are present for update
         const updateData = {
-          ...countryData,
-          currencies: countryData.currencies?.map(c => c.toString()) || ["1"]
+          name: countryData.name,
+          flag: getFlagEmoji(countryData.iso_code), // Always include flag
+          iso_code: countryData.iso_code,
+          default_vat_percentage: countryData.default_vat_percentage,
+          base_currency_id: countryData.base_currency_id || 1,
+          currencies: countryData.currencies || [countryData.base_currency_id?.toString() || "1"]
         };
+        
+        console.log('Update data being sent:', updateData);
         await updateCountry(editingCountry.id, updateData);
       } else {
-        // For creation, convert currencies to number array
+        // Ensure all required fields are present for create
         const createData = {
-          ...countryData,
-          currencies: countryData.currencies?.map(c => typeof c === 'string' ? parseInt(c) : c) || [1]
+          name: countryData.name,
+          flag: getFlagEmoji(countryData.iso_code), // Always include flag
+          iso_code: countryData.iso_code,
+          default_vat_percentage: countryData.default_vat_percentage,
+          base_currency_id: countryData.base_currency_id || 1,
+          currencies: countryData.currencies?.map(c => typeof c === 'string' ? parseInt(c) : c) || [countryData.base_currency_id || 1]
         };
+        
+        console.log('Create data being sent:', createData);
         await createCountry(createData);
       }
       setIsModalOpen(false);
       setEditingCountry(null);
     } catch (error) {
+      console.error('Error in handleSaveCountry:', error);
       // Error handling is done in the hook
     }
   };
 
-  // Convert API country format to legacy format for CountryCurrencyModal
   const convertToLegacyCountry = (country: Country) => ({
     id: country.id,
     name: country.name,

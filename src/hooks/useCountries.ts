@@ -40,13 +40,15 @@ export const useCountries = () => {
   }) => {
     try {
       const requestData: CreateCountryRequest = {
-        name: countryData.name,
+        name: countryData.name.trim(),
         flag: countryData.flag || getFlagEmoji(countryData.iso_code),
-        iso_code: countryData.iso_code,
+        iso_code: countryData.iso_code.trim().toUpperCase(),
         base_currency_id: countryData.base_currency_id || 1,
         default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
-        currencies: countryData.currencies || [1],
+        currencies: countryData.currencies || [countryData.base_currency_id || 1],
       };
+
+      console.log('Creating country with data:', requestData);
 
       const response = await countryService.createCountry(requestData);
       
@@ -77,17 +79,24 @@ export const useCountries = () => {
     iso_code: string;
     default_vat_percentage: string;
     base_currency_id?: number;
-    currencies?: string[];
+    currencies?: string[] | number[];
   }) => {
     try {
+      // Convert currencies to string array as required by the API for updates
+      const currenciesAsStrings = countryData.currencies?.map(c => 
+        typeof c === 'string' ? c : c.toString()
+      ) || ["1"];
+
       const requestData: UpdateCountryRequest = {
-        name: countryData.name,
+        name: countryData.name.trim(),
         flag: countryData.flag || getFlagEmoji(countryData.iso_code),
-        iso_code: countryData.iso_code,
+        iso_code: countryData.iso_code.trim().toUpperCase(),
         base_currency_id: countryData.base_currency_id || 1,
         default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
-        currencies: countryData.currencies || ["1"],
+        currencies: currenciesAsStrings,
       };
+
+      console.log('Updating country with data:', requestData);
 
       const response = await countryService.updateCountry(id, requestData);
       
