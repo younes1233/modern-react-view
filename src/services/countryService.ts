@@ -37,12 +37,12 @@ export interface CreateCountryRequest {
 }
 
 export interface UpdateCountryRequest {
-  name: string;
-  flag: string;
-  iso_code: string;
-  base_currency_id: number;
-  default_vat_percentage: number;
-  currencies: string[];
+  name?: string;
+  flag: string; // Required for updates
+  iso_code?: string;
+  base_currency_id?: number;
+  default_vat_percentage?: number;
+  currencies?: number[]; // Should be array of integers, not strings
 }
 
 class CountryService extends BaseApiService {

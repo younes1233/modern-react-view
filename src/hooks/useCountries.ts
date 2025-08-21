@@ -82,18 +82,18 @@ export const useCountries = () => {
     currencies?: string[] | number[];
   }) => {
     try {
-      // Convert currencies to string array as required by the API for updates
-      const currenciesAsStrings = countryData.currencies?.map(c => 
-        typeof c === 'string' ? c : c.toString()
-      ) || ["1"];
+      // Convert currencies to number array as required by the API
+      const currenciesAsNumbers = countryData.currencies?.map(c => 
+        typeof c === 'string' ? parseInt(c) : c
+      ) || [1];
 
       const requestData: UpdateCountryRequest = {
         name: countryData.name.trim(),
-        flag: countryData.flag || getFlagEmoji(countryData.iso_code),
+        flag: countryData.flag || getFlagEmoji(countryData.iso_code), // Required field
         iso_code: countryData.iso_code.trim().toUpperCase(),
         base_currency_id: countryData.base_currency_id || 1,
         default_vat_percentage: parseFloat(countryData.default_vat_percentage) || 0,
-        currencies: currenciesAsStrings,
+        currencies: currenciesAsNumbers, // Must be array of integers
       };
 
       console.log('Updating country with data:', requestData);
