@@ -13,11 +13,13 @@ import {
   Globe, 
   MapPin, 
   Warehouse, 
-  DollarSign 
+  DollarSign,
+  Layers
 } from "lucide-react";
 import { CountryManagement } from "@/components/localization/CountryManagement";
 import { WarehouseManagement } from "@/components/localization/WarehouseManagement";
 import { CurrencyManagement } from "@/components/localization/CurrencyManagement";
+import { ZoneStructureManagement } from "@/components/localization/ZoneStructureManagement";
 
 const Localization = () => {
   return (
@@ -34,12 +36,12 @@ const Localization = () => {
                     <Globe className="w-8 h-8 text-blue-600" />
                     Localization
                   </h1>
-                  <p className="text-gray-600 dark:text-gray-400">Manage countries, warehouses, and currencies</p>
+                  <p className="text-gray-600 dark:text-gray-400">Manage countries, warehouses, zone structures, and currencies</p>
                 </div>
               </div>
 
               <Tabs defaultValue="countries" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-4">
                   <TabsTrigger value="countries" className="flex items-center gap-2">
                     <MapPin className="w-4 h-4" />
                     Countries
@@ -47,6 +49,10 @@ const Localization = () => {
                   <TabsTrigger value="warehouses" className="flex items-center gap-2">
                     <Warehouse className="w-4 h-4" />
                     Warehouses
+                  </TabsTrigger>
+                  <TabsTrigger value="zone-structures" className="flex items-center gap-2">
+                    <Layers className="w-4 h-4" />
+                    Zone Structures
                   </TabsTrigger>
                   <TabsTrigger value="currencies" className="flex items-center gap-2">
                     <DollarSign className="w-4 h-4" />
@@ -60,6 +66,10 @@ const Localization = () => {
 
                 <TabsContent value="warehouses" className="space-y-6">
                   <WarehouseManagement />
+                </TabsContent>
+
+                <TabsContent value="zone-structures" className="space-y-6">
+                  <ZoneStructureManagement />
                 </TabsContent>
 
                 <TabsContent value="currencies" className="space-y-6">
