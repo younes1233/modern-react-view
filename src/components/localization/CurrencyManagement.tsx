@@ -22,6 +22,8 @@ export const CurrencyManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
 
+  console.log('CurrencyManagement render:', { currencies, loading, error });
+
   const handleAddCurrency = () => {
     console.log('Add currency clicked');
     setEditingCurrency(null);
@@ -145,60 +147,64 @@ export const CurrencyManagement = () => {
               </Button>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Code</TableHead>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Symbol</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {currencies.map((currency) => (
-                  <TableRow key={currency.id}>
-                    <TableCell>
-                      <Badge variant="outline" className="font-mono">
-                        {currency.code}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="font-medium">{currency.name}</TableCell>
-                    <TableCell className="text-lg font-bold">{currency.symbol}</TableCell>
-                    <TableCell>
-                      <Badge variant={currency.is_active ? "default" : "secondary"}>
-                        {currency.is_active ? "Active" : "Inactive"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditCurrency(currency)}
-                          className="hover:bg-blue-50"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteCurrency(currency.id)}
-                          className="hover:bg-red-50 hover:text-red-600"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+            <div className="space-y-4">
+              <div className="text-sm text-gray-600">
+                Found {currencies.length} currencies
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Code</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Symbol</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {currencies.map((currency) => (
+                    <TableRow key={currency.id}>
+                      <TableCell>
+                        <Badge variant="outline" className="font-mono">
+                          {currency.code}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="font-medium">{currency.name}</TableCell>
+                      <TableCell className="text-lg font-bold">{currency.symbol}</TableCell>
+                      <TableCell>
+                        <Badge variant={currency.is_active ? "default" : "secondary"}>
+                          {currency.is_active ? "Active" : "Inactive"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end space-x-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditCurrency(currency)}
+                            className="hover:bg-blue-50"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteCurrency(currency.id)}
+                            className="hover:bg-red-50 hover:text-red-600"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
 
-      {/* Currency Modal */}
       <CurrencyModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

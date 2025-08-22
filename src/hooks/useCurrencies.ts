@@ -14,11 +14,15 @@ export const useCurrencies = () => {
       setLoading(true);
       setError(null);
       
+      console.log('Fetching currencies...');
       const response = await currencyService.getCurrencies();
+      console.log('Currency API response:', response);
       
       if (!response.error && response.details?.currencies) {
+        console.log('Setting currencies:', response.details.currencies);
         setCurrencies(response.details.currencies);
       } else {
+        console.error('API error:', response.message);
         setError(response.message || 'Failed to load currencies');
         setCurrencies([]);
       }
@@ -48,9 +52,10 @@ export const useCurrencies = () => {
       console.log('Creating currency with data:', requestData);
 
       const response = await currencyService.createCurrency(requestData);
+      console.log('Create currency response:', response);
       
       if (!response.error && response.details?.currency) {
-        setCurrencies([...currencies, response.details.currency]);
+        setCurrencies(prev => [...prev, response.details!.currency]);
         toast({
           title: "Success",
           description: "Currency created successfully",
@@ -66,6 +71,11 @@ export const useCurrencies = () => {
       }
     } catch (error) {
       console.error('Error creating currency:', error);
+      toast({
+        title: "Error",
+        description: "Failed to create currency",
+        variant: "destructive",
+      });
       throw error;
     }
   };
@@ -91,9 +101,10 @@ export const useCurrencies = () => {
       console.log('Updating currency with data:', requestData);
 
       const response = await currencyService.updateCurrency(id, requestData);
+      console.log('Update currency response:', response);
       
       if (!response.error && response.details?.currency) {
-        setCurrencies(currencies.map(currency => 
+        setCurrencies(prev => prev.map(currency => 
           currency.id === id ? response.details!.currency : currency
         ));
         toast({
@@ -111,16 +122,23 @@ export const useCurrencies = () => {
       }
     } catch (error) {
       console.error('Error updating currency:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update currency",
+        variant: "destructive",
+      });
       throw error;
     }
   };
 
   const deleteCurrency = async (id: number) => {
     try {
+      console.log('Deleting currency:', id);
       const response = await currencyService.deleteCurrency(id);
+      console.log('Delete currency response:', response);
       
       if (!response.error) {
-        setCurrencies(currencies.filter(currency => currency.id !== id));
+        setCurrencies(prev => prev.filter(currency => currency.id !== id));
         toast({
           title: "Success",
           description: "Currency deleted successfully",
@@ -135,6 +153,11 @@ export const useCurrencies = () => {
       }
     } catch (error) {
       console.error('Error deleting currency:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete currency",
+        variant: "destructive",
+      });
       throw error;
     }
   };
