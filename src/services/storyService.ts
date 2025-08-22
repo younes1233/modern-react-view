@@ -65,20 +65,49 @@ class StoryService extends BaseApiService {
 
   async createStory(data: CreateStoryData): Promise<Story> {
     const formData = new FormData();
+    
+    // Add required fields
     formData.append('title', data.title);
-    if (data.content) formData.append('content', data.content);
     formData.append('image', data.image);
-    if (data.background_color) formData.append('background_color', data.background_color);
-    if (data.text_color) formData.append('text_color', data.text_color);
-    if (data.is_active !== undefined) formData.append('is_active', data.is_active.toString());
-    if (data.expires_at) formData.append('expires_at', data.expires_at);
-    if (data.order_index !== undefined) formData.append('order_index', data.order_index.toString());
+    
+    // Add optional fields only if they exist
+    if (data.content) {
+      formData.append('content', data.content);
+    }
+    if (data.background_color) {
+      formData.append('background_color', data.background_color);
+    }
+    if (data.text_color) {
+      formData.append('text_color', data.text_color);
+    }
+    if (data.is_active !== undefined) {
+      formData.append('is_active', data.is_active ? '1' : '0');
+    }
+    if (data.expires_at) {
+      formData.append('expires_at', data.expires_at);
+    }
+    if (data.order_index !== undefined) {
+      formData.append('order_index', data.order_index.toString());
+    }
+
+    console.log('Creating story with FormData:', {
+      title: data.title,
+      hasImage: !!data.image,
+      imageSize: data.image?.size,
+      imageName: data.image?.name,
+      content: data.content,
+      background_color: data.background_color,
+      text_color: data.text_color,
+      is_active: data.is_active,
+      expires_at: data.expires_at,
+      order_index: data.order_index
+    });
 
     const response = await this.request<StoryResponse>('/stories', {
       method: 'POST',
       body: formData,
       headers: {
-        // Don't set Content-Type for FormData, let the browser set it
+        // Remove Content-Type to let browser set it with boundary for FormData
       },
     });
     return response.details.story;
@@ -86,20 +115,38 @@ class StoryService extends BaseApiService {
 
   async updateStory(id: string, data: UpdateStoryData): Promise<Story> {
     const formData = new FormData();
-    if (data.title) formData.append('title', data.title);
-    if (data.content) formData.append('content', data.content);
-    if (data.image) formData.append('image', data.image);
-    if (data.background_color) formData.append('background_color', data.background_color);
-    if (data.text_color) formData.append('text_color', data.text_color);
-    if (data.is_active !== undefined) formData.append('is_active', data.is_active.toString());
-    if (data.expires_at) formData.append('expires_at', data.expires_at);
-    if (data.order_index !== undefined) formData.append('order_index', data.order_index.toString());
+    
+    // Add fields only if they exist
+    if (data.title) {
+      formData.append('title', data.title);
+    }
+    if (data.content !== undefined) {
+      formData.append('content', data.content);
+    }
+    if (data.image) {
+      formData.append('image', data.image);
+    }
+    if (data.background_color) {
+      formData.append('background_color', data.background_color);
+    }
+    if (data.text_color) {
+      formData.append('text_color', data.text_color);
+    }
+    if (data.is_active !== undefined) {
+      formData.append('is_active', data.is_active ? '1' : '0');
+    }
+    if (data.expires_at) {
+      formData.append('expires_at', data.expires_at);
+    }
+    if (data.order_index !== undefined) {
+      formData.append('order_index', data.order_index.toString());
+    }
 
     const response = await this.request<StoryResponse>(`/stories/${id}`, {
       method: 'PUT',
       body: formData,
       headers: {
-        // Don't set Content-Type for FormData, let the browser set it
+        // Remove Content-Type to let browser set it with boundary for FormData
       },
     });
     return response.details.story;

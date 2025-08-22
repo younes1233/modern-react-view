@@ -42,19 +42,28 @@ class BaseApiService {
     
     // Build headers with required API secret and optional Bearer token
     const headers: Record<string, string> = {
-      'Content-Type': 'application/json',
       'Accept': 'application/json',
       'X-API-SECRET': this.apiSecret,
     };
+
+    // Only add Content-Type for non-FormData requests
+    if (!(options.body instanceof FormData)) {
+      headers['Content-Type'] = 'application/json';
+    }
 
     // Add Bearer token if available
     if (BaseApiService.token) {
       headers['Authorization'] = `Bearer ${BaseApiService.token}`;
     }
 
-    // Merge with any additional headers
+    // Merge with any additional headers, but don't override Content-Type for FormData
     if (options.headers) {
-      Object.assign(headers, options.headers);
+      const additionalHeaders = options.headers as Record<string, string>;
+      Object.keys(additionalHeaders).forEach(key => {
+        if (key !== 'Content-Type' || !(options.body instanceof FormData)) {
+          headers[key] = additionalHeaders[key];
+        }
+      });
     }
     
     const config: RequestInit = {
@@ -65,6 +74,7 @@ class BaseApiService {
     console.log('API Request:', {
       method: config.method || 'GET',
       url,
+      isFormData: options.body instanceof FormData,
       headers: {
         ...headers,
         'X-API-SECRET': '[HIDDEN]', // Don't log the actual secret
