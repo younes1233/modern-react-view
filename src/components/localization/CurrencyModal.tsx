@@ -27,8 +27,11 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
     is_active: true,
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   useEffect(() => {
     if (currency) {
+      console.log('Editing currency:', currency);
       setFormData({
         code: currency.code,
         name: currency.name,
@@ -36,6 +39,7 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
         is_active: currency.is_active,
       });
     } else {
+      console.log('Creating new currency');
       setFormData({
         code: "",
         name: "",
@@ -43,24 +47,52 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
         is_active: true,
       });
     }
-  }, [currency]);
+  }, [currency, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSave(formData);
+    
+    if (!formData.code.trim() || !formData.name.trim() || !formData.symbol.trim()) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    
+    try {
+      console.log('Submitting currency form:', formData);
+      await onSave({
+        code: formData.code.trim().toUpperCase(),
+        name: formData.name.trim(),
+        symbol: formData.symbol.trim(),
+        is_active: formData.is_active,
+      });
+    } catch (error) {
+      console.error('Error submitting form:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    console.log('Modal close requested');
+    if (!isSubmitting) {
+      onClose();
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
             {currency ? "Edit Currency" : "Add New Currency"}
           </DialogTitle>
         </DialogHeader>
+        
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="code">Currency Code</Label>
+            <Label htmlFor="code">Currency Code *</Label>
             <Input
               id="code"
               value={formData.code}
@@ -68,14 +100,18 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               placeholder="USD"
               maxLength={3}
               required
-              disabled={!!currency} // Disable editing code for existing currencies
+              disabled={!!currency || isSubmitting}
+              className="font-mono"
             />
             {currency && (
-              <p className="text-sm text-muted-foreground">Currency code cannot be changed</p>
+              <p className="text-sm text-muted-foreground">
+                Currency code cannot be changed for existing currencies
+              </p>
             )}
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="name">Currency Name</Label>
+            <Label htmlFor="name">Currency Name *</Label>
             <Input
               id="name"
               value={formData.name}
@@ -83,10 +119,12 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               placeholder="US Dollar"
               maxLength={255}
               required
+              disabled={isSubmitting}
             />
           </div>
+
           <div className="space-y-2">
-            <Label htmlFor="symbol">Currency Symbol</Label>
+            <Label htmlFor="symbol">Currency Symbol *</Label>
             <Input
               id="symbol"
               value={formData.symbol}
@@ -94,26 +132,51 @@ export const CurrencyModal = ({ isOpen, onClose, onSave, currency }: CurrencyMod
               placeholder="$"
               maxLength={3}
               required
+              disabled={isSubmitting}
+              className="font-bold text-lg"
             />
           </div>
+
           <div className="flex items-center space-x-2">
             <Switch
               id="is_active"
               checked={formData.is_active}
               onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+              disabled={isSubmitting}
             />
-            <Label htmlFor="is_active">Active</Label>
+            <Label htmlFor="is_active">Active Currency</Label>
           </div>
-          <div className="text-sm text-muted-foreground">
-            Note: This currency will be available for assignment in countries. 
-            Exchange rates are configured per country.
+
+          <div className="text-sm text-muted-foreground bg-blue-50 p-3 rounded-md">
+            <p className="font-medium text-blue-900 mb-1">Note:</p>
+            <p className="text-blue-800">
+              This currency will be available for assignment in countries. 
+              Exchange rates are configured per country in the Countries section.
+            </p>
           </div>
-          <div className="flex justify-end space-x-2">
-            <Button type="button" variant="outline" onClick={onClose}>
+
+          <div className="flex justify-end space-x-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
               Cancel
             </Button>
-            <Button type="submit">
-              {currency ? "Update" : "Create"} Currency
+            <Button 
+              type="submit"
+              disabled={isSubmitting}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  {currency ? "Updating..." : "Creating..."}
+                </>
+              ) : (
+                currency ? "Update Currency" : "Create Currency"
+              )}
             </Button>
           </div>
         </form>
