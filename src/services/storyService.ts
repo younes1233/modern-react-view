@@ -70,23 +70,23 @@ class StoryService extends BaseApiService {
     formData.append('title', data.title);
     formData.append('image', data.image);
     
-    // Add optional fields only if they exist
-    if (data.content) {
-      formData.append('content', data.content);
+    // Add optional fields only if they exist and are not empty
+    if (data.content && data.content.trim()) {
+      formData.append('content', data.content.trim());
     }
-    if (data.background_color) {
+    if (data.background_color && data.background_color !== '#000000') {
       formData.append('background_color', data.background_color);
     }
-    if (data.text_color) {
+    if (data.text_color && data.text_color !== '#ffffff') {
       formData.append('text_color', data.text_color);
     }
     if (data.is_active !== undefined) {
-      formData.append('is_active', data.is_active ? '1' : '0');
+      formData.append('is_active', data.is_active ? 'true' : 'false');
     }
     if (data.expires_at) {
       formData.append('expires_at', data.expires_at);
     }
-    if (data.order_index !== undefined) {
+    if (data.order_index !== undefined && data.order_index > 0) {
       formData.append('order_index', data.order_index.toString());
     }
 
@@ -106,9 +106,6 @@ class StoryService extends BaseApiService {
     const response = await this.request<StoryResponse>('/stories', {
       method: 'POST',
       body: formData,
-      headers: {
-        // Remove Content-Type to let browser set it with boundary for FormData
-      },
     });
     return response.details.story;
   }
@@ -117,37 +114,36 @@ class StoryService extends BaseApiService {
     const formData = new FormData();
     
     // Add fields only if they exist
-    if (data.title) {
-      formData.append('title', data.title);
+    if (data.title && data.title.trim()) {
+      formData.append('title', data.title.trim());
     }
     if (data.content !== undefined) {
-      formData.append('content', data.content);
+      if (data.content.trim()) {
+        formData.append('content', data.content.trim());
+      }
     }
     if (data.image) {
       formData.append('image', data.image);
     }
-    if (data.background_color) {
+    if (data.background_color && data.background_color !== '#000000') {
       formData.append('background_color', data.background_color);
     }
-    if (data.text_color) {
+    if (data.text_color && data.text_color !== '#ffffff') {
       formData.append('text_color', data.text_color);
     }
     if (data.is_active !== undefined) {
-      formData.append('is_active', data.is_active ? '1' : '0');
+      formData.append('is_active', data.is_active ? 'true' : 'false');
     }
     if (data.expires_at) {
       formData.append('expires_at', data.expires_at);
     }
-    if (data.order_index !== undefined) {
+    if (data.order_index !== undefined && data.order_index > 0) {
       formData.append('order_index', data.order_index.toString());
     }
 
     const response = await this.request<StoryResponse>(`/stories/${id}`, {
       method: 'PUT',
       body: formData,
-      headers: {
-        // Remove Content-Type to let browser set it with boundary for FormData
-      },
     });
     return response.details.story;
   }
