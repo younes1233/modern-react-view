@@ -67,7 +67,7 @@ class StoryService extends BaseApiService {
     const formData = new FormData();
     
     // Add required fields
-    formData.append('title', data.title);
+    formData.append('title', data.title.trim());
     formData.append('image', data.image);
     
     // Add optional fields only if they exist and are not empty
@@ -81,12 +81,13 @@ class StoryService extends BaseApiService {
       formData.append('text_color', data.text_color);
     }
     if (data.is_active !== undefined) {
-      formData.append('is_active', data.is_active ? 'true' : 'false');
+      // Send as boolean value, not string
+      formData.append('is_active', data.is_active.toString());
     }
     if (data.expires_at) {
       formData.append('expires_at', data.expires_at);
     }
-    if (data.order_index !== undefined && data.order_index > 0) {
+    if (data.order_index !== undefined && data.order_index >= 0) {
       formData.append('order_index', data.order_index.toString());
     }
 
@@ -103,9 +104,38 @@ class StoryService extends BaseApiService {
       order_index: data.order_index
     });
 
+    // Use JSON data instead of FormData for better boolean handling
+    const jsonData = {
+      title: data.title.trim(),
+      content: data.content?.trim() || undefined,
+      background_color: data.background_color !== '#000000' ? data.background_color : undefined,
+      text_color: data.text_color !== '#ffffff' ? data.text_color : undefined,
+      is_active: data.is_active,
+      expires_at: data.expires_at,
+      order_index: data.order_index >= 0 ? data.order_index : undefined,
+    };
+
+    // Remove undefined values
+    Object.keys(jsonData).forEach(key => {
+      if (jsonData[key as keyof typeof jsonData] === undefined) {
+        delete jsonData[key as keyof typeof jsonData];
+      }
+    });
+
+    // Create FormData with image and JSON data
+    const finalFormData = new FormData();
+    finalFormData.append('image', data.image);
+    
+    // Append other fields individually to FormData
+    Object.entries(jsonData).forEach(([key, value]) => {
+      if (value !== undefined) {
+        finalFormData.append(key, typeof value === 'boolean' ? value.toString() : String(value));
+      }
+    });
+
     const response = await this.request<StoryResponse>('/stories', {
       method: 'POST',
-      body: formData,
+      body: finalFormData,
     });
     return response.details.story;
   }
@@ -132,12 +162,12 @@ class StoryService extends BaseApiService {
       formData.append('text_color', data.text_color);
     }
     if (data.is_active !== undefined) {
-      formData.append('is_active', data.is_active ? 'true' : 'false');
+      formData.append('is_active', data.is_active.toString());
     }
     if (data.expires_at) {
       formData.append('expires_at', data.expires_at);
     }
-    if (data.order_index !== undefined && data.order_index > 0) {
+    if (data.order_index !== undefined && data.order_index >= 0) {
       formData.append('order_index', data.order_index.toString());
     }
 
