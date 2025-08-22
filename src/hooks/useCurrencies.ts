@@ -18,9 +18,9 @@ export const useCurrencies = () => {
       const response = await currencyService.getCurrencies();
       console.log('Currency API response:', response);
       
-      if (!response.error && response.details?.currencies) {
-        console.log('Setting currencies:', response.details.currencies);
-        setCurrencies(response.details.currencies);
+      if (!response.error && response.details?.Currencies) {
+        console.log('Setting currencies:', response.details.Currencies);
+        setCurrencies(response.details.Currencies);
       } else {
         console.error('API error:', response.message);
         setError(response.message || 'Failed to load currencies');
