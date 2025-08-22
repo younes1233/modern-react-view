@@ -14,6 +14,7 @@ import {
 import { FileUpload } from "@/components/ui/file-upload";
 import { Story } from "@/services/storyService";
 import { useStories } from "@/hooks/useStories";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryModalProps {
   isOpen: boolean;
@@ -24,6 +25,7 @@ interface StoryModalProps {
 
 export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProps) => {
   const { createStory, updateStory, loading } = useStories();
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     title: "",
     content: "",
@@ -64,6 +66,18 @@ export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProp
   const handleFileSelect = (files: File[]) => {
     if (files.length > 0) {
       const file = files[0];
+      
+      // Check file size (additional client-side validation)
+      const maxSizeInMB = 2; // 2MB limit
+      if (file.size > maxSizeInMB * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: `Please select an image smaller than ${maxSizeInMB}MB`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
       setSelectedFile(file);
       
       const reader = new FileReader();
@@ -78,10 +92,20 @@ export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProp
     e.preventDefault();
     
     if (!formData.title.trim()) {
+      toast({
+        title: "Validation Error",
+        description: "Please enter a story title",
+        variant: "destructive",
+      });
       return;
     }
 
     if (!story && !selectedFile) {
+      toast({
+        title: "Validation Error",
+        description: "Please select an image for the story",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -117,7 +141,15 @@ export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProp
       
       onSuccess();
     } catch (error) {
-      // Error is handled by the hook
+      console.error('Story submission error:', error);
+      // Error handling is done in the hook, but we can add specific handling here
+      if (error instanceof Error && error.message.includes('413')) {
+        toast({
+          title: "File Too Large",
+          description: "The image file is too large. Please try a smaller image or compress it.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -146,7 +178,8 @@ export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProp
               onFileSelect={handleFileSelect}
               maxFiles={1}
               accept="image/*"
-              placeholder="Upload story image (recommended: 1080x1920)"
+              placeholder="Upload story image (recommended: 1080x1920, max 2MB)"
+              maxFileSize={2} // 2MB limit
             />
             {previewImage && (
               <div className="mt-2">
