@@ -2,30 +2,28 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X, ChevronLeft, ChevronRight, Play, Pause } from "lucide-react";
-import { storyService, Story } from "@/services/storyService";
+import { Story } from "@/services/storyService";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface StoriesViewerProps {
   isOpen: boolean;
   onClose: () => void;
   initialStoryIndex?: number;
+  stories: Story[];
 }
 
-export const StoriesViewer = ({ isOpen, onClose, initialStoryIndex = 0 }: StoriesViewerProps) => {
-  const [stories, setStories] = useState<Story[]>([]);
+export const StoriesViewer = ({ isOpen, onClose, initialStoryIndex = 0, stories }: StoriesViewerProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialStoryIndex);
   const [progress, setProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      const activeStories = storyService.getStories().filter(story => story.isActive);
-      setStories(activeStories);
-      setCurrentIndex(Math.min(initialStoryIndex, activeStories.length - 1));
+      setCurrentIndex(Math.min(initialStoryIndex, stories.length - 1));
       setProgress(0);
       setIsPaused(false);
     }
-  }, [isOpen, initialStoryIndex]);
+  }, [isOpen, initialStoryIndex, stories.length]);
 
   useEffect(() => {
     if (!isOpen || isPaused || stories.length === 0) return;

@@ -1,34 +1,18 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Eye, EyeOff, Clock } from "lucide-react";
-import { storyService, Story } from "@/services/storyService";
+import { Story } from "@/services/storyService";
 import { StoryModal } from "./StoryModal";
-import { useToast } from "@/hooks/use-toast";
+import { useStories } from "@/hooks/useStories";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const StoriesManagement = () => {
-  const [stories, setStories] = useState<Story[]>([]);
+  const { stories, loading, deleteStory } = useStories();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStory, setEditingStory] = useState<Story | null>(null);
-  const { toast } = useToast();
-
-  useEffect(() => {
-    loadStories();
-    
-    const handleStoriesUpdate = () => {
-      loadStories();
-    };
-    
-    window.addEventListener('storiesUpdated', handleStoriesUpdate);
-    return () => window.removeEventListener('storiesUpdated', handleStoriesUpdate);
-  }, []);
-
-  const loadStories = () => {
-    const loadedStories = storyService.getStories();
-    setStories(loadedStories);
-  };
 
   const handleCreateStory = () => {
     setEditingStory(null);
@@ -40,27 +24,9 @@ export const StoriesManagement = () => {
     setIsModalOpen(true);
   };
 
-  const handleDeleteStory = (id: string) => {
+  const handleDeleteStory = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this story?')) {
-      const success = storyService.deleteStory(id);
-      if (success) {
-        toast({
-          title: "Success",
-          description: "Story deleted successfully",
-        });
-        loadStories();
-      }
-    }
-  };
-
-  const handleToggleActive = (story: Story) => {
-    const updated = storyService.updateStory(story.id, { isActive: !story.isActive });
-    if (updated) {
-      toast({
-        title: "Success",
-        description: `Story ${updated.isActive ? 'activated' : 'deactivated'}`,
-      });
-      loadStories();
+      await deleteStory(id);
     }
   };
 
@@ -79,6 +45,38 @@ export const StoriesManagement = () => {
     }
     return `${minutes}m remaining`;
   };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <div>
+            <Skeleton className="h-8 w-48 mb-2" />
+            <Skeleton className="h-4 w-96" />
+          </div>
+          <Skeleton className="h-10 w-24" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[...Array(6)].map((_, index) => (
+            <Card key={index} className="overflow-hidden">
+              <Skeleton className="w-full h-48" />
+              <CardHeader>
+                <Skeleton className="h-6 w-32" />
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent>
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-16" />
+                  <Skeleton className="h-8 w-16" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -141,15 +139,6 @@ export const StoriesManagement = () => {
                     Edit
                   </Button>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleToggleActive(story)}
-                    className="gap-2"
-                  >
-                    {story.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    {story.isActive ? "Hide" : "Show"}
-                  </Button>
-                  <Button
                     variant="destructive"
                     size="sm"
                     onClick={() => handleDeleteStory(story.id)}
@@ -171,7 +160,6 @@ export const StoriesManagement = () => {
         story={editingStory}
         onSuccess={() => {
           setIsModalOpen(false);
-          loadStories();
         }}
       />
     </div>

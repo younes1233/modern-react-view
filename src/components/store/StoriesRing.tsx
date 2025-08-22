@@ -1,42 +1,46 @@
 
-import { useState, useEffect } from "react";
-import { storyService, Story } from "@/services/storyService";
+import { useState } from "react";
 import { StoriesViewer } from "./StoriesViewer";
+import { useStories } from "@/hooks/useStories";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const StoriesRing = () => {
-  const [stories, setStories] = useState<Story[]>([]);
+  const { stories, loading } = useStories();
   const [isViewerOpen, setIsViewerOpen] = useState(false);
   const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
-
-  useEffect(() => {
-    loadStories();
-    
-    const handleStoriesUpdate = () => {
-      loadStories();
-    };
-    
-    window.addEventListener('storiesUpdated', handleStoriesUpdate);
-    return () => window.removeEventListener('storiesUpdated', handleStoriesUpdate);
-  }, []);
-
-  const loadStories = () => {
-    const activeStories = storyService.getStories().filter(story => story.isActive);
-    setStories(activeStories);
-  };
 
   const openStoryViewer = (index: number) => {
     setSelectedStoryIndex(index);
     setIsViewerOpen(true);
   };
 
-  if (stories.length === 0) return null;
+  const activeStories = stories.filter(story => story.isActive);
+
+  if (loading) {
+    return (
+      <section className="py-4 bg-white">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex gap-4 overflow-x-auto scrollbar-hide">
+            {[...Array(6)].map((_, index) => (
+              <div key={index} className="flex-shrink-0">
+                <Skeleton className="w-16 h-16 rounded-full" />
+                <Skeleton className="h-3 w-12 mt-2 mx-auto" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (activeStories.length === 0) return null;
 
   return (
     <>
       <section className="py-4 bg-white">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-4 overflow-x-auto scrollbar-hide">
-            {stories.map((story, index) => (
+            {activeStories.map((story, index) => (
               <div
                 key={story.id}
                 className="flex-shrink-0 cursor-pointer group"
@@ -67,6 +71,7 @@ export const StoriesRing = () => {
         isOpen={isViewerOpen}
         onClose={() => setIsViewerOpen(false)}
         initialStoryIndex={selectedStoryIndex}
+        stories={activeStories}
       />
     </>
   );
