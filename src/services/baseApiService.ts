@@ -86,8 +86,39 @@ class BaseApiService {
       const response = await fetch(url, config);
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+        let errorData: any = {};
+        let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+        
+        try {
+          errorData = await response.json();
+          console.error('API Error Response:', errorData);
+          
+          // Build detailed error message
+          if (errorData.message) {
+            errorMessage = errorData.message;
+          }
+          
+          // Add validation details if available
+          if (errorData.errors) {
+            const validationErrors = Array.isArray(errorData.errors) 
+              ? errorData.errors.join(', ')
+              : Object.entries(errorData.errors)
+                  .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+                  .join('; ');
+            errorMessage += ` - Validation errors: ${validationErrors}`;
+          }
+          
+          // Add details if available
+          if (errorData.details && typeof errorData.details === 'object') {
+            const detailsStr = JSON.stringify(errorData.details);
+            errorMessage += ` - Details: ${detailsStr}`;
+          }
+          
+        } catch (parseError) {
+          console.error('Failed to parse error response:', parseError);
+        }
+        
+        throw new Error(errorMessage);
       }
 
       return await response.json();
