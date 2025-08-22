@@ -4,47 +4,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-
-interface Warehouse {
-  id: number;
-  name: string;
-  code: string;
-  address: string;
-  countryCode: string;
-  countryName: string;
-  capacity: number;
-  isActive: boolean;
-}
+import { Warehouse } from "@/services/warehouseService";
+import { useCountries } from "@/hooks/useCountries";
+import { Loader2 } from "lucide-react";
 
 interface WarehouseModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (warehouse: Omit<Warehouse, 'id'>) => void;
+  onSave: (warehouse: {
+    name: string;
+    country_id: number;
+    location: string;
+    zone_structure_id?: number;
+    code: string;
+  }) => void;
   warehouse: Warehouse | null;
 }
 
-// Mock countries data
-const countries = [
-  { code: "US", name: "United States" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "DE", name: "Germany" },
-  { code: "CA", name: "Canada" },
-  { code: "AU", name: "Australia" },
-  { code: "JP", name: "Japan" },
-];
-
 export const WarehouseModal = ({ isOpen, onClose, onSave, warehouse }: WarehouseModalProps) => {
+  const { countries, loading: countriesLoading } = useCountries();
   const [formData, setFormData] = useState({
     name: "",
     code: "",
-    address: "",
-    countryCode: "",
-    countryName: "",
-    capacity: 0,
-    isActive: true,
+    location: "",
+    country_id: 0,
+    zone_structure_id: undefined as number | undefined,
   });
 
   useEffect(() => {
@@ -52,36 +37,34 @@ export const WarehouseModal = ({ isOpen, onClose, onSave, warehouse }: Warehouse
       setFormData({
         name: warehouse.name,
         code: warehouse.code,
-        address: warehouse.address,
-        countryCode: warehouse.countryCode,
-        countryName: warehouse.countryName,
-        capacity: warehouse.capacity,
-        isActive: warehouse.isActive,
+        location: warehouse.location,
+        country_id: warehouse.country.id,
+        zone_structure_id: warehouse.zone_structure?.id,
       });
     } else {
       setFormData({
         name: "",
         code: "",
-        address: "",
-        countryCode: "",
-        countryName: "",
-        capacity: 0,
-        isActive: true,
+        location: "",
+        country_id: 0,
+        zone_structure_id: undefined,
       });
     }
   }, [warehouse]);
 
-  const handleCountryChange = (countryCode: string) => {
-    const country = countries.find(c => c.code === countryCode);
+  const handleCountryChange = (countryId: string) => {
     setFormData({
       ...formData,
-      countryCode,
-      countryName: country?.name || "",
+      country_id: parseInt(countryId),
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.country_id) {
+      alert('Please select a country');
+      return;
+    }
     onSave(formData);
   };
 
@@ -102,8 +85,10 @@ export const WarehouseModal = ({ isOpen, onClose, onSave, warehouse }: Warehouse
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="New York Distribution Center"
               required
+              maxLength={255}
             />
           </div>
+          
           <div className="space-y-2">
             <Label htmlFor="code">Warehouse Code</Label>
             <Input
@@ -112,56 +97,51 @@ export const WarehouseModal = ({ isOpen, onClose, onSave, warehouse }: Warehouse
               onChange={(e) => setFormData({ ...formData, code: e.target.value.toUpperCase() })}
               placeholder="NYC-DC"
               required
+              maxLength={50}
             />
           </div>
+          
           <div className="space-y-2">
             <Label htmlFor="country">Country</Label>
-            <Select
-              value={formData.countryCode}
-              onValueChange={handleCountryChange}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select country" />
-              </SelectTrigger>
-              <SelectContent>
-                {countries.map((country) => (
-                  <SelectItem key={country.code} value={country.code}>
-                    {country.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {countriesLoading ? (
+              <div className="flex items-center space-x-2">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>Loading countries...</span>
+              </div>
+            ) : (
+              <Select
+                value={formData.country_id ? formData.country_id.toString() : ""}
+                onValueChange={handleCountryChange}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.id} value={country.id.toString()}>
+                      <div className="flex items-center gap-2">
+                        <span>{country.flag}</span>
+                        <span>{country.name}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
+          
           <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea
-              id="address"
-              value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-              placeholder="123 Industrial Ave, New York, NY"
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="capacity">Capacity (sq ft)</Label>
+            <Label htmlFor="location">Location</Label>
             <Input
-              id="capacity"
-              type="number"
-              value={formData.capacity}
-              onChange={(e) => setFormData({ ...formData, capacity: parseInt(e.target.value) || 0 })}
-              placeholder="10000"
-              required
+              id="location"
+              value={formData.location}
+              onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+              placeholder="NYC"
+              maxLength={3}
             />
           </div>
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-            />
-            <Label htmlFor="isActive">Active</Label>
-          </div>
+          
           <div className="flex justify-end space-x-2">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
