@@ -64,34 +64,7 @@ class StoryService extends BaseApiService {
   }
 
   async createStory(data: CreateStoryData): Promise<Story> {
-    const formData = new FormData();
-    
-    // Add required fields
-    formData.append('title', data.title.trim());
-    formData.append('image', data.image);
-    
-    // Add optional fields only if they exist and are not empty
-    if (data.content && data.content.trim()) {
-      formData.append('content', data.content.trim());
-    }
-    if (data.background_color && data.background_color !== '#000000') {
-      formData.append('background_color', data.background_color);
-    }
-    if (data.text_color && data.text_color !== '#ffffff') {
-      formData.append('text_color', data.text_color);
-    }
-    if (data.is_active !== undefined) {
-      // Send as boolean value, not string
-      formData.append('is_active', data.is_active.toString());
-    }
-    if (data.expires_at) {
-      formData.append('expires_at', data.expires_at);
-    }
-    if (data.order_index !== undefined && data.order_index >= 0) {
-      formData.append('order_index', data.order_index.toString());
-    }
-
-    console.log('Creating story with FormData:', {
+    console.log('Creating story with data:', {
       title: data.title,
       hasImage: !!data.image,
       imageSize: data.image?.size,
@@ -101,41 +74,49 @@ class StoryService extends BaseApiService {
       text_color: data.text_color,
       is_active: data.is_active,
       expires_at: data.expires_at,
-      order_index: data.order_index
     });
 
-    // Use JSON data instead of FormData for better boolean handling
-    const jsonData = {
+    // Prepare JSON data (excluding order_index and image)
+    const jsonData: any = {
       title: data.title.trim(),
-      content: data.content?.trim() || undefined,
-      background_color: data.background_color !== '#000000' ? data.background_color : undefined,
-      text_color: data.text_color !== '#ffffff' ? data.text_color : undefined,
-      is_active: data.is_active,
-      expires_at: data.expires_at,
-      order_index: data.order_index >= 0 ? data.order_index : undefined,
     };
 
-    // Remove undefined values
-    Object.keys(jsonData).forEach(key => {
-      if (jsonData[key as keyof typeof jsonData] === undefined) {
-        delete jsonData[key as keyof typeof jsonData];
-      }
-    });
+    // Add optional fields only if they have valid values
+    if (data.content && data.content.trim()) {
+      jsonData.content = data.content.trim();
+    }
+    if (data.background_color && data.background_color !== '#000000') {
+      jsonData.background_color = data.background_color;
+    }
+    if (data.text_color && data.text_color !== '#ffffff') {
+      jsonData.text_color = data.text_color;
+    }
+    if (data.is_active !== undefined) {
+      jsonData.is_active = data.is_active; // Send as actual boolean
+    }
+    if (data.expires_at) {
+      jsonData.expires_at = data.expires_at;
+    }
+    // Note: Removing order_index as API doesn't allow it in create endpoint
 
-    // Create FormData with image and JSON data
-    const finalFormData = new FormData();
-    finalFormData.append('image', data.image);
+    // Create FormData with image and other fields
+    const formData = new FormData();
+    formData.append('image', data.image);
     
-    // Append other fields individually to FormData
+    // Append JSON fields to FormData
     Object.entries(jsonData).forEach(([key, value]) => {
-      if (value !== undefined) {
-        finalFormData.append(key, typeof value === 'boolean' ? value.toString() : String(value));
+      if (value !== undefined && value !== null) {
+        if (typeof value === 'boolean') {
+          formData.append(key, value.toString());
+        } else {
+          formData.append(key, String(value));
+        }
       }
     });
 
     const response = await this.request<StoryResponse>('/stories', {
       method: 'POST',
-      body: finalFormData,
+      body: formData,
     });
     return response.details.story;
   }
@@ -143,7 +124,7 @@ class StoryService extends BaseApiService {
   async updateStory(id: string, data: UpdateStoryData): Promise<Story> {
     const formData = new FormData();
     
-    // Add fields only if they exist
+    // Add fields only if they exist and are valid
     if (data.title && data.title.trim()) {
       formData.append('title', data.title.trim());
     }
@@ -167,9 +148,7 @@ class StoryService extends BaseApiService {
     if (data.expires_at) {
       formData.append('expires_at', data.expires_at);
     }
-    if (data.order_index !== undefined && data.order_index >= 0) {
-      formData.append('order_index', data.order_index.toString());
-    }
+    // Note: Removing order_index as API doesn't allow it in update endpoint
 
     const response = await this.request<StoryResponse>(`/stories/${id}`, {
       method: 'PUT',
