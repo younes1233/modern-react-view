@@ -1,5 +1,5 @@
 
-import { baseApiService } from './baseApiService';
+import BaseApiService from './baseApiService';
 
 export interface Story {
   id: string;
@@ -52,10 +52,10 @@ interface UpdateStoryData {
   order_index?: number;
 }
 
-class StoryService {
+class StoryService extends BaseApiService {
   async getStories(): Promise<Story[]> {
     try {
-      const response = await baseApiService.get<StoriesResponse>('/stories');
+      const response = await this.get<StoriesResponse>('/stories');
       return response.details.stories || [];
     } catch (error) {
       console.error('Error fetching stories:', error);
@@ -74,9 +74,11 @@ class StoryService {
     if (data.expires_at) formData.append('expires_at', data.expires_at);
     if (data.order_index !== undefined) formData.append('order_index', data.order_index.toString());
 
-    const response = await baseApiService.post<StoryResponse>('/stories', formData, {
+    const response = await this.request<StoryResponse>('/stories', {
+      method: 'POST',
+      body: formData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        // Don't set Content-Type for FormData, let the browser set it
       },
     });
     return response.details.story;
@@ -93,16 +95,18 @@ class StoryService {
     if (data.expires_at) formData.append('expires_at', data.expires_at);
     if (data.order_index !== undefined) formData.append('order_index', data.order_index.toString());
 
-    const response = await baseApiService.put<StoryResponse>(`/stories/${id}`, formData, {
+    const response = await this.request<StoryResponse>(`/stories/${id}`, {
+      method: 'PUT',
+      body: formData,
       headers: {
-        'Content-Type': 'multipart/form-data',
+        // Don't set Content-Type for FormData, let the browser set it
       },
     });
     return response.details.story;
   }
 
   async deleteStory(id: string): Promise<Story[]> {
-    const response = await baseApiService.delete<StoriesResponse>(`/stories/${id}`);
+    const response = await this.delete<StoriesResponse>(`/stories/${id}`);
     return response.details.stories || [];
   }
 }
