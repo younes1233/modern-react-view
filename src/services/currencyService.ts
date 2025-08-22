@@ -1,4 +1,3 @@
-
 import BaseApiService, { ApiResponse } from './baseApiService';
 
 export interface Currency {
@@ -10,7 +9,7 @@ export interface Currency {
 }
 
 export interface CurrenciesResponse {
-  currencies: Currency[];
+  Currencies: Currency[];
 }
 
 export interface CurrencyResponse {

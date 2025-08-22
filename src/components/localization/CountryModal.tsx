@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Country, Currency } from "@/services/countryService";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Country } from "@/services/countryService";
+import { useCurrencies } from "@/hooks/useCurrencies";
 
 interface CountryFormData {
   name: string;
@@ -23,14 +25,8 @@ interface CountryModalProps {
   country: Country | null;
 }
 
-// Available currencies based on the API response
-const availableCurrencies: Currency[] = [
-  { id: 1, code: "USD", name: "US Dollar", symbol: "$", is_active: 1 },
-  { id: 2, code: "LBP", name: "Lebanese Pound", symbol: "LBP", is_active: 1 },
-  { id: 3, code: "SYP", name: "Syrian Pound", symbol: "SYP", is_active: 1 },
-];
-
 export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalProps) => {
+  const { currencies, loading: currenciesLoading } = useCurrencies();
   const [formData, setFormData] = useState({
     name: "",
     iso_code: "",
@@ -49,15 +45,19 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
         currencies: country.currencies.map(c => c.id),
       });
     } else {
+      // Set default to first available currency when creating new country
+      const firstActiveCurrency = currencies.find(c => c.is_active);
+      const defaultCurrencyId = firstActiveCurrency?.id || 1;
+      
       setFormData({
         name: "",
         iso_code: "",
         default_vat_percentage: "0",
-        base_currency_id: 1,
-        currencies: [1],
+        base_currency_id: defaultCurrencyId,
+        currencies: [defaultCurrencyId],
       });
     }
-  }, [country]);
+  }, [country, currencies]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -105,6 +105,8 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
       };
     });
   };
+
+  const activeCurrencies = currencies.filter(c => c.is_active);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -155,63 +157,82 @@ export const CountryModal = ({ isOpen, onClose, onSave, country }: CountryModalP
 
           <div className="space-y-2">
             <Label>Base Currency</Label>
-            <Select
-              value={formData.base_currency_id.toString()}
-              onValueChange={(value) => {
-                const currencyId = parseInt(value);
-                handleChange("base_currency_id", currencyId);
-                // Ensure base currency is in currencies array
-                if (!formData.currencies.includes(currencyId)) {
-                  handleChange("currencies", [...formData.currencies, currencyId]);
-                }
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select base currency" />
-              </SelectTrigger>
-              <SelectContent>
-                {availableCurrencies.filter(c => c.is_active).map((currency) => (
-                  <SelectItem key={currency.id} value={currency.id.toString()}>
-                    {currency.code} - {currency.name} ({currency.symbol})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {currenciesLoading ? (
+              <Skeleton className="h-10 w-full" />
+            ) : (
+              <Select
+                value={formData.base_currency_id.toString()}
+                onValueChange={(value) => {
+                  const currencyId = parseInt(value);
+                  handleChange("base_currency_id", currencyId);
+                  // Ensure base currency is in currencies array
+                  if (!formData.currencies.includes(currencyId)) {
+                    handleChange("currencies", [...formData.currencies, currencyId]);
+                  }
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select base currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeCurrencies.map((currency) => (
+                    <SelectItem key={currency.id} value={currency.id.toString()}>
+                      {currency.code} - {currency.name} ({currency.symbol})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
 
           <div className="space-y-2">
             <Label>Supported Currencies</Label>
-            <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded p-2">
-              {availableCurrencies.filter(c => c.is_active).map((currency) => (
-                <div key={currency.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`currency-${currency.id}`}
-                    checked={formData.currencies.includes(currency.id)}
-                    onCheckedChange={(checked) => 
-                      handleCurrencyToggle(currency.id, checked as boolean)
-                    }
-                    disabled={currency.id === formData.base_currency_id}
-                  />
-                  <Label 
-                    htmlFor={`currency-${currency.id}`}
-                    className="text-sm font-normal flex items-center gap-1"
-                  >
-                    <span className="font-mono">{currency.code}</span>
-                    <span>{currency.symbol}</span>
-                    {currency.id === formData.base_currency_id && (
-                      <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">base</span>
-                    )}
-                  </Label>
-                </div>
-              ))}
-            </div>
+            {currenciesLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+                <Skeleton className="h-6 w-full" />
+              </div>
+            ) : activeCurrencies.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                No active currencies available. Please add currencies first.
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-2 max-h-32 overflow-y-auto border rounded p-2">
+                {activeCurrencies.map((currency) => (
+                  <div key={currency.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`currency-${currency.id}`}
+                      checked={formData.currencies.includes(currency.id)}
+                      onCheckedChange={(checked) => 
+                        handleCurrencyToggle(currency.id, checked as boolean)
+                      }
+                      disabled={currency.id === formData.base_currency_id}
+                    />
+                    <Label 
+                      htmlFor={`currency-${currency.id}`}
+                      className="text-sm font-normal flex items-center gap-1"
+                    >
+                      <span className="font-mono">{currency.code}</span>
+                      <span>{currency.symbol}</span>
+                      {currency.id === formData.base_currency_id && (
+                        <span className="text-xs bg-blue-100 text-blue-800 px-1 rounded">base</span>
+                      )}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={formData.currencies.length === 0}>
+            <Button 
+              type="submit" 
+              disabled={formData.currencies.length === 0 || currenciesLoading}
+            >
               {country ? "Update" : "Create"} Country
             </Button>
           </div>
