@@ -138,7 +138,7 @@ export const WarehouseModal = ({ isOpen, onClose, onSave, warehouse }: Warehouse
               value={formData.location}
               onChange={(e) => setFormData({ ...formData, location: e.target.value })}
               placeholder="NYC"
-              maxLength={3}
+              maxLength={20}
             />
           </div>
           
