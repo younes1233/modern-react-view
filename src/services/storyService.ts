@@ -76,43 +76,29 @@ class StoryService extends BaseApiService {
       expires_at: data.expires_at,
     });
 
-    // Prepare JSON data (excluding order_index and image)
-    const jsonData: any = {
-      title: data.title.trim(),
-    };
-
-    // Add optional fields only if they have valid values
-    if (data.content && data.content.trim()) {
-      jsonData.content = data.content.trim();
-    }
-    if (data.background_color && data.background_color !== '#000000') {
-      jsonData.background_color = data.background_color;
-    }
-    if (data.text_color && data.text_color !== '#ffffff') {
-      jsonData.text_color = data.text_color;
-    }
-    if (data.is_active !== undefined) {
-      jsonData.is_active = data.is_active; // Send as actual boolean
-    }
-    if (data.expires_at) {
-      jsonData.expires_at = data.expires_at;
-    }
-    // Note: Removing order_index as API doesn't allow it in create endpoint
-
     // Create FormData with image and other fields
     const formData = new FormData();
     formData.append('image', data.image);
+    formData.append('title', data.title.trim());
     
-    // Append JSON fields to FormData
-    Object.entries(jsonData).forEach(([key, value]) => {
-      if (value !== undefined && value !== null) {
-        if (typeof value === 'boolean') {
-          formData.append(key, value.toString());
-        } else {
-          formData.append(key, String(value));
-        }
-      }
-    });
+    // Add optional fields only if they have valid values
+    if (data.content && data.content.trim()) {
+      formData.append('content', data.content.trim());
+    }
+    if (data.background_color && data.background_color !== '#000000') {
+      formData.append('background_color', data.background_color);
+    }
+    if (data.text_color && data.text_color !== '#ffffff') {
+      formData.append('text_color', data.text_color);
+    }
+    if (data.is_active !== undefined) {
+      // Convert boolean to string that Laravel expects: '1' for true, '0' for false
+      formData.append('is_active', data.is_active ? '1' : '0');
+    }
+    if (data.expires_at) {
+      formData.append('expires_at', data.expires_at);
+    }
+    // Note: Removing order_index as API doesn't allow it in create endpoint
 
     const response = await this.request<StoryResponse>('/stories', {
       method: 'POST',
@@ -143,7 +129,8 @@ class StoryService extends BaseApiService {
       formData.append('text_color', data.text_color);
     }
     if (data.is_active !== undefined) {
-      formData.append('is_active', data.is_active.toString());
+      // Convert boolean to string that Laravel expects: '1' for true, '0' for false
+      formData.append('is_active', data.is_active ? '1' : '0');
     }
     if (data.expires_at) {
       formData.append('expires_at', data.expires_at);
