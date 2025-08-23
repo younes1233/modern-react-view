@@ -178,7 +178,7 @@ export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProp
               onFileSelect={handleFileSelect}
               maxFiles={1}
               accept="image/*"
-              placeholder="Upload story image (recommended: 1080x1920, max 2MB)"
+              placeholder="Upload story image (recommended: 600*600, max 2MB)"
               maxFileSize={2} // 2MB limit
             />
             {previewImage && (
