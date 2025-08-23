@@ -1,14 +1,15 @@
-
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -18,33 +19,43 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { useForm } from "react-hook-form";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { createLevel, updateLevel } from "@/lib/api/level.api";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useEffect } from "react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { Level } from "@/services/zoneStructureService";
 
 const formSchema = z.object({
-  type: z.string().min(1, "Type is required"),
-  depth: z.string().min(1, "Depth is required"),
-});
+  type: z.string().min(2, {
+    message: "Level type must be at least 2 characters.",
+  }),
+  depth: z.string().min(1, {
+    message: "Level depth must be at least 1 character.",
+  }),
+})
 
 interface LevelModalProps {
-  isOpen: boolean;
+  open: boolean;
   onClose: () => void;
-  onSave: (data: { type: string; depth: string }) => Promise<void>;
-  level?: Level | null;
+  level?: {
+    id: number;
+    type: string;
+    depth: string;
+  };
+  onLevelCreated?: () => void;
+  onLevelUpdated?: () => void;
 }
 
-export const LevelModal = ({ isOpen, onClose, onSave, level }: LevelModalProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+export function LevelModal({ open, onClose, level, onLevelCreated, onLevelUpdated }: LevelModalProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      type: "",
-      depth: "",
+      type: level?.type || "",
+      depth: level?.depth || "",
     },
-  });
+  })
 
   useEffect(() => {
     if (level) {
@@ -60,71 +71,78 @@ export const LevelModal = ({ isOpen, onClose, onSave, level }: LevelModalProps) 
     }
   }, [level, form]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (data: { type?: string; depth?: string }) => {
     try {
-      setIsSubmitting(true);
-      await onSave(values);
+      // Ensure required fields are present
+      if (!data.type || !data.depth) {
+        console.error('Type and depth are required');
+        return;
+      }
+
+      const levelData = {
+        type: data.type,
+        depth: data.depth
+      };
+
+      if (level) {
+        await updateLevel(level.id, levelData);
+        onLevelUpdated?.();
+      } else {
+        await createLevel(levelData);
+        onLevelCreated?.();
+      }
       onClose();
     } catch (error) {
       console.error('Error saving level:', error);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>
-            {level ? "Edit Level" : "Add Level"}
-          </DialogTitle>
-          <DialogDescription>
-            {level ? "Update the level details below." : "Create a new level for zone structures."}
-          </DialogDescription>
-        </DialogHeader>
-
+    <AlertDialog open={open} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{level ? "Edit Level" : "Create New Level"}</AlertDialogTitle>
+          <AlertDialogDescription>
+            {level
+              ? "Update the level details."
+              : "Add a new level to the zone structure."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="type"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Type</FormLabel>
+                  <FormLabel>Level Type</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter level type (e.g., Zone, Aisle, Shelf)" {...field} />
+                    <Input placeholder="Enter level type" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
             <FormField
               control={form.control}
               name="depth"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Depth</FormLabel>
+                  <FormLabel>Level Depth</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter depth level (e.g., 1, 2, 3)" {...field} />
+                    <Input placeholder="Enter level depth" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Saving..." : level ? "Update Level" : "Create Level"}
-              </Button>
-            </DialogFooter>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button type="submit">{level ? "Update" : "Create"}</Button>
+            </AlertDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
-};
+}

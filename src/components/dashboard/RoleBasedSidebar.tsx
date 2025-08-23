@@ -1,4 +1,3 @@
-
 import {
   BarChart3,
   Home,
@@ -168,7 +167,9 @@ export function RoleBasedSidebar() {
     if (user.role === 'super_admin') {
       return true; // Always show all sections for super_admin
     }
-    return menuItems[sectionKey] && menuItems[sectionKey].length > 0;
+    // For other roles, check if the section exists and has items
+    const sectionItems = menuItems[sectionKey];
+    return sectionItems && sectionItems.length > 0;
   };
 
   return (

@@ -1,108 +1,193 @@
-
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from "react-hook-form";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "@/components/ui/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Trash } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { ZoneStructure, Level } from "@/services/zoneStructureService";
+import {
+  createZoneStructure,
+  deleteZoneStructure,
+  updateZoneStructure,
+} from "@/lib/actions/zone-structure.actions";
+import { useToast } from "@/components/ui/use-toast";
+import { Level } from "@/types";
+import { getAllLevels } from "@/lib/actions/level.actions";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  level_ids: z.array(z.number()).min(1, "At least one level must be selected"),
+  name: z.string().min(2, {
+    message: "Zone Structure name must be at least 2 characters.",
+  }),
+  level_ids: z.array(z.number()).optional(),
 });
 
 interface ZoneStructureModalProps {
-  isOpen: boolean;
+  zoneStructure?: { id: number; name: string; levels: Level[] } | null;
   onClose: () => void;
-  onSave: (data: { name: string; level_ids: number[] }) => Promise<void>;
-  zoneStructure?: ZoneStructure | null;
-  levels: Level[];
+  onZoneStructureCreated?: () => void;
+  onZoneStructureUpdated?: () => void;
+  onZoneStructureDeleted?: () => void;
 }
 
-export const ZoneStructureModal = ({ 
-  isOpen, 
-  onClose, 
-  onSave, 
-  zoneStructure, 
-  levels 
-}: ZoneStructureModalProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export function ZoneStructureModal({
+  zoneStructure,
+  onClose,
+  onZoneStructureCreated,
+  onZoneStructureUpdated,
+  onZoneStructureDeleted,
+}: ZoneStructureModalProps) {
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [selectedLevelIds, setSelectedLevelIds] = useState<number[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const fetchLevels = async () => {
+      try {
+        const fetchedLevels = await getAllLevels();
+        setLevels(fetchedLevels);
+      } catch (error) {
+        console.error("Error fetching levels:", error);
+      }
+    };
+
+    fetchLevels();
+  }, []);
+
+  useEffect(() => {
+    if (zoneStructure) {
+      setSelectedLevelIds(zoneStructure.levels.map((level) => level.id));
+    }
+  }, [zoneStructure]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      level_ids: [],
+      name: zoneStructure?.name || "",
+      level_ids: zoneStructure?.levels?.map((level) => level.id) || [],
     },
   });
 
-  useEffect(() => {
-    if (zoneStructure) {
-      // Convert levels to level_ids by matching type and depth
-      const levelIds = zoneStructure.levels.map(zsLevel => {
-        const matchingLevel = levels.find(level => 
-          level.type === zsLevel.type && level.depth === zsLevel.depth
-        );
-        return matchingLevel ? matchingLevel.id : null;
-      }).filter(id => id !== null) as number[];
+  const handleCheckboxChange = (levelId: number) => {
+    setSelectedLevelIds((prevSelected) => {
+      if (prevSelected.includes(levelId)) {
+        return prevSelected.filter((id) => id !== levelId);
+      } else {
+        return [...prevSelected, levelId];
+      }
+    });
+  };
 
-      form.reset({
-        name: zoneStructure.name,
-        level_ids: levelIds,
-      });
-    } else {
-      form.reset({
-        name: "",
-        level_ids: [],
-      });
-    }
-  }, [zoneStructure, levels, form]);
-
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (data: { name?: string; level_ids?: number[] }) => {
     try {
-      setIsSubmitting(true);
-      await onSave(values);
+      // Ensure required fields are present
+      if (!data.name || !data.level_ids) {
+        console.error('Name and level_ids are required');
+        return;
+      }
+
+      const zoneStructureData = {
+        name: data.name,
+        level_ids: data.level_ids
+      };
+
+      if (zoneStructure) {
+        await updateZoneStructure(zoneStructure.id, zoneStructureData);
+        onZoneStructureUpdated?.();
+      } else {
+        await createZoneStructure(zoneStructureData);
+        onZoneStructureCreated?.();
+      }
       onClose();
     } catch (error) {
       console.error('Error saving zone structure:', error);
-    } finally {
-      setIsSubmitting(false);
+    }
+  };
+
+  const onDelete = async () => {
+    if (!zoneStructure) {
+      console.error("No zone structure to delete.");
+      return;
+    }
+
+    try {
+      await deleteZoneStructure(zoneStructure.id);
+      toast({
+        title: "Success",
+        description: "Zone Structure deleted successfully.",
+      });
+      onZoneStructureDeleted?.();
+      onClose();
+    } catch (error) {
+      console.error("Error deleting zone structure:", error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete zone structure.",
+      });
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>
-            {zoneStructure ? "Edit Zone Structure" : "Add Zone Structure"}
-          </DialogTitle>
-          <DialogDescription>
-            {zoneStructure ? "Update the zone structure details below." : "Create a new zone structure by selecting levels."}
-          </DialogDescription>
-        </DialogHeader>
-
+    <AlertDialog open={true} onOpenChange={onClose}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>
+            {zoneStructure ? "Edit Zone Structure" : "Create New Zone Structure"}
+          </AlertDialogTitle>
+          <AlertDialogDescription>
+            {zoneStructure
+              ? "Update the zone structure details."
+              : "Enter the details for the new zone structure."}
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -110,81 +195,56 @@ export const ZoneStructureModal = ({
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter zone structure name" {...field} />
+                    <Input placeholder="Zone Structure Name" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="level_ids"
-              render={() => (
-                <FormItem>
-                  <div className="mb-4">
-                    <FormLabel className="text-base">Levels</FormLabel>
-                    <FormDescription>
-                      Select the levels that belong to this zone structure.
-                    </FormDescription>
-                  </div>
-                  {levels.length === 0 ? (
-                    <p className="text-sm text-muted-foreground">
-                      No levels available. Create levels first to assign them to zone structures.
-                    </p>
-                  ) : (
-                    <div className="space-y-2 max-h-48 overflow-y-auto">
-                      {levels.map((level) => (
-                        <FormField
-                          key={level.id}
-                          control={form.control}
-                          name="level_ids"
-                          render={({ field }) => {
-                            return (
-                              <FormItem
-                                key={level.id}
-                                className="flex flex-row items-start space-x-3 space-y-0"
-                              >
-                                <FormControl>
-                                  <Checkbox
-                                    checked={field.value?.includes(level.id)}
-                                    onCheckedChange={(checked) => {
-                                      return checked
-                                        ? field.onChange([...field.value, level.id])
-                                        : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== level.id
-                                            )
-                                          )
-                                    }}
-                                  />
-                                </FormControl>
-                                <FormLabel className="text-sm font-normal">
-                                  {level.type} (Depth: {level.depth})
-                                </FormLabel>
-                              </FormItem>
-                            )
-                          }}
+            <div>
+              <FormLabel>Levels</FormLabel>
+              {levels.map((level) => (
+                <FormField
+                  key={level.id}
+                  control={form.control}
+                  name="level_ids"
+                  render={() => (
+                    <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={selectedLevelIds.includes(level.id)}
+                          onCheckedChange={() => handleCheckboxChange(level.id)}
                         />
-                      ))}
-                    </div>
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        {level.type} (Depth: {level.depth})
+                      </FormLabel>
+                    </FormItem>
                   )}
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                />
+              ))}
+            </div>
 
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
-                Cancel
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button type="submit">
+                {zoneStructure ? "Update" : "Create"}
               </Button>
-              <Button type="submit" disabled={isSubmitting || levels.length === 0}>
-                {isSubmitting ? "Saving..." : zoneStructure ? "Update Zone Structure" : "Create Zone Structure"}
-              </Button>
-            </DialogFooter>
+              {zoneStructure && (
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="destructive"
+                    onClick={onDelete}
+                  >
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+              )}
+            </AlertDialogFooter>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+      </AlertDialogContent>
+    </AlertDialog>
   );
-};
+}
