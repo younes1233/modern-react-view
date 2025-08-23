@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -53,7 +52,7 @@ export const ZoneStructureManagement = () => {
     }
   };
 
-  const handleSaveZoneStructure = async (data: { name: string; level_ids: number[] }) => {
+  const handleSaveZoneStructure = async (data: { name: string; levels: Array<{ type: string; depth: string }> }) => {
     try {
       if (editingZoneStructure) {
         await updateZoneStructure(editingZoneStructure.id, data);
@@ -83,7 +82,7 @@ export const ZoneStructureManagement = () => {
     }
   };
 
-  const handleSaveLevel = async (data: { type: string; depth: string }) => {
+  const handleSaveLevel = async (data: { type: string }) => {
     try {
       if (editingLevel) {
         await updateLevel(editingLevel.id, data);

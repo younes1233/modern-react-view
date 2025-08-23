@@ -1,14 +1,11 @@
 
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,22 +17,18 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { zoneStructureService } from "@/services/zoneStructureService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 
 const formSchema = z.object({
-  type: z.string().min(2, {
-    message: "Level type must be at least 2 characters.",
+  type: z.string().min(1, {
+    message: "Level type is required.",
+  }).max(255, {
+    message: "Level type must be at most 255 characters.",
   }),
-  depth: z.string().min(1, {
-    message: "Level depth must be at least 1 character.",
-  }),
-})
+});
 
 interface LevelModalProps {
   isOpen: boolean;
@@ -45,7 +38,7 @@ interface LevelModalProps {
     type: string;
     depth: string;
   } | null;
-  onSave: (data: { type: string; depth: string }) => Promise<void>;
+  onSave: (data: { type: string }) => Promise<void>;
 }
 
 export function LevelModal({ isOpen, onClose, level, onSave }: LevelModalProps) {
@@ -53,38 +46,25 @@ export function LevelModal({ isOpen, onClose, level, onSave }: LevelModalProps) 
     resolver: zodResolver(formSchema),
     defaultValues: {
       type: level?.type || "",
-      depth: level?.depth || "",
     },
-  })
+  });
 
   useEffect(() => {
     if (level) {
       form.reset({
         type: level.type,
-        depth: level.depth,
       });
     } else {
       form.reset({
         type: "",
-        depth: "",
       });
     }
   }, [level, form]);
 
-  const handleSubmit = async (data: { type?: string; depth?: string }) => {
+  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
-      // Ensure required fields are present
-      if (!data.type || !data.depth) {
-        console.error('Type and depth are required');
-        return;
-      }
-
-      const levelData = {
-        type: data.type,
-        depth: data.depth
-      };
-
-      await onSave(levelData);
+      await onSave(data);
+      onClose();
     } catch (error) {
       console.error('Error saving level:', error);
     }
@@ -98,7 +78,7 @@ export function LevelModal({ isOpen, onClose, level, onSave }: LevelModalProps) 
           <AlertDialogDescription>
             {level
               ? "Update the level details."
-              : "Add a new level to the zone structure."}
+              : "Add a new level to the system."}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <Form {...form}>
@@ -110,27 +90,16 @@ export function LevelModal({ isOpen, onClose, level, onSave }: LevelModalProps) 
                 <FormItem>
                   <FormLabel>Level Type</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter level type" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="depth"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Level Depth</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter level depth" {...field} />
+                    <Input placeholder="Enter level type (e.g., Country, State, City)" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
               <Button type="submit">{level ? "Update" : "Create"}</Button>
             </AlertDialogFooter>
           </form>

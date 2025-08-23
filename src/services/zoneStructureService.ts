@@ -39,28 +39,32 @@ export interface LevelResponse {
 
 export interface CreateZoneStructureRequest {
   name: string;
-  level_ids: number[];
+  levels: Array<{
+    type: string;
+    depth: string;
+  }>;
 }
 
 export interface UpdateZoneStructureRequest {
   name?: string;
-  level_ids?: number[];
+  levels?: Array<{
+    type: string;
+    depth: string;
+  }>;
 }
 
 export interface CreateLevelRequest {
   type: string;
-  depth: string;
 }
 
 export interface UpdateLevelRequest {
   type?: string;
-  depth?: string;
 }
 
 class ZoneStructureService extends BaseApiService {
   // Zone Structure methods
   async getZoneStructures(): Promise<ApiResponse<ZoneStructuresResponse>> {
-    return this.get<ApiResponse<ZoneStructuresResponse>>('/admin/zone-structures/');
+    return this.get<ApiResponse<ZoneStructuresResponse>>('/admin/zone-structures');
   }
 
   async createZoneStructure(data: CreateZoneStructureRequest): Promise<ApiResponse<ZoneStructureResponse>> {
@@ -77,7 +81,7 @@ class ZoneStructureService extends BaseApiService {
 
   // Level methods
   async getLevels(): Promise<ApiResponse<LevelsResponse>> {
-    return this.get<ApiResponse<LevelsResponse>>('/admin/levels/');
+    return this.get<ApiResponse<LevelsResponse>>('/admin/levels');
   }
 
   async createLevel(data: CreateLevelRequest): Promise<ApiResponse<LevelResponse>> {
