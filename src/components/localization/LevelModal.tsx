@@ -1,3 +1,4 @@
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { createLevel, updateLevel } from "@/lib/api/level.api";
+import { zoneStructureService } from "@/services/zoneStructureService";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
@@ -37,18 +38,17 @@ const formSchema = z.object({
 })
 
 interface LevelModalProps {
-  open: boolean;
+  isOpen: boolean;
   onClose: () => void;
   level?: {
     id: number;
     type: string;
     depth: string;
-  };
-  onLevelCreated?: () => void;
-  onLevelUpdated?: () => void;
+  } | null;
+  onSave: (data: { type: string; depth: string }) => Promise<void>;
 }
 
-export function LevelModal({ open, onClose, level, onLevelCreated, onLevelUpdated }: LevelModalProps) {
+export function LevelModal({ isOpen, onClose, level, onSave }: LevelModalProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,21 +84,14 @@ export function LevelModal({ open, onClose, level, onLevelCreated, onLevelUpdate
         depth: data.depth
       };
 
-      if (level) {
-        await updateLevel(level.id, levelData);
-        onLevelUpdated?.();
-      } else {
-        await createLevel(levelData);
-        onLevelCreated?.();
-      }
-      onClose();
+      await onSave(levelData);
     } catch (error) {
       console.error('Error saving level:', error);
     }
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{level ? "Edit Level" : "Create New Level"}</AlertDialogTitle>

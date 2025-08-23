@@ -1,3 +1,4 @@
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -47,14 +48,8 @@ import { Plus, Trash } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import {
-  createZoneStructure,
-  deleteZoneStructure,
-  updateZoneStructure,
-} from "@/lib/actions/zone-structure.actions";
 import { useToast } from "@/components/ui/use-toast";
-import { Level } from "@/types";
-import { getAllLevels } from "@/lib/actions/level.actions";
+import { Level, ZoneStructure } from "@/services/zoneStructureService";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
@@ -65,40 +60,28 @@ const formSchema = z.object({
 });
 
 interface ZoneStructureModalProps {
-  zoneStructure?: { id: number; name: string; levels: Level[] } | null;
+  isOpen: boolean;
+  zoneStructure?: ZoneStructure | null;
   onClose: () => void;
-  onZoneStructureCreated?: () => void;
-  onZoneStructureUpdated?: () => void;
-  onZoneStructureDeleted?: () => void;
+  onSave: (data: { name: string; level_ids: number[] }) => Promise<void>;
+  levels: Level[];
 }
 
 export function ZoneStructureModal({
+  isOpen,
   zoneStructure,
   onClose,
-  onZoneStructureCreated,
-  onZoneStructureUpdated,
-  onZoneStructureDeleted,
+  onSave,
+  levels,
 }: ZoneStructureModalProps) {
-  const [levels, setLevels] = useState<Level[]>([]);
   const [selectedLevelIds, setSelectedLevelIds] = useState<number[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
-    const fetchLevels = async () => {
-      try {
-        const fetchedLevels = await getAllLevels();
-        setLevels(fetchedLevels);
-      } catch (error) {
-        console.error("Error fetching levels:", error);
-      }
-    };
-
-    fetchLevels();
-  }, []);
-
-  useEffect(() => {
     if (zoneStructure) {
-      setSelectedLevelIds(zoneStructure.levels.map((level) => level.id));
+      setSelectedLevelIds(zoneStructure.levels.map((level) => level.id || 0));
+    } else {
+      setSelectedLevelIds([]);
     }
   }, [zoneStructure]);
 
@@ -106,7 +89,7 @@ export function ZoneStructureModal({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: zoneStructure?.name || "",
-      level_ids: zoneStructure?.levels?.map((level) => level.id) || [],
+      level_ids: zoneStructure?.levels?.map((level) => level.id || 0) || [],
     },
   });
 
@@ -123,55 +106,24 @@ export function ZoneStructureModal({
   const handleSubmit = async (data: { name?: string; level_ids?: number[] }) => {
     try {
       // Ensure required fields are present
-      if (!data.name || !data.level_ids) {
-        console.error('Name and level_ids are required');
+      if (!data.name) {
+        console.error('Name is required');
         return;
       }
 
       const zoneStructureData = {
         name: data.name,
-        level_ids: data.level_ids
+        level_ids: selectedLevelIds
       };
 
-      if (zoneStructure) {
-        await updateZoneStructure(zoneStructure.id, zoneStructureData);
-        onZoneStructureUpdated?.();
-      } else {
-        await createZoneStructure(zoneStructureData);
-        onZoneStructureCreated?.();
-      }
-      onClose();
+      await onSave(zoneStructureData);
     } catch (error) {
       console.error('Error saving zone structure:', error);
     }
   };
 
-  const onDelete = async () => {
-    if (!zoneStructure) {
-      console.error("No zone structure to delete.");
-      return;
-    }
-
-    try {
-      await deleteZoneStructure(zoneStructure.id);
-      toast({
-        title: "Success",
-        description: "Zone Structure deleted successfully.",
-      });
-      onZoneStructureDeleted?.();
-      onClose();
-    } catch (error) {
-      console.error("Error deleting zone structure:", error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete zone structure.",
-      });
-    }
-  };
-
   return (
-    <AlertDialog open={true} onOpenChange={onClose}>
+    <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>
@@ -231,16 +183,6 @@ export function ZoneStructureModal({
               <Button type="submit">
                 {zoneStructure ? "Update" : "Create"}
               </Button>
-              {zoneStructure && (
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="destructive"
-                    onClick={onDelete}
-                  >
-                    Delete
-                  </Button>
-                </AlertDialogTrigger>
-              )}
             </AlertDialogFooter>
           </form>
         </Form>
