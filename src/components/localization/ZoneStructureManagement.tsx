@@ -52,7 +52,7 @@ export const ZoneStructureManagement = () => {
     }
   };
 
-  const handleSaveZoneStructure = async (data: { name: string; levels: Array<{ type: string; depth: string }> }) => {
+  const handleSaveZoneStructure = async (data: { name: string; levels: Array<{ id: number }> }) => {
     try {
       if (editingZoneStructure) {
         await updateZoneStructure(editingZoneStructure.id, data);
@@ -146,7 +146,7 @@ export const ZoneStructureManagement = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle>Zone Structures</CardTitle>
-                  <CardDescription>Manage zone structures and assign levels to them</CardDescription>
+                  <CardDescription>Manage zone structures by selecting and ordering levels</CardDescription>
                 </div>
                 <Button onClick={handleAddZoneStructure}>
                   <Plus className="w-4 h-4 mr-2" />
@@ -164,7 +164,7 @@ export const ZoneStructureManagement = () => {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Name</TableHead>
-                      <TableHead>Levels</TableHead>
+                      <TableHead>Levels (in order)</TableHead>
                       <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
@@ -175,8 +175,8 @@ export const ZoneStructureManagement = () => {
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {zoneStructure.levels.map((level, index) => (
-                              <Badge key={index} variant="secondary">
-                                {level.type} (D: {level.depth})
+                              <Badge key={index} variant="secondary" className="text-xs">
+                                {index + 1}. {level.type} (D: {level.depth})
                               </Badge>
                             ))}
                           </div>

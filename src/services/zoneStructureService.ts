@@ -40,16 +40,14 @@ export interface LevelResponse {
 export interface CreateZoneStructureRequest {
   name: string;
   levels: Array<{
-    type: string;
-    depth: string;
+    id: number;
   }>;
 }
 
 export interface UpdateZoneStructureRequest {
   name?: string;
   levels?: Array<{
-    type: string;
-    depth: string;
+    id: number;
   }>;
 }
 
