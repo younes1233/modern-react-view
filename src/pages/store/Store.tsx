@@ -73,15 +73,22 @@ const Store = () => {
         return <BannerSkeleton key={`banner-skeleton-${section.id}`} />;
       }
 
-      // Use API banners instead of demo data
-      const banner = banners.find((b) => b.id === section.item_id && b.isActive) || section.item;
+      // Find banner by ID and check if it's active using the correct property name
+      const banner = banners.find((b) => b.id === section.item_id && b.isActive);
       if (!banner) return null;
       
       // Get the responsive image based on device type
       let bannerImage = '/placeholder.svg';
       if (banner.images?.urls?.banner) {
-        bannerImage = banner.images.urls.banner[deviceType] || banner.images.urls.banner.desktop || banner.images.urls.original || '/placeholder.svg';
+        bannerImage = banner.images.urls.banner[deviceType] || 
+                     banner.images.urls.banner.desktop || 
+                     banner.images.urls.original || 
+                     '/placeholder.svg';
       }
+      
+      console.log('Banner found:', banner);
+      console.log('Device type:', deviceType);
+      console.log('Selected image URL:', bannerImage);
       
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
@@ -91,6 +98,10 @@ const Store = () => {
                 src={bannerImage}
                 alt={banner.images?.alt || banner.title}
                 className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover transition-all duration-300"
+                onError={(e) => {
+                  console.error('Failed to load banner image:', bannerImage);
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
                 <div className="p-3 sm:p-4 md:p-8 text-white">
@@ -115,11 +126,9 @@ const Store = () => {
         return <ProductSectionSkeleton key={`product-skeleton-${section.id}`} />;
       }
 
-      // Use API product listings instead of demo data
       const listing = productListings.find((l) => l.id === section.item_id && l.is_active) || section.item;
       if (!listing) return null;
       
-      // Convert API listing format to expected format
       const convertedListing = {
         id: listing.id,
         title: listing.title,
