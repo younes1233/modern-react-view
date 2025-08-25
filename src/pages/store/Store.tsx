@@ -93,11 +93,12 @@ const Store = () => {
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
           <div className="w-full max-w-full overflow-hidden bg-white">
-            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white">
+            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white" style={{ aspectRatio: '4/1' }}>
               <img
                 src={bannerImage}
                 alt={banner.images?.alt || banner.title}
-                className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover transition-all duration-300"
+                className="w-full transition-all duration-300"
+                style={{ height: 'auto', objectFit: 'cover' }}
                 onError={(e) => {
                   console.error('Failed to load banner image:', bannerImage);
                   e.currentTarget.src = '/placeholder.svg';
