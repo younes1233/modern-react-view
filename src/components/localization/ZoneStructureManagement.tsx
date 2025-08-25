@@ -1,295 +1,268 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit, Trash2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import {
+  useZoneStructures,
+  ZoneStructure as ZoneStructureType,
+  Level as LevelType,
+  CreateZoneStructureRequest,
+  UpdateZoneStructureRequest
+} from "@/hooks/useZoneStructures";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "@/components/ui/table";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Loader2, Layers } from "lucide-react";
 import { ZoneStructureModal } from "./ZoneStructureModal";
-import { LevelModal } from "./LevelModal";
-import { useZoneStructures } from "@/hooks/useZoneStructures";
-import { ZoneStructure, Level } from "@/services/zoneStructureService";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-export const ZoneStructureManagement = () => {
-  const { 
-    zoneStructures, 
-    levels, 
-    loading, 
-    error, 
-    createZoneStructure, 
-    updateZoneStructure, 
+interface ZoneStructure extends ZoneStructureType {
+  created_at: string;
+  updated_at: string;
+}
+
+export function ZoneStructureManagement() {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedZoneStructure, setSelectedZoneStructure] = useState<ZoneStructure | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
+  const { toast } = useToast();
+  const {
+    zoneStructures,
+    levels,
+    loading,
+    error,
+    refetch,
+    createZoneStructure,
+    updateZoneStructure,
     deleteZoneStructure,
-    createLevel,
-    updateLevel,
-    deleteLevel
   } = useZoneStructures();
 
-  const [isZoneStructureModalOpen, setIsZoneStructureModalOpen] = useState(false);
-  const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
-  const [editingZoneStructure, setEditingZoneStructure] = useState<ZoneStructure | null>(null);
-  const [editingLevel, setEditingLevel] = useState<Level | null>(null);
+  useEffect(() => {
+    refetch();
+  }, []);
 
-  const handleAddZoneStructure = () => {
-    setEditingZoneStructure(null);
-    setIsZoneStructureModalOpen(true);
+  const handleOpenModal = () => {
+    setIsModalOpen(true);
+    setSelectedZoneStructure(null);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedZoneStructure(null);
   };
 
   const handleEditZoneStructure = (zoneStructure: ZoneStructure) => {
-    setEditingZoneStructure(zoneStructure);
-    setIsZoneStructureModalOpen(true);
+    setSelectedZoneStructure(zoneStructure);
+    setIsModalOpen(true);
   };
 
   const handleDeleteZoneStructure = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this zone structure?')) {
+    try {
       await deleteZoneStructure(id);
+      toast({
+        title: "Success",
+        description: "Zone structure deleted successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to delete zone structure",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleSaveZoneStructure = async (data: { name: string; levels: Array<{ id: number }> }) => {
+  const handleCreateZoneStructure = async (data: CreateZoneStructureRequest) => {
     try {
-      if (editingZoneStructure) {
-        await updateZoneStructure(editingZoneStructure.id, data);
-      } else {
-        await createZoneStructure(data);
+      const newZoneStructure = await createZoneStructure(data);
+      if (newZoneStructure) {
+        // Add default properties for the newly created zone structure
+        const zoneStructureWithDefaults = {
+          ...newZoneStructure,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        setSelectedZoneStructure(zoneStructureWithDefaults);
+        setIsModalOpen(false);
       }
-      setIsZoneStructureModalOpen(false);
-      setEditingZoneStructure(null);
     } catch (error) {
-      console.error('Error saving zone structure:', error);
+      console.error('Error creating zone structure:', error);
     }
   };
 
-  const handleAddLevel = () => {
-    setEditingLevel(null);
-    setIsLevelModalOpen(true);
-  };
-
-  const handleEditLevel = (level: Level) => {
-    setEditingLevel(level);
-    setIsLevelModalOpen(true);
-  };
-
-  const handleDeleteLevel = async (id: number) => {
-    if (window.confirm('Are you sure you want to delete this level?')) {
-      await deleteLevel(id);
-    }
-  };
-
-  const handleSaveLevel = async (data: { type: string }) => {
+  const handleUpdateZoneStructure = async (id: number, data: UpdateZoneStructureRequest) => {
     try {
-      if (editingLevel) {
-        await updateLevel(editingLevel.id, data);
-      } else {
-        await createLevel(data);
+      const updatedZoneStructure = await updateZoneStructure(id, data);
+      if (updatedZoneStructure) {
+        // Ensure updated zone structure has required properties
+        const zoneStructureWithDefaults = {
+          ...updatedZoneStructure,
+          updated_at: new Date().toISOString()
+        };
+        setSelectedZoneStructure(zoneStructureWithDefaults);
+        setIsModalOpen(false);
       }
-      setIsLevelModalOpen(false);
-      setEditingLevel(null);
     } catch (error) {
-      console.error('Error saving level:', error);
+      console.error('Error updating zone structure:', error);
     }
   };
+
+  const filteredZoneStructures = selectedLevel
+    ? zoneStructures.filter(zs => zs.level_id === selectedLevel)
+    : zoneStructures;
 
   if (loading) {
     return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="flex items-center justify-center p-8">
-            <Loader2 className="w-8 h-8 animate-spin" />
-            <span className="ml-2">Loading zone structures...</span>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-center h-48">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="space-y-6">
-        <Card>
-          <CardContent className="flex items-center justify-center p-8">
-            <div className="text-center">
-              <p className="text-red-600 mb-4">{error}</p>
-              <Button onClick={() => window.location.reload()}>
-                Retry
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <div className="text-red-500">Error: {error}</div>;
   }
 
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="zone-structures" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="zone-structures" className="flex items-center gap-2">
-            <Layers className="w-4 h-4" />
-            Zone Structures
-          </TabsTrigger>
-          <TabsTrigger value="levels" className="flex items-center gap-2">
-            <Layers className="w-4 h-4" />
-            Levels
-          </TabsTrigger>
-        </TabsList>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-xl font-semibold">Zone Structures</h2>
+          <p className="text-muted-foreground">
+            Manage zone structures for your store.
+          </p>
+        </div>
+        <Button onClick={handleOpenModal}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Zone Structure
+        </Button>
+      </div>
 
-        <TabsContent value="zone-structures" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Zone Structures</CardTitle>
-                  <CardDescription>Manage zone structures by selecting and ordering levels</CardDescription>
-                </div>
-                <Button onClick={handleAddZoneStructure}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Zone Structure
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {zoneStructures.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No zone structures found.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Levels (in order)</TableHead>
-                      <TableHead>Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {zoneStructures.map((zoneStructure) => (
+      <Card>
+        <CardHeader>
+          <CardTitle>Zone Structures List</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-4">
+            <div>
+              <Label htmlFor="level">Filter by Level</Label>
+              <Select onValueChange={(value) => setSelectedLevel(value === 'all' ? null : parseInt(value))}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="All Levels" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  {levels.map((level) => (
+                    <SelectItem key={level.id} value={level.id.toString()}>
+                      {level.type}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <ScrollArea className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-[100px]">ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Level</TableHead>
+                    <TableHead>Parent</TableHead>
+                    <TableHead>Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredZoneStructures.map((zoneStructure) => {
+                    const level = levels.find(l => l.id === zoneStructure.level_id);
+                    const parent = zoneStructures.find(zs => zs.id === zoneStructure.parent_id);
+
+                    return (
                       <TableRow key={zoneStructure.id}>
-                        <TableCell className="font-medium">{zoneStructure.name}</TableCell>
+                        <TableCell className="font-medium">{zoneStructure.id}</TableCell>
+                        <TableCell>{zoneStructure.name}</TableCell>
                         <TableCell>
-                          <div className="flex flex-wrap gap-1">
-                            {zoneStructure.levels.map((level, index) => (
-                              <Badge key={index} variant="secondary" className="text-xs">
-                                {index + 1}. {level.type} (D: {level.depth})
-                              </Badge>
-                            ))}
-                          </div>
+                          <Badge variant="secondary">{level?.type || 'N/A'}</Badge>
                         </TableCell>
+                        <TableCell>{parent?.name || 'N/A'}</TableCell>
                         <TableCell>
-                          <div className="flex space-x-2">
+                          <div className="flex gap-2">
                             <Button
-                              variant="outline"
+                              variant="ghost"
                               size="sm"
-                              onClick={() => handleEditZoneStructure(zoneStructure)}
+                              onClick={() => handleEditZoneStructure(zoneStructure as ZoneStructure)}
                             >
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteZoneStructure(zoneStructure.id)}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-red-500">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. Are you sure you want to delete this zone structure?
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeleteZoneStructure(zoneStructure.id)}>
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="levels" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Levels</CardTitle>
-                  <CardDescription>Manage levels that can be assigned to zone structures</CardDescription>
-                </div>
-                <Button onClick={handleAddLevel}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Level
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {levels.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">No levels found.</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
+                    );
+                  })}
+                  {filteredZoneStructures.length === 0 && (
                     <TableRow>
-                      <TableHead>Type</TableHead>
-                      <TableHead>Depth</TableHead>
-                      <TableHead>Zone Structures Count</TableHead>
-                      <TableHead>Created At</TableHead>
-                      <TableHead>Actions</TableHead>
+                      <TableCell colSpan={5} className="text-center">
+                        No zone structures found.
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {levels.map((level) => (
-                      <TableRow key={level.id}>
-                        <TableCell className="font-medium">{level.type}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{level.depth}</Badge>
-                        </TableCell>
-                        <TableCell>{level.zone_structures_count}</TableCell>
-                        <TableCell>{new Date(level.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleEditLevel(level)}
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleDeleteLevel(level.id)}
-                              disabled={level.zone_structures_count > 0}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+                  )}
+                </TableBody>
+              </Table>
+            </ScrollArea>
+          </div>
+        </CardContent>
+      </Card>
 
       <ZoneStructureModal
-        isOpen={isZoneStructureModalOpen}
-        onClose={() => setIsZoneStructureModalOpen(false)}
-        onSave={handleSaveZoneStructure}
-        zoneStructure={editingZoneStructure}
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onSave={selectedZoneStructure ? handleUpdateZoneStructure : handleCreateZoneStructure}
+        zoneStructure={selectedZoneStructure}
         levels={levels}
-      />
-
-      <LevelModal
-        isOpen={isLevelModalOpen}
-        onClose={() => setIsLevelModalOpen(false)}
-        onSave={handleSaveLevel}
-        level={editingLevel}
+        zoneStructures={zoneStructures}
       />
     </div>
   );
-};
+}

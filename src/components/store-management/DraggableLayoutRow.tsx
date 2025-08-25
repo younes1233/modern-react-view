@@ -16,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Banner } from "@/hooks/useBanners";
+import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
 interface DraggableLayoutRowProps {
   section: any;
@@ -30,6 +31,8 @@ export function DraggableLayoutRow({
   onToggleActive, 
   onDeleteSection 
 }: DraggableLayoutRowProps) {
+  const { getImageUrl } = useResponsiveImage();
+  
   const {
     attributes,
     listeners,
@@ -59,6 +62,13 @@ export function DraggableLayoutRow({
     );
   };
 
+  const getBannerImage = (banner: Banner) => {
+    if (banner.images?.urls?.banner) {
+      return getImageUrl(banner.images.urls.banner);
+    }
+    return '/placeholder.svg';
+  };
+
   return (
     <tr 
       ref={setNodeRef}
@@ -84,7 +94,7 @@ export function DraggableLayoutRow({
           {item && (
             <>
               <img 
-                src={section.type === 'banner' ? (item as Banner).image : '/placeholder.svg'} 
+                src={section.type === 'banner' ? getBannerImage(item as Banner) : '/placeholder.svg'} 
                 alt={(item as any).title} 
                 className="w-16 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
               />

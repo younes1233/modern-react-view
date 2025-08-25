@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +6,7 @@ import { Plus, Package } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
+import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 import { 
   useHomeSections, 
   useCreateHomeSection, 
@@ -33,6 +33,7 @@ import { DraggableLayoutRow } from './DraggableLayoutRow';
 
 export function LayoutManagement() {
   const { toast } = useToast();
+  const { getImageUrl } = useResponsiveImage();
   
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
   const { banners, isLoading: bannersLoading } = useBanners();
@@ -56,6 +57,13 @@ export function LayoutManagement() {
     } else {
       return productListings.find(p => p.id === section.item_id) || section.item;
     }
+  };
+
+  const getBannerImage = (banner: Banner) => {
+    if (banner.images?.urls?.banner) {
+      return getImageUrl(banner.images.urls.banner);
+    }
+    return '/placeholder.svg';
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -191,7 +199,7 @@ export function LayoutManagement() {
                 {availableBanners.map((banner) => (
                   <div key={banner.id} className="flex items-center justify-between p-2 border rounded-lg">
                     <div className="flex items-center gap-2">
-                      <img src={banner.image} alt={banner.title} className="w-8 h-6 rounded object-cover" />
+                      <img src={getBannerImage(banner)} alt={banner.title} className="w-8 h-6 rounded object-cover" />
                       <span className="text-sm font-medium">{banner.title}</span>
                     </div>
                     <Button size="sm" onClick={() => handleAddBannerSection(banner.id)}>
