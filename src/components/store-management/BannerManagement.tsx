@@ -18,7 +18,7 @@ import {
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
-export function BannerManagement() {
+function BannerManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
   const [selectedBanner, setSelectedBanner] = useState<Banner | null>(null);

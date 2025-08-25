@@ -10,6 +10,7 @@ export interface Level {
 }
 
 export interface ZoneStructureLevel {
+  id: number;
   depth: string;
   type: string;
 }
