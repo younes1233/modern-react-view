@@ -79,7 +79,19 @@ const Categories = () => {
           categoriesData = (response.details as any).categories;
         }
         
-        setCategories(categoriesData);
+        // Ensure all categories have default values for required properties
+        const sanitizedCategories = categoriesData.map(category => ({
+          ...category,
+          products: category.products ?? 0,
+          revenue: category.revenue ?? 0,
+          level: category.level ?? 0,
+          isExpanded: category.isExpanded ?? false,
+          is_active: category.is_active ?? true,
+          featured: category.featured ?? false,
+          order: category.order ?? 0
+        }));
+        
+        setCategories(sanitizedCategories);
       } else {
         toast({
           title: "Error",
@@ -280,7 +292,7 @@ const Categories = () => {
                   {category.is_active ? 'active' : 'inactive'}
                 </Badge>
               </div>
-              <p className="text-sm text-gray-600">{category.description}</p>
+              <p className="text-sm text-gray-600">{category.description || ''}</p>
               {category.level && category.level > 0 && (
                 <p className="text-xs text-gray-500">
                   {getCategoryPath(category)}
@@ -293,7 +305,7 @@ const Categories = () => {
             <div className="text-right">
               <div className="flex items-center gap-1">
                 <Package className="w-4 h-4 text-gray-400" />
-                <span className="font-medium">{category.products || 0}</span>
+                <span className="font-medium">{(category.products || 0)}</span>
               </div>
             </div>
             
@@ -595,15 +607,15 @@ const Categories = () => {
                             </Badge>
                           </div>
                           <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{category.name}</h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{category.description}</p>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{category.description || ''}</p>
                           {category.parent_id && (
                             <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
                               📁 {getCategoryPath(category)}
                             </p>
                           )}
                           <div className="flex justify-between items-center mb-4">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">{category.products} products</span>
-                            <span className="text-sm font-bold text-green-600 dark:text-green-400">${category.revenue.toLocaleString()}</span>
+                            <span className="text-sm text-gray-500 dark:text-gray-400">{(category.products || 0)} products</span>
+                            <span className="text-sm font-bold text-green-600 dark:text-green-400">${(category.revenue || 0).toLocaleString()}</span>
                           </div>
                           <div className="flex gap-2">
                             <Button 
