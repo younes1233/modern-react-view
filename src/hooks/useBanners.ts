@@ -1,13 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { bannerService } from '@/services/bannerService';
+import { bannerService, BannerImages } from '@/services/bannerService';
 
 export interface Banner {
   id: number;
   title: string;
   subtitle?: string;
-  image: string;
+  images: BannerImages;
   ctaText?: string;
   ctaLink?: string;
   position: 'hero' | 'secondary' | 'sidebar';
@@ -20,7 +19,7 @@ const transformBannerFromAPI = (apiBanner: any): Banner => ({
   id: apiBanner.id,
   title: apiBanner.title,
   subtitle: apiBanner.subtitle,
-  image: apiBanner.image,
+  images: apiBanner.images,
   ctaText: apiBanner.cta_text,
   ctaLink: apiBanner.cta_link,
   position: apiBanner.position,
@@ -32,8 +31,7 @@ const transformBannerFromAPI = (apiBanner: any): Banner => ({
 const transformBannerToAPI = (banner: Omit<Banner, 'id'>) => ({
   title: banner.title,
   subtitle: banner.subtitle,
-  image: banner.image,
-  alt: banner.title, // Use title as alt if not provided
+  images: banner.images,
   cta_text: banner.ctaText,
   cta_link: banner.ctaLink,
   position: banner.position,

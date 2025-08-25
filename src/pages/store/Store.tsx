@@ -23,6 +23,7 @@ import { HeroSkeleton } from "@/components/store/HeroSkeleton";
 import { BannerSkeleton } from "@/components/store/BannerSkeleton";
 import { ShopByCategorySkeleton } from "@/components/store/ShopByCategorySkeleton";
 import { ProductSectionSkeleton } from "@/components/store/ProductSectionSkeleton";
+import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
@@ -32,6 +33,7 @@ const Store = () => {
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: productListingsLoading } = useProductListings();
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
+  const { getResponsiveImage } = useResponsiveImage();
 
   // Unified loading state for smooth transitions
   const isGlobalLoading = bannersLoading || productListingsLoading || homeSectionsLoading;
@@ -74,13 +76,16 @@ const Store = () => {
       // Use API banners instead of demo data
       const banner = banners.find((b) => b.id === section.item_id && b.isActive) || section.item;
       if (!banner) return null;
+      
+      const bannerImage = getResponsiveImage(banner.images);
+      
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
           <div className="w-full max-w-full overflow-hidden bg-white">
             <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white">
               <img
-                src={banner.image}
-                alt={banner.title}
+                src={bannerImage}
+                alt={banner.images.alt || banner.title}
                 className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover transition-all duration-300"
               />
               <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">

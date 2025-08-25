@@ -17,12 +17,23 @@ interface BannerCreateResponse {
   };
 }
 
+interface BannerImages {
+  urls: {
+    original: string;
+    banner: {
+      desktop: string;
+      tablet: string;
+      mobile: string;
+    };
+  };
+  alt?: string | null;
+}
+
 interface BannerAPIData {
   id: number;
   title: string;
   subtitle?: string;
-  image: string;
-  alt?: string;
+  images: BannerImages;
   cta_text?: string;
   cta_link?: string;
   position: 'hero' | 'secondary' | 'sidebar';
@@ -47,8 +58,7 @@ class BannerService extends BaseApiService {
   async createBanner(bannerData: {
     title: string;
     subtitle?: string;
-    image: string;
-    alt?: string;
+    images: BannerImages;
     cta_text?: string;
     cta_link?: string;
     position: 'hero' | 'secondary' | 'sidebar';
@@ -62,8 +72,7 @@ class BannerService extends BaseApiService {
     bannerData: Partial<{
       title: string;
       subtitle: string;
-      image: string;
-      alt: string;
+      images: BannerImages;
       cta_text: string;
       cta_link: string;
       position: 'hero' | 'secondary' | 'sidebar';
@@ -85,3 +94,4 @@ class BannerService extends BaseApiService {
 // Create and export a singleton instance
 export const bannerService = new BannerService();
 export default bannerService;
+export type { BannerImages, BannerAPIData };

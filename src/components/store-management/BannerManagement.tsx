@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useBanners, Banner } from "@/hooks/useBanners";
+import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
 export function BannerManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -32,6 +32,8 @@ export function BannerManagement() {
     deleteBanner, 
     reorderBanners 
   } = useBanners();
+
+  const { getResponsiveImage } = useResponsiveImage();
 
   const handleAddBanner = () => {
     setModalMode('add');
@@ -182,8 +184,8 @@ export function BannerManagement() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <img 
-                            src={banner.image} 
-                            alt={banner.title} 
+                            src={getResponsiveImage(banner.images)} 
+                            alt={banner.images.alt || banner.title} 
                             className="w-16 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
                           />
                           <div>

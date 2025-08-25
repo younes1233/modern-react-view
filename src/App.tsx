@@ -1,168 +1,104 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { ThemeProvider } from "./components/ThemeProvider";
-import { StoreThemeHandler } from "./components/StoreThemeHandler";
-import { AuthProvider } from "./contexts/AuthContext";
-import { RoleAuthProvider } from "./contexts/RoleAuthContext";
-import { CartProvider } from "./contexts/CartContext";
-import { WishlistProvider } from "./contexts/WishlistContext";
-import { SearchProvider } from "./contexts/SearchContext";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { RoleProtectedRoute } from "./components/RoleProtectedRoute";
-import Index from "./pages/Index";
+import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { RoleAuthProvider } from "@/contexts/RoleAuthContext";
+import { CartProvider } from "@/contexts/CartContext";
+import { WishlistProvider } from "@/contexts/WishlistContext";
+import { SearchProvider } from "@/contexts/SearchContext";
+import { ResponsiveImageProvider } from "@/contexts/ResponsiveImageContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import RoleProtectedRoute from "@/components/RoleProtectedRoute";
+import StoreThemeHandler from "@/components/StoreThemeHandler";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
-import RoleLogin from "./pages/RoleLogin";
-import Unauthorized from "./pages/Unauthorized";
-import UserManagement from "./pages/UserManagement";
-import ProductApproval from "./pages/ProductApproval";
-import Localization from "./pages/Localization";
-import SellerProducts from "./pages/SellerProducts";
-import Products from "./pages/Products";
-import Categories from "./pages/Categories";
-import Inventory from "./pages/Inventory";
-import Orders from "./pages/Orders";
-import Customers from "./pages/Customers";
-import Analytics from "./pages/Analytics";
-import SalesReport from "./pages/SalesReport";
-import StoreManagement from "./pages/StoreManagement";
-import Coupons from "./pages/Coupons";
+import Register from "./pages/Register";
 import Store from "./pages/store/Store";
-import StoreCategories from "./pages/store/StoreCategories";
-import ProductDetail from "./pages/store/ProductDetail";
-import Wishlist from "./pages/store/Wishlist";
-import Checkout from "./pages/store/Checkout";
-import StoreReturns from "./pages/store/Returns";
+import ProductDetails from "./pages/store/ProductDetails";
+import CategoryPage from "./pages/store/CategoryPage";
+import Checkout from "./pages/Checkout";
+import Profile from "./pages/Profile";
+import Orders from "./pages/Orders";
+import Wishlist from "./pages/Wishlist";
+import SearchResults from "./pages/SearchResults";
+import AboutUs from "./pages/AboutUs";
+import ContactUs from "./pages/ContactUs";
+import FAQ from "./pages/FAQ";
 import NotFound from "./pages/NotFound";
-import Returns from "./pages/Returns";
+import Dashboard from "./pages/dashboard/Dashboard";
+import UsersManagement from "./pages/dashboard/UsersManagement";
+import ProductsManagement from "./pages/dashboard/ProductsManagement";
+import CategoriesManagement from "./pages/dashboard/CategoriesManagement";
+import OrdersManagement from "./pages/dashboard/OrdersManagement";
+import Settings from "./pages/dashboard/Settings";
+import ProductListingManagement from "./pages/dashboard/ProductListingManagement";
+import Analytics from "./pages/dashboard/Analytics";
+import Localization from "./pages/dashboard/Localization";
+import BannersManagement from "./pages/store-management/BannerManagement";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <ThemeProvider defaultTheme="system" storageKey="dashboard-theme">
-      <RoleAuthProvider>
-        <AuthProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <SearchProvider>
-                <TooltipProvider>
-                  <Toaster />
-                  <Sonner />
-                  <BrowserRouter>
-                    <StoreThemeHandler />
-                    <Routes>
-                      {/* Old login system */}
-                      <Route path="/login" element={<Login />} />
-                      
-                      {/* New role-based login system */}
-                      <Route path="/role-login" element={<RoleLogin />} />
-                      <Route path="/unauthorized" element={<Unauthorized />} />
+function App() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>
+        <ResponsiveImageProvider>
+          <AuthProvider>
+            <RoleAuthProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <SearchProvider>
+                    <Router>
+                      <StoreThemeHandler />
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/store" element={<Store />} />
+                        <Route path="/store/product/:slug" element={<ProductDetails />} />
+                        <Route path="/store/category/:slug" element={<CategoryPage />} />
+                        <Route path="/search" element={<SearchResults />} />
+                        <Route path="/about" element={<AboutUs />} />
+                        <Route path="/contact" element={<ContactUs />} />
+                        <Route path="/faq" element={<FAQ />} />
+                        <Route path="*" element={<NotFound />} />
 
-                      {/* Store routes (accessible to customers and everyone) */}
-                      <Route path="/store" element={<Store />} />
-                      <Route path="/store/categories" element={<StoreCategories />} />
-                      <Route path="/store/product/:slug" element={<ProductDetail />} />
-                      <Route path="/store/wishlist" element={<Wishlist />} />
-                      <Route path="/store/checkout" element={<Checkout />} />
-                      <Route path="/store/returns" element={<StoreReturns />} />
+                        <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+                        <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                        <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
+                        <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
 
-                      {/* Dashboard routes */}
-                      <Route path="/" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin', 'manager', 'seller']}>
-                          <Index />
-                        </RoleProtectedRoute>
-                      } />
-
-                      {/* Super Admin only routes */}
-                      <Route path="/user-management" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <UserManagement />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/product-approval" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <ProductApproval />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/localization" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <Localization />
-                        </RoleProtectedRoute>
-                      } />
-
-                      {/* Seller only routes */}
-                      <Route path="/seller-products" element={
-                        <RoleProtectedRoute allowedRoles={['seller']}>
-                          <SellerProducts />
-                        </RoleProtectedRoute>
-                      } />
-
-                      {/* Super Admin and Manager routes */}
-                      <Route path="/products" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
-                          <Products />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/categories" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
-                          <Categories />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/inventory" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <Inventory />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/orders" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
-                          <Orders />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/returns" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
-                          <Returns />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/customers" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
-                          <Customers />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/coupons" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <Coupons />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/analytics" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <Analytics />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/sales-report" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <SalesReport />
-                        </RoleProtectedRoute>
-                      } />
-                      <Route path="/store-management" element={
-                        <RoleProtectedRoute allowedRoles={['super_admin']}>
-                          <StoreManagement />
-                        </RoleProtectedRoute>
-                      } />
-
-                      <Route path="*" element={<NotFound />} />
-                    </Routes>
-                  </BrowserRouter>
-                </TooltipProvider>
-              </SearchProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </AuthProvider>
-      </RoleAuthProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
-);
+                        <Route path="/dashboard" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><Dashboard /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/users" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><UsersManagement /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/products" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><ProductsManagement /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/categories" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><CategoriesManagement /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/product-listings" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><ProductListingManagement /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/banners" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><BannersManagement /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/orders" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><OrdersManagement /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/analytics" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><Analytics /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/localization" element={<RoleProtectedRoute allowedRoles={['super_admin']}><Localization /></RoleProtectedRoute>} />
+                        <Route path="/dashboard/settings" element={<RoleProtectedRoute allowedRoles={['super_admin']}><Settings /></RoleProtectedRoute>} />
+                      </Routes>
+                      <Toaster />
+                    </Router>
+                  </SearchProvider>
+                </WishlistProvider>
+              </CartProvider>
+            </RoleAuthProvider>
+          </AuthProvider>
+        </ResponsiveImageProvider>
+      </ThemeProvider>
+    </QueryClientProvider>
+  );
+}
 
 export default App;

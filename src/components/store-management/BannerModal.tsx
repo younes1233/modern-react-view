@@ -4,16 +4,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { BannerImages } from "@/services/bannerService";
 
 interface Banner {
   id?: number;
   title: string;
   subtitle?: string;
-  image: string;
+  images: BannerImages;
   ctaText?: string;
   ctaLink?: string;
   position: 'hero' | 'secondary' | 'sidebar';
@@ -33,7 +33,17 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
   const [formData, setFormData] = useState<Omit<Banner, 'id'>>({
     title: '',
     subtitle: '',
-    image: '/placeholder.svg',
+    images: {
+      urls: {
+        original: '/placeholder.svg',
+        banner: {
+          desktop: '/placeholder.svg',
+          tablet: '/placeholder.svg',
+          mobile: '/placeholder.svg'
+        }
+      },
+      alt: null
+    },
     ctaText: '',
     ctaLink: '',
     position: 'hero',
@@ -50,7 +60,17 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
       setFormData({
         title: '',
         subtitle: '',
-        image: '/placeholder.svg',
+        images: {
+          urls: {
+            original: '/placeholder.svg',
+            banner: {
+              desktop: '/placeholder.svg',
+              tablet: '/placeholder.svg',
+              mobile: '/placeholder.svg'
+            }
+          },
+          alt: null
+        },
         ctaText: '',
         ctaLink: '',
         position: 'hero',
@@ -104,14 +124,74 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
             />
           </div>
 
-          <div>
-            <Label htmlFor="image">Image URL</Label>
-            <Input
-              id="image"
-              value={formData.image}
-              onChange={(e) => setFormData(prev => ({ ...prev, image: e.target.value }))}
-              placeholder="Enter image URL"
-            />
+          <div className="space-y-2">
+            <Label>Banner Images</Label>
+            
+            <div>
+              <Label htmlFor="desktopImage" className="text-sm">Desktop Image URL</Label>
+              <Input
+                id="desktopImage"
+                value={formData.images.urls.banner.desktop}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  images: {
+                    ...prev.images,
+                    urls: {
+                      ...prev.images.urls,
+                      banner: {
+                        ...prev.images.urls.banner,
+                        desktop: e.target.value
+                      }
+                    }
+                  }
+                }))}
+                placeholder="Enter desktop image URL"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="tabletImage" className="text-sm">Tablet Image URL</Label>
+              <Input
+                id="tabletImage"
+                value={formData.images.urls.banner.tablet}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  images: {
+                    ...prev.images,
+                    urls: {
+                      ...prev.images.urls,
+                      banner: {
+                        ...prev.images.urls.banner,
+                        tablet: e.target.value
+                      }
+                    }
+                  }
+                }))}
+                placeholder="Enter tablet image URL"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="mobileImage" className="text-sm">Mobile Image URL</Label>
+              <Input
+                id="mobileImage"
+                value={formData.images.urls.banner.mobile}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev,
+                  images: {
+                    ...prev.images,
+                    urls: {
+                      ...prev.images.urls,
+                      banner: {
+                        ...prev.images.urls.banner,
+                        mobile: e.target.value
+                      }
+                    }
+                  }
+                }))}
+                placeholder="Enter mobile image URL"
+              />
+            </div>
           </div>
 
           <div>

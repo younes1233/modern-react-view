@@ -1,248 +1,242 @@
-
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, Trash, GripVertical } from "lucide-react";
-import { useEffect, useState } from "react";
-import { useForm, useFieldArray } from "react-hook-form";
-import * as z from "zod";
-import { Level, ZoneStructure } from "@/services/zoneStructureService";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useToast } from "@/hooks/use-toast";
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableItem } from '@/components/localization/SortableItem';
 
-const formSchema = z.object({
-  name: z.string().min(2, {
-    message: "Zone Structure name must be at least 2 characters.",
-  }),
-  selectedLevels: z.array(z.object({
-    id: z.number(),
-  })).min(1, "At least one level is required"),
-});
+interface ZoneStructure {
+  id: number;
+  name: string;
+  levels: { id: number; type: string; }[];
+  created_at: string;
+  updated_at: string;
+}
+
+interface Level {
+  id: number;
+  type: string;
+  depth: string;
+  zone_structures_count: number;
+  created_at: string;
+  updated_at: string;
+}
 
 interface ZoneStructureModalProps {
   isOpen: boolean;
-  zoneStructure?: ZoneStructure | null;
   onClose: () => void;
-  onSave: (data: { name: string; levels: Array<{ id: number }> }) => Promise<void>;
+  onSave: (data: { name: string; levels: { id: number }[] }) => Promise<void>;
+  zoneStructure?: ZoneStructure | null;
   levels: Level[];
 }
 
-export function ZoneStructureModal({
-  isOpen,
-  zoneStructure,
-  onClose,
-  onSave,
-  levels,
-}: ZoneStructureModalProps) {
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      selectedLevels: [{ id: 0 }],
-    },
+export function ZoneStructureModal({ isOpen, onClose, onSave, zoneStructure, levels }: ZoneStructureModalProps) {
+  const [formData, setFormData] = useState({
+    name: '',
+    selectedLevels: [] as number[]
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const { fields, append, remove, move } = useFieldArray({
-    control: form.control,
-    name: "selectedLevels",
-  });
-
-  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   useEffect(() => {
     if (zoneStructure) {
-      // Convert zone structure levels back to selected level IDs
-      const selectedLevelIds = zoneStructure.levels.map(level => {
-        const foundLevel = levels.find(l => l.type === level.type);
-        return { id: foundLevel?.id || 0 };
-      });
-      
-      form.reset({
+      setFormData({
         name: zoneStructure.name,
-        selectedLevels: selectedLevelIds.length > 0 ? selectedLevelIds : [{ id: 0 }],
+        selectedLevels: zoneStructure.levels.map(level => level.id)
       });
     } else {
-      form.reset({
-        name: "",
-        selectedLevels: [{ id: 0 }],
+      setFormData({
+        name: '',
+        selectedLevels: []
       });
     }
-  }, [zoneStructure, form, levels]);
+  }, [zoneStructure, isOpen]);
 
-  const handleSubmit = async (data: z.infer<typeof formSchema>) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a zone structure name",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (formData.selectedLevels.length === 0) {
+      toast({
+        title: "Error",
+        description: "Please select at least one level",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
+      setIsLoading(true);
+      
+      // Ensure all level IDs are valid numbers
+      const validLevelIds = formData.selectedLevels.filter(id => typeof id === 'number' && id > 0);
+      
+      if (validLevelIds.length === 0) {
+        throw new Error('No valid levels selected');
+      }
+
       await onSave({
-        name: data.name,
-        levels: data.selectedLevels,
+        name: formData.name.trim(),
+        levels: validLevelIds.map(id => ({ id }))
       });
       onClose();
     } catch (error) {
       console.error('Error saving zone structure:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const addLevel = () => {
-    append({ id: 0 });
-  };
-
-  const removeLevel = (index: number) => {
-    if (fields.length > 1) {
-      remove(index);
+  const handleAddLevel = (levelId: string) => {
+    const id = parseInt(levelId);
+    if (!isNaN(id) && !formData.selectedLevels.includes(id)) {
+      setFormData(prev => ({
+        ...prev,
+        selectedLevels: [...prev.selectedLevels, id]
+      }));
     }
   };
 
-  const handleDragStart = (index: number) => {
-    setDraggedIndex(index);
+  const handleRemoveLevel = (levelId: number) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedLevels: prev.selectedLevels.filter(id => id !== levelId)
+    }));
   };
 
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    setDragOverIndex(index);
-  };
+  const handleDragEnd = (event: any) => {
+    const { active, over } = event;
 
-  const handleDrop = (e: React.DragEvent, dropIndex: number) => {
-    e.preventDefault();
-    if (draggedIndex !== null && draggedIndex !== dropIndex) {
-      move(draggedIndex, dropIndex);
+    if (active.id !== over.id) {
+      setFormData(prev => {
+        const oldIndex = prev.selectedLevels.indexOf(active.id);
+        const newIndex = prev.selectedLevels.indexOf(over.id);
+
+        return {
+          ...prev,
+          selectedLevels: arrayMove(prev.selectedLevels, oldIndex, newIndex)
+        };
+      });
     }
-    setDraggedIndex(null);
-    setDragOverIndex(null);
   };
 
-  const getAvailableLevels = (currentIndex: number) => {
-    const selectedIds = form.watch("selectedLevels").map(l => l.id);
-    const currentId = form.watch(`selectedLevels.${currentIndex}.id`);
-    
-    return levels.filter(level => 
-      !selectedIds.includes(level.id) || level.id === currentId
-    );
-  };
+  const availableLevels = levels.filter(level => !formData.selectedLevels.includes(level.id));
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
-      <AlertDialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            {zoneStructure ? "Edit Zone Structure" : "Create New Zone Structure"}
-          </AlertDialogTitle>
-          <AlertDialogDescription>
-            {zoneStructure
-              ? "Update the zone structure details."
-              : "Enter the details for the new zone structure."}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Zone Structure Name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>{zoneStructure ? 'Edit Zone Structure' : 'Add New Zone Structure'}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="name">Zone Structure Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+              placeholder="Enter zone structure name"
+              required
+              disabled={isLoading}
             />
+          </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <FormLabel>Levels (in order)</FormLabel>
-                <Button type="button" variant="outline" size="sm" onClick={addLevel}>
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Level
-                </Button>
-              </div>
-              
-              {fields.map((field, index) => (
-                <div 
-                  key={field.id} 
-                  className={`flex gap-2 items-center p-2 border rounded ${
-                    dragOverIndex === index ? 'border-blue-500 bg-blue-50' : 'border-gray-200'
-                  }`}
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragOver={(e) => handleDragOver(e, index)}
-                  onDrop={(e) => handleDrop(e, index)}
+          <div>
+            <Label>Available Levels</Label>
+            <Select onValueChange={handleAddLevel}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a level to add" />
+              </SelectTrigger>
+              <SelectContent>
+                {availableLevels.map(level => (
+                  <SelectItem key={level.id} value={String(level.id)}>
+                    {level.type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label>Selected Levels</Label>
+            {formData.selectedLevels.length === 0 ? (
+              <p className="text-sm text-gray-500">No levels selected.</p>
+            ) : (
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext
+                  items={formData.selectedLevels}
+                  strategy={verticalListSortingStrategy}
                 >
-                  <GripVertical className="w-4 h-4 text-gray-400 cursor-move" />
-                  <div className="text-sm text-gray-500 w-8">
-                    {index + 1}.
-                  </div>
-                  <FormField
-                    control={form.control}
-                    name={`selectedLevels.${index}.id`}
-                    render={({ field }) => (
-                      <FormItem className="flex-1">
-                        <FormControl>
-                          <Select
-                            value={field.value?.toString() || ""}
-                            onValueChange={(value) => field.onChange(parseInt(value))}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select a level" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {getAvailableLevels(index).map((level) => (
-                                <SelectItem key={level.id} value={level.id.toString()}>
-                                  {level.type} (Depth: {level.depth})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => removeLevel(index)}
-                    disabled={fields.length === 1}
-                  >
-                    <Trash className="w-4 h-4" />
-                  </Button>
-                </div>
-              ))}
-            </div>
+                  <div className="space-y-2">
+                    {formData.selectedLevels.map((levelId) => {
+                      const level = levels.find(l => l.id === levelId);
+                      if (!level) return null;
 
-            <AlertDialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit">
-                {zoneStructure ? "Update" : "Create"}
-              </Button>
-            </AlertDialogFooter>
-          </form>
-        </Form>
-      </AlertDialogContent>
-    </AlertDialog>
+                      return (
+                        <SortableItem key={level.id} id={level.id}>
+                          <div className="flex items-center justify-between p-3 bg-gray-100 rounded-md">
+                            <span>{level.type}</span>
+                            <Button 
+                              type="button" 
+                              variant="ghost" 
+                              size="sm"
+                              onClick={() => handleRemoveLevel(level.id)}
+                            >
+                              Remove
+                            </Button>
+                          </div>
+                        </SortableItem>
+                      );
+                    })}
+                  </div>
+                </SortableContext>
+              </DndContext>
+            )}
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose} 
+              className="flex-1"
+              disabled={isLoading}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              className="flex-1"
+              disabled={isLoading}
+            >
+              {isLoading ? 'Saving...' : (zoneStructure ? 'Update Zone Structure' : 'Create Zone Structure')}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
