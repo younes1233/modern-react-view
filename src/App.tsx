@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleAuthProvider } from "@/contexts/RoleAuthContext";
 import { CartProvider } from "@/contexts/CartContext";
-import { WishlistProvider } from "@/contexts/WishlistContext";
+import { WishlistProvider } from "@/contexts/WishlistProvider";
 import { SearchProvider } from "@/contexts/SearchContext";
 import { ResponsiveImageProvider } from "@/contexts/ResponsiveImageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -27,7 +27,7 @@ import Categories from "./pages/Categories";
 import Orders from "./pages/Orders";
 import Analytics from "./pages/Analytics";
 import Localization from "./pages/Localization";
-import BannersManagement from "./components/store-management/BannerManagement";
+import { BannerManagement } from "./components/store-management/BannerManagement";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,7 +67,7 @@ function App() {
                         <Route path="/orders" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><Orders /></RoleProtectedRoute>} />
                         <Route path="/analytics" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><Analytics /></RoleProtectedRoute>} />
                         <Route path="/localization" element={<RoleProtectedRoute allowedRoles={['super_admin']}><Localization /></RoleProtectedRoute>} />
-                        <Route path="/banners" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><BannersManagement /></RoleProtectedRoute>} />
+                        <Route path="/banners" element={<RoleProtectedRoute allowedRoles={['manager', 'super_admin']}><BannerManagement /></RoleProtectedRoute>} />
                       </Routes>
                       <Toaster />
                     </Router>

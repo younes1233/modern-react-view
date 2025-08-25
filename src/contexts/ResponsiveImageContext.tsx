@@ -6,6 +6,7 @@ export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 interface ResponsiveImageContextType {
   deviceType: DeviceType;
   getResponsiveImage: (images: BannerImages) => string;
+  getImageUrl: (banner: { desktop: string; tablet: string; mobile: string }) => string;
 }
 
 interface BannerImages {
@@ -45,10 +46,7 @@ export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = 
       }
     };
 
-    // Set initial device type
     checkDeviceType();
-
-    // Add resize listener
     window.addEventListener('resize', checkDeviceType);
 
     return () => {
@@ -57,12 +55,15 @@ export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = 
   }, []);
 
   const getResponsiveImage = (images: BannerImages): string => {
-    // Return the appropriate image based on device type
     return images.urls.banner[deviceType] || images.urls.original;
   };
 
+  const getImageUrl = (banner: { desktop: string; tablet: string; mobile: string }): string => {
+    return banner[deviceType] || banner.desktop;
+  };
+
   return (
-    <ResponsiveImageContext.Provider value={{ deviceType, getResponsiveImage }}>
+    <ResponsiveImageContext.Provider value={{ deviceType, getResponsiveImage, getImageUrl }}>
       {children}
     </ResponsiveImageContext.Provider>
   );

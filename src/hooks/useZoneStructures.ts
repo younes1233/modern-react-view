@@ -229,3 +229,11 @@ export const useZoneStructures = () => {
     deleteLevel,
   };
 };
+
+export {
+  type ZoneStructure,
+  type Level,
+  type CreateZoneStructureRequest,
+  type UpdateZoneStructureRequest,
+  useZoneStructures
+};

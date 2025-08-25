@@ -268,3 +268,5 @@ export function BannerManagement() {
     </div>
   );
 }
+
+export { BannerManagement };
