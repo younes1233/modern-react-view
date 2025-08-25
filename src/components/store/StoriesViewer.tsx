@@ -97,7 +97,7 @@ export const StoriesViewer = ({ isOpen, onClose, initialStoryIndex = 0, stories 
             onClick={onClose}
             className="absolute top-4 right-4 z-20 text-white hover:bg-white/20"
           >
-            <X className="w-6 h-6" />
+            <X className="w-7 h-7" />
           </Button>
 
           {/* Story content */}
