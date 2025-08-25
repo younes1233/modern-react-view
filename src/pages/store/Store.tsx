@@ -1,281 +1,238 @@
 import { useState, useEffect } from "react";
-import { StoreLayout } from "@/components/store/StoreLayout";
-import { ProductCard } from "@/components/store/ProductCard";
-import { ShopByCategory } from "@/components/store/ShopByCategory";
-import { ProductSection } from "@/components/store/ProductSection";
-import { StoriesRing } from "@/components/store/StoriesRing";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, Star, Heart, ShoppingCart, Zap, Shield, Truck } from "lucide-react";
-import {
-  getProducts,
-  getFeaturedProducts,
-  getNewArrivals,
-  getProductsOnSale,
-  getHeroSection,
-  HeroSection,
-} from "@/data/storeData";
-import { useBanners, Banner } from "@/hooks/useBanners";
-import { useProductListings } from "@/hooks/useProductListings";
-import { useHomeSections } from "@/hooks/useHomeSections";
-import { HeroSkeleton } from "@/components/store/HeroSkeleton";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { ProductCard } from "@/components/store/ProductCard";
+import { ProductSection } from "@/components/store/ProductSection";
 import { BannerSkeleton } from "@/components/store/BannerSkeleton";
-import { ShopByCategorySkeleton } from "@/components/store/ShopByCategorySkeleton";
-import { ProductSectionSkeleton } from "@/components/store/ProductSectionSkeleton";
+import { ArrowRight, Search } from "lucide-react";
 import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
+import { bannerService, BannerImages } from "@/services/bannerService";
 
-const Store = () => {
-  const [favorites, setFavorites] = useState<string[]>([]);
-  const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
-  const [heroLoading, setHeroLoading] = useState(true);
-  
-  const { banners, isLoading: bannersLoading } = useBanners();
-  const { productListings, isLoading: productListingsLoading } = useProductListings();
-  const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
-  const { deviceType } = useResponsiveImage();
+interface Banner {
+  id: number;
+  title: string;
+  subtitle?: string;
+  images: BannerImages;
+  ctaText?: string;
+  ctaLink?: string;
+  position: string;
+  isActive: boolean;
+  order: number;
+}
 
-  // Unified loading state for smooth transitions
-  const isGlobalLoading = bannersLoading || productListingsLoading || homeSectionsLoading;
+const StorePage = () => {
+  const [heroBanners, setHeroBanners] = useState<Banner[]>([]);
+  const [secondaryBanners, setSecondaryBanners] = useState<Banner[]>([]);
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { getResponsiveImage } = useResponsiveImage();
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const loadData = () => {
-      setHeroLoading(true);
-      setHeroSection(getHeroSection());
-      setHeroLoading(false);
-    };
-    loadData();
+    const fetchBannersAndProducts = async () => {
+      try {
+        setLoading(true);
+        setError(null);
 
-    const handleDataUpdate = () => {
-      loadData();
+        // Fetch banners
+        const bannersResponse = await bannerService.getBanners();
+        if (bannersResponse.error) {
+          throw new Error(bannersResponse.message);
+        }
+
+        const transformedBanners = bannersResponse.details.banners.map((apiBanner: any) => ({
+          id: apiBanner.id,
+          title: apiBanner.title,
+          subtitle: apiBanner.subtitle,
+          images: apiBanner.images,
+          ctaText: apiBanner.cta_text,
+          ctaLink: apiBanner.cta_link,
+          position: apiBanner.position,
+          isActive: Boolean(apiBanner.is_active),
+          order: apiBanner.order,
+        }));
+
+        // Separate banners by position
+        setHeroBanners(transformedBanners.filter(banner => banner.position === 'hero'));
+        setSecondaryBanners(transformedBanners.filter(banner => banner.position === 'secondary'));
+
+        // Fetch products (replace with your actual product fetching logic)
+        // For now, using dummy data
+        const dummyProducts = [
+          { id: 1, name: "Product 1", price: 25, imageUrl: "https://source.unsplash.com/400x300/?product" },
+          { id: 2, name: "Product 2", price: 50, imageUrl: "https://source.unsplash.com/400x300/?clothing" },
+          { id: 3, name: "Product 3", price: 75, imageUrl: "https://source.unsplash.com/400x300/?shoes" },
+          { id: 4, name: "Product 4", price: 100, imageUrl: "https://source.unsplash.com/400x300/?accessories" },
+          { id: 5, name: "Product 5", price: 25, imageUrl: "https://source.unsplash.com/400x300/?electronics" },
+          { id: 6, name: "Product 6", price: 50, imageUrl: "https://source.unsplash.com/400x300/?books" },
+          { id: 7, name: "Product 7", price: 75, imageUrl: "https://source.unsplash.com/400x300/?furniture" },
+          { id: 8, name: "Product 8", price: 100, imageUrl: "https://source.unsplash.com/400x300/?toys" },
+        ];
+        setProducts(dummyProducts);
+
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch banners and products';
+        setError(errorMessage);
+        console.error('Error fetching banners and products:', err);
+      } finally {
+        setLoading(false);
+      }
     };
-    window.addEventListener("storeDataUpdated", handleDataUpdate);
-    return () => {
-      window.removeEventListener("storeDataUpdated", handleDataUpdate);
-    };
+
+    fetchBannersAndProducts();
   }, []);
 
-  const toggleFavorite = (productId: string) => {
-    setFavorites((prev) =>
-      prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]
-    );
-  };
-
-  const products = getProducts();
-  const bestSellers = getProductsOnSale();
-
-  const getSectionContent = (section: any) => {
-    if (!section.is_active) return null;
-
-    if (section.type === 'banner') {
-      // Use unified loading state for consistent behavior
-      if (isGlobalLoading) {
-        return <BannerSkeleton key={`banner-skeleton-${section.id}`} />;
-      }
-
-      // Find banner by ID and check if it's active using the correct property name
-      const banner = banners.find((b) => b.id === section.item_id && b.isActive);
-      if (!banner) return null;
-      
-      // Get the responsive image based on device type
-      let bannerImage = '/placeholder.svg';
-      if (banner.images?.urls?.banner) {
-        bannerImage = banner.images.urls.banner[deviceType] || 
-                     banner.images.urls.banner.desktop || 
-                     banner.images.urls.original || 
-                     '/placeholder.svg';
-      }
-      
-      console.log('Banner found:', banner);
-      console.log('Device type:', deviceType);
-      console.log('Selected image URL:', bannerImage);
-      
-      return (
-        <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
-          <div className="w-full max-w-full overflow-hidden bg-white">
-            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white">
-              <img
-                src={bannerImage}
-                alt={banner.images?.alt || banner.title}
-                className="w-full h-40 sm:h-48 md:h-64 lg:h-80 object-cover transition-all duration-300"
-                onError={(e) => {
-                  console.error('Failed to load banner image:', bannerImage);
-                  e.currentTarget.src = '/placeholder.svg';
-                }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
-                <div className="p-3 sm:p-4 md:p-8 text-white">
-                  <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2">{banner.title}</h2>
-                  {banner.subtitle && (
-                    <p className="text-sm sm:text-base md:text-lg mb-2 sm:mb-3 md:mb-4 opacity-90">{banner.subtitle}</p>
-                  )}
-                  {banner.ctaText && banner.ctaLink && (
-                    <Button className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-1.5 sm:py-2 rounded-full text-sm md:text-base transition-all duration-200 hover-scale">
-                      {banner.ctaText}
-                    </Button>
-                  )}
-                </div>
+  const renderHeroBanner = (banner: any) => (
+    <Card key={banner.id} className="overflow-hidden group cursor-pointer">
+      <CardContent className="p-0">
+        <AspectRatio ratio={4/1}>
+          <div className="relative w-full h-full overflow-hidden">
+            <img
+              src={getResponsiveImage(banner.images)}
+              alt={banner.images.alt || banner.title}
+              className="w-full h-auto object-cover transition-transform duration-500 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-transparent" />
+            <div className="absolute inset-0 flex items-center px-8 lg:px-12">
+              <div className="max-w-2xl">
+                <h1 className="text-3xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                  {banner.title}
+                </h1>
+                {banner.subtitle && (
+                  <p className="text-white/90 text-lg lg:text-xl mb-6 leading-relaxed">
+                    {banner.subtitle}
+                  </p>
+                )}
+                {banner.ctaText && (
+                  <Button 
+                    size="lg"
+                    className="bg-white text-gray-900 hover:bg-white/90 font-semibold text-lg px-8 py-3"
+                    onClick={() => {
+                      if (banner.ctaLink) {
+                        window.open(banner.ctaLink, '_blank');
+                      }
+                    }}
+                  >
+                    {banner.ctaText}
+                    <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                )}
               </div>
             </div>
           </div>
-        </section>
-      );
-    } else if (section.type === 'productListing') {
-      // Use unified loading state for consistent behavior
-      if (isGlobalLoading) {
-        return <ProductSectionSkeleton key={`product-skeleton-${section.id}`} />;
-      }
+        </AspectRatio>
+      </CardContent>
+    </Card>
+  );
 
-      const listing = productListings.find((l) => l.id === section.item_id && l.is_active) || section.item;
-      if (!listing) return null;
-      
-      const convertedListing = {
-        id: listing.id,
-        title: listing.title,
-        subtitle: listing.subtitle,
-        type: listing.type,
-        maxProducts: listing.max_products || listing.maxProducts,
-        layout: listing.layout,
-        showTitle: listing.show_title !== undefined ? listing.show_title : listing.showTitle,
-        isActive: listing.is_active !== undefined ? listing.is_active : listing.isActive,
-        order: listing.order
-      };
-      
-      return (
-        <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
-          <ProductSection listing={convertedListing} disableIndividualLoading />
-        </section>
-      );
-    }
-    return null;
-  };
+  if (loading) {
+    return (
+      <div className="container mx-auto p-6">
+        <BannerSkeleton />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-8">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardContent className="p-4">
+                <AspectRatio ratio={1}>
+                  <div className="w-full h-full bg-gray-100 animate-pulse" />
+                </AspectRatio>
+                <div className="mt-4 space-y-2">
+                  <div className="h-4 bg-gray-100 animate-pulse w-3/4" />
+                  <div className="h-4 bg-gray-100 animate-pulse w-1/2" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
-  console.log('Store: Home sections from API:', homeSections);
-  console.log('Store: Product listings from API:', productListings);
-  console.log('Store: Banners from API:', banners);
+  if (error) {
+    return (
+      <div className="container mx-auto p-6 text-center text-red-600">
+        <p>Error loading store data: {error}</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
-      <StoreLayout>
-        {/* Hero Section with Loading - Reduced height on mobile */}
-        {heroLoading ? (
-          <HeroSkeleton />
-        ) : (
-          heroSection && heroSection.isActive && (
-            <section className="relative w-full overflow-hidden z-10" style={{
-              height: 'clamp(300px, 40vh, 600px)', // Reduced from 50vh to 40vh and min from 400px to 300px
-              minHeight: '300px', // Reduced from 400px to 300px
-              maxHeight: '600px'
-            }}>
-              <div className="absolute inset-0">
-                <img
-                  src={heroSection.backgroundImage}
-                  alt="Hero Background"
-                  className="w-full h-full object-cover"
-                  style={{
-                    objectPosition: 'center center',
-                    transform: 'scale(1.02)', // Slight scale to prevent gaps on iOS
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
-              </div>
-
-              <div className="relative z-20 h-full flex items-center rounded-md mx-0">
-                <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
-                  {/* Left side: title + subtitle */}
-                  <div className="max-w-2xl text-white">
-                    <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
-                      ✨ Premium Quality
-                    </div>
-                    <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-2 sm:mb-3 md:mb-4">
-                      {heroSection.title}
-                    </h1>
-                    <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-3 sm:mb-4 md:mb-6 max-w-xl">
-                      {heroSection.subtitle}
-                    </p>
-                  </div>
-
-                  {/* Bottom right: button + contact info with small left margin */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-6 self-end">
-                    <Button
-                      size="lg"
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
-                    >
-                      {heroSection.ctaText}
-                    </Button>
-                    <div className="text-left">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-white">961 76591765</div>
-                      <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </section>
-          )
-        )}
-
-        {/* Stories Ring */}
-        <StoriesRing />
-
-        {/* Shop by Category with Loading */}
-        <div className="w-full overflow-hidden">
-          {isGlobalLoading ? (
-            <ShopByCategorySkeleton />
-          ) : (
-            <div className="animate-fade-in">
-              <ShopByCategory />
-            </div>
-          )}
+    <div className="container mx-auto p-6 space-y-8">
+      {/* Hero Banner Section */}
+      {heroBanners.length > 0 ? (
+        <div className="space-y-6">
+          {heroBanners.map(renderHeroBanner)}
         </div>
+      ) : null}
 
-        {/* Dynamic Home Sections from API with Loading */}
-        <div className="w-full overflow-hidden bg-white">
-          {isGlobalLoading ? (
-            // Show skeleton sections while loading
-            <div className="animate-fade-in">
-              <BannerSkeleton />
-              <ProductSectionSkeleton />
-              <BannerSkeleton />
-            </div>
-          ) : (
-            <div className="animate-fade-in">
-              {homeSections
-                .filter(section => section.is_active)
-                .sort((a, b) => a.order - b.order)
-                .map((section) => getSectionContent(section))}
-            </div>
-          )}
+      {/* Product Section */}
+      <ProductSection title="Featured Products" products={products} />
+
+      {/* Secondary Banners Section */}
+      {secondaryBanners.length > 0 ? (
+        <div className="space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+            Promotions & Offers
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {secondaryBanners.map((banner) => (
+              <Card key={banner.id} className="overflow-hidden group cursor-pointer">
+                <CardContent className="p-0">
+                  <AspectRatio ratio={4/1}>
+                    <div className="relative w-full h-full overflow-hidden">
+                      <img
+                        src={getResponsiveImage(banner.images)}
+                        alt={banner.images.alt || banner.title}
+                        className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+                      <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-8">
+                        <div className="max-w-lg">
+                          <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+                            {banner.title}
+                          </h3>
+                          {banner.subtitle && (
+                            <p className="text-white/90 text-lg mb-4 line-clamp-2">
+                              {banner.subtitle}
+                            </p>
+                          )}
+                          {banner.ctaText && (
+                            <Button 
+                              variant="secondary" 
+                              className="bg-white text-gray-900 hover:bg-white/90 font-semibold"
+                              onClick={() => {
+                                if (banner.ctaLink) {
+                                  window.open(banner.ctaLink, '_blank');
+                                }
+                              }}
+                            >
+                              {banner.ctaText}
+                              <ArrowRight className="w-4 h-4 ml-2" />
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </AspectRatio>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
+      ) : null}
 
-        {/* Fallback Best Sellers if no sections are configured */}
-        {!isGlobalLoading && homeSections.filter(s => s.is_active).length === 0 && (
-          <section className="py-8 md:py-16 bg-white overflow-hidden">
-            <div className="w-full max-w-full px-2 md:px-4">
-              <div className="max-w-7xl mx-auto">
-                <div className="mb-12">
-                  <div className="bg-cyan-500 text-white px-6 py-2 rounded-t-lg inline-block">
-                    <h2 className="text-2xl lg:text-3xl font-bold">Electronic</h2>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                  {bestSellers.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-
-                {/* Pagination dots */}
-                <div className="flex justify-center mt-8 space-x-2">
-                  <div className="w-3 h-3 bg-cyan-500 rounded-full"></div>
-                  <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                  <div className="w-3 h-3 bg-gray-300 rounded-full"></div>
-                </div>
-              </div>
-            </div>
-          </section>
-        )}
-      </StoreLayout>
+      {/* More Product Sections can be added here */}
     </div>
   );
 };
 
-export default Store;
+export default StorePage;

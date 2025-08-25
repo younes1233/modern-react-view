@@ -1,222 +1,199 @@
-import { useState, useEffect } from "react";
-import { useProductListingProducts } from "@/hooks/useProductListings";
-import { ProductCard } from "./ProductCard";
-import { ProductSectionSkeleton } from "./ProductSectionSkeleton";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { ProductAPI } from "@/services/productService";
+import { Badge } from "@/components/ui/badge";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { ArrowRight, ShoppingCart, Heart } from "lucide-react";
+import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/contexts/WishlistContext";
+import { useToast } from "@/hooks/use-toast";
+import { bannerService, BannerImages } from "@/services/bannerService";
 
-interface ProductSectionProps {
-  listing: {
-    id: number;
-    title: string;
-    subtitle?: string;
-    type: string;
-    maxProducts: number;
-    layout: string;
-    showTitle: boolean;
-    isActive: boolean;
-    order: number;
-  };
-  disableIndividualLoading?: boolean;
+interface Banner {
+  id: number;
+  title: string;
+  subtitle?: string;
+  images: BannerImages;
+  ctaText?: string;
+  ctaLink?: string;
+  position: string;
+  isActive: boolean;
+  order: number;
 }
 
-// Convert API product to legacy format for ProductCard
-const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
-  return {
-    id: apiProduct.id, // Keep as number, don't convert to string
-    name: apiProduct.name,
-    slug: apiProduct.slug,
-    image: apiProduct.media.cover_image.image, // Extract image URL from object
-    price: apiProduct.pricing.price, // Use direct price, not final.price
-    originalPrice: apiProduct.pricing.original_price, // Use direct original_price
-    category: apiProduct.category.name.toLowerCase(),
-    rating: apiProduct.rating.average,
-    reviews: apiProduct.rating.count,
-    isOnSale: apiProduct.flags.on_sale,
-    isFeatured: apiProduct.flags.is_featured,
-    isNewArrival: apiProduct.flags.is_new_arrival,
-    sku: apiProduct.identifiers.sku,
-    thumbnails: apiProduct.media.thumbnails.map(thumb => ({
-      url: thumb.image,
-      alt: thumb.alt_text
-    })),
-    description: apiProduct.short_description,
-    stock: apiProduct.inventory.stock ? parseInt(apiProduct.inventory.stock) : 0,
-    isAvailable: parseInt(apiProduct.inventory.stock) > 0, // Calculate availability from stock
-    // Add missing required properties
-    inStock: parseInt(apiProduct.inventory.stock) > 0, // Calculate from stock
-    variations: [] // Default to empty array since API doesn't provide variations in this format
-  };
-};
+interface ProductSectionProps {
+  title: string;
+  products: any[];
+  showViewAll?: boolean;
+  onViewAll?: () => void;
+  position?: 'hero' | 'secondary' | 'sidebar';
+}
 
-export function ProductSection({ listing, disableIndividualLoading = false }: ProductSectionProps) {
-  const [currentSlide, setCurrentSlide] = useState(0);
-  const isMobile = useIsMobile();
+export const ProductSection = ({ 
+  title, 
+  products, 
+  showViewAll = false, 
+  onViewAll,
+  position = 'secondary'
+}: ProductSectionProps) => {
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const { getResponsiveImage } = useResponsiveImage();
+  const { addToCart } = useCart();
+  const { addToWishlist, isInWishlist } = useWishlist();
+  const { toast } = useToast();
 
-  // Use the API to get products for this listing
-  // Default to Lebanon (1) and USD (1) for now
-  const { data: listingData, isLoading, error } = useProductListingProducts(listing.id, 1, 1);
-  
-  console.log(`ProductSection for "${listing.title}":`, {
-    listing,
-    listingData,
-    isLoading,
-    error
-  });
+  useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        const response = await bannerService.getBanners();
+        if (response.error) {
+          console.error("Failed to fetch banners:", response.message);
+          return;
+        }
+        const filteredBanners = response.details.banners
+          .filter((banner: any) => banner.position === position && banner.is_active)
+          .sort((a: any, b: any) => a.order - b.order);
+        setBanners(filteredBanners as Banner[]);
+      } catch (error) {
+        console.error("Failed to fetch banners:", error);
+      }
+    };
 
-  // Ensure apiProducts is always an array, even if API call fails
-  const apiProducts = Array.isArray(listingData?.products) ? listingData.products : [];
-  const products = apiProducts.map(convertAPIProductToLegacy);
+    fetchBanners();
+  }, [position]);
 
-  if (!listing.isActive) {
-    return null;
-  }
-
-  if (isLoading && !disableIndividualLoading) {
-    return <ProductSectionSkeleton showTitle={listing.showTitle} isMobile={isMobile} />;
-  }
-
-  if (error || products.length === 0) {
-    console.log(`ProductSection "${listing.title}" not showing: error=${error}, products=${products.length}`);
-    return null;
-  }
-
-  // Desktop slider configuration
-  const productsPerSlide = 6;
-  const totalSlides = Math.ceil(products.length / productsPerSlide);
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  const handleAddToCart = (product: any) => {
+    addToCart(product);
+    toast({
+      title: "Success",
+      description: `${product.name} added to cart.`,
+    });
   };
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  const handleAddToWishlist = (product: any) => {
+    addToWishlist(product);
+    toast({
+      title: "Success",
+      description: `${product.name} added to wishlist.`,
+    });
   };
 
-  const goToSlide = (slideIndex: number) => {
-    setCurrentSlide(slideIndex);
-  };
-
-  return (
-    <section className="py-2 md:py-4 bg-white overflow-hidden animate-fade-in transition-all duration-300">
-      <div className="w-full max-w-full px-2 md:px-4">
-        <div className="mx-auto">
-          {/* Header Section */}
-          {listing.showTitle && (
-            <div className="mb-2 md:mb-4 relative">
-              <div className="relative bg-gradient-to-r from-cyan-100 to-blue-100 pt-6 md:pt-10 overflow-visible w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] absolute">
-                <h2 className="absolute -top-3 md:-top-6 text-xl md:text-3xl font-bold text-cyan-600 ml-4 md:ml-8 z-10">
-                  {listing.title}
-                </h2>
-                {listing.subtitle && (
-                  <p className="text-gray-600 text-sm md:text-base ml-4 md:ml-8">
-                    {listing.subtitle}
+  const renderBanner = (banner: Banner) => (
+    <Card key={banner.id} className="overflow-hidden group cursor-pointer hover:shadow-lg transition-all duration-300">
+      <CardContent className="p-0">
+        <AspectRatio ratio={4/1}>
+          <div className="relative w-full h-full overflow-hidden">
+            <img
+              src={getResponsiveImage(banner.images)}
+              alt={banner.images.alt || banner.title}
+              className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/30 to-transparent" />
+            <div className="absolute inset-0 flex flex-col justify-center px-6 lg:px-8">
+              <div className="max-w-lg">
+                <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
+                  {banner.title}
+                </h3>
+                {banner.subtitle && (
+                  <p className="text-white/90 text-lg mb-4 line-clamp-2">
+                    {banner.subtitle}
                   </p>
+                )}
+                {banner.ctaText && (
+                  <Button 
+                    variant="secondary" 
+                    className="bg-white text-gray-900 hover:bg-white/90 font-semibold"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (banner.ctaLink) {
+                        window.open(banner.ctaLink, '_blank');
+                      }
+                    }}
+                  >
+                    {banner.ctaText}
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
                 )}
               </div>
             </div>
-          )}
+          </div>
+        </AspectRatio>
+      </CardContent>
+    </Card>
+  );
 
-          <div className="relative overflow-hidden">
-            {/* Mobile: Horizontal scroll container */}
-            {isMobile ? (
-              <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
-                  {products.map((product: any) => (
-                    <div
-                      key={product.id}
-                      className="flex-shrink-0"
-                      style={{ width: 'calc(40vw - 8px)' }}
-                    >
-                      <ProductCard product={product} />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Desktop: Slider with navigation */
-              <div className="overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-300 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                >
-                  {Array.from({ length: totalSlides }).map((_, slideIndex) => {
-                    const slideStartIndex = slideIndex * productsPerSlide;
-                    const slideProducts = products.slice(slideStartIndex, slideStartIndex + productsPerSlide);
-                    
-                    return (
-                      <div
-                        key={slideIndex}
-                        className="w-full flex-shrink-0"
-                      >
-                        <div className="grid gap-2 grid-cols-6">
-                          {slideProducts.map((product: any) => (
-                            <ProductCard key={product.id} product={product} />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* Navigation Arrows - Desktop only */}
-            {!isMobile && totalSlides > 1 && (
-              <>
-                <Button
-                  variant="outline"
-                  onClick={prevSlide}
-                  disabled={currentSlide === 0}
-                  className="absolute top-1/2 left-0 transform -translate-y-1/2 w-8 h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
-                >
-                  <ChevronLeft className="w-4 h-4 text-gray-600" />
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={nextSlide}
-                  disabled={currentSlide === totalSlides - 1}
-                  className="absolute top-1/2 right-0 transform -translate-y-1/2 w-8 h-12 bg-white shadow-lg hover:bg-gray-50 border border-gray-300 rounded-md flex items-center justify-center z-10"
-                >
-                  <ChevronRight className="w-4 h-4 text-gray-600" />
-                </Button>
-              </>
-            )}
-
-            {/* Modern Pagination Dots - Desktop only */}
-            {!isMobile && totalSlides > 1 && (
-              <div className="flex justify-end mt-4 space-x-2 pr-4">
-                {Array.from({ length: totalSlides }).map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => goToSlide(index)}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 transform hover:scale-110 ${
-                      index === currentSlide 
-                        ? 'bg-cyan-500 shadow-lg scale-110' 
-                        : 'bg-gray-300 hover:bg-gray-400'
-                    }`}
-                    aria-label={`Go to slide ${index + 1}`}
-                  />
-                ))}
-              </div>
-            )}
+  const renderProduct = (product: any) => (
+    <Card key={product.id} className="overflow-hidden group cursor-pointer">
+      <CardContent className="p-4">
+        <div className="relative">
+          <img
+            src={product.image}
+            alt={product.name}
+            className="w-full h-48 object-cover rounded-md mb-4 transition-transform duration-300 group-hover:scale-105"
+          />
+          <Badge className="absolute top-2 left-2 z-10">{product.category}</Badge>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2 line-clamp-1">
+          {product.name}
+        </h3>
+        <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+          {product.description}
+        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
+            ${product.price}
+          </span>
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => handleAddToWishlist(product)}
+            >
+              <Heart 
+                className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-red-500 text-red-500' : ''}`} 
+              />
+            </Button>
+            <Button variant="default" size="sm" onClick={() => handleAddToCart(product)}>
+              Add to Cart
+              <ShoppingCart className="w-4 h-4 ml-2" />
+            </Button>
           </div>
         </div>
+      </CardContent>
+    </Card>
+  );
+
+  return (
+    <div className="space-y-6">
+      {/* Render banners first */}
+      {banners.length > 0 && (
+        <div className="space-y-4">
+          {banners.map(renderBanner)}
+        </div>
+      )}
+
+      {/* Section header */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+          {title}
+        </h2>
+        {showViewAll && onViewAll && (
+          <Button 
+            variant="outline" 
+            onClick={onViewAll}
+            className="flex items-center gap-2"
+          >
+            View All
+            <ArrowRight className="w-4 h-4" />
+          </Button>
+        )}
       </div>
 
-      <style>
-        {`
-          .scrollbar-hide {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-          }
-          .scrollbar-hide::-webkit-scrollbar {
-            display: none;
-          }
-        `}
-      </style>
-    </section>
+      {/* Products grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        {products.slice(0, 8).map(renderProduct)}
+      </div>
+    </div>
   );
-}
+};
