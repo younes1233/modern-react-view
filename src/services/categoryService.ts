@@ -4,7 +4,17 @@ export interface Category {
   id?: number;
   name: string;
   slug: string;
-  image: string;
+  image?: string; // Keep for backward compatibility
+  images?: {
+    urls: {
+      original: string;
+      category_image: {
+        desktop: string;
+        tablet: string;
+        mobile: string;
+      };
+    };
+  };
   icon: string;
   description?: string;
   category_image?: string;
@@ -82,44 +92,69 @@ class CategoryService extends BaseApiService {
     return this.get<ApiResponse<Category>>(`/admin/categories/slug/${slug}`);
   }
 
-  // Create new category
-  async createCategory(categoryData: Omit<Category, 'id' | 'created_at' | 'updated_at'>): Promise<ApiResponse<Category>> {
-    const payload = {
-      name: categoryData.name,
-      slug: categoryData.slug,
-      image: categoryData.image,
-      icon: categoryData.icon,
-      description: categoryData.description || null,
-      category_image: categoryData.category_image || null,
-      order: categoryData.order,
-      is_active: categoryData.is_active,
-      featured: categoryData.featured,
-      seo_title: categoryData.seo_title || null,
-      seo_description: categoryData.seo_description || null,
-      parent_id: categoryData.parent_id || null
-    };
+  // Create new category with file upload
+  async createCategory(categoryData: Omit<Category, 'id' | 'created_at' | 'updated_at'>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
+    const formData = new FormData();
+    
+    // Add text fields
+    formData.append('name', categoryData.name);
+    formData.append('slug', categoryData.slug);
+    formData.append('order', categoryData.order.toString());
+    formData.append('is_active', categoryData.is_active ? '1' : '0');
+    formData.append('featured', categoryData.featured ? '1' : '0');
+    
+    if (categoryData.description) formData.append('description', categoryData.description);
+    if (categoryData.seo_title) formData.append('seo_title', categoryData.seo_title);
+    if (categoryData.seo_description) formData.append('seo_description', categoryData.seo_description);
+    if (categoryData.parent_id) formData.append('parent_id', categoryData.parent_id.toString());
+    
+    // Add image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile);
+    } else if (categoryData.image) {
+      formData.append('image_url', categoryData.image);
+    }
+    
+    // Add icon file if provided  
+    if (iconFile) {
+      formData.append('icon', iconFile);
+    } else if (categoryData.icon) {
+      formData.append('icon_url', categoryData.icon);
+    }
 
-    return this.post<ApiResponse<Category>>('/admin/categories', payload);
+    return this.postFormData<ApiResponse<Category>>('/admin/categories', formData);
   }
 
-  // Update category
-  async updateCategory(id: number, categoryData: Partial<Category>): Promise<ApiResponse<Category>> {
-    const payload: any = {};
+  // Update category with file upload
+  async updateCategory(id: number, categoryData: Partial<Category>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
+    const formData = new FormData();
     
-    if (categoryData.name) payload.name = categoryData.name;
-    if (categoryData.slug) payload.slug = categoryData.slug;
-    if (categoryData.image !== undefined) payload.image = categoryData.image;
-    if (categoryData.icon) payload.icon = categoryData.icon;
-    if (categoryData.description !== undefined) payload.description = categoryData.description;
-    if (categoryData.category_image !== undefined) payload.category_image = categoryData.category_image;
-    if (categoryData.order !== undefined) payload.order = categoryData.order;
-    if (categoryData.is_active !== undefined) payload.is_active = categoryData.is_active;
-    if (categoryData.featured !== undefined) payload.featured = categoryData.featured;
-    if (categoryData.seo_title !== undefined) payload.seo_title = categoryData.seo_title;
-    if (categoryData.seo_description !== undefined) payload.seo_description = categoryData.seo_description;
-    if (categoryData.parent_id !== undefined) payload.parent_id = categoryData.parent_id;
+    // Add text fields only if they exist
+    if (categoryData.name) formData.append('name', categoryData.name);
+    if (categoryData.slug) formData.append('slug', categoryData.slug);
+    if (categoryData.order !== undefined) formData.append('order', categoryData.order.toString());
+    if (categoryData.is_active !== undefined) formData.append('is_active', categoryData.is_active ? '1' : '0');
+    if (categoryData.featured !== undefined) formData.append('featured', categoryData.featured ? '1' : '0');
+    if (categoryData.description !== undefined) formData.append('description', categoryData.description || '');
+    if (categoryData.seo_title !== undefined) formData.append('seo_title', categoryData.seo_title || '');
+    if (categoryData.seo_description !== undefined) formData.append('seo_description', categoryData.seo_description || '');
+    if (categoryData.parent_id !== undefined) formData.append('parent_id', categoryData.parent_id ? categoryData.parent_id.toString() : '');
+    
+    // Add image file if provided
+    if (imageFile) {
+      formData.append('image', imageFile);
+    } else if (categoryData.image) {
+      formData.append('image_url', categoryData.image);
+    }
+    
+    // Add icon file if provided
+    if (iconFile) {
+      formData.append('icon', iconFile);
+    } else if (categoryData.icon) {
+      formData.append('icon_url', categoryData.icon);
+    }
 
-    return this.put<ApiResponse<Category>>(`/admin/categories/${id}`, payload);
+    return this.putFormData<ApiResponse<Category>>(`/admin/categories/${id}`, formData);
   }
 
   // Delete category

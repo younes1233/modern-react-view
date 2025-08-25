@@ -48,13 +48,11 @@ const Categories = () => {
   });
   const { toast } = useToast();
 
-  // Load categories on component mount
   useEffect(() => {
     loadCategories();
     loadStats();
   }, []);
 
-  // Load categories with current filters
   useEffect(() => {
     loadCategories();
   }, [searchTerm, statusFilter]);
@@ -67,10 +65,8 @@ const Categories = () => {
         status: statusFilter === "all" ? undefined : statusFilter as "active" | "inactive"
       };
       
-      // Use getCategories instead of getCategoryTree to get all categories
       const response = await categoryService.getCategories();
       if (!response.error) {
-        // Ensure we always set an array, regardless of API response structure
         let categoriesData: Category[] = [];
         
         if (Array.isArray(response.details)) {
@@ -79,7 +75,6 @@ const Categories = () => {
           categoriesData = (response.details as any).categories;
         }
         
-        // Ensure all categories have default values for required properties
         const sanitizedCategories = categoriesData.map(category => ({
           ...category,
           products: category.products ?? 0,
@@ -101,7 +96,6 @@ const Categories = () => {
       }
     } catch (error) {
       console.error('Error loading categories:', error);
-      // Ensure categories stays as an array even on error
       setCategories([]);
       toast({
         title: "Error",
@@ -120,8 +114,8 @@ const Categories = () => {
         setStats({
           totalCategories: response.details?.totalCategories || 0,
           activeCategories: response.details?.activeCategories || 0,
-          products: 0, // This would come from product API
-          revenue: 0   // This would come from analytics API
+          products: 0,
+          revenue: 0
         });
       }
     } catch (error) {
@@ -199,14 +193,14 @@ const Categories = () => {
     }
   };
 
-  const handleSaveCategory = async (categoryData: Category) => {
+  const handleSaveCategory = async (categoryData: Category, imageFile?: File, iconFile?: File) => {
     try {
       let response;
       
       if (modalMode === 'add') {
-        response = await categoryService.createCategory(categoryData);
+        response = await categoryService.createCategory(categoryData, imageFile, iconFile);
       } else if (selectedCategory?.id) {
-        response = await categoryService.updateCategory(selectedCategory.id, categoryData);
+        response = await categoryService.updateCategory(selectedCategory.id, categoryData, imageFile, iconFile);
       }
 
       if (response && !response.error) {
@@ -252,6 +246,8 @@ const Categories = () => {
     const hasChildren = category.children && category.children.length > 0;
     const indentLevel = (category.level || 0) * 24;
 
+    const displayImage = category.images?.urls?.original || category.image;
+
     return (
       <div key={category.id}>
         <div 
@@ -277,8 +273,8 @@ const Categories = () => {
             )}
             
             <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-              {category.image ? (
-                <img src={category.image} alt={category.name} className="w-8 h-8 rounded object-cover" />
+              {displayImage ? (
+                <img src={displayImage} alt={category.name} className="w-8 h-8 rounded object-cover" />
               ) : (
                 <Package className="w-6 h-6 text-blue-600" />
               )}
@@ -409,7 +405,6 @@ const Categories = () => {
     return result;
   };
 
-  // Ensure categories is always an array before filtering
   const validCategories = Array.isArray(categories) ? categories : [];
   const filteredCategories = searchTerm 
     ? validCategories.filter(category =>
@@ -473,7 +468,6 @@ const Categories = () => {
               </div>
             </div>
 
-            {/* Search and Filters */}
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -503,7 +497,6 @@ const Categories = () => {
               </div>
             </div>
 
-            {/* Metric Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
               <Card className="bg-gradient-to-br from-pink-500 to-pink-600 text-white border-0">
                 <CardContent className="p-6">
@@ -568,7 +561,6 @@ const Categories = () => {
               </Card>
             </div>
 
-            {/* Categories Content */}
             <Card className="shadow-lg">
               <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-700">
                 <CardTitle>Category Management</CardTitle>
@@ -591,77 +583,81 @@ const Categories = () => {
                   </div>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {flattenCategories(filteredCategories).map((category) => (
-                      <Card key={category.id} className="hover:shadow-lg transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900">
-                              {category.image ? (
-                                <img src={category.image} alt={category.name} className="w-6 h-6 rounded" />
-                              ) : (
-                                <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-                              )}
+                    {flattenCategories(filteredCategories).map((category) => {
+                      const displayImage = category.images?.urls?.original || category.image;
+                      
+                      return (
+                        <Card key={category.id} className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-6">
+                            <div className="flex justify-between items-start mb-4">
+                              <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900">
+                                {displayImage ? (
+                                  <img src={displayImage} alt={category.name} className="w-6 h-6 rounded" />
+                                ) : (
+                                  <Package className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                )}
+                              </div>
+                              <Badge className={category.is_active ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"}>
+                                {category.is_active ? 'active' : 'inactive'}
+                              </Badge>
                             </div>
-                            <Badge className={category.is_active ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300" : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300"}>
-                              {category.is_active ? 'active' : 'inactive'}
-                            </Badge>
-                          </div>
-                          <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{category.name}</h3>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{category.description || ''}</p>
-                          {category.parent_id && (
-                            <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
-                              📁 {getCategoryPath(category)}
-                            </p>
-                          )}
-                          <div className="flex justify-between items-center mb-4">
-                            <span className="text-sm text-gray-500 dark:text-gray-400">{(category.products || 0)} products</span>
-                            <span className="text-sm font-bold text-green-600 dark:text-green-400">${(category.revenue || 0).toLocaleString()}</span>
-                          </div>
-                          <div className="flex gap-2">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="flex-1"
-                              onClick={() => handleEditCategory(category)}
-                            >
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="sm"
-                              onClick={() => handleAddSubcategory(category)}
-                            >
-                              <Plus className="w-4 h-4" />
-                            </Button>
-                            <AlertDialog>
-                              <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="sm">
-                                  <Trash2 className="w-4 h-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    Are you sure you want to delete "{category.name}"? This action cannot be undone.
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                  <AlertDialogAction 
-                                    onClick={() => handleDeleteCategory(category.id)}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    Delete
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                            <h3 className="font-semibold text-lg mb-2 dark:text-gray-100">{category.name}</h3>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">{category.description || ''}</p>
+                            {category.parent_id && (
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mb-3 font-medium">
+                                📁 {getCategoryPath(category)}
+                              </p>
+                            )}
+                            <div className="flex justify-between items-center mb-4">
+                              <span className="text-sm text-gray-500 dark:text-gray-400">{(category.products || 0)} products</span>
+                              <span className="text-sm font-bold text-green-600 dark:text-green-400">${(category.revenue || 0).toLocaleString()}</span>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="flex-1"
+                                onClick={() => handleEditCategory(category)}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="sm"
+                                onClick={() => handleAddSubcategory(category)}
+                              >
+                                <Plus className="w-4 h-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="sm">
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Category</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete "{category.name}"? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                      onClick={() => handleDeleteCategory(category.id)}
+                                      className="bg-red-600 hover:bg-red-700"
+                                    >
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
