@@ -230,10 +230,9 @@ export const useZoneStructures = () => {
   };
 };
 
-export {
-  type ZoneStructure,
-  type Level,
-  type CreateZoneStructureRequest,
-  type UpdateZoneStructureRequest,
-  useZoneStructures
+export type {
+  ZoneStructure,
+  Level,
+  CreateZoneStructureRequest,
+  UpdateZoneStructureRequest
 };

@@ -1,4 +1,3 @@
-
 import BaseApiService, { ApiResponse } from './baseApiService';
 
 export interface Level {
@@ -19,6 +18,8 @@ export interface ZoneStructure {
   id: number;
   name: string;
   levels: ZoneStructureLevel[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface ZoneStructuresResponse {
