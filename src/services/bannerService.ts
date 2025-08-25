@@ -71,7 +71,7 @@ class BannerService extends BaseApiService {
     if (bannerData.cta_text) formData.append('cta_text', bannerData.cta_text);
     if (bannerData.cta_link) formData.append('cta_link', bannerData.cta_link);
     formData.append('position', bannerData.position);
-    formData.append('is_active', String(bannerData.is_active ?? true));
+    formData.append('is_active', bannerData.is_active ? '1' : '0');
 
     return this.postFormData<BannerCreateResponse>('/banners', formData);
   }
@@ -96,7 +96,7 @@ class BannerService extends BaseApiService {
     if (bannerData.cta_text) formData.append('cta_text', bannerData.cta_text);
     if (bannerData.cta_link) formData.append('cta_link', bannerData.cta_link);
     if (bannerData.position) formData.append('position', bannerData.position);
-    if (bannerData.is_active !== undefined) formData.append('is_active', String(bannerData.is_active));
+    if (bannerData.is_active !== undefined) formData.append('is_active', bannerData.is_active ? '1' : '0');
 
     return this.putFormData<BannerCreateResponse>(`/banners/${id}`, formData);
   }
