@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleAuthProvider } from "@/contexts/RoleAuthContext";
 import { CartProvider } from "@/contexts/CartContext";
-import { WishlistProvider } from "@/contexts/WishlistContext";
+import { WishlistProvider } from "@/contexts/WishlistProvider";
 import { SearchProvider } from "@/contexts/SearchContext";
 import { ResponsiveImageProvider } from "@/contexts/ResponsiveImageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
@@ -15,6 +15,8 @@ import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 import { StoreThemeHandler } from "@/components/StoreThemeHandler";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
+import RoleLogin from "./pages/RoleLogin";
+import Unauthorized from "./pages/Unauthorized";
 import Store from "./pages/store/Store";
 import ProductDetail from "./pages/store/ProductDetail";
 import StoreCategories from "./pages/store/StoreCategories";
@@ -53,6 +55,8 @@ function App() {
                       <Routes>
                         <Route path="/" element={<Index />} />
                         <Route path="/login" element={<Login />} />
+                        <Route path="/role-login" element={<RoleLogin />} />
+                        <Route path="/unauthorized" element={<Unauthorized />} />
                         <Route path="/store" element={<Store />} />
                         <Route path="/store/product/:slug" element={<ProductDetail />} />
                         <Route path="/store/categories" element={<StoreCategories />} />
