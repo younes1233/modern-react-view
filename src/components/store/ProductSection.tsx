@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,7 +54,18 @@ export const ProductSection = ({
         }
         const filteredBanners = response.details.banners
           .filter((banner: any) => banner.position === position && banner.is_active)
-          .sort((a: any, b: any) => a.order - b.order);
+          .sort((a: any, b: any) => a.order - b.order)
+          .map((apiBanner: any) => ({
+            id: apiBanner.id,
+            title: apiBanner.title,
+            subtitle: apiBanner.subtitle,
+            images: apiBanner.images,
+            ctaText: apiBanner.cta_text,
+            ctaLink: apiBanner.cta_link,
+            position: apiBanner.position,
+            isActive: Boolean(apiBanner.is_active),
+            order: apiBanner.order,
+          }));
         setBanners(filteredBanners as Banner[]);
       } catch (error) {
         console.error("Failed to fetch banners:", error);
