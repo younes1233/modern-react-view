@@ -55,11 +55,18 @@ export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = 
   }, []);
 
   const getResponsiveImage = (images: BannerImages): string => {
-    return images.urls.banner[deviceType] || images.urls.original;
+    // Add null checks to prevent errors
+    if (!images || !images.urls || !images.urls.banner) {
+      return images?.urls?.original || '/placeholder.svg';
+    }
+    return images.urls.banner[deviceType] || images.urls.original || '/placeholder.svg';
   };
 
   const getImageUrl = (banner: { desktop: string; tablet: string; mobile: string }): string => {
-    return banner[deviceType] || banner.desktop;
+    if (!banner) {
+      return '/placeholder.svg';
+    }
+    return banner[deviceType] || banner.desktop || '/placeholder.svg';
   };
 
   return (
