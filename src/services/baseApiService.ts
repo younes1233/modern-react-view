@@ -143,11 +143,27 @@ class BaseApiService {
     });
   }
 
+  // POST request with FormData
+  protected async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
   // PUT request
   protected async put<T>(endpoint: string, data?: any): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  // PUT request with FormData
+  protected async putFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PUT',
+      body: formData,
     });
   }
 
