@@ -1,14 +1,41 @@
+
 import { Category } from '@/services/categoryService';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useResponsiveImage } from '@/contexts/ResponsiveImageContext';
 
 interface CategoryGridProps {
   categories: Category[];
   loading?: boolean;
   onCategoryClick?: (category: Category) => void;
+  isAdminView?: boolean;
 }
 
-const CategoryGrid = ({ categories, loading, onCategoryClick }: CategoryGridProps) => {
+const CategoryGrid = ({ categories, loading, onCategoryClick, isAdminView = false }: CategoryGridProps) => {
+  const { getImageUrl } = useResponsiveImage();
+
+  const getCategoryImage = (category: Category): string => {
+    // For admin view, always use original image
+    if (isAdminView) {
+      if (category.images?.urls?.original) {
+        return category.images.urls.original;
+      }
+      return category.image || `https://picsum.photos/seed/${category.slug}/600/400`;
+    }
+
+    // For store view, use responsive image selection
+    if (category.images?.urls?.category_image) {
+      return getImageUrl(category.images.urls.category_image);
+    }
+    
+    // Fallback to original or placeholder
+    if (category.images?.urls?.original) {
+      return category.images.urls.original;
+    }
+    
+    return category.image || `https://picsum.photos/seed/${category.slug}/600/400`;
+  };
+
   if (loading) {
     return (
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
@@ -40,7 +67,7 @@ const CategoryGrid = ({ categories, loading, onCategoryClick }: CategoryGridProp
           <div 
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage: `url(${category.image || 'https://picsum.photos/seed/' + category.slug + '/600/400'})`
+              backgroundImage: `url(${getCategoryImage(category)})`
             }}
           >
             {/* Overlay for better text readability */}

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
@@ -39,11 +40,12 @@ const StoreCategories = () => {
           </p>
         </div>
 
-        {/* Categories Grid */}
+        {/* Categories Grid with store view (responsive images) */}
         <CategoryGrid 
           categories={categories}
           loading={loading}
           onCategoryClick={handleCategoryClick}
+          isAdminView={false}
         />
 
         {/* Additional info */}
