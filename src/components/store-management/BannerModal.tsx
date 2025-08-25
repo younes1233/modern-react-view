@@ -6,8 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { FileUpload } from "@/components/ui/file-upload";
 import { useToast } from "@/hooks/use-toast";
 import { BannerImages } from "@/services/bannerService";
+import { BannerFormData } from "@/hooks/useBanners";
 
 interface Banner {
   id?: number;
@@ -24,61 +26,61 @@ interface Banner {
 interface BannerModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (banner: Omit<Banner, 'id'>) => void;
+  onSave: (banner: BannerFormData) => void;
   banner?: Banner | null;
   mode: 'add' | 'edit';
 }
 
 export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerModalProps) {
-  const [formData, setFormData] = useState<Omit<Banner, 'id'>>({
+  const [formData, setFormData] = useState<BannerFormData>({
     title: '',
     subtitle: '',
-    images: {
-      urls: {
-        original: '/placeholder.svg',
-        banner: {
-          desktop: '/placeholder.svg',
-          tablet: '/placeholder.svg',
-          mobile: '/placeholder.svg'
-        }
-      },
-      alt: null
-    },
+    image: undefined,
     ctaText: '',
     ctaLink: '',
     position: 'hero',
     isActive: true,
     order: 1
   });
+  
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
     if (banner && mode === 'edit') {
-      const { id, ...bannerData } = banner;
-      setFormData(bannerData);
+      setFormData({
+        title: banner.title,
+        subtitle: banner.subtitle || '',
+        image: undefined, // Don't set existing image as File
+        ctaText: banner.ctaText || '',
+        ctaLink: banner.ctaLink || '',
+        position: banner.position,
+        isActive: banner.isActive,
+        order: banner.order
+      });
+      setSelectedFiles([]);
     } else {
       setFormData({
         title: '',
         subtitle: '',
-        images: {
-          urls: {
-            original: '/placeholder.svg',
-            banner: {
-              desktop: '/placeholder.svg',
-              tablet: '/placeholder.svg',
-              mobile: '/placeholder.svg'
-            }
-          },
-          alt: null
-        },
+        image: undefined,
         ctaText: '',
         ctaLink: '',
         position: 'hero',
         isActive: true,
         order: 1
       });
+      setSelectedFiles([]);
     }
   }, [banner, mode, isOpen]);
+
+  const handleFileSelect = (files: File[]) => {
+    setSelectedFiles(files);
+    setFormData(prev => ({ 
+      ...prev, 
+      image: files.length > 0 ? files[0] : undefined 
+    }));
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -87,6 +89,15 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
       toast({
         title: "Error",
         description: "Please enter a banner title",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (mode === 'add' && !formData.image) {
+      toast({
+        title: "Error",
+        description: "Please select an image",
         variant: "destructive"
       });
       return;
@@ -125,73 +136,19 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
           </div>
 
           <div className="space-y-2">
-            <Label>Banner Images</Label>
-            
-            <div>
-              <Label htmlFor="desktopImage" className="text-sm">Desktop Image URL</Label>
-              <Input
-                id="desktopImage"
-                value={formData.images.urls.banner.desktop}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  images: {
-                    ...prev.images,
-                    urls: {
-                      ...prev.images.urls,
-                      banner: {
-                        ...prev.images.urls.banner,
-                        desktop: e.target.value
-                      }
-                    }
-                  }
-                }))}
-                placeholder="Enter desktop image URL"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="tabletImage" className="text-sm">Tablet Image URL</Label>
-              <Input
-                id="tabletImage"
-                value={formData.images.urls.banner.tablet}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  images: {
-                    ...prev.images,
-                    urls: {
-                      ...prev.images.urls,
-                      banner: {
-                        ...prev.images.urls.banner,
-                        tablet: e.target.value
-                      }
-                    }
-                  }
-                }))}
-                placeholder="Enter tablet image URL"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="mobileImage" className="text-sm">Mobile Image URL</Label>
-              <Input
-                id="mobileImage"
-                value={formData.images.urls.banner.mobile}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev,
-                  images: {
-                    ...prev.images,
-                    urls: {
-                      ...prev.images.urls,
-                      banner: {
-                        ...prev.images.urls.banner,
-                        mobile: e.target.value
-                      }
-                    }
-                  }
-                }))}
-                placeholder="Enter mobile image URL"
-              />
-            </div>
+            <Label>Banner Image {mode === 'add' ? '*' : '(optional for updates)'}</Label>
+            <FileUpload
+              onFileSelect={handleFileSelect}
+              maxFiles={1}
+              accept="image/*"
+              placeholder="Drop banner image here or click to upload"
+              maxFileSize={5}
+            />
+            {mode === 'edit' && banner && selectedFiles.length === 0 && (
+              <div className="text-sm text-gray-500 mt-2">
+                Current image will be kept if no new image is selected
+              </div>
+            )}
           </div>
 
           <div>

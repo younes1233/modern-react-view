@@ -14,6 +14,17 @@ export interface Banner {
   order: number;
 }
 
+export interface BannerFormData {
+  title: string;
+  subtitle?: string;
+  image?: File;
+  ctaText?: string;
+  ctaLink?: string;
+  position: 'hero' | 'secondary' | 'sidebar';
+  isActive: boolean;
+  order: number;
+}
+
 // Transform API data to internal format
 const transformBannerFromAPI = (apiBanner: any): Banner => ({
   id: apiBanner.id,
@@ -25,17 +36,6 @@ const transformBannerFromAPI = (apiBanner: any): Banner => ({
   position: apiBanner.position,
   isActive: Boolean(apiBanner.is_active),
   order: apiBanner.order,
-});
-
-// Transform internal format to API data
-const transformBannerToAPI = (banner: Omit<Banner, 'id'>) => ({
-  title: banner.title,
-  subtitle: banner.subtitle,
-  images: banner.images,
-  cta_text: banner.ctaText,
-  cta_link: banner.ctaLink,
-  position: banner.position,
-  is_active: banner.isActive,
 });
 
 export const useBanners = () => {
@@ -65,9 +65,22 @@ export const useBanners = () => {
     }
   };
 
-  const addBanner = async (bannerData: Omit<Banner, 'id'>) => {
+  const addBanner = async (bannerData: BannerFormData) => {
     try {
-      const apiData = transformBannerToAPI(bannerData);
+      if (!bannerData.image) {
+        throw new Error('Image is required');
+      }
+
+      const apiData = {
+        title: bannerData.title,
+        subtitle: bannerData.subtitle,
+        image: bannerData.image,
+        cta_text: bannerData.ctaText,
+        cta_link: bannerData.ctaLink,
+        position: bannerData.position,
+        is_active: bannerData.isActive,
+      };
+
       const response = await bannerService.createBanner(apiData);
       
       if (response.error) {
@@ -94,9 +107,18 @@ export const useBanners = () => {
     }
   };
 
-  const updateBanner = async (id: number, bannerData: Partial<Omit<Banner, 'id'>>) => {
+  const updateBanner = async (id: number, bannerData: Partial<BannerFormData>) => {
     try {
-      const apiData = transformBannerToAPI(bannerData as Omit<Banner, 'id'>);
+      const apiData: any = {};
+      
+      if (bannerData.title) apiData.title = bannerData.title;
+      if (bannerData.subtitle !== undefined) apiData.subtitle = bannerData.subtitle;
+      if (bannerData.image) apiData.image = bannerData.image;
+      if (bannerData.ctaText !== undefined) apiData.cta_text = bannerData.ctaText;
+      if (bannerData.ctaLink !== undefined) apiData.cta_link = bannerData.ctaLink;
+      if (bannerData.position) apiData.position = bannerData.position;
+      if (bannerData.isActive !== undefined) apiData.is_active = bannerData.isActive;
+
       const response = await bannerService.updateBanner(id, apiData);
       
       if (response.error) {

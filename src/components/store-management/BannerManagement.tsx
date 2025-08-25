@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useBanners, Banner } from "@/hooks/useBanners";
+import { useBanners, Banner, BannerFormData } from "@/hooks/useBanners";
 import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
 function BannerManagement() {
@@ -47,7 +47,7 @@ function BannerManagement() {
     setIsModalOpen(true);
   };
 
-  const handleSaveBanner = async (bannerData: Omit<Banner, 'id'>) => {
+  const handleSaveBanner = async (bannerData: BannerFormData) => {
     if (modalMode === 'add') {
       await addBanner(bannerData);
     } else if (selectedBanner) {
