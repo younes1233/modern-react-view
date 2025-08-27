@@ -76,7 +76,7 @@ function App() {
 
                         {/* Store Routes (Public) */}
                         <Route path="/store" element={<Store />} />
-                        <Route path="/store/product/:id" element={<ProductDetail />} />
+                        <Route path="/store/product/:slug" element={<ProductDetail />} />
                         <Route path="/store/categories" element={<StoreCategories />} />
                         <Route path="/store/checkout" element={<Checkout />} />
                         <Route path="/store/returns" element={<StoreReturns />} />
