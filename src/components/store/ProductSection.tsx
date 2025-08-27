@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useProductListingProducts } from "@/hooks/useProductListings";
 import { ProductCard } from "./ProductCard";
@@ -5,7 +6,7 @@ import { ProductSectionSkeleton } from "./ProductSectionSkeleton";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ProductAPI } from "@/services/productService";
+import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
 interface ProductSectionProps {
   listing: {
@@ -22,38 +23,63 @@ interface ProductSectionProps {
   disableIndividualLoading?: boolean;
 }
 
-// Convert API product to legacy format for ProductCard
-const convertAPIProductToLegacy = (apiProduct: ProductAPI) => {
-  return {
-    id: apiProduct.id, // Keep as number, don't convert to string
-    name: apiProduct.name,
-    slug: apiProduct.slug,
-    image: apiProduct.media.cover_image.image, // Extract image URL from object
-    price: apiProduct.pricing.price, // Use direct price, not final.price
-    originalPrice: apiProduct.pricing.original_price, // Use direct original_price
-    category: apiProduct.category.name.toLowerCase(),
-    rating: apiProduct.rating.average,
-    reviews: apiProduct.rating.count,
-    isOnSale: apiProduct.flags.on_sale,
-    isFeatured: apiProduct.flags.is_featured,
-    isNewArrival: apiProduct.flags.is_new_arrival,
-    sku: apiProduct.identifiers.sku,
-    thumbnails: apiProduct.media.thumbnails.map(thumb => ({
-      url: thumb.image,
-      alt: thumb.alt_text
-    })),
-    description: apiProduct.short_description,
-    stock: apiProduct.inventory.stock ? parseInt(apiProduct.inventory.stock) : 0,
-    isAvailable: parseInt(apiProduct.inventory.stock) > 0, // Calculate availability from stock
-    // Add missing required properties
-    inStock: parseInt(apiProduct.inventory.stock) > 0, // Calculate from stock
-    variations: [] // Default to empty array since API doesn't provide variations in this format
+// New API product interface based on the provided format
+interface NewProductAPI {
+  id: number;
+  name: string;
+  slug: string;
+  short_description: string;
+  cover_image: {
+    desktop: string;
+    tablet: string;
+    mobile: string;
   };
-};
+  flags: {
+    on_sale: boolean;
+    is_featured: boolean;
+    is_new_arrival: boolean;
+    is_best_seller: boolean;
+    is_vat_exempt: boolean;
+    seller_product_status: string;
+  };
+  pricing: {
+    original_price: number;
+    price: number;
+    currency_id: number;
+    currency: {
+      code: string;
+      symbol: string;
+    };
+    applied_discounts: Array<{
+      label: string;
+      type: string;
+      value: string;
+      amount_value: number;
+      max_discount: number | null;
+      scope: string;
+    }>;
+    vat: {
+      rate: number;
+      amount: number;
+    };
+  };
+  stock: number;
+  rating: {
+    average: number;
+    count: number;
+  };
+  meta: {
+    seo_title: string;
+    seo_description: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
 
 export function ProductSection({ listing, disableIndividualLoading = false }: ProductSectionProps) {
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
+  const { getImageUrl } = useResponsiveImage();
 
   // Use the API to get products for this listing
   // Default to Lebanon (1) and USD (1) for now
@@ -66,9 +92,37 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
     error
   });
 
+  // Convert new API product to legacy format for ProductCard
+  const convertNewAPIProductToLegacy = (apiProduct: NewProductAPI) => {
+    // Get responsive image using the responsive image context
+    const responsiveImage = getImageUrl(apiProduct.cover_image);
+    
+    return {
+      id: apiProduct.id,
+      name: apiProduct.name,
+      slug: apiProduct.slug,
+      image: responsiveImage, // Use responsive image selection
+      price: apiProduct.pricing.price,
+      originalPrice: apiProduct.pricing.original_price,
+      category: 'general', // Default category since not provided in new format
+      rating: apiProduct.rating.average,
+      reviews: apiProduct.rating.count,
+      isOnSale: apiProduct.flags.on_sale,
+      isFeatured: apiProduct.flags.is_featured,
+      isNewArrival: apiProduct.flags.is_new_arrival,
+      sku: '', // Not provided in new format
+      thumbnails: [], // Not provided in new format
+      description: apiProduct.short_description,
+      stock: apiProduct.stock,
+      isAvailable: apiProduct.stock > 0,
+      inStock: apiProduct.stock > 0,
+      variations: []
+    };
+  };
+
   // Ensure apiProducts is always an array, even if API call fails
   const apiProducts = Array.isArray(listingData?.products) ? listingData.products : [];
-  const products = apiProducts.map(convertAPIProductToLegacy);
+  const products = apiProducts.map(convertNewAPIProductToLegacy);
 
   if (!listing.isActive) {
     return null;
