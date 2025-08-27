@@ -140,6 +140,19 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     };
   };
 
+  const goProduct = (slug: string) => {
+  navigate(`/store/product/${slug}`);
+  clearSearch();
+  setShowSearchResults(false);
+  setShowMobileSearchResults(false);
+};
+
+const goAll = () => {
+  navigate('/store/categories'); // you already do this elsewhere
+  setShowSearchResults(false);
+  setShowMobileSearchResults(false);
+};
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-blue-100 light overflow-x-hidden">
       {/* Header */}
@@ -489,7 +502,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       </div>
 
       {/* Desktop Search Results Dropdown - Rendered as Portal */}
-      {showSearchResults && searchQuery.length > 0 && searchInputRef && (
+  {showSearchResults && searchQuery.length > 0 && searchInputRef && (
   <Portal.Root>
     <div
       className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
@@ -498,9 +511,12 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         left: getSearchDropdownPosition(searchInputRef).left,
         width: getSearchDropdownPosition(searchInputRef).width,
       }}
+      // prevent outer overlays from swallowing clicks
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onClickCapture={(e) => e.stopPropagation()}
     >
-      {/* Loading state prevents the flicker */}
       {isSearching ? (
+        // loading → removes the "no results" flicker
         <div className="p-6 text-center text-gray-500">
           <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
           <p className="text-sm">Searching…</p>
@@ -512,12 +528,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
 
           {filteredResults.slice(0, 6).map((product) => (
-            <Link
+            <button
               key={product.slug}
-              to={`/product/${product.slug}`}                  // ← use slug route
-              onClick={() => {
-                setShowSearchResults(false);
-                clearSearch();
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goProduct(product.slug);
               }}
               className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
             >
@@ -530,22 +547,27 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               ) : (
                 <div className="w-8 h-8 rounded-lg bg-gray-100" />
               )}
+
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate text-xs">{product.name}</h4>
+                <h4 className="font-medium text-gray-900 truncate text-xs">
+                  {product.name}
+                </h4>
                 <p className="text-xs font-semibold text-blue-600">
                   {(product.currency?.symbol ?? '')}
                   {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
                   {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
                 </p>
               </div>
-            </Link>
+            </button>
           ))}
 
           {filteredResults.length > 6 && (
             <button
-              onClick={() => {
-                navigate('/store/categories');
-                setShowSearchResults(false);
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goAll();
               }}
               className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
             >
@@ -567,7 +589,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
 
       {/* Mobile Search Results Dropdown - Rendered as Portal */}
-     {showMobileSearchResults && searchQuery.length > 0 && mobileSearchInputRef && (
+
+{showMobileSearchResults && searchQuery.length > 0 && mobileSearchInputRef && (
   <Portal.Root>
     <div
       className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
@@ -576,6 +599,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
         left: getSearchDropdownPosition(mobileSearchInputRef).left,
         width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350),
       }}
+      onMouseDownCapture={(e) => e.stopPropagation()}
+      onClickCapture={(e) => e.stopPropagation()}
     >
       {isSearching ? (
         <div className="p-6 text-center text-gray-500">
@@ -589,12 +614,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </div>
 
           {filteredResults.slice(0, 6).map((product) => (
-            <Link
+            <button
               key={product.slug}
-              to={`/product/${product.slug}`}                  // ← use slug route
-              onClick={() => {
-                setShowMobileSearchResults(false);
-                clearSearch();
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goProduct(product.slug);
               }}
               className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
             >
@@ -607,22 +633,27 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               ) : (
                 <div className="w-8 h-8 rounded-lg bg-gray-100" />
               )}
+
               <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate text-xs">{product.name}</h4>
+                <h4 className="font-medium text-gray-900 truncate text-xs">
+                  {product.name}
+                </h4>
                 <p className="text-xs font-semibold text-blue-600">
                   {(product.currency?.symbol ?? '')}
                   {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
                   {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
                 </p>
               </div>
-            </Link>
+            </button>
           ))}
 
           {filteredResults.length > 6 && (
             <button
-              onClick={() => {
-                navigate('/store/categories');
-                setShowMobileSearchResults(false);
+              type="button"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                goAll();
               }}
               className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
             >
