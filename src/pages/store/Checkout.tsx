@@ -566,23 +566,41 @@ const Checkout = () => {
                 {/* Cart Items */}
                 <div className="space-y-4 max-h-60 overflow-y-auto">
                   {items.map((item) => (
-                    <div key={item.product.id} className="flex items-center space-x-3">
-                      <div className="relative">
-                        <img
-                          src={item.product.image}
-                          alt={item.product.name}
-                          className="w-16 h-16 object-cover rounded-md"
-                        />
-                        <span className="absolute -top-2 -right-2 bg-gray-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                          {item.quantity}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
-                        <p className="text-sm text-gray-600">${item.product.price.toFixed(2)}</p>
-                      </div>
-                      <span className="font-medium">${(item.product.price * item.quantity).toFixed(2)}</span>
-                    </div>
+                   <div key={item.product.id} className="flex items-center space-x-3">
+  <div className="relative">
+    <img
+      src={item.product.image}
+      alt={item.product.name}
+      className="w-16 h-16 object-cover rounded-md"
+    />
+    {/* Quantity badge — inset so it won't be clipped by the scroll container */}
+    <span
+      className="
+        absolute top-1 right-1 z-10
+        bg-cyan-600 text-white
+        text-[11px] leading-none
+        rounded-full
+        min-w-[1.25rem] h-5 px-1
+        flex items-center justify-center
+        shadow ring-2 ring-white
+      "
+      aria-label={`Quantity ${item.quantity}`}
+    >
+      {item.quantity}
+    </span>
+  </div>
+
+  <div className="flex-1">
+    <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
+    <p className="text-sm text-gray-600">${item.product.price.toFixed(2)}</p>
+  </div>
+
+  <span className="font-medium">
+    ${(item.product.price * item.quantity).toFixed(2)}
+  </span>
+</div>
+
+
                   ))}
                 </div>
 
