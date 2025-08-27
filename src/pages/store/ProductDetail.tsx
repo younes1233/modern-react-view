@@ -13,6 +13,7 @@ import { ImageZoom } from '@/components/store/ImageZoom';
 import { useProductDetail } from '@/hooks/useProductDetail';
 import { ProductDetailSkeleton } from '@/components/store/ProductDetailSkeleton';
 import { ProductAPI } from '@/services/productService';
+import { useResponsiveImage } from '@/contexts/ResponsiveImageContext';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -27,6 +28,7 @@ const ProductDetail = () => {
   const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { getImageUrl } = useResponsiveImage();
 
   // Fetch product from API - now using slug directly
   console.log('ProductDetail: slug from params:', slug);
@@ -65,10 +67,12 @@ const ProductDetail = () => {
     
     // Only handle horizontal swipes (ignore vertical scrolling)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      const allImages = [
-        { url: product.media.cover_image.image, alt: product.media.cover_image.alt_text },
-        ...product.media.thumbnails.map(thumb => ({ url: thumb.image, alt: thumb.alt_text }))
-      ];
+      const allImages = product.media.images.map(img => ({
+        url: getImageUrl(img.urls.main),
+        alt: img.alt_text || product.name,
+        zoomUrl: img.urls.zoom?.desktop || getImageUrl(img.urls.main),
+        thumbnailUrl: getImageUrl(img.urls.thumbnails)
+      }));
       
       if (deltaX > 0 && selectedImage > 0) {
         // Swipe right - previous image
@@ -140,12 +144,14 @@ const ProductDetail = () => {
 
   const currentPrice = product.pricing.price;
   const originalPrice = product.pricing.original_price;
-  const inStock = parseInt(product.inventory.stock) > 0;
+  const inStock = product.stock === null || product.stock > 0;
   
-  const allImages = [
-    { url: product.media.cover_image.image, alt: product.media.cover_image.alt_text },
-    ...product.media.thumbnails.map(thumb => ({ url: thumb.image, alt: thumb.alt_text }))
-  ];
+  const allImages = product.media.images.map(img => ({
+    url: getImageUrl(img.urls.main),
+    alt: img.alt_text || product.name,
+    zoomUrl: img.urls.zoom?.desktop || getImageUrl(img.urls.main),
+    thumbnailUrl: getImageUrl(img.urls.thumbnails)
+  }));
 
   const handleAddToCart = () => {
     // Convert API product to cart format
@@ -155,20 +161,20 @@ const ProductDetail = () => {
       slug: product.slug,
       price: currentPrice,
       originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
-      image: product.media.cover_image.image,
+      image: allImages[0]?.url || '',
       category: product.category.name,
       inStock,
-      rating: product.rating.average,
-      reviews: product.rating.count,
+      rating: 0, // Rating not available in new format
+      reviews: 0, // Reviews count not available in new format
       isFeatured: product.flags.is_featured,
       isNewArrival: product.flags.is_new_arrival,
       isOnSale: product.flags.on_sale,
       sku: product.identifiers.sku,
       description: product.description,
-      thumbnails: product.media.thumbnails.map(thumb => ({
-        id: thumb.id, 
-        url: thumb.image, 
-        alt: thumb.alt_text
+      thumbnails: allImages.map((img, index) => ({
+        id: index, 
+        url: img.thumbnailUrl, 
+        alt: img.alt
       })),
       variations: []
     };
@@ -182,20 +188,20 @@ const ProductDetail = () => {
       slug: product.slug,
       price: currentPrice,
       originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
-      image: product.media.cover_image.image,
+      image: allImages[0]?.url || '',
       category: product.category.name,
       inStock,
-      rating: product.rating.average,
-      reviews: product.rating.count,
+      rating: 0, // Rating not available in new format
+      reviews: 0, // Reviews count not available in new format
       isFeatured: product.flags.is_featured,
       isNewArrival: product.flags.is_new_arrival,
       isOnSale: product.flags.on_sale,
       sku: product.identifiers.sku,
       description: product.description,
-      thumbnails: product.media.thumbnails.map(thumb => ({
-        id: thumb.id, 
-        url: thumb.image, 
-        alt: thumb.alt_text
+      thumbnails: allImages.map((img, index) => ({
+        id: index, 
+        url: img.thumbnailUrl, 
+        alt: img.alt
       })),
       variations: []
     };
@@ -403,7 +409,7 @@ const ProductDetail = () => {
                             }}
                           >
                             <img
-                              src={image.url}
+                              src={image.thumbnailUrl}
                               alt={image.alt}
                               className="w-full h-full object-cover transition-transform duration-200"
                             />
@@ -436,7 +442,7 @@ const ProductDetail = () => {
                             }}
                           >
                             <img
-                              src={image.url}
+                              src={image.thumbnailUrl}
                               alt={image.alt}
                               className="w-full h-full object-cover transition-transform duration-200"
                             />
@@ -488,18 +494,18 @@ const ProductDetail = () => {
                 <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
                   {product.name}
                 </h1>
-                <p className="text-gray-600 mt-2">{product.short_description}</p>
+                <p className="text-gray-600 mt-2">{product.description}</p>
               </div>
               
-              {/* Rating */}
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1">
-                  {renderStars(product.rating.average)}
-                </div>
-                <span className="text-sm text-gray-600">
-                  {product.rating.average.toFixed(1)} ({product.rating.count} reviews)
-                </span>
-              </div>
+               {/* Rating */}
+               <div className="flex items-center space-x-3">
+                 <div className="flex items-center space-x-1">
+                   {renderStars(0)} {/* No rating in new format */}
+                 </div>
+                 <span className="text-sm text-gray-600">
+                   No reviews yet
+                 </span>
+               </div>
 
               {/* Price */}
               <div className="space-y-2">
@@ -537,9 +543,9 @@ const ProductDetail = () => {
                 {inStock ? (
                   <div className="flex items-center space-x-2">
                     <Badge className="bg-green-500 text-white">In Stock</Badge>
-                    <span className="text-sm text-gray-600">
-                      {product.inventory.stock} available
-                    </span>
+                     <span className="text-sm text-gray-600">
+                       Available
+                     </span>
                   </div>
                 ) : (
                   <Badge variant="destructive">Out of Stock</Badge>
@@ -566,12 +572,12 @@ const ProductDetail = () => {
                       <Minus className="w-4 h-4" />
                     </Button>
                     <span className="w-12 text-center font-medium text-lg">{quantity}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setQuantity(Math.min(parseInt(product.inventory.stock), quantity + 1))}
-                      className="w-10 h-10 p-0 hover:bg-gray-50"
-                    >
+                     <Button
+                       variant="ghost"
+                       size="sm"
+                       onClick={() => setQuantity(quantity + 1)}
+                       className="w-10 h-10 p-0 hover:bg-gray-50"
+                     >
                       <Plus className="w-4 h-4" />
                     </Button>
                   </div>
@@ -670,33 +676,37 @@ const ProductDetail = () => {
                       <div className="flex items-center justify-between">
                         <h3 className="text-lg font-semibold">Customer Reviews</h3>
                         <div className="flex items-center space-x-2">
-                          <div className="flex items-center space-x-1">
-                            {renderStars(product.rating.average)}
-                          </div>
-                          <span className="text-sm text-gray-600">
-                            ({product.rating.average.toFixed(1)} out of 5)
-                          </span>
+                           <div className="flex items-center space-x-1">
+                             {renderStars(0)} {/* No rating in new format */}
+                           </div>
+                           <span className="text-sm text-gray-600">
+                             No reviews yet
+                           </span>
                         </div>
                       </div>
                       
-                      <div className="space-y-4">
-                        {product.reviews.map((review) => (
-                          <div key={review.id} className="border-b border-gray-100 pb-4">
-                            <div className="flex items-center justify-between mb-2">
-                              <span className="font-medium">
-                                {review.user.name || `User ${review.user.id}`}
-                              </span>
-                              <div className="flex items-center space-x-1">
-                                {renderStars(review.rating)}
-                              </div>
-                            </div>
-                            <p className="text-gray-700">{review.comment}</p>
-                            <p className="text-sm text-gray-500 mt-1">
-                              {new Date(review.created_at).toLocaleDateString()}
-                            </p>
-                          </div>
-                        ))}
-                      </div>
+                       <div className="space-y-4">
+                         {product.reviews && product.reviews.length > 0 ? (
+                           product.reviews.map((review) => (
+                             <div key={review.id} className="border-b border-gray-100 pb-4">
+                               <div className="flex items-center justify-between mb-2">
+                                 <span className="font-medium">
+                                   {review.user?.name || `User ${review.user?.id}`}
+                                 </span>
+                                 <div className="flex items-center space-x-1">
+                                   {renderStars(review.rating)}
+                                 </div>
+                               </div>
+                               <p className="text-gray-700">{review.comment}</p>
+                               <p className="text-sm text-gray-500 mt-1">
+                                 {new Date(review.created_at).toLocaleDateString()}
+                               </p>
+                             </div>
+                           ))
+                         ) : (
+                           <p className="text-gray-500 text-center py-4">No reviews yet</p>
+                         )}
+                       </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -706,7 +716,7 @@ const ProductDetail = () => {
         </div>
 
         <ImageZoom
-          images={allImages}
+          images={allImages.map(img => ({ url: img.zoomUrl, alt: img.alt }))}
           selectedIndex={selectedImage}
           open={showImageZoom}
           onOpenChange={setShowImageZoom}
