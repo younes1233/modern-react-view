@@ -67,12 +67,26 @@ const ProductDetail = () => {
     
     // Only handle horizontal swipes (ignore vertical scrolling)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      const allImages = product.media.images.map(img => ({
-        url: getImageUrl(img.urls.main),
-        alt: img.alt_text || product.name,
-        zoomUrl: img.urls.zoom?.desktop || getImageUrl(img.urls.main),
-        thumbnailUrl: getImageUrl(img.urls.thumbnails)
-      }));
+      const allImages = product.media.images.map(img => {
+        const mainUrls = img.urls?.main;
+        const thumbnailUrls = img.urls?.thumbnails;
+        
+        if (!mainUrls || !thumbnailUrls) {
+          return {
+            url: img.urls?.original || '/placeholder.svg',
+            alt: img.alt_text || product.name,
+            zoomUrl: img.urls?.original || '/placeholder.svg',
+            thumbnailUrl: img.urls?.original || '/placeholder.svg'
+          };
+        }
+
+        return {
+          url: getImageUrl(mainUrls),
+          alt: img.alt_text || product.name,
+          zoomUrl: img.urls?.zoom?.desktop || getImageUrl(mainUrls),
+          thumbnailUrl: getImageUrl(thumbnailUrls)
+        };
+      });
       
       if (deltaX > 0 && selectedImage > 0) {
         // Swipe right - previous image
@@ -146,12 +160,27 @@ const ProductDetail = () => {
   const originalPrice = product.pricing.original_price;
   const inStock = product.stock === null || product.stock > 0;
   
-  const allImages = product.media.images.map(img => ({
-    url: getImageUrl(img.urls.main),
-    alt: img.alt_text || product.name,
-    zoomUrl: img.urls.zoom?.desktop || getImageUrl(img.urls.main),
-    thumbnailUrl: getImageUrl(img.urls.thumbnails)
-  }));
+  const allImages = product.media.images.map(img => {
+    // Add null checks for image URLs
+    const mainUrls = img.urls?.main;
+    const thumbnailUrls = img.urls?.thumbnails;
+    
+    if (!mainUrls || !thumbnailUrls) {
+      return {
+        url: img.urls?.original || '/placeholder.svg',
+        alt: img.alt_text || product.name,
+        zoomUrl: img.urls?.original || '/placeholder.svg',
+        thumbnailUrl: img.urls?.original || '/placeholder.svg'
+      };
+    }
+
+    return {
+      url: getImageUrl(mainUrls),
+      alt: img.alt_text || product.name,
+      zoomUrl: img.urls?.zoom?.desktop || getImageUrl(mainUrls),
+      thumbnailUrl: getImageUrl(thumbnailUrls)
+    };
+  });
 
   const handleAddToCart = () => {
     // Convert API product to cart format
