@@ -1,128 +1,147 @@
+// src/context/SearchContext.tsx
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import productService from '@/services/productService';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getProducts, Product } from '@/data/storeData';
+export interface UIProduct {
+  name: string;
+  slug: string;
+  cover_image: string | null;
+  price: number;
+  currency: { code: string; symbol: string };
+}
 
 interface SearchContextType {
   searchQuery: string;
-  setSearchQuery: (query: string) => void;
-  selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
-  priceRange: [number, number];
-  setPriceRange: (range: [number, number]) => void;
-  sortBy: string;
-  setSortBy: (sort: string) => void;
-  filteredProducts: Product[];
-  searchResults: Product[];
+  setSearchQuery: (q: string) => void;
+  results: UIProduct[];
+  filteredResults: UIProduct[];
   isSearching: boolean;
-  clearFilters: () => void;
+  errorMsg: string | null;
   clearSearch: () => void;
+
+  // optional client-side filters/sorts
+  priceRange: [number, number];
+  setPriceRange: (r: [number, number]) => void;
+  sortBy: 'featured' | 'price-low' | 'price-high' | 'name-asc' | 'name-desc';
+  setSortBy: (s: SearchContextType['sortBy']) => void;
 }
 
 const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
-export function SearchProvider({ children }: { children: React.ReactNode }) {
+export function SearchProvider({
+  children,
+  countryId = 1,
+  debounceMs = 300,
+}: {
+  children: React.ReactNode;
+  countryId?: number;
+  debounceMs?: number;
+}) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [sortBy, setSortBy] = useState('featured');
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [results, setResults] = useState<UIProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // optional client-side extras
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [sortBy, setSortBy] =
+    useState<SearchContextType['sortBy']>('featured');
 
   useEffect(() => {
-    const allProducts = getProducts();
-    let filtered = [...allProducts];
+    const q = searchQuery.trim();
+    const abort = new AbortController();
 
-    // Apply search query
-    if (searchQuery.trim()) {
-      setIsSearching(true);
-      const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter(product => 
-        product.name.toLowerCase().includes(query) ||
-        product.category.toLowerCase().includes(query) ||
-        (product.sku && product.sku.toLowerCase().includes(query)) ||
-        (product.description && product.description.toLowerCase().includes(query))
-      );
-    } else {
+    if (!q) {
+      setResults([]);
       setIsSearching(false);
+      setErrorMsg(null);
+      return () => abort.abort();
     }
 
-    // Apply category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(product => product.category === selectedCategory);
-    }
+    setIsSearching(true);
+    setErrorMsg(null);
 
-    // Apply price range filter
-    filtered = filtered.filter(product => 
-      product.price >= priceRange[0] && product.price <= priceRange[1]
+    const t = setTimeout(async () => {
+      try {
+        const res = await productService.searchByQuery(countryId, q, abort.signal);
+        if (res.error) throw new Error(res.message || 'API error');
+
+        const items = (res.details?.products ?? []) as UIProduct[];
+        setResults(items);
+      } catch (e: any) {
+        if (e?.name !== 'AbortError') {
+          setErrorMsg(e?.message || 'Failed to search products');
+          setResults([]);
+        }
+      } finally {
+        setIsSearching(false);
+      }
+    }, debounceMs);
+
+    return () => {
+      abort.abort();
+      clearTimeout(t);
+    };
+  }, [searchQuery, countryId, debounceMs]);
+
+  // backend already returns newest-first; we add optional price/name sorting
+  const filteredResults = useMemo(() => {
+    let list = results.filter(
+      (p) => typeof p.price === 'number' && p.price >= priceRange[0] && p.price <= priceRange[1]
     );
 
-    // Apply sorting
     switch (sortBy) {
       case 'price-low':
-        filtered.sort((a, b) => a.price - b.price);
+        list = [...list].sort((a, b) => a.price - b.price);
         break;
       case 'price-high':
-        filtered.sort((a, b) => b.price - a.price);
-        break;
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
-      case 'newest':
-        filtered.sort((a, b) => (b.isNewArrival ? 1 : 0) - (a.isNewArrival ? 1 : 0));
+        list = [...list].sort((a, b) => b.price - a.price);
         break;
       case 'name-asc':
-        filtered.sort((a, b) => a.name.localeCompare(b.name));
+        list = [...list].sort((a, b) => a.name.localeCompare(b.name));
         break;
       case 'name-desc':
-        filtered.sort((a, b) => b.name.localeCompare(a.name));
+        list = [...list].sort((a, b) => b.name.localeCompare(a.name));
         break;
       case 'featured':
       default:
-        filtered.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+        // keep backend order (newest-first)
         break;
     }
 
-    setFilteredProducts(filtered);
-    setSearchResults(filtered);
-  }, [searchQuery, selectedCategory, priceRange, sortBy]);
-
-  const clearFilters = () => {
-    setSelectedCategory('all');
-    setPriceRange([0, 1000]);
-    setSortBy('featured');
-  };
+    return list;
+  }, [results, priceRange, sortBy]);
 
   const clearSearch = () => {
     setSearchQuery('');
+    setResults([]);
     setIsSearching(false);
+    setErrorMsg(null);
   };
 
   return (
-    <SearchContext.Provider value={{
-      searchQuery,
-      setSearchQuery,
-      selectedCategory,
-      setSelectedCategory,
-      priceRange,
-      setPriceRange,
-      sortBy,
-      setSortBy,
-      filteredProducts,
-      searchResults,
-      isSearching,
-      clearFilters,
-      clearSearch
-    }}>
+    <SearchContext.Provider
+      value={{
+        searchQuery,
+        setSearchQuery,
+        results,
+        filteredResults,
+        isSearching,
+        errorMsg,
+        clearSearch,
+        priceRange,
+        setPriceRange,
+        sortBy,
+        setSortBy,
+      }}
+    >
       {children}
     </SearchContext.Provider>
   );
 }
 
 export function useSearch() {
-  const context = useContext(SearchContext);
-  if (context === undefined) {
-    throw new Error('useSearch must be used within a SearchProvider');
-  }
-  return context;
+  const ctx = useContext(SearchContext);
+  if (!ctx) throw new Error('useSearch must be used within a SearchProvider');
+  return ctx;
 }

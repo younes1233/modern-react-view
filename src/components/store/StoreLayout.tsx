@@ -21,7 +21,14 @@ interface StoreLayoutProps {
 }
 
 export function StoreLayout({ children }: StoreLayoutProps) {
-  const { searchQuery, setSearchQuery, clearSearch, searchResults } = useSearch();
+ const {
+   searchQuery,
+   setSearchQuery,
+   clearSearch,
+   filteredResults,   // newest-first from backend, after client-side filters/sorts
+   isSearching,
+   errorMsg,
+  } = useSearch();
   const { items: wishlistItems } = useWishlist();
   const { getTotalItems } = useCart();
   const auth = useAuth();
@@ -483,123 +490,157 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
       {/* Desktop Search Results Dropdown - Rendered as Portal */}
       {showSearchResults && searchQuery.length > 0 && searchInputRef && (
-        <Portal.Root>
-          <div 
-            className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
-            style={{
-              top: getSearchDropdownPosition(searchInputRef).top,
-              left: getSearchDropdownPosition(searchInputRef).left,
-              width: getSearchDropdownPosition(searchInputRef).width,
-            }}
-          >
-            {searchResults.length > 0 ? (
-              <div className="p-2">
-                <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
-                  {searchResults.length} results found
-                </div>
-                {searchResults.slice(0, 6).map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleSearchResultClick(product.slug)}
-                    className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-8 h-8 object-cover rounded-lg shadow-md"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate text-xs">
-                        {product.name}
-                      </h4>
-                      <p className="text-xs text-gray-500 capitalize">{product.category}</p>
-                      <p className="text-xs font-semibold text-blue-600">
-                        ${product.price.toFixed(2)}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-                {searchResults.length > 6 && (
-                  <button
-                    onClick={() => {
-                      navigate('/store/categories');
-                      setShowSearchResults(false);
-                    }}
-                    className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
-                  >
-                    View all {searchResults.length} results
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500">
-                <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-                <p className="text-sm">No products found for "{searchQuery}"</p>
-              </div>
-            )}
+  <Portal.Root>
+    <div
+      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
+      style={{
+        top: getSearchDropdownPosition(searchInputRef).top,
+        left: getSearchDropdownPosition(searchInputRef).left,
+        width: getSearchDropdownPosition(searchInputRef).width,
+      }}
+    >
+      {/* Loading state prevents the flicker */}
+      {isSearching ? (
+        <div className="p-6 text-center text-gray-500">
+          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">Searching…</p>
+        </div>
+      ) : filteredResults.length > 0 ? (
+        <div className="p-2">
+          <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
+            {filteredResults.length} results found
           </div>
-        </Portal.Root>
+
+          {filteredResults.slice(0, 6).map((product) => (
+            <Link
+              key={product.slug}
+              to={`/product/${product.slug}`}                  // ← use slug route
+              onClick={() => {
+                setShowSearchResults(false);
+                clearSearch();
+              }}
+              className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+            >
+              {product.cover_image ? (
+                <img
+                  src={product.cover_image}
+                  alt={product.name}
+                  className="w-8 h-8 object-cover rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-gray-100" />
+              )}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-gray-900 truncate text-xs">{product.name}</h4>
+                <p className="text-xs font-semibold text-blue-600">
+                  {(product.currency?.symbol ?? '')}
+                  {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
+                  {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
+                </p>
+              </div>
+            </Link>
+          ))}
+
+          {filteredResults.length > 6 && (
+            <button
+              onClick={() => {
+                navigate('/store/categories');
+                setShowSearchResults(false);
+              }}
+              className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
+            >
+              View all {filteredResults.length} results
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="p-6 text-center text-gray-500">
+          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">No products found for “{searchQuery}”.</p>
+          {errorMsg && <p className="text-xs text-red-600 mt-1">{errorMsg}</p>}
+        </div>
       )}
+    </div>
+  </Portal.Root>
+)}
+
+
 
       {/* Mobile Search Results Dropdown - Rendered as Portal */}
-      {showMobileSearchResults && searchQuery.length > 0 && mobileSearchInputRef && (
-        <Portal.Root>
-          <div 
-            className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
-            style={{
-              top: getSearchDropdownPosition(mobileSearchInputRef).top,
-              left: getSearchDropdownPosition(mobileSearchInputRef).left,
-              width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350),
-            }}
-          >
-            {searchResults.length > 0 ? (
-              <div className="p-2">
-                <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
-                  {searchResults.length} results found
-                </div>
-                {searchResults.slice(0, 6).map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleSearchResultClick(product.slug)}
-                    className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
-                  >
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-8 h-8 object-cover rounded-lg shadow-md"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-medium text-gray-900 truncate text-xs">
-                        {product.name}
-                      </h4>
-                      <p className="text-xs text-gray-500 capitalize">{product.category}</p>
-                      <p className="text-xs font-semibold text-blue-600">
-                        ${product.price.toFixed(2)}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-                {searchResults.length > 6 && (
-                  <button
-                    onClick={() => {
-                      navigate('/store/categories');
-                      setShowMobileSearchResults(false);
-                    }}
-                    className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
-                  >
-                    View all {searchResults.length} results
-                  </button>
-                )}
-              </div>
-            ) : (
-              <div className="p-6 text-center text-gray-500">
-                <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-                <p className="text-sm">No products found for "{searchQuery}"</p>
-              </div>
-            )}
+     {showMobileSearchResults && searchQuery.length > 0 && mobileSearchInputRef && (
+  <Portal.Root>
+    <div
+      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
+      style={{
+        top: getSearchDropdownPosition(mobileSearchInputRef).top,
+        left: getSearchDropdownPosition(mobileSearchInputRef).left,
+        width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350),
+      }}
+    >
+      {isSearching ? (
+        <div className="p-6 text-center text-gray-500">
+          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">Searching…</p>
+        </div>
+      ) : filteredResults.length > 0 ? (
+        <div className="p-2">
+          <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
+            {filteredResults.length} results found
           </div>
-        </Portal.Root>
+
+          {filteredResults.slice(0, 6).map((product) => (
+            <Link
+              key={product.slug}
+              to={`/product/${product.slug}`}                  // ← use slug route
+              onClick={() => {
+                setShowMobileSearchResults(false);
+                clearSearch();
+              }}
+              className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+            >
+              {product.cover_image ? (
+                <img
+                  src={product.cover_image}
+                  alt={product.name}
+                  className="w-8 h-8 object-cover rounded-lg shadow-md"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-lg bg-gray-100" />
+              )}
+              <div className="flex-1 min-w-0">
+                <h4 className="font-medium text-gray-900 truncate text-xs">{product.name}</h4>
+                <p className="text-xs font-semibold text-blue-600">
+                  {(product.currency?.symbol ?? '')}
+                  {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
+                  {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
+                </p>
+              </div>
+            </Link>
+          ))}
+
+          {filteredResults.length > 6 && (
+            <button
+              onClick={() => {
+                navigate('/store/categories');
+                setShowMobileSearchResults(false);
+              }}
+              className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
+            >
+              View all {filteredResults.length} results
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="p-6 text-center text-gray-500">
+          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+          <p className="text-sm">No products found for “{searchQuery}”.</p>
+          {errorMsg && <p className="text-xs text-red-600 mt-1">{errorMsg}</p>}
+        </div>
       )}
+    </div>
+  </Portal.Root>
+)}
+
 
       {/* Main Content */}
       <main className="w-full overflow-x-hidden pb-6 lg:pb-0">

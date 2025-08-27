@@ -129,6 +129,18 @@ export interface ProductDetailResponse {
   product: ProductAPI;
 }
 
+export interface SearchByQueryProduct {
+  name: string;
+  slug: string;
+  cover_image: string | null;
+  price: number;
+  currency: { code: string; symbol: string };
+}
+export interface SearchByQueryDetails {
+  products: SearchByQueryProduct[];
+  search_query: string;
+}
+
 class ProductService extends BaseApiService {
   // Get all products with country and currency parameters
   async getProducts(
@@ -282,6 +294,19 @@ class ProductService extends BaseApiService {
     console.log('Product by slug API response:', response);
     return response;
   }
+  /**
+   * GET /products/search-by-query?country_id=&q=
+   * NOTE: server returns newest-first, max 20, no pagination.
+   */
+  async searchByQuery(
+    countryId: number,
+    q: string,
+    signal?: AbortSignal
+  ): Promise<ApiResponse<SearchByQueryDetails>> {
+    const ep = `/products/search-by-query?country_id=${encodeURIComponent(countryId)}&q=${encodeURIComponent(q)}`;
+    return this.request<ApiResponse<SearchByQueryDetails>>(ep, { method: 'GET', signal });
+  }
+
 }
 
 export const productService = new ProductService();
