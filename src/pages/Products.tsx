@@ -1,21 +1,66 @@
 import React, { useState } from 'react';
-import { useAdminProducts, useDeleteProduct, useCreateProduct, useUpdateProduct } from '@/hooks/useAdminProducts';
+import {
+  useAdminProducts,
+  useDeleteProduct,
+  useCreateProduct,
+  useUpdateProduct,
+} from '@/hooks/useAdminProducts';
 import { AdminProductAPI, CreateProductData } from '@/services/adminProductService';
 import { toast } from 'sonner';
-import { Sidebar, SidebarContent, SidebarProvider } from '@/components/ui/sidebar';
+import { Sidebar, SidebarProvider } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/dashboard/AppSidebar';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { AdminProductModal } from '@/components/AdminProductModal';
 import { MassUploadModal } from '@/components/MassUploadModal';
-import { Plus, MoreHorizontal, Edit, Trash, Upload, Search, Filter, Download, Package, TrendingUp, AlertTriangle } from 'lucide-react';
+import {
+  Plus,
+  MoreHorizontal,
+  Edit,
+  Trash,
+  Upload,
+  Search,
+  Filter,
+  Download,
+  Package,
+  TrendingUp,
+  AlertTriangle,
+} from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 
 export default function Products() {
@@ -24,7 +69,9 @@ export default function Products() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'add' | 'edit'>('add');
-  const [selectedProduct, setSelectedProduct] = useState<AdminProductAPI | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<AdminProductAPI | null>(
+    null,
+  );
   const [isMassUploadModalOpen, setIsMassUploadModalOpen] = useState(false);
 
   // Fetch products data
@@ -101,7 +148,7 @@ export default function Products() {
       { header: 'Status', dataKey: 'status' },
       { header: 'Category', dataKey: 'category' },
       { header: 'Store', dataKey: 'store' },
-      { header: 'Has Variants', dataKey: 'hasVariants' }
+      { header: 'Has Variants', dataKey: 'hasVariants' },
     ];
 
     exportToPDF(exportData, 'products', 'Products Report', headers);
@@ -145,19 +192,16 @@ export default function Products() {
         },
       });
     } else if (modalMode === 'edit' && selectedProduct) {
-      updateProductMutation.mutate(
-        { id: selectedProduct.id, data: productData },
-        {
-          onSuccess: () => {
-            toast.success('Product updated successfully');
-            setIsModalOpen(false);
-            refetch();
-          },
-          onError: (error: any) => {
-            toast.error(error.message || 'Failed to update product');
-          },
-        }
-      );
+      updateProductMutation.mutate({ id: selectedProduct.id, data: productData }, {
+        onSuccess: () => {
+          toast.success('Product updated successfully');
+          setIsModalOpen(false);
+          refetch();
+        },
+        onError: (error: any) => {
+          toast.error(error.message || 'Failed to update product');
+        },
+      });
     }
   };
 
@@ -180,7 +224,7 @@ export default function Products() {
           is_on_sale: Boolean(item.is_on_sale),
           is_featured: Boolean(item.is_featured),
           is_new_arrival: Boolean(item.is_new_arrival),
-        })
+        }),
       );
 
       await Promise.all(promises);
@@ -200,11 +244,7 @@ export default function Products() {
       draft: 'outline',
     };
 
-    return (
-      <Badge variant={variants[status] || 'outline'}>
-        {status}
-      </Badge>
-    );
+    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
   };
 
   const getSellerStatusBadge = (status: string) => {
@@ -215,11 +255,7 @@ export default function Products() {
       draft: 'outline',
     };
 
-    return (
-      <Badge variant={variants[status] || 'outline'}>
-        {status}
-      </Badge>
-    );
+    return <Badge variant={variants[status] || 'outline'}>{status}</Badge>;
   };
 
   if (error) {
@@ -227,9 +263,9 @@ export default function Products() {
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-background">
           <AppSidebar />
-          <div className="flex-1">
+          <div className="flex-1 flex flex-col overflow-hidden">
             <DashboardHeader />
-            <div className="flex items-center justify-center h-screen">
+            <div className="flex-1 flex items-center justify-center">
               <div className="text-center">
                 <p className="text-lg font-semibold text-red-600">Error loading products</p>
                 <p className="text-gray-600">{error.message}</p>
@@ -244,17 +280,19 @@ export default function Products() {
     );
   }
 
-  const activeProducts = products.filter(p => p.status === "active").length;
-  const inactiveProducts = products.filter(p => p.status === "inactive").length;
-  const draftProducts = products.filter(p => p.status === "draft").length;
+  const activeProducts = products.filter((p) => p.status === 'active').length;
+  const inactiveProducts = products.filter((p) => p.status === 'inactive').length;
+  const draftProducts = products.filter((p) => p.status === 'draft').length;
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
         <AppSidebar />
-        <div className="flex-1">
+        {/* Make the main content area a flex column with overflow handling */}
+        <div className="flex-1 flex flex-col overflow-hidden">
           <DashboardHeader />
-          <div className="flex-1 space-y-4 p-4 md:p-8">
+          {/* This inner container scrolls vertically and horizontally when content overflows */}
+          <div className="flex-1 overflow-auto space-y-4 p-4 md:p-8">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold tracking-tight">Products</h1>
@@ -293,7 +331,7 @@ export default function Products() {
                   </div>
                 </CardContent>
               </Card>
-              
+
               <Card className="bg-gradient-to-br from-emerald-50 to-emerald-100 border-emerald-200 hover:shadow-lg transition-shadow">
                 <CardContent className="p-4 lg:p-6">
                   <div className="flex items-center justify-between">
@@ -445,9 +483,7 @@ export default function Products() {
                               {getSellerStatusBadge(product.flags?.seller_product_status || 'N/A')}
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline">
-                                {product.variants?.length || 0} variants
-                              </Badge>
+                              <Badge variant="outline">{product.variants?.length || 0} variants</Badge>
                             </TableCell>
                             <TableCell>
                               <div className="text-sm">
@@ -456,7 +492,10 @@ export default function Products() {
                                     {product.pricing[0].currency.symbol}
                                     {product.pricing[0].net_price}
                                     {product.pricing.length > 1 && (
-                                      <span className="text-muted-foreground"> +{product.pricing.length - 1} more</span>
+                                      <span className="text-muted-foreground">
+                                        {' '}
+                                        +{product.pricing.length - 1} more
+                                      </span>
                                     )}
                                   </div>
                                 )}
@@ -464,10 +503,26 @@ export default function Products() {
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                {product.flags?.on_sale && <Badge variant="secondary" className="text-xs">Sale</Badge>}
-                                {product.flags?.is_featured && <Badge variant="default" className="text-xs">Featured</Badge>}
-                                {product.flags?.is_new_arrival && <Badge variant="outline" className="text-xs">New</Badge>}
-                                {product.flags?.is_best_seller && <Badge variant="destructive" className="text-xs">Bestseller</Badge>}
+                                {product.flags?.on_sale && (
+                                  <Badge variant="secondary" className="text-xs">
+                                    Sale
+                                  </Badge>
+                                )}
+                                {product.flags?.is_featured && (
+                                  <Badge variant="default" className="text-xs">
+                                    Featured
+                                  </Badge>
+                                )}
+                                {product.flags?.is_new_arrival && (
+                                  <Badge variant="outline" className="text-xs">
+                                    New
+                                  </Badge>
+                                )}
+                                {product.flags?.is_best_seller && (
+                                  <Badge variant="destructive" className="text-xs">
+                                    Bestseller
+                                  </Badge>
+                                )}
                               </div>
                             </TableCell>
                             <TableCell className="text-right">
@@ -510,15 +565,17 @@ export default function Products() {
                           </TableRow>
                         ))}
                       </TableBody>
-                    </Table>
-                  </div>
+                      </Table>
+                    </div>
                 )}
 
                 {/* Pagination */}
                 {pagination && pagination.total > 0 && (
                   <div className="flex items-center justify-between space-x-2 py-4">
                     <div className="text-sm text-muted-foreground">
-                      Showing {((pagination.current_page - 1) * pagination.per_page) + 1} to {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of {pagination.total} products
+                      Showing {(pagination.current_page - 1) * pagination.per_page + 1} to{' '}
+                      {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of{' '}
+                      {pagination.total} products
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -529,9 +586,7 @@ export default function Products() {
                       >
                         Previous
                       </Button>
-                      <div className="text-sm">
-                        Page {pagination.current_page} of {pagination.last_page}
-                      </div>
+                      <div className="text-sm">Page {pagination.current_page} of {pagination.last_page}</div>
                       <Button
                         variant="outline"
                         size="sm"
@@ -545,6 +600,8 @@ export default function Products() {
                 )}
               </CardContent>
             </Card>
+
+            {/* End of main content wrapper */}
           </div>
         </div>
       </div>
