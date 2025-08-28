@@ -67,11 +67,33 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
   // Local states for image previews and dynamic lists
   const [mainImage, setMainImage] = useState<string>('');
   const [thumbnails, setThumbnails] = useState<{ id: number; url: string; alt: string }[]>([]);
-  const [availableCountries, setAvailableCountries] = useState<string>('');
-  const [priceEntries, setPriceEntries] = useState<
-    { country_id: string; net_price: string; cost: string; vat_percentage: string }[]
-  >([]);
+      const [availableCountries, setAvailableCountries] = useState<string>('');
+      const [priceEntries, setPriceEntries] = useState<
+        { country_id: string; net_price: string; cost: string; vat_percentage: string }[]
+      >([]);
+  // Specifications state holds an array of {id, name, value}. When adding a new product, we
+  // prepopulate the first four entries with the required specifications: weight, height,
+  // width and length. These are required by the API and cannot be removed. Additional
+  // specifications can still be added via the "Add Spec" button.
   const [specifications, setSpecifications] = useState<{ id: number; name: string; value: string }[]>([]);
+
+      /**
+       * Variants state for has_variants=true.
+       * Each variant entry contains an image upload, a comma separated list of attribute value IDs,
+       * optional pricing overrides, optional delivery overrides, and optional specification overrides.
+       */
+      const [variantEntries, setVariantEntries] = useState<
+        {
+          id: number;
+          image: string;
+          variations: string;
+          available_countries?: string;
+          variantPrices: { country_id: string; net_price: string; cost: string; vat_percentage: string }[];
+          variantSpecs: { id: number; name: string; value: string }[];
+          delivery_method_id?: string;
+          delivery_cost?: string;
+        }[]
+      >([]);
   const { toast } = useToast();
   const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
 
@@ -170,7 +192,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       setThumbnails([]);
       setAvailableCountries('');
       setPriceEntries([]);
-      setSpecifications([]);
+      // For a new product, initialise the specifications state with the required
+      // attributes: weight, height, width and length. These entries cannot be removed
+      // by the user and must have non-empty values before submission. Additional
+      // specifications can be added on top of these entries.
+      setSpecifications([
+        { id: Date.now(), name: 'weight', value: '' },
+        { id: Date.now() + 1, name: 'height', value: '' },
+        { id: Date.now() + 2, name: 'width', value: '' },
+        { id: Date.now() + 3, name: 'length', value: '' },
+      ]);
     }
   }, [product, mode, isOpen]);
 
@@ -250,8 +281,189 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     });
   };
   const removeSpecification = (index: number) => {
-    setSpecifications(prev => prev.filter((_, idx) => idx !== index));
+    setSpecifications(prev => {
+      // Prevent removal of the first four required specifications (weight, height, width, length)
+      if (index < 4) {
+        return prev;
+      }
+      return prev.filter((_, idx) => idx !== index);
+    });
   };
+
+      // Variant management handlers
+      /**
+       * Adds a new variant entry to the form. Variants are only used when
+       * `has_variants` is true. Each variant starts with empty values for
+       * image, variations, pricing overrides, delivery overrides and
+       * specification overrides.
+       */
+      const addVariant = () => {
+        setVariantEntries(prev => [
+          ...prev,
+          {
+            id: Date.now(),
+            image: '',
+            variations: '',
+            available_countries: '',
+            variantPrices: [],
+            variantSpecs: [],
+            delivery_method_id: '',
+            delivery_cost: '',
+          },
+        ]);
+      };
+
+      /**
+       * Removes a variant entry by id.
+       */
+      const removeVariant = (variantId: number) => {
+        setVariantEntries(prev => prev.filter(v => v.id !== variantId));
+      };
+
+      /**
+       * Updates a top-level field of a variant, such as image, variations,
+       * available_countries, delivery_method_id or delivery_cost.
+       */
+      const updateVariantField = (
+        variantId: number,
+        field: keyof (typeof variantEntries[number]),
+        value: any,
+      ) => {
+        setVariantEntries(prev =>
+          prev.map(v =>
+            v.id === variantId
+              ? {
+                  ...v,
+                  [field]: value,
+                }
+              : v,
+          ),
+        );
+      };
+
+      /**
+       * Adds a pricing override entry to a specific variant. Each pricing
+       * override corresponds to a product_variant_prices entry in the API.
+       */
+      const addVariantPrice = (variantId: number) => {
+        setVariantEntries(prev =>
+          prev.map(v =>
+            v.id === variantId
+              ? {
+                  ...v,
+                  variantPrices: [
+                    ...v.variantPrices,
+                    { country_id: '', net_price: '', cost: '', vat_percentage: '' },
+                  ],
+                }
+              : v,
+          ),
+        );
+      };
+
+      /**
+       * Updates a field of a variant's pricing override at a given index.
+       */
+      const updateVariantPrice = (
+        variantId: number,
+        index: number,
+        field: keyof { country_id: string; net_price: string; cost: string; vat_percentage: string },
+        value: string,
+      ) => {
+        setVariantEntries(prev =>
+          prev.map(v => {
+            if (v.id === variantId) {
+              const updatedPrices = v.variantPrices.map((p, i) =>
+                i === index
+                  ? {
+                      ...p,
+                      [field]: value,
+                    }
+                  : p,
+              );
+              return { ...v, variantPrices: updatedPrices };
+            }
+            return v;
+          }),
+        );
+      };
+
+      /**
+       * Removes a pricing override entry from a variant.
+       */
+      const removeVariantPrice = (variantId: number, index: number) => {
+        setVariantEntries(prev =>
+          prev.map(v => {
+            if (v.id === variantId) {
+              return {
+                ...v,
+                variantPrices: v.variantPrices.filter((_, i) => i !== index),
+              };
+            }
+            return v;
+          }),
+        );
+      };
+
+      /**
+       * Adds a specification override to a variant.
+       */
+      const addVariantSpec = (variantId: number) => {
+        setVariantEntries(prev =>
+          prev.map(v =>
+            v.id === variantId
+              ? {
+                  ...v,
+                  variantSpecs: [...v.variantSpecs, { id: Date.now(), name: '', value: '' }],
+                }
+              : v,
+          ),
+        );
+      };
+
+      /**
+       * Updates a specification override for a variant.
+       */
+      const updateVariantSpec = (
+        variantId: number,
+        index: number,
+        field: keyof { name: string; value: string },
+        value: string,
+      ) => {
+        setVariantEntries(prev =>
+          prev.map(v => {
+            if (v.id === variantId) {
+              const updatedSpecs = v.variantSpecs.map((s, i) =>
+                i === index
+                  ? {
+                      ...s,
+                      [field]: value,
+                    }
+                  : s,
+              );
+              return { ...v, variantSpecs: updatedSpecs };
+            }
+            return v;
+          }),
+        );
+      };
+
+      /**
+       * Removes a specification override from a variant.
+       */
+      const removeVariantSpec = (variantId: number, index: number) => {
+        setVariantEntries(prev =>
+          prev.map(v => {
+            if (v.id === variantId) {
+              return {
+                ...v,
+                variantSpecs: v.variantSpecs.filter((_, i) => i !== index),
+              };
+            }
+            return v;
+          }),
+        );
+      };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -287,17 +499,63 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       .map((s) => ({ name: s.name, value: s.value }))
       .filter((s) => s.name.trim() !== '' && s.value.trim() !== '');
 
-    const payload: CreateProductData = {
-      ...formData,
-      available_countries: countryIds,
-      product_prices: prices,
-      specifications: specs,
-      cover_image: mainImage || formData.cover_image,
-      images: thumbnails.map((t) => t.url),
-    };
+        // Build variants array if has_variants is true
+        let variantsPayload: any[] = [];
+        if (formData.has_variants && variantEntries.length > 0) {
+          variantsPayload = variantEntries.map((variant) => {
+            // Parse variations (attribute value IDs)
+            const variations = variant.variations
+              .split(',')
+              .map((v) => v.trim())
+              .filter((v) => v.length > 0)
+              .map((v) => parseInt(v, 10))
+              .filter((v) => !isNaN(v));
+            // Parse available countries for variant (optional)
+            const variantCountries = variant.available_countries
+              ? variant.available_countries
+                  .split(',')
+                  .map((c) => c.trim())
+                  .filter((c) => c.length > 0)
+                  .map((c) => parseInt(c, 10))
+                  .filter((c) => !isNaN(c))
+              : undefined;
+            // Parse variant prices
+            const variantPricesParsed = variant.variantPrices
+              .map((p) => ({
+                country_id: parseInt(p.country_id, 10),
+                net_price: parseFloat(p.net_price),
+                cost: parseFloat(p.cost),
+                vat_percentage: p.vat_percentage ? parseFloat(p.vat_percentage) : undefined,
+              }))
+              .filter((p) => !isNaN(p.country_id) && !isNaN(p.net_price) && !isNaN(p.cost));
+            // Parse variant specs
+            const variantSpecsParsed = variant.variantSpecs
+              .map((s) => ({ name: s.name, value: s.value }))
+              .filter((s) => s.name.trim() !== '' && s.value.trim() !== '');
+            return {
+              image: variant.image,
+              variations: variations,
+              available_countries: variantCountries,
+              product_variant_prices: variantPricesParsed.length > 0 ? variantPricesParsed : undefined,
+              delivery_method_id: variant.delivery_method_id ? parseInt(variant.delivery_method_id, 10) : undefined,
+              delivery_cost: variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined,
+              product_variant_specifications: variantSpecsParsed.length > 0 ? variantSpecsParsed : undefined,
+            };
+          });
+        }
 
-    onSave(payload);
-    onClose();
+        const payload: CreateProductData = {
+          ...formData,
+          available_countries: countryIds,
+          product_prices: prices,
+          specifications: specs,
+          cover_image: mainImage || formData.cover_image,
+          images: thumbnails.map((t) => t.url),
+          variants: variantsPayload,
+        };
+
+        onSave(payload);
+        onClose();
   };
 
   return (
@@ -646,11 +904,177 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   onChange={(e) => updateSpecification(index, 'value', e.target.value)}
                   placeholder="Value"
                 />
-                <Button type="button" variant="destructive" onClick={() => removeSpecification(index)}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={() => removeSpecification(index)}
+                  disabled={index < 4}
+                >
                   Remove
                 </Button>
               </div>
             ))}
+
+            {/* Variants Section */}
+            {formData.has_variants && (
+              <div className="space-y-4 mt-4">
+                <div className="flex items-center justify-between">
+                  <Label>Variants</Label>
+                  <Button type="button" onClick={addVariant} variant="secondary">
+                    Add Variant
+                  </Button>
+                </div>
+                {variantEntries.map((variant) => (
+                  <div key={variant.id} className="border rounded-md p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h4 className="font-medium">Variant</h4>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        onClick={() => removeVariant(variant.id)}
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                    {/* Variant image */}
+                    <div>
+                      <Label>Variant Image</Label>
+                      <FileUpload
+                        onUpload={(url: string) => updateVariantField(variant.id, 'image', url)}
+                        accept="image/*"
+                      />
+                      {variant.image && (
+                        <div className="mt-2">
+                          <img src={variant.image} alt="Variant" className="w-24 h-24 object-cover rounded" />
+                        </div>
+                      )}
+                    </div>
+                    {/* Variant variations */}
+                    <div>
+                      <Label>Variations (attribute value IDs, comma separated)</Label>
+                      <Input
+                        value={variant.variations}
+                        onChange={(e) => updateVariantField(variant.id, 'variations', e.target.value)}
+                        placeholder="e.g., 1,2"
+                      />
+                    </div>
+                    {/* Variant available countries (optional) */}
+                    <div>
+                      <Label>Available Countries (comma separated IDs)</Label>
+                      <Input
+                        value={variant.available_countries || ''}
+                        onChange={(e) => updateVariantField(variant.id, 'available_countries', e.target.value)}
+                        placeholder="e.g., 1,2,3"
+                      />
+                    </div>
+                    {/* Variant Pricing Overrides */}
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label>Variant Prices (overrides)</Label>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => addVariantPrice(variant.id)}
+                        >
+                          Add Price
+                        </Button>
+                      </div>
+                      {variant.variantPrices.map((p, idx) => (
+                        <div key={idx} className="grid grid-cols-5 gap-2 mt-2">
+                          <Input
+                            type="number"
+                            value={p.country_id}
+                            onChange={(e) => updateVariantPrice(variant.id, idx, 'country_id', e.target.value)}
+                            placeholder="Country ID"
+                          />
+                          <Input
+                            type="number"
+                            value={p.net_price}
+                            onChange={(e) => updateVariantPrice(variant.id, idx, 'net_price', e.target.value)}
+                            placeholder="Net Price"
+                          />
+                          <Input
+                            type="number"
+                            value={p.cost}
+                            onChange={(e) => updateVariantPrice(variant.id, idx, 'cost', e.target.value)}
+                            placeholder="Cost"
+                          />
+                          <Input
+                            type="number"
+                            value={p.vat_percentage}
+                            onChange={(e) => updateVariantPrice(variant.id, idx, 'vat_percentage', e.target.value)}
+                            placeholder="VAT % (optional)"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => removeVariantPrice(variant.id, idx)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Variant Specs Overrides */}
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <Label>Variant Specifications (overrides)</Label>
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          onClick={() => addVariantSpec(variant.id)}
+                        >
+                          Add Spec
+                        </Button>
+                      </div>
+                      {variant.variantSpecs.map((spec, idx) => (
+                        <div key={spec.id} className="grid grid-cols-3 gap-2 mt-2">
+                          <Input
+                            value={spec.name}
+                            onChange={(e) => updateVariantSpec(variant.id, idx, 'name', e.target.value)}
+                            placeholder="Name"
+                          />
+                          <Input
+                            value={spec.value}
+                            onChange={(e) => updateVariantSpec(variant.id, idx, 'value', e.target.value)}
+                            placeholder="Value"
+                          />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            onClick={() => removeVariantSpec(variant.id, idx)}
+                          >
+                            Remove
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                    {/* Variant delivery overrides */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Delivery Method ID (override)</Label>
+                        <Input
+                          type="number"
+                          value={variant.delivery_method_id || ''}
+                          onChange={(e) => updateVariantField(variant.id, 'delivery_method_id', e.target.value)}
+                          placeholder="Delivery Method ID"
+                        />
+                      </div>
+                      <div>
+                        <Label>Delivery Cost (override)</Label>
+                        <Input
+                          type="number"
+                          value={variant.delivery_cost || ''}
+                          onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)}
+                          placeholder="Delivery Cost"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Images */}

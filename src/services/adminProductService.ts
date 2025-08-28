@@ -1,3 +1,5 @@
+// This file is adapted from the original adminProductService.ts in the remote repository.
+// It has been modified to align with the new Product API specification found in ADD_PRODUCT_API_DOC.md.
 
 import BaseApiService, { ApiResponse } from './baseApiService';
 
@@ -172,18 +174,57 @@ export interface AdminProductsResponse {
   };
 }
 
+/**
+ * CreateProductData defines the structure for creating a product via the admin API.
+ * It has been expanded to support the full set of fields described in the new API documentation.
+ */
 export interface CreateProductData {
+  // basic required fields
+  store_id: number;
+  category_id: number;
   name: string;
   slug: string;
   sku: string;
-  description?: string;
   status: 'active' | 'inactive' | 'draft';
   has_variants: boolean;
-  category_id: number;
-  is_seller_product?: boolean;
+  is_seller_product: boolean;
+  seller_product_status: 'accepted' | 'pending' | 'draft' | 'rejected' | 'not_seller';
+  // optional descriptive fields
+  description?: string;
+  seo_title?: string;
+  seo_description?: string;
+  // identifiers
+  barcode?: string;
+  qr_code?: string;
+  serial_number?: string;
+  // feature flags
   is_on_sale?: boolean;
   is_featured?: boolean;
   is_new_arrival?: boolean;
+  is_best_seller?: boolean;
+  is_vat_exempt?: boolean;
+  // media
+  cover_image?: string;
+  images?: string[];
+  // simple product inventory
+  stock?: number;
+  warehouse_id?: number;
+  warehouse_zone_id?: number;
+  shelf_id?: number;
+  delivery_method_id?: number;
+  delivery_cost?: number;
+  // product availability and pricing
+  available_countries?: number[];
+  product_prices?: Array<{
+    country_id: number;
+    net_price: number;
+    cost: number;
+    vat_percentage?: number;
+  }>;
+  // variant-specific data
+  variants?: Array<any>;
+  // specifications
+  specifications?: Array<{ name: string; value: string }>;
 }
 
 export interface UpdateProductData extends Partial<CreateProductData> {
@@ -203,7 +244,7 @@ class AdminProductService extends BaseApiService {
     } = {}
   ): Promise<ApiResponse<AdminProductsResponse>> {
     console.log('Fetching admin products with filters:', filters);
-    
+
     try {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
@@ -216,7 +257,7 @@ class AdminProductService extends BaseApiService {
       const endpoints = [
         `/admin/products${queryString ? `?${queryString}` : ''}`
       ];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log('Trying endpoint:', endpoint);
@@ -227,41 +268,41 @@ class AdminProductService extends BaseApiService {
           console.log(`Endpoint ${endpoint} failed, trying next...`);
         }
       }
-      
+
       throw new Error('All endpoints failed');
     } catch (error: any) {
       console.error('All admin product endpoints failed:', error);
-        return {
-          error: false,
-          message: "Mock data - API endpoint not available",
-          details: {
-            products: {
-              current_page: 1,
-              data: [],
-              first_page_url: "",
-              from: 0,
-              last_page: 1,
-              last_page_url: "",
-              links: [],
-              next_page_url: null,
-              path: "",
-              per_page: 25,
-              prev_page_url: null,
-              to: 0,
-              total: 0
-            }
+      return {
+        error: false,
+        message: "Mock data - API endpoint not available",
+        details: {
+          products: {
+            current_page: 1,
+            data: [],
+            first_page_url: "",
+            from: 0,
+            last_page: 1,
+            last_page_url: "",
+            links: [],
+            next_page_url: null,
+            path: "",
+            per_page: 25,
+            prev_page_url: null,
+            to: 0,
+            total: 0
           }
-        };
+        }
+      };
     }
   }
 
   // Get admin product by ID
   async getAdminProduct(id: number): Promise<ApiResponse<{ product: AdminProductAPI }>> {
     console.log('Fetching admin product by ID:', id);
-    
+
     try {
       const endpoints = [`/admin/products/${id}`];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log('Trying endpoint:', endpoint);
@@ -272,7 +313,7 @@ class AdminProductService extends BaseApiService {
           console.log(`Endpoint ${endpoint} failed, trying next...`);
         }
       }
-      
+
       throw new Error('All endpoints failed');
     } catch (error: any) {
       console.error('Get admin product failed:', error);
@@ -283,10 +324,10 @@ class AdminProductService extends BaseApiService {
   // Get admin product by SKU
   async getAdminProductBySku(sku: string): Promise<ApiResponse<{ product: AdminProductAPI }>> {
     console.log('Fetching admin product by SKU:', sku);
-    
+
     try {
       const endpoints = [`/admin/products/sku/${sku}`];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log('Trying endpoint:', endpoint);
@@ -297,7 +338,7 @@ class AdminProductService extends BaseApiService {
           console.log(`Endpoint ${endpoint} failed, trying next...`);
         }
       }
-      
+
       throw new Error('All endpoints failed');
     } catch (error: any) {
       console.error('Get admin product by SKU failed:', error);
@@ -306,27 +347,27 @@ class AdminProductService extends BaseApiService {
   }
 
   // Create new product
-  async createProduct(productData: CreateProductData): Promise<ApiResponse<{ product: AdminProductAPI }>> {
+  async createProduct(productData: CreateProductData): Promise<ApiResponse<any>> {
     console.log('Creating product:', productData);
-    
+
     try {
       const endpoints = ['/admin/products'];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log('Trying create endpoint:', endpoint);
-          const response = await this.post<ApiResponse<{ product: AdminProductAPI }>>(endpoint, productData);
+          const response = await this.post<ApiResponse<any>>(endpoint, productData);
           console.log('Product creation API response:', response);
           return response;
         } catch (error) {
           console.log(`Create endpoint ${endpoint} failed, trying next...`);
         }
       }
-      
+
       throw new Error('All create endpoints failed');
     } catch (error: any) {
       console.log('Simulating product creation due to API unavailability');
-      
+
       // Mock product creation - return simple success message
       return {
         error: false,
@@ -344,98 +385,92 @@ class AdminProductService extends BaseApiService {
               on_sale: productData.is_on_sale || false,
               is_featured: productData.is_featured || false,
               is_new_arrival: productData.is_new_arrival || false,
-              is_best_seller: false,
-              is_vat_exempt: false,
-              seller_product_status: 'draft'
+              is_best_seller: productData.is_best_seller || false,
+              is_vat_exempt: productData.is_vat_exempt || false,
+              seller_product_status: productData.seller_product_status || 'draft'
             }
           } as AdminProductAPI
         }
       };
-
     }
   }
 
   // Update product
-  async updateProduct(id: number, productData: Partial<CreateProductData>): Promise<ApiResponse<{ product: AdminProductAPI }>> {
+  async updateProduct(id: number, productData: Partial<CreateProductData>): Promise<ApiResponse<any>> {
     console.log('Updating product:', id, productData);
-    
+
     try {
       const endpoints = [`/admin/products/${id}`];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log('Trying update endpoint:', endpoint);
-          const response = await this.put<ApiResponse<{ product: AdminProductAPI }>>(endpoint, productData);
+          const response = await this.put<ApiResponse<any>>(endpoint, productData);
           console.log('Product update API response:', response);
           return response;
         } catch (error) {
           console.log(`Update endpoint ${endpoint} failed, trying next...`);
         }
       }
-      
+
       throw new Error('All update endpoints failed');
     } catch (error: any) {
       console.log('Simulating product update due to API unavailability');
-      
+
       return {
         error: false,
         message: "Product updated successfully (mock)",
         details: {
           product: {
             id: id,
-            name: productData.name || 'Updated Product',
-            slug: productData.slug || 'updated-product',
-            description: productData.description || '',
-            status: productData.status || 'active',
+            name: (productData as any).name || 'Updated Product',
+            slug: (productData as any).slug || 'updated-product',
+            description: (productData as any).description || '',
+            status: (productData as any).status || 'active',
             variants: [],
             pricing: [],
             flags: {
-              on_sale: productData.is_on_sale || false,
-              is_featured: productData.is_featured || false,
-              is_new_arrival: productData.is_new_arrival || false,
-              is_best_seller: false,
-              is_vat_exempt: false,
-              seller_product_status: 'draft'
+              on_sale: (productData as any).is_on_sale || false,
+              is_featured: (productData as any).is_featured || false,
+              is_new_arrival: (productData as any).is_new_arrival || false,
+              is_best_seller: (productData as any).is_best_seller || false,
+              is_vat_exempt: (productData as any).is_vat_exempt || false,
+              seller_product_status: (productData as any).seller_product_status || 'draft'
             }
           } as AdminProductAPI
         }
       };
-
     }
   }
 
   // Delete product
-  async deleteProduct(id: number): Promise<ApiResponse<{ message: string }>> {
+  async deleteProduct(id: number): Promise<ApiResponse<any>> {
     console.log('Deleting product with ID:', id);
-    
+
     try {
       const endpoints = [`/admin/products/${id}`];
-      
+
       for (const endpoint of endpoints) {
         try {
           console.log('Trying delete endpoint:', endpoint);
-          const response = await this.delete<ApiResponse<{ message: string }>>(endpoint);
+          const response = await this.delete<ApiResponse<any>>(endpoint);
           console.log('Product deletion API response:', response);
           return response;
         } catch (error) {
           console.log(`Delete endpoint ${endpoint} failed, trying next...`);
         }
       }
-      
+
       throw new Error('All delete endpoints failed');
     } catch (error: any) {
       console.log('Simulating product deletion due to API unavailability');
-      
       return {
         error: false,
-        message: "Product deleted successfully",
-        details: {
-          message: `Product with ID ${id} has been deleted`
-        }
+        message: "Product deleted successfully (mock)",
+        details: {}
       };
     }
   }
 }
 
 export const adminProductService = new AdminProductService();
-export default adminProductService;
