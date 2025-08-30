@@ -44,7 +44,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     status: 'active',
     has_variants: false,
     is_seller_product: false,
-    seller_product_status: 'draft',
+    // Always pass "not_seller" for seller_product_status. The UI does not expose a selector.
+    seller_product_status: 'not_seller',
     description: '',
     seo_title: '',
     seo_description: '',
@@ -54,7 +55,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     is_on_sale: false,
     is_featured: false,
     is_new_arrival: false,
-    is_best_seller: false,
+    // Best seller removed; always null in payload
+    is_best_seller: null,
     is_vat_exempt: false,
     cover_image: '',
     images: [],
@@ -115,7 +117,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         status: product.status,
         has_variants: product.variants?.length > 0,
         is_seller_product: product.flags?.seller_product_status !== 'not_seller',
-        seller_product_status: (product.flags?.seller_product_status as any) || 'draft',
+        // Force seller_product_status to "not_seller" regardless of existing product status
+        seller_product_status: 'not_seller',
         description: product.description || '',
         seo_title: product.meta?.seo_title || '',
         seo_description: product.meta?.seo_description || '',
@@ -125,7 +128,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         is_on_sale: product.flags?.on_sale || false,
         is_featured: product.flags?.is_featured || false,
         is_new_arrival: product.flags?.is_new_arrival || false,
-        is_best_seller: product.flags?.is_best_seller || false,
+        // Best seller removed; explicitly set to null when editing
+        is_best_seller: null,
         is_vat_exempt: product.flags?.is_vat_exempt || false,
         cover_image: product.media?.cover_image?.image || '',
         images: product.media?.thumbnails?.map((t) => t.image) || [],
@@ -170,7 +174,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         status: 'active',
         has_variants: false,
         is_seller_product: false,
-        seller_product_status: 'draft',
+        // Default seller_product_status to "not_seller" for new products
+        seller_product_status: 'not_seller',
         description: '',
         seo_title: '',
         seo_description: '',
@@ -180,7 +185,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         is_on_sale: false,
         is_featured: false,
         is_new_arrival: false,
-        is_best_seller: false,
+        // Best seller removed; always null
+        is_best_seller: null,
         is_vat_exempt: false,
         cover_image: '',
         images: [],
@@ -447,6 +453,20 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     );
   };
 
+  // NEW: ensure only one of is_on_sale, is_featured, is_new_arrival can be true.
+  const handleExclusiveFlagChange = (
+    flag: 'is_on_sale' | 'is_featured' | 'is_new_arrival',
+    checked: boolean,
+  ) => {
+    if (checked) {
+      updateField('is_on_sale', flag === 'is_on_sale');
+      updateField('is_featured', flag === 'is_featured');
+      updateField('is_new_arrival', flag === 'is_new_arrival');
+    } else {
+      updateField(flag, false);
+    }
+  };
+
   // Form submission handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -579,16 +599,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 placeholder="product-url-slug"
               />
             </div>
-            <div>
-              <Label>Store ID *</Label>
-              <Input
-                type="number"
-                value={formData.store_id}
-                onChange={(e) => updateField('store_id', parseInt(e.target.value || '0', 10))}
-                placeholder="Store ID"
-                required
-              />
-            </div>
             <div className="col-span-2">
               <Label>Description</Label>
               <Textarea
@@ -641,50 +651,50 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           {/* Product Flags */}
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="flex items-center space-x-2">
-              <Switch checked={formData.has_variants} onCheckedChange={(checked) => updateField('has_variants', checked)} />
+              <Switch
+                checked={formData.has_variants}
+                onCheckedChange={(checked) => updateField('has_variants', checked)}
+              />
               <Label>Has Variants</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch checked={formData.is_on_sale} onCheckedChange={(checked) => updateField('is_on_sale', checked)} />
+              <Switch
+                checked={formData.is_on_sale}
+                onCheckedChange={(checked) => handleExclusiveFlagChange('is_on_sale', checked)}
+                disabled={(formData.is_featured || formData.is_new_arrival) && !formData.is_on_sale}
+              />
               <Label>On Sale</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch checked={formData.is_featured} onCheckedChange={(checked) => updateField('is_featured', checked)} />
+              <Switch
+                checked={formData.is_featured}
+                onCheckedChange={(checked) => handleExclusiveFlagChange('is_featured', checked)}
+                disabled={(formData.is_on_sale || formData.is_new_arrival) && !formData.is_featured}
+              />
               <Label>Featured</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch checked={formData.is_new_arrival} onCheckedChange={(checked) => updateField('is_new_arrival', checked)} />
+              <Switch
+                checked={formData.is_new_arrival}
+                onCheckedChange={(checked) => handleExclusiveFlagChange('is_new_arrival', checked)}
+                disabled={(formData.is_on_sale || formData.is_featured) && !formData.is_new_arrival}
+              />
               <Label>New Arrival</Label>
             </div>
+            {/* Best Seller option removed */}
             <div className="flex items-center space-x-2">
-              <Switch checked={formData.is_best_seller} onCheckedChange={(checked) => updateField('is_best_seller', checked)} />
-              <Label>Best Seller</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch checked={formData.is_vat_exempt} onCheckedChange={(checked) => updateField('is_vat_exempt', checked)} />
+              <Switch
+                checked={formData.is_vat_exempt}
+                onCheckedChange={(checked) => updateField('is_vat_exempt', checked)}
+              />
               <Label>VAT Exempt</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch checked={formData.is_seller_product} onCheckedChange={(checked) => updateField('is_seller_product', checked)} />
+              <Switch
+                checked={formData.is_seller_product}
+                onCheckedChange={(checked) => updateField('is_seller_product', checked)}
+              />
               <Label>Seller Product</Label>
-            </div>
-            <div>
-              <Label>Seller Product Status</Label>
-              <Select
-                value={formData.seller_product_status}
-                onValueChange={(value) => updateField('seller_product_status', value as any)}
-              >
-                <SelectTrigger>
-                  <SelectValue>{formData.seller_product_status}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="accepted">Accepted</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="rejected">Rejected</SelectItem>
-                  <SelectItem value="not_seller">Not Seller</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
