@@ -15,6 +15,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useFlatCategories } from "@/hooks/useCategories";
 import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
 import { X } from "lucide-react";
+// NEW: import the Auth context to access country, store, and warehouse selections
+import { useAuth } from '@/contexts/AuthContext';
 
 interface AdminProductModalProps {
   isOpen: boolean;
@@ -29,6 +31,9 @@ interface AdminProductModalProps {
  * The form captures all fields required by the new API.
  */
 export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: AdminProductModalProps) {
+  // Pull localization selections from the AuthContext
+  const { country, store, warehouse } = useAuth();
+
   // Maintain form data with default values for all required fields.
   const [formData, setFormData] = useState<CreateProductData>({
     store_id: 1,
@@ -64,36 +69,37 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     specifications: [],
     variants: [],
   });
+
   // Local states for image previews and dynamic lists
   const [mainImage, setMainImage] = useState<string>('');
   const [thumbnails, setThumbnails] = useState<{ id: number; url: string; alt: string }[]>([]);
-      const [availableCountries, setAvailableCountries] = useState<string>('');
-      const [priceEntries, setPriceEntries] = useState<
-        { country_id: string; net_price: string; cost: string; vat_percentage: string }[]
-      >([]);
+  const [availableCountries, setAvailableCountries] = useState<string>('');
+  const [priceEntries, setPriceEntries] = useState<
+    { country_id: string; net_price: string; cost: string; vat_percentage: string }[]
+  >([]);
   // Specifications state holds an array of {id, name, value}. When adding a new product, we
   // prepopulate the first four entries with the required specifications: weight, height,
   // width and length. These are required by the API and cannot be removed. Additional
   // specifications can still be added via the "Add Spec" button.
   const [specifications, setSpecifications] = useState<{ id: number; name: string; value: string }[]>([]);
 
-      /**
-       * Variants state for has_variants=true.
-       * Each variant entry contains an image upload, a comma separated list of attribute value IDs,
-       * optional pricing overrides, optional delivery overrides, and optional specification overrides.
-       */
-      const [variantEntries, setVariantEntries] = useState<
-        {
-          id: number;
-          image: string;
-          variations: string;
-          available_countries?: string;
-          variantPrices: { country_id: string; net_price: string; cost: string; vat_percentage: string }[];
-          variantSpecs: { id: number; name: string; value: string }[];
-          delivery_method_id?: string;
-          delivery_cost?: string;
-        }[]
-      >([]);
+  /**
+   * Variants state for has_variants=true.
+   * Each variant entry contains an image upload, a comma separated list of attribute value IDs,
+   * optional pricing overrides, optional delivery overrides, and optional specification overrides.
+   */
+  const [variantEntries, setVariantEntries] = useState<
+    {
+      id: number;
+      image: string;
+      variations: string;
+      available_countries?: string;
+      variantPrices: { country_id: string; net_price: string; cost: string; vat_percentage: string }[];
+      variantSpecs: { id: number; name: string; value: string }[];
+      delivery_method_id?: string;
+      delivery_cost?: string;
+    }[]
+  >([]);
   const { toast } = useToast();
   const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
 
@@ -153,9 +159,10 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         })) || []
       );
     } else {
-      // Reset all fields when adding a new product
+      // Reset all fields when adding a new product.
+      // NEW: Use the selected store, warehouse and country from context to prefill defaults.
       setFormData({
-        store_id: 1,
+        store_id: store?.id || 1,
         category_id: 1,
         name: '',
         slug: '',
@@ -178,21 +185,22 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         cover_image: '',
         images: [],
         stock: 0,
-        warehouse_id: undefined,
+        warehouse_id: warehouse?.id,
         warehouse_zone_id: undefined,
         shelf_id: undefined,
         delivery_method_id: undefined,
         delivery_cost: 0,
-        available_countries: [],
+        available_countries: country ? [country.id] : [],
         product_prices: [],
         specifications: [],
         variants: [],
       });
       setMainImage('');
       setThumbnails([]);
-      setAvailableCountries('');
+      // NEW: prefill availableCountries input from context
+      setAvailableCountries(country ? String(country.id) : '');
       setPriceEntries([]);
-      // For a new product, initialise the specifications state with the required
+      // For a new product, initialize the specifications state with the required
       // attributes: weight, height, width and length. These entries cannot be removed
       // by the user and must have non-empty values before submission. Additional
       // specifications can be added on top of these entries.
@@ -203,7 +211,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         { id: Date.now() + 3, name: 'length', value: '' },
       ]);
     }
-  }, [product, mode, isOpen]);
+  // NEW: re-run this effect if the selected store, warehouse or country changes
+  }, [product, mode, isOpen, store, warehouse, country]);
 
   const generateSlug = (name: string) => {
     return name
@@ -257,7 +266,11 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     setPriceEntries(prev => [...prev, { country_id: '', net_price: '', cost: '', vat_percentage: '' }]);
   };
 
-  const updatePriceEntry = (index: number, field: keyof { country_id: string; net_price: string; cost: string; vat_percentage: string }, value: string) => {
+  const updatePriceEntry = (
+    index: number,
+    field: keyof { country_id: string; net_price: string; cost: string; vat_percentage: string },
+    value: string
+  ) => {
     setPriceEntries(prev => {
       const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
@@ -290,184 +303,154 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     });
   };
 
-      // Variant management handlers
-      /**
-       * Adds a new variant entry to the form. Variants are only used when
-       * `has_variants` is true. Each variant starts with empty values for
-       * image, variations, pricing overrides, delivery overrides and
-       * specification overrides.
-       */
-      const addVariant = () => {
-        setVariantEntries(prev => [
-          ...prev,
-          {
-            id: Date.now(),
-            image: '',
-            variations: '',
-            available_countries: '',
-            variantPrices: [],
-            variantSpecs: [],
-            delivery_method_id: '',
-            delivery_cost: '',
-          },
-        ]);
-      };
+  // Variant management handlers
+  /**
+   * Adds a new variant entry to the form. Variants are only used when
+   * `has_variants` is true. Each variant starts with empty values for
+   * image, variations, pricing overrides, delivery overrides and
+   * specification overrides.
+   */
+  const addVariant = () => {
+    setVariantEntries(prev => [
+      ...prev,
+      {
+        id: Date.now(),
+        image: '',
+        variations: '',
+        available_countries: '',
+        variantPrices: [],
+        variantSpecs: [],
+        delivery_method_id: '',
+        delivery_cost: '',
+      },
+    ]);
+  };
 
-      /**
-       * Removes a variant entry by id.
-       */
-      const removeVariant = (variantId: number) => {
-        setVariantEntries(prev => prev.filter(v => v.id !== variantId));
-      };
+  /**
+   * Removes a variant entry by id.
+   */
+  const removeVariant = (variantId: number) => {
+    setVariantEntries(prev => prev.filter(v => v.id !== variantId));
+  };
 
-      /**
-       * Updates a top-level field of a variant, such as image, variations,
-       * available_countries, delivery_method_id or delivery_cost.
-       */
-      const updateVariantField = (
-        variantId: number,
-        field: keyof (typeof variantEntries[number]),
-        value: any,
-      ) => {
-        setVariantEntries(prev =>
-          prev.map(v =>
-            v.id === variantId
-              ? {
-                  ...v,
-                  [field]: value,
-                }
-              : v,
-          ),
-        );
-      };
-
-      /**
-       * Adds a pricing override entry to a specific variant. Each pricing
-       * override corresponds to a product_variant_prices entry in the API.
-       */
-      const addVariantPrice = (variantId: number) => {
-        setVariantEntries(prev =>
-          prev.map(v =>
-            v.id === variantId
-              ? {
-                  ...v,
-                  variantPrices: [
-                    ...v.variantPrices,
-                    { country_id: '', net_price: '', cost: '', vat_percentage: '' },
-                  ],
-                }
-              : v,
-          ),
-        );
-      };
-
-      /**
-       * Updates a field of a variant's pricing override at a given index.
-       */
-      const updateVariantPrice = (
-        variantId: number,
-        index: number,
-        field: keyof { country_id: string; net_price: string; cost: string; vat_percentage: string },
-        value: string,
-      ) => {
-        setVariantEntries(prev =>
-          prev.map(v => {
-            if (v.id === variantId) {
-              const updatedPrices = v.variantPrices.map((p, i) =>
-                i === index
-                  ? {
-                      ...p,
-                      [field]: value,
-                    }
-                  : p,
-              );
-              return { ...v, variantPrices: updatedPrices };
+  /**
+   * Updates a top-level field of a variant, such as image, variations,
+   * available_countries, delivery_method_id or delivery_cost.
+   */
+  const updateVariantField = (
+    variantId: number,
+    field: keyof (typeof variantEntries[number]),
+    value: any,
+  ) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? {
+              ...v,
+              [field]: value,
             }
-            return v;
-          }),
-        );
-      };
+          : v,
+      ),
+    );
+  };
 
-      /**
-       * Removes a pricing override entry from a variant.
-       */
-      const removeVariantPrice = (variantId: number, index: number) => {
-        setVariantEntries(prev =>
-          prev.map(v => {
-            if (v.id === variantId) {
-              return {
-                ...v,
-                variantPrices: v.variantPrices.filter((_, i) => i !== index),
-              };
+  /**
+   * Adds a pricing override entry to a specific variant. Each pricing
+   * override corresponds to a product_variant_prices entry in the API.
+   */
+  const addVariantPrice = (variantId: number) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? {
+              ...v,
+              variantPrices: [
+                ...v.variantPrices,
+                { country_id: '', net_price: '', cost: '', vat_percentage: '' },
+              ],
             }
-            return v;
-          }),
-        );
-      };
+          : v,
+      ),
+    );
+  };
 
-      /**
-       * Adds a specification override to a variant.
-       */
-      const addVariantSpec = (variantId: number) => {
-        setVariantEntries(prev =>
-          prev.map(v =>
-            v.id === variantId
-              ? {
-                  ...v,
-                  variantSpecs: [...v.variantSpecs, { id: Date.now(), name: '', value: '' }],
-                }
-              : v,
-          ),
-        );
-      };
-
-      /**
-       * Updates a specification override for a variant.
-       */
-      const updateVariantSpec = (
-        variantId: number,
-        index: number,
-        field: keyof { name: string; value: string },
-        value: string,
-      ) => {
-        setVariantEntries(prev =>
-          prev.map(v => {
-            if (v.id === variantId) {
-              const updatedSpecs = v.variantSpecs.map((s, i) =>
-                i === index
-                  ? {
-                      ...s,
-                      [field]: value,
-                    }
-                  : s,
-              );
-              return { ...v, variantSpecs: updatedSpecs };
+  const updateVariantPrice = (
+    variantId: number,
+    index: number,
+    field: keyof { country_id: string; net_price: string; cost: string; vat_percentage: string },
+    value: string
+  ) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? {
+              ...v,
+              variantPrices: v.variantPrices.map((p, idx) =>
+                idx === index ? { ...p, [field]: value } : p,
+              ),
             }
-            return v;
-          }),
-        );
-      };
+          : v,
+      ),
+    );
+  };
 
-      /**
-       * Removes a specification override from a variant.
-       */
-      const removeVariantSpec = (variantId: number, index: number) => {
-        setVariantEntries(prev =>
-          prev.map(v => {
-            if (v.id === variantId) {
-              return {
-                ...v,
-                variantSpecs: v.variantSpecs.filter((_, i) => i !== index),
-              };
+  const removeVariantPrice = (variantId: number, index: number) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? { ...v, variantPrices: v.variantPrices.filter((_, idx) => idx !== index) }
+          : v,
+      ),
+    );
+  };
+
+  const addVariantSpec = (variantId: number) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? {
+              ...v,
+              variantSpecs: [...v.variantSpecs, { id: Date.now(), name: '', value: '' }],
             }
-            return v;
-          }),
-        );
-      };
+          : v,
+      ),
+    );
+  };
 
+  const updateVariantSpec = (
+    variantId: number,
+    index: number,
+    field: 'name' | 'value',
+    value: string,
+  ) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? {
+              ...v,
+              variantSpecs: v.variantSpecs.map((s, idx) =>
+                idx === index ? { ...s, [field]: value } : s,
+              ),
+            }
+          : v,
+      ),
+    );
+  };
+
+  const removeVariantSpec = (variantId: number, index: number) => {
+    setVariantEntries(prev =>
+      prev.map(v =>
+        v.id === variantId
+          ? { ...v, variantSpecs: v.variantSpecs.filter((_, idx) => idx !== index) }
+          : v,
+      ),
+    );
+  };
+
+  // Form submission handler
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
+    // Validate required fields
     if (!formData.name || !formData.sku) {
       toast({
         title: "Error",
@@ -499,87 +482,78 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       .map((s) => ({ name: s.name, value: s.value }))
       .filter((s) => s.name.trim() !== '' && s.value.trim() !== '');
 
-        // Build variants array if has_variants is true
-        let variantsPayload: any[] = [];
-        if (formData.has_variants && variantEntries.length > 0) {
-          variantsPayload = variantEntries.map((variant) => {
-            // Parse variations (attribute value IDs)
-            const variations = variant.variations
+    // Build variants array if has_variants is true
+    let variantsPayload: any[] = [];
+    if (formData.has_variants && variantEntries.length > 0) {
+      variantsPayload = variantEntries.map((variant) => {
+        // Parse variations (attribute value IDs)
+        const variations = variant.variations
+          .split(',')
+          .map((v) => v.trim())
+          .filter((v) => v.length > 0)
+          .map((v) => parseInt(v, 10))
+          .filter((v) => !isNaN(v));
+        // Parse available countries for variant (optional)
+        const variantCountries = variant.available_countries
+          ? variant.available_countries
               .split(',')
-              .map((v) => v.trim())
-              .filter((v) => v.length > 0)
-              .map((v) => parseInt(v, 10))
-              .filter((v) => !isNaN(v));
-            // Parse available countries for variant (optional)
-            const variantCountries = variant.available_countries
-              ? variant.available_countries
-                  .split(',')
-                  .map((c) => c.trim())
-                  .filter((c) => c.length > 0)
-                  .map((c) => parseInt(c, 10))
-                  .filter((c) => !isNaN(c))
-              : undefined;
-            // Parse variant prices
-            const variantPricesParsed = variant.variantPrices
-              .map((p) => ({
-                country_id: parseInt(p.country_id, 10),
-                net_price: parseFloat(p.net_price),
-                cost: parseFloat(p.cost),
-                vat_percentage: p.vat_percentage ? parseFloat(p.vat_percentage) : undefined,
-              }))
-              .filter((p) => !isNaN(p.country_id) && !isNaN(p.net_price) && !isNaN(p.cost));
-            // Parse variant specs
-            const variantSpecsParsed = variant.variantSpecs
-              .map((s) => ({ name: s.name, value: s.value }))
-              .filter((s) => s.name.trim() !== '' && s.value.trim() !== '');
-            return {
-              image: variant.image,
-              variations: variations,
-              available_countries: variantCountries,
-              product_variant_prices: variantPricesParsed.length > 0 ? variantPricesParsed : undefined,
-              delivery_method_id: variant.delivery_method_id ? parseInt(variant.delivery_method_id, 10) : undefined,
-              delivery_cost: variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined,
-              product_variant_specifications: variantSpecsParsed.length > 0 ? variantSpecsParsed : undefined,
-            };
-          });
-        }
-
-        const payload: CreateProductData = {
-          ...formData,
-          available_countries: countryIds,
-          product_prices: prices,
-          specifications: specs,
-          cover_image: mainImage || formData.cover_image,
-          images: thumbnails.map((t) => t.url),
-          variants: variantsPayload,
+              .map((c) => c.trim())
+              .filter((c) => c.length > 0)
+              .map((c) => parseInt(c, 10))
+              .filter((c) => !isNaN(c))
+          : undefined;
+        // Parse variant prices
+        const variantPricesParsed = variant.variantPrices
+          .map((p) => ({
+            country_id: parseInt(p.country_id, 10),
+            net_price: parseFloat(p.net_price),
+            cost: parseFloat(p.cost),
+            vat_percentage: p.vat_percentage ? parseFloat(p.vat_percentage) : undefined,
+          }))
+          .filter((p) => !isNaN(p.country_id) && !isNaN(p.net_price) && !isNaN(p.cost));
+        // Parse variant specs
+        const variantSpecsParsed = variant.variantSpecs
+          .map((s) => ({ name: s.name, value: s.value }))
+          .filter((s) => s.name.trim() !== '' && s.value.trim() !== '');
+        return {
+          image: variant.image,
+          variations: variations,
+          available_countries: variantCountries,
+          product_variant_prices: variantPricesParsed.length > 0 ? variantPricesParsed : undefined,
+          delivery_method_id: variant.delivery_method_id ? parseInt(variant.delivery_method_id, 10) : undefined,
+          delivery_cost: variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined,
+          product_variant_specifications: variantSpecsParsed.length > 0 ? variantSpecsParsed : undefined,
         };
+      });
+    }
 
-        onSave(payload);
-        onClose();
+    const payload: CreateProductData = {
+      ...formData,
+      available_countries: countryIds,
+      product_prices: prices,
+      specifications: specs,
+      cover_image: mainImage || formData.cover_image,
+      images: thumbnails.map((t) => t.url),
+      variants: variantsPayload,
+    };
+
+    onSave(payload);
+    onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-    {/*
-       The dialog content can grow very tall because the product form contains
-       many fields. Without constraining its height and enabling scrolling,
-       long forms may overflow the viewport and users will be unable to reach
-       the bottom of the modal. To fix this we set a maximum height and
-       enable vertical scrolling on the DialogContent element. The `max-h`
-       value of 80vh means the modal will take up at most 80% of the
-       viewport height, and `overflow-y-auto` allows the inner form to
-       scroll independently when its content exceeds that height.
-    */}
-    <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>{mode === 'add' ? 'Add New Product' : 'Edit Product'}</DialogTitle>
-        </DialogHeader>
+      <DialogHeader>
+        <DialogTitle>{mode === 'add' ? 'Add New Product' : 'Edit Product'}</DialogTitle>
+      </DialogHeader>
+      <DialogContent className="max-h-[80vh] overflow-y-auto p-4">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Product Name *</Label>
               <Input
+                type="text"
                 value={formData.name}
                 onChange={(e) => handleNameChange(e.target.value)}
                 placeholder="Enter product name"
@@ -589,6 +563,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             <div>
               <Label>SKU *</Label>
               <Input
+                type="text"
                 value={formData.sku}
                 onChange={(e) => updateField('sku', e.target.value)}
                 placeholder="Enter SKU"
@@ -598,6 +573,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             <div>
               <Label>URL Slug</Label>
               <Input
+                type="text"
                 value={formData.slug}
                 onChange={(e) => updateField('slug', e.target.value)}
                 placeholder="product-url-slug"
@@ -628,12 +604,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value: any) => updateField('status', value as any)}
-              >
+              <Select value={formData.status} onValueChange={(value) => updateField('status', value as any)}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status">{formData.status}</SelectValue>
+                  <SelectValue>{formData.status}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="active">Active</SelectItem>
@@ -646,10 +619,10 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               <Label>Category</Label>
               <Select
                 value={String(formData.category_id)}
-                onValueChange={(value: any) => updateField('category_id', parseInt(value, 10))}
+                onValueChange={(value) => updateField('category_id', parseInt(value, 10))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select category">
+                  <SelectValue>
                     {categories.find((c) => c.id === formData.category_id)?.name || 'Select category'}
                   </SelectValue>
                 </SelectTrigger>
@@ -666,73 +639,43 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           </div>
 
           {/* Product Flags */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="flex items-center space-x-2">
-              <Switch
-                id="hasVariants"
-                checked={formData.has_variants}
-                onCheckedChange={(checked) => updateField('has_variants', checked)}
-              />
-              <Label htmlFor="hasVariants">Has Variants</Label>
+              <Switch checked={formData.has_variants} onCheckedChange={(checked) => updateField('has_variants', checked)} />
+              <Label>Has Variants</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="isOnSale"
-                checked={formData.is_on_sale}
-                onCheckedChange={(checked) => updateField('is_on_sale', checked)}
-              />
-              <Label htmlFor="isOnSale">On Sale</Label>
+              <Switch checked={formData.is_on_sale} onCheckedChange={(checked) => updateField('is_on_sale', checked)} />
+              <Label>On Sale</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="isFeatured"
-                checked={formData.is_featured}
-                onCheckedChange={(checked) => updateField('is_featured', checked)}
-              />
-              <Label htmlFor="isFeatured">Featured</Label>
+              <Switch checked={formData.is_featured} onCheckedChange={(checked) => updateField('is_featured', checked)} />
+              <Label>Featured</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="isNewArrival"
-                checked={formData.is_new_arrival}
-                onCheckedChange={(checked) => updateField('is_new_arrival', checked)}
-              />
-              <Label htmlFor="isNewArrival">New Arrival</Label>
+              <Switch checked={formData.is_new_arrival} onCheckedChange={(checked) => updateField('is_new_arrival', checked)} />
+              <Label>New Arrival</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="isBestSeller"
-                checked={formData.is_best_seller}
-                onCheckedChange={(checked) => updateField('is_best_seller', checked)}
-              />
-              <Label htmlFor="isBestSeller">Best Seller</Label>
+              <Switch checked={formData.is_best_seller} onCheckedChange={(checked) => updateField('is_best_seller', checked)} />
+              <Label>Best Seller</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="isVatExempt"
-                checked={formData.is_vat_exempt}
-                onCheckedChange={(checked) => updateField('is_vat_exempt', checked)}
-              />
-              <Label htmlFor="isVatExempt">VAT Exempt</Label>
+              <Switch checked={formData.is_vat_exempt} onCheckedChange={(checked) => updateField('is_vat_exempt', checked)} />
+              <Label>VAT Exempt</Label>
             </div>
             <div className="flex items-center space-x-2">
-              <Switch
-                id="isSellerProduct"
-                checked={formData.is_seller_product}
-                onCheckedChange={(checked) => updateField('is_seller_product', checked)}
-              />
-              <Label htmlFor="isSellerProduct">Seller Product</Label>
+              <Switch checked={formData.is_seller_product} onCheckedChange={(checked) => updateField('is_seller_product', checked)} />
+              <Label>Seller Product</Label>
             </div>
             <div>
               <Label>Seller Product Status</Label>
               <Select
                 value={formData.seller_product_status}
-                onValueChange={(value: any) =>
-                  updateField('seller_product_status', value as any)
-                }
+                onValueChange={(value) => updateField('seller_product_status', value as any)}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Status">{formData.seller_product_status}</SelectValue>
+                  <SelectValue>{formData.seller_product_status}</SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="accepted">Accepted</SelectItem>
@@ -746,11 +689,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           </div>
 
           {/* Identifiers */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <Label>Barcode</Label>
               <Input
-                value={formData.barcode || ''}
+                type="text"
+                value={formData.barcode}
                 onChange={(e) => updateField('barcode', e.target.value)}
                 placeholder="Barcode"
               />
@@ -758,7 +702,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             <div>
               <Label>QR Code</Label>
               <Input
-                value={formData.qr_code || ''}
+                type="text"
+                value={formData.qr_code}
                 onChange={(e) => updateField('qr_code', e.target.value)}
                 placeholder="QR Code"
               />
@@ -766,7 +711,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             <div>
               <Label>Serial Number</Label>
               <Input
-                value={formData.serial_number || ''}
+                type="text"
+                value={formData.serial_number}
                 onChange={(e) => updateField('serial_number', e.target.value)}
                 placeholder="Serial Number"
               />
@@ -775,12 +721,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
           {/* Inventory and Delivery */}
           {!formData.has_variants && (
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Stock</Label>
                 <Input
                   type="number"
-                  value={formData.stock || 0}
+                  value={formData.stock}
                   onChange={(e) => updateField('stock', parseInt(e.target.value || '0', 10))}
                   placeholder="Stock quantity"
                 />
@@ -790,7 +736,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 <Input
                   type="number"
                   value={formData.warehouse_id || ''}
-                  onChange={(e) => updateField('warehouse_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                  onChange={(e) =>
+                    updateField('warehouse_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
+                  }
                   placeholder="Warehouse ID"
                 />
               </div>
@@ -799,7 +747,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 <Input
                   type="number"
                   value={formData.warehouse_zone_id || ''}
-                  onChange={(e) => updateField('warehouse_zone_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                  onChange={(e) =>
+                    updateField('warehouse_zone_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
+                  }
                   placeholder="Zone ID"
                 />
               </div>
@@ -808,7 +758,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 <Input
                   type="number"
                   value={formData.shelf_id || ''}
-                  onChange={(e) => updateField('shelf_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                  onChange={(e) =>
+                    updateField('shelf_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
+                  }
                   placeholder="Shelf ID"
                 />
               </div>
@@ -817,7 +769,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 <Input
                   type="number"
                   value={formData.delivery_method_id || ''}
-                  onChange={(e) => updateField('delivery_method_id', e.target.value ? parseInt(e.target.value, 10) : undefined)}
+                  onChange={(e) =>
+                    updateField('delivery_method_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
+                  }
                   placeholder="Delivery Method ID"
                 />
               </div>
@@ -837,6 +791,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           <div>
             <Label>Available Countries (comma separated IDs)</Label>
             <Input
+              type="text"
               value={availableCountries}
               onChange={(e) => setAvailableCountries(e.target.value)}
               placeholder="e.g., 1,2,3"
@@ -844,15 +799,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           </div>
 
           {/* Pricing Entries */}
-          <div>
-            <div className="flex items-center justify-between">
-              <Label>Product Prices</Label>
-              <Button type="button" onClick={addPriceEntry} variant="secondary">
-                Add Price
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label>Product Prices</Label>
+            <Button type="button" variant="secondary" size="sm" onClick={addPriceEntry}>
+              Add Price
+            </Button>
             {priceEntries.map((entry, index) => (
-              <div key={index} className="grid grid-cols-5 gap-2 mt-2">
+              <div key={index} className="grid grid-cols-4 gap-2">
                 <Input
                   type="number"
                   value={entry.country_id}
@@ -877,7 +830,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   onChange={(e) => updatePriceEntry(index, 'vat_percentage', e.target.value)}
                   placeholder="VAT % (optional)"
                 />
-                <Button type="button" variant="destructive" onClick={() => removePriceEntry(index)}>
+                <Button type="button" variant="destructive" size="sm" onClick={() => removePriceEntry(index)}>
                   Remove
                 </Button>
               </div>
@@ -885,21 +838,21 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           </div>
 
           {/* Specifications */}
-          <div>
-            <div className="flex items-center justify-between">
-              <Label>Specifications</Label>
-              <Button type="button" onClick={addSpecification} variant="secondary">
-                Add Specification
-              </Button>
-            </div>
+          <div className="space-y-2">
+            <Label>Specifications</Label>
+            <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>
+              Add Specification
+            </Button>
             {specifications.map((spec, index) => (
-              <div key={spec.id} className="grid grid-cols-3 gap-2 mt-2">
+              <div key={spec.id} className="grid grid-cols-3 gap-2 items-center">
                 <Input
+                  type="text"
                   value={spec.name}
                   onChange={(e) => updateSpecification(index, 'name', e.target.value)}
                   placeholder="Name"
                 />
                 <Input
+                  type="text"
                   value={spec.value}
                   onChange={(e) => updateSpecification(index, 'value', e.target.value)}
                   placeholder="Value"
@@ -907,6 +860,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 <Button
                   type="button"
                   variant="destructive"
+                  size="sm"
                   onClick={() => removeSpecification(index)}
                   disabled={index < 4}
                 >
@@ -914,168 +868,171 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 </Button>
               </div>
             ))}
+          </div>
 
-            {/* Variants Section */}
-            {formData.has_variants && (
-              <div className="space-y-4 mt-4">
-                <div className="flex items-center justify-between">
-                  <Label>Variants</Label>
-                  <Button type="button" onClick={addVariant} variant="secondary">
-                    Add Variant
-                  </Button>
-                </div>
-                {variantEntries.map((variant) => (
-                  <div key={variant.id} className="border rounded-md p-4 space-y-3">
-                    <div className="flex justify-between items-center">
-                      <h4 className="font-medium">Variant</h4>
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => removeVariant(variant.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                    {/* Variant image */}
-                    <div>
-                      <Label>Variant Image</Label>
-                      <FileUpload
-                        onUpload={(url: string) => updateVariantField(variant.id, 'image', url)}
-                        accept="image/*"
-                      />
-                      {variant.image && (
-                        <div className="mt-2">
-                          <img src={variant.image} alt="Variant" className="w-24 h-24 object-cover rounded" />
-                        </div>
-                      )}
-                    </div>
-                    {/* Variant variations */}
-                    <div>
-                      <Label>Variations (attribute value IDs, comma separated)</Label>
-                      <Input
-                        value={variant.variations}
-                        onChange={(e) => updateVariantField(variant.id, 'variations', e.target.value)}
-                        placeholder="e.g., 1,2"
-                      />
-                    </div>
-                    {/* Variant available countries (optional) */}
-                    <div>
-                      <Label>Available Countries (comma separated IDs)</Label>
-                      <Input
-                        value={variant.available_countries || ''}
-                        onChange={(e) => updateVariantField(variant.id, 'available_countries', e.target.value)}
-                        placeholder="e.g., 1,2,3"
-                      />
-                    </div>
-                    {/* Variant Pricing Overrides */}
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <Label>Variant Prices (overrides)</Label>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => addVariantPrice(variant.id)}
-                        >
-                          Add Price
-                        </Button>
+          {/* Variants Section */}
+          {formData.has_variants && (
+            <div className="space-y-4">
+              <Label>Variants</Label>
+              <Button type="button" variant="secondary" size="sm" onClick={addVariant}>
+                Add Variant
+              </Button>
+              {variantEntries.map((variant) => (
+                <div key={variant.id} className="border p-4 rounded space-y-2">
+                  <div className="flex justify-between items-center mb-2">
+                    <Label>Variant</Label>
+                    <Button type="button" variant="destructive" size="sm" onClick={() => removeVariant(variant.id)}>
+                      Remove
+                    </Button>
+                  </div>
+                  {/* Variant image */}
+                  <div>
+                    <Label>Variant Image</Label>
+                    <FileUpload
+                      onUpload={(files) => {
+                        if (files.length > 0) {
+                          const file = files[0];
+                          const url = URL.createObjectURL(file);
+                          updateVariantField(variant.id, 'image', url);
+                        }
+                      }}
+                      accept="image/*"
+                    />
+                    {variant.image && (
+                      <div className="mt-2">
+                        <img src={variant.image} alt="Variant" className="w-32 h-32 object-cover rounded" />
                       </div>
-                      {variant.variantPrices.map((p, idx) => (
-                        <div key={idx} className="grid grid-cols-5 gap-2 mt-2">
-                          <Input
-                            type="number"
-                            value={p.country_id}
-                            onChange={(e) => updateVariantPrice(variant.id, idx, 'country_id', e.target.value)}
-                            placeholder="Country ID"
-                          />
-                          <Input
-                            type="number"
-                            value={p.net_price}
-                            onChange={(e) => updateVariantPrice(variant.id, idx, 'net_price', e.target.value)}
-                            placeholder="Net Price"
-                          />
-                          <Input
-                            type="number"
-                            value={p.cost}
-                            onChange={(e) => updateVariantPrice(variant.id, idx, 'cost', e.target.value)}
-                            placeholder="Cost"
-                          />
-                          <Input
-                            type="number"
-                            value={p.vat_percentage}
-                            onChange={(e) => updateVariantPrice(variant.id, idx, 'vat_percentage', e.target.value)}
-                            placeholder="VAT % (optional)"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={() => removeVariantPrice(variant.id, idx)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Variant Specs Overrides */}
-                    <div>
-                      <div className="flex items-center justify-between">
-                        <Label>Variant Specifications (overrides)</Label>
-                        <Button
-                          type="button"
-                          variant="secondary"
-                          onClick={() => addVariantSpec(variant.id)}
-                        >
-                          Add Spec
-                        </Button>
-                      </div>
-                      {variant.variantSpecs.map((spec, idx) => (
-                        <div key={spec.id} className="grid grid-cols-3 gap-2 mt-2">
-                          <Input
-                            value={spec.name}
-                            onChange={(e) => updateVariantSpec(variant.id, idx, 'name', e.target.value)}
-                            placeholder="Name"
-                          />
-                          <Input
-                            value={spec.value}
-                            onChange={(e) => updateVariantSpec(variant.id, idx, 'value', e.target.value)}
-                            placeholder="Value"
-                          />
-                          <Button
-                            type="button"
-                            variant="destructive"
-                            onClick={() => removeVariantSpec(variant.id, idx)}
-                          >
-                            Remove
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
-                    {/* Variant delivery overrides */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Delivery Method ID (override)</Label>
+                    )}
+                  </div>
+                  {/* Variant variations */}
+                  <div>
+                    <Label>Variations (attribute value IDs, comma separated)</Label>
+                    <Input
+                      type="text"
+                      value={variant.variations}
+                      onChange={(e) => updateVariantField(variant.id, 'variations', e.target.value)}
+                      placeholder="e.g., 1,2"
+                    />
+                  </div>
+                  {/* Variant available countries (optional) */}
+                  <div>
+                    <Label>Available Countries (comma separated IDs)</Label>
+                    <Input
+                      type="text"
+                      value={variant.available_countries || ''}
+                      onChange={(e) => updateVariantField(variant.id, 'available_countries', e.target.value)}
+                      placeholder="e.g., 1,2,3"
+                    />
+                  </div>
+                  {/* Variant Pricing Overrides */}
+                  <div className="space-y-2">
+                    <Label>Variant Prices (overrides)</Label>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => addVariantPrice(variant.id)}
+                    >
+                      Add Price
+                    </Button>
+                    {variant.variantPrices.map((p, idx) => (
+                      <div key={idx} className="grid grid-cols-5 gap-2">
                         <Input
                           type="number"
-                          value={variant.delivery_method_id || ''}
-                          onChange={(e) => updateVariantField(variant.id, 'delivery_method_id', e.target.value)}
-                          placeholder="Delivery Method ID"
+                          value={p.country_id}
+                          onChange={(e) => updateVariantPrice(variant.id, idx, 'country_id', e.target.value)}
+                          placeholder="Country ID"
                         />
-                      </div>
-                      <div>
-                        <Label>Delivery Cost (override)</Label>
                         <Input
                           type="number"
-                          value={variant.delivery_cost || ''}
-                          onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)}
-                          placeholder="Delivery Cost"
+                          value={p.net_price}
+                          onChange={(e) => updateVariantPrice(variant.id, idx, 'net_price', e.target.value)}
+                          placeholder="Net Price"
                         />
+                        <Input
+                          type="number"
+                          value={p.cost}
+                          onChange={(e) => updateVariantPrice(variant.id, idx, 'cost', e.target.value)}
+                          placeholder="Cost"
+                        />
+                        <Input
+                          type="number"
+                          value={p.vat_percentage}
+                          onChange={(e) => updateVariantPrice(variant.id, idx, 'vat_percentage', e.target.value)}
+                          placeholder="VAT % (optional)"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeVariantPrice(variant.id, idx)}
+                        >
+                          Remove
+                        </Button>
                       </div>
+                    ))}
+                  </div>
+                  {/* Variant Specs Overrides */}
+                  <div className="space-y-2">
+                    <Label>Variant Specifications (overrides)</Label>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => addVariantSpec(variant.id)}
+                    >
+                      Add Spec
+                    </Button>
+                    {variant.variantSpecs.map((spec, idx) => (
+                      <div key={idx} className="grid grid-cols-3 gap-2 items-center">
+                        <Input
+                          type="text"
+                          value={spec.name}
+                          onChange={(e) => updateVariantSpec(variant.id, idx, 'name', e.target.value)}
+                          placeholder="Name"
+                        />
+                        <Input
+                          type="text"
+                          value={spec.value}
+                          onChange={(e) => updateVariantSpec(variant.id, idx, 'value', e.target.value)}
+                          placeholder="Value"
+                        />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => removeVariantSpec(variant.id, idx)}
+                        >
+                          Remove
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                  {/* Variant delivery overrides */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Delivery Method ID (override)</Label>
+                      <Input
+                        type="number"
+                        value={variant.delivery_method_id || ''}
+                        onChange={(e) => updateVariantField(variant.id, 'delivery_method_id', e.target.value)}
+                        placeholder="Delivery Method ID"
+                      />
+                    </div>
+                    <div>
+                      <Label>Delivery Cost (override)</Label>
+                      <Input
+                        type="number"
+                        value={variant.delivery_cost || ''}
+                        onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)}
+                        placeholder="Delivery Cost"
+                      />
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Images */}
           <div>
