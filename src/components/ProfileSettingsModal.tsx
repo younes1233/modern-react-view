@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,15 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { User, Mail, Phone, MapPin, Bell, Shield, Palette } from "lucide-react";
+import { useCountries } from "@/hooks/useCountries";
+import { useWarehouses } from "@/hooks/useWarehouses";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
@@ -22,6 +31,55 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   const { user } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  const {
+  country,
+  store,
+  warehouse,
+  setCountry,
+  setStore,
+  setWarehouse,
+} = useAuth() || {};
+const { countries = [], loading: countriesLoading } = useCountries();
+// When a country is selected, fetch warehouses scoped to that country.  If no country
+// is selected the hook will return all warehouses.  Passing the string
+// `selectedCountryId` directly is fine because the hook converts it to a number.
+const [selectedCountryId, setSelectedCountryId] = useState(
+  country?.id ? String(country.id) : ""
+);
+const { warehouses = [], loading: warehousesLoading } = useWarehouses(
+  selectedCountryId || undefined
+);
+
+const [selectedWarehouseId, setSelectedWarehouseId] = useState(
+  warehouse?.id ? String(warehouse.id) : ""
+);
+const [selectedStore, setSelectedStoreLocal] = useState(store || "");
+
+// Reset the warehouse selection whenever the user picks a different country. This
+// prevents showing an old warehouse that may not belong to the newly selected
+// country.
+useEffect(() => {
+  setSelectedWarehouseId('');
+}, [selectedCountryId]);
+
+
+const handleSaveLocalization = () => {
+  const selectedCountry = countries.find(
+    (c) => String(c.id) === selectedCountryId
+  );
+  const selectedWarehouse = warehouses.find(
+    (w) => String(w.id) === selectedWarehouseId
+  );
+  setCountry?.(selectedCountry || null);
+  setStore?.(selectedStore || null);
+  setWarehouse?.(selectedWarehouse || null);
+  toast({
+    title: "Localization updated",
+    description: "Your localization preferences have been saved.",
+  });
+};
+
   
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -91,11 +149,72 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
         <Tabs defaultValue="profile" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="localization">Localization</TabsTrigger>
             <TabsTrigger value="profile">Profile</TabsTrigger>
             <TabsTrigger value="account">Account</TabsTrigger>
             <TabsTrigger value="notifications">Notifications</TabsTrigger>
-            <TabsTrigger value="preferences">Preferences</TabsTrigger>
+            {/* <TabsTrigger value="preferences">Preferences</TabsTrigger> */}
           </TabsList>
+          <TabsContent value="localization">
+  <Card>
+    <CardHeader>
+      <CardTitle>Localization</CardTitle>
+      <CardDescription>
+        Select your default country, store and warehouse.
+      </CardDescription>
+    </CardHeader>
+    <CardContent className="space-y-4">
+      <div>
+        <Label htmlFor="country">Country</Label>
+        <Select
+          value={selectedCountryId}
+          onValueChange={(value) => setSelectedCountryId(value)}
+        >
+          <SelectTrigger id="country">
+            <SelectValue placeholder="Select a country" />
+          </SelectTrigger>
+          <SelectContent>
+            {countries.map((c) => (
+              <SelectItem key={c.id} value={String(c.id)}>
+                {c.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div>
+        <Label htmlFor="store">Store</Label>
+        <Input
+          id="store"
+          placeholder="Store name or ID"
+          value={selectedStore}
+          onChange={(e) => setSelectedStoreLocal(e.target.value)}
+        />
+      </div>
+      <div>
+        <Label htmlFor="warehouse">Warehouse</Label>
+        <Select
+          value={selectedWarehouseId}
+          onValueChange={(value) => setSelectedWarehouseId(value)}
+        >
+          <SelectTrigger id="warehouse">
+            <SelectValue placeholder="Select a warehouse" />
+          </SelectTrigger>
+          <SelectContent>
+            {warehouses.map((w) => (
+              <SelectItem key={w.id} value={String(w.id)}>
+                {w.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <Button onClick={handleSaveLocalization}>Save Localization</Button>
+    </CardContent>
+  </Card>
+</TabsContent>
+
+
 
           <TabsContent value="profile" className="space-y-6">
             <Card>

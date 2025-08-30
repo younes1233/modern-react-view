@@ -1,9 +1,21 @@
-
 import { useState, useEffect } from 'react';
-import { warehouseService, Warehouse, CreateWarehouseRequest, UpdateWarehouseRequest } from '../services/warehouseService';
+import {
+  warehouseService,
+  Warehouse,
+  CreateWarehouseRequest,
+  UpdateWarehouseRequest,
+} from '../services/warehouseService';
 import { useToast } from '@/hooks/use-toast';
 
-export const useWarehouses = () => {
+/**
+ * A hook that manages the lifecycle of warehouse data within the UI. It can
+ * optionally take a `countryId` parameter to fetch warehouses scoped to
+ * a particular country. If no countryId is provided, all warehouses are
+ * returned. The returned object contains the current list of warehouses,
+ * loading and error states, as well as helpers for create, update and
+ * delete operations.
+ */
+export const useWarehouses = (countryId?: number | string) => {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -13,16 +25,22 @@ export const useWarehouses = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      console.log('Fetching warehouses...');
-      const response = await warehouseService.getWarehouses();
-      console.log('Warehouses API response:', response);
-      
-      if (!response.error && response.details?.warehouses) {
-        setWarehouses(response.details.warehouses);
-        console.log('Warehouses set successfully:', response.details.warehouses);
+
+      let response;
+      // If a countryId is provided, fetch warehouses scoped to that country
+      if (countryId) {
+        const id = typeof countryId === 'string' ? parseInt(countryId, 10) : countryId;
+        response = await warehouseService.getWarehousesByCountry(id);
       } else {
-        console.error('Failed to fetch warehouses:', response.message);
+        response = await warehouseService.getWarehouses();
+      }
+
+      if (!response.error && response.details) {
+        // The admin API returns { country, warehouses } for country-specific queries
+        const details: any = response.details;
+        const list = details.warehouses ?? details.warehouses;
+        setWarehouses(list || []);
+      } else {
         setError(response.message || 'Failed to load warehouses');
         setWarehouses([]);
       }
@@ -51,22 +69,20 @@ export const useWarehouses = () => {
         ...(warehouseData.zone_structure_id && { zone_structure_id: warehouseData.zone_structure_id }),
       };
 
-      console.log('Creating warehouse with data:', requestData);
-
       const response = await warehouseService.createWarehouse(requestData);
-      
+
       if (!response.error && response.details?.warehouse) {
         setWarehouses([...warehouses, response.details.warehouse]);
         toast({
-          title: "Success",
-          description: "Warehouse created successfully",
+          title: 'Success',
+          description: 'Warehouse created successfully',
         });
         return response.details.warehouse;
       } else {
         toast({
-          title: "Error",
-          description: response.message || "Failed to create warehouse",
-          variant: "destructive",
+          title: 'Error',
+          description: response.message || 'Failed to create warehouse',
+          variant: 'destructive',
         });
         throw new Error(response.message);
       }
@@ -92,24 +108,22 @@ export const useWarehouses = () => {
         ...(warehouseData.zone_structure_id && { zone_structure_id: warehouseData.zone_structure_id }),
       };
 
-      console.log('Updating warehouse with data:', requestData);
-
       const response = await warehouseService.updateWarehouse(id, requestData);
-      
+
       if (!response.error && response.details?.warehouse) {
-        setWarehouses(warehouses.map(warehouse => 
-          warehouse.id === id ? response.details!.warehouse : warehouse
-        ));
+        setWarehouses(
+          warehouses.map((warehouse) => (warehouse.id === id ? response.details!.warehouse : warehouse))
+        );
         toast({
-          title: "Success",
-          description: "Warehouse updated successfully",
+          title: 'Success',
+          description: 'Warehouse updated successfully',
         });
         return response.details.warehouse;
       } else {
         toast({
-          title: "Error",
-          description: response.message || "Failed to update warehouse",
-          variant: "destructive",
+          title: 'Error',
+          description: response.message || 'Failed to update warehouse',
+          variant: 'destructive',
         });
         throw new Error(response.message);
       }
@@ -122,18 +136,18 @@ export const useWarehouses = () => {
   const deleteWarehouse = async (id: number) => {
     try {
       const response = await warehouseService.deleteWarehouse(id);
-      
+
       if (!response.error) {
-        setWarehouses(warehouses.filter(warehouse => warehouse.id !== id));
+        setWarehouses(warehouses.filter((warehouse) => warehouse.id !== id));
         toast({
-          title: "Success",
-          description: "Warehouse deleted successfully",
+          title: 'Success',
+          description: 'Warehouse deleted successfully',
         });
       } else {
         toast({
-          title: "Error",
-          description: response.message || "Failed to delete warehouse",
-          variant: "destructive",
+          title: 'Error',
+          description: response.message || 'Failed to delete warehouse',
+          variant: 'destructive',
         });
         throw new Error(response.message);
       }
@@ -143,9 +157,11 @@ export const useWarehouses = () => {
     }
   };
 
+  // Refetch when the selected country changes
   useEffect(() => {
     fetchWarehouses();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [countryId]);
 
   return {
     warehouses,

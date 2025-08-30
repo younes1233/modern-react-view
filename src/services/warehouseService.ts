@@ -1,5 +1,15 @@
-
 import BaseApiService, { ApiResponse } from './baseApiService';
+
+/*
+ * Service and type definitions for interacting with warehouses via the admin API.
+ *
+ * This file mirrors the structure of the warehouse service found in the original
+ * project. It defines several TypeScript interfaces to describe the shape of
+ * warehouse related data returned from the API and exposes a WarehouseService
+ * class that wraps the underlying API calls. In addition to the existing
+ * CRUD methods, a new helper `getWarehousesByCountry` has been added to
+ * retrieve warehouses scoped to a specific country.
+ */
 
 export interface Currency {
   id: number;
@@ -85,6 +95,14 @@ export interface UpdateWarehouseRequest {
   code?: string;
 }
 
+/**
+ * The WarehouseService exposes methods to interact with warehouse resources.
+ *
+ * Existing methods cover basic CRUD operations on the warehouses collection. The
+ * new `getWarehousesByCountry` method complements these by returning
+ * warehouses filtered by a specific country. It accepts a country ID and
+ * constructs the appropriate admin API endpoint.
+ */
 class WarehouseService extends BaseApiService {
   async getWarehouses(): Promise<ApiResponse<WarehousesResponse>> {
     return this.get<ApiResponse<WarehousesResponse>>('/admin/warehouses/');
@@ -98,8 +116,21 @@ class WarehouseService extends BaseApiService {
     return this.put<ApiResponse<WarehouseResponse>>(`/admin/warehouses/${id}`, data);
   }
 
-  async deleteWarehouse(id: number): Promise<ApiResponse> {
-    return this.delete<ApiResponse>(`/admin/warehouses/${id}`);
+  async deleteWarehouse(id: number): Promise<ApiResponse<{}>> {
+    return this.delete<ApiResponse<{}>>(`/admin/warehouses/${id}`);
+  }
+
+  /**
+   * Fetch warehouses for a specific country. The country ID is passed as a
+   * parameter and will be interpolated into the URL. The API response
+   * contains a `country` object and a list of `warehouses` scoped to that
+   * country. When using this method you should access `response.details
+   * .warehouses` to retrieve the array.
+   *
+   * @param countryId ID of the country whose warehouses should be returned
+   */
+  async getWarehousesByCountry(countryId: number): Promise<ApiResponse<{ country: Country; warehouses: Warehouse[] }>> {
+    return this.get<ApiResponse<{ country: Country; warehouses: Warehouse[] }>>(`/admin/countries/${countryId}/warehouses`);
   }
 }
 
