@@ -66,7 +66,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     images: [],
     stock: 0,
     warehouse_id: undefined,
-    warehouse_zone_id: undefined,
     shelf_id: undefined,
     delivery_method_id: undefined,
     delivery_cost: 0,
@@ -139,7 +138,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         images: product.media?.thumbnails?.map((t) => t.image) || [],
         stock: 0,
         warehouse_id: undefined,
-        warehouse_zone_id: undefined,
         shelf_id: undefined,
         delivery_method_id: undefined,
         delivery_cost: 0,
@@ -196,7 +194,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         images: [],
         stock: 0,
         warehouse_id: warehouse?.id,
-        warehouse_zone_id: undefined,
         shelf_id: undefined,
         delivery_method_id: undefined,
         delivery_cost: 0,
@@ -652,53 +649,93 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             </div>
           </div>
 
+          {/* Product Images */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Product Images</Label>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Main Product Image</Label>
+                <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
+                {mainImage && (
+                  <div className="mt-2">
+                    <img src={mainImage} alt="Main product" className="h-20 w-20 object-cover rounded" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <Label>Additional Images</Label>
+                <FileUpload onFileSelect={handleThumbnailUpload} accept="image/*" maxFiles={10} />
+                {thumbnails.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {thumbnails.map((thumb) => (
+                      <div key={thumb.id} className="relative">
+                        <img src={thumb.url} alt={thumb.alt} className="h-16 w-16 object-cover rounded" />
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                          onClick={() => removeThumbnail(thumb.id)}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Product Flags */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.has_variants}
-                onCheckedChange={(checked) => updateField('has_variants', checked)}
-              />
-              <Label>Has Variants</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.is_on_sale}
-                onCheckedChange={(checked) => handleExclusiveFlagChange('is_on_sale', checked)}
-                disabled={(formData.is_featured || formData.is_new_arrival) && !formData.is_on_sale}
-              />
-              <Label>On Sale</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.is_featured}
-                onCheckedChange={(checked) => handleExclusiveFlagChange('is_featured', checked)}
-                disabled={(formData.is_on_sale || formData.is_new_arrival) && !formData.is_featured}
-              />
-              <Label>Featured</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.is_new_arrival}
-                onCheckedChange={(checked) => handleExclusiveFlagChange('is_new_arrival', checked)}
-                disabled={(formData.is_on_sale || formData.is_featured) && !formData.is_new_arrival}
-              />
-              <Label>New Arrival</Label>
-            </div>
-            {/* Best Seller option removed */}
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.is_vat_exempt}
-                onCheckedChange={(checked) => updateField('is_vat_exempt', checked)}
-              />
-              <Label>VAT Exempt</Label>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                checked={formData.is_seller_product}
-                onCheckedChange={(checked) => updateField('is_seller_product', checked)}
-              />
-              <Label>Seller Product</Label>
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Product Settings</Label>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.has_variants}
+                  onCheckedChange={(checked) => updateField('has_variants', checked)}
+                />
+                <Label>Has Variants</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.is_on_sale}
+                  onCheckedChange={(checked) => handleExclusiveFlagChange('is_on_sale', checked)}
+                  disabled={(formData.is_featured || formData.is_new_arrival) && !formData.is_on_sale}
+                />
+                <Label>On Sale</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.is_featured}
+                  onCheckedChange={(checked) => handleExclusiveFlagChange('is_featured', checked)}
+                  disabled={(formData.is_on_sale || formData.is_new_arrival) && !formData.is_featured}
+                />
+                <Label>Featured</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.is_new_arrival}
+                  onCheckedChange={(checked) => handleExclusiveFlagChange('is_new_arrival', checked)}
+                  disabled={(formData.is_on_sale || formData.is_featured) && !formData.is_new_arrival}
+                />
+                <Label>New Arrival</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.is_vat_exempt}
+                  onCheckedChange={(checked) => updateField('is_vat_exempt', checked)}
+                />
+                <Label>VAT Exempt</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.is_seller_product}
+                  onCheckedChange={(checked) => updateField('is_seller_product', checked)}
+                />
+                <Label>Seller Product</Label>
+              </div>
             </div>
           </div>
 
@@ -746,38 +783,27 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 />
               </div>
               <div>
-                <Label>Warehouse Zone ID</Label>
-                <Input
-                  type="number"
-                  value={formData.warehouse_zone_id || ''}
-                  onChange={(e) =>
-                    updateField('warehouse_zone_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
+                <Label>Shelf</Label>
+                <Select
+                  value={formData.shelf_id ? String(formData.shelf_id) : ''}
+                  onValueChange={(value) =>
+                    updateField('shelf_id', value ? parseInt(value, 10) : undefined)
                   }
-                  placeholder="Zone ID"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      {shelves.find((s) => s.id === formData.shelf_id)?.name || 'Select Shelf'}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shelves.map((shelf) => (
+                      <SelectItem key={shelf.id} value={String(shelf.id)}>
+                        {shelf.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-      <div>
-        <Label>Shelf</Label>
-        <Select
-          value={formData.shelf_id ? String(formData.shelf_id) : ''}
-          onValueChange={(value) =>
-            updateField('shelf_id', value ? parseInt(value, 10) : undefined)
-          }
-        >
-          <SelectTrigger>
-            <SelectValue>
-              {shelves.find((s) => s.id === formData.shelf_id)?.name || 'Select Shelf'}
-            </SelectValue>
-          </SelectTrigger>
-          <SelectContent>
-            {shelves.map((shelf) => (
-              <SelectItem key={shelf.id} value={String(shelf.id)}>
-                {shelf.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
               <div>
                 <Label>Delivery Method ID</Label>
                 <Input
@@ -800,6 +826,31 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               </div>
             </div>
           )}
+
+          {/* SEO Information */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">SEO & Meta Information</Label>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label>SEO Title</Label>
+                <Input
+                  type="text"
+                  value={formData.seo_title}
+                  onChange={(e) => updateField('seo_title', e.target.value)}
+                  placeholder="SEO Title for search engines"
+                />
+              </div>
+              <div>
+                <Label>SEO Description</Label>
+                <Textarea
+                  value={formData.seo_description}
+                  onChange={(e) => updateField('seo_description', e.target.value)}
+                  placeholder="SEO description for search engines"
+                  rows={2}
+                />
+              </div>
+            </div>
+          </div>
 
           {/* Available Countries */}
           <div>
@@ -1048,38 +1099,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             </div>
           )}
 
-          {/* Images */}
-          <div>
-            <Label>Main Product Image</Label>
-            <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
-            {mainImage && (
-              <div className="mt-2">
-                <img src={mainImage} alt="Main product" className="w-32 h-32 object-cover rounded" />
-              </div>
-            )}
-          </div>
-          <div>
-            <Label>Additional Images</Label>
-            <FileUpload onFileSelect={handleThumbnailUpload} accept="image/*" maxFiles={10} />
-            {thumbnails.length > 0 && (
-              <div className="grid grid-cols-4 gap-2 mt-2">
-                {thumbnails.map((thumbnail) => (
-                  <div key={thumbnail.id} className="relative">
-                    <img src={thumbnail.url} alt={thumbnail.alt} className="w-full h-24 object-cover rounded" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      className="absolute top-1 right-1"
-                      onClick={() => removeThumbnail(thumbnail.id)}
-                    >
-                      <X size={12} />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4">

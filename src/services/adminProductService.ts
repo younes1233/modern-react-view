@@ -209,7 +209,6 @@ export interface CreateProductData {
   // simple product inventory
   stock?: number;
   warehouse_id?: number;
-  warehouse_zone_id?: number;
   shelf_id?: number;
   delivery_method_id?: number;
   delivery_cost?: number;
