@@ -17,6 +17,8 @@ import { AdminProductAPI, CreateProductData } from "@/services/adminProductServi
 import { X } from "lucide-react";
 // NEW: import the Auth context to access country, store, and warehouse selections
 import { useAuth } from '@/contexts/AuthContext';
+// NEW: import the shelves hook to load shelf options based on the selected warehouse
+import { useShelves } from '@/hooks/useShelves';
 
 interface AdminProductModalProps {
   isOpen: boolean;
@@ -33,6 +35,8 @@ interface AdminProductModalProps {
 export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: AdminProductModalProps) {
   // Pull localization selections from the AuthContext
   const { country, store, warehouse } = useAuth();
+  // Fetch shelves for the selected warehouse from context
+  const { shelves = [] } = useShelves(warehouse?.id);
 
   // Maintain form data with default values for all required fields.
   const [formData, setFormData] = useState<CreateProductData>({
@@ -566,7 +570,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       <DialogHeader>
         <DialogTitle>{mode === 'add' ? 'Add New Product' : 'Edit Product'}</DialogTitle>
       </DialogHeader>
-      <DialogContent className="max-h-[80vh] overflow-y-auto p-4">
+     <DialogContent className="max-h-[80vh] overflow-y-auto p-6 w-full max-w-4xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information */}
           <div className="grid grid-cols-2 gap-4">
@@ -742,17 +746,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 />
               </div>
               <div>
-                <Label>Warehouse ID</Label>
-                <Input
-                  type="number"
-                  value={formData.warehouse_id || ''}
-                  onChange={(e) =>
-                    updateField('warehouse_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
-                  }
-                  placeholder="Warehouse ID"
-                />
-              </div>
-              <div>
                 <Label>Warehouse Zone ID</Label>
                 <Input
                   type="number"
@@ -763,17 +756,28 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   placeholder="Zone ID"
                 />
               </div>
-              <div>
-                <Label>Shelf ID</Label>
-                <Input
-                  type="number"
-                  value={formData.shelf_id || ''}
-                  onChange={(e) =>
-                    updateField('shelf_id', e.target.value ? parseInt(e.target.value, 10) : undefined)
-                  }
-                  placeholder="Shelf ID"
-                />
-              </div>
+      <div>
+        <Label>Shelf</Label>
+        <Select
+          value={formData.shelf_id ? String(formData.shelf_id) : ''}
+          onValueChange={(value) =>
+            updateField('shelf_id', value ? parseInt(value, 10) : undefined)
+          }
+        >
+          <SelectTrigger>
+            <SelectValue>
+              {shelves.find((s) => s.id === formData.shelf_id)?.name || 'Select Shelf'}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            {shelves.map((shelf) => (
+              <SelectItem key={shelf.id} value={String(shelf.id)}>
+                {shelf.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
               <div>
                 <Label>Delivery Method ID</Label>
                 <Input

@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { apiService } from '@/services/apiService';
 import { Country } from '@/services/countryService';
 import { Warehouse } from '@/services/warehouseService';
 
 /**
- * User represents the authenticated user returned from the backend. The
- * existing interface has been preserved from the original code. Extra
- * properties can be added here to match your API response.
+ * User represents the authenticated user returned from the backend.
+ * This interface mirrors the existing one from the original project.
+ * Additional properties can be added here to match your API response.
  */
 interface User {
   id: string;
@@ -29,11 +29,21 @@ interface User {
 }
 
 /**
- * AuthContextType defines everything that will be exposed from the context.
- * In addition to the user authentication actions, we now include
- * localization fields (country, store and warehouse) and setter functions
- * for each. These allow any component in the admin application to read
- * and update the current localization selections.
+ * The localization object groups the three location‑specific fields together.  
+ * Storing them as one object allows atomic updates and easier persistence.
+ */
+interface Localization {
+  country: Country | null;
+  store: string | null;
+  warehouse: Warehouse | null;
+}
+
+/**
+ * AuthContextType defines everything that will be exposed from the context.  
+ * In addition to the user authentication actions, we include the
+ * localization fields (country, store and warehouse) and setter
+ * functions for each.  These allow any component in the admin
+ * application to read and update the current localization selections.
  */
 interface AuthContextType {
   user: User | null;
@@ -83,49 +93,47 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Safely parse a JSON value from localStorage.  If parsing fails or
+ * the value is invalid, `null` is returned.  This helper prevents
+ * runtime crashes due to malformed JSON in storage.
+ */
+function safeParse<T>(raw: string | null): T | null {
+  if (!raw) return null;
+  try {
+    const parsed = JSON.parse(raw);
+    // ensure we only return objects (not strings or numbers)
+    return parsed && typeof parsed === 'object' ? (parsed as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * AuthProvider encapsulates authentication and localization state.  It
+ * initializes state from localStorage, persists changes back to
+ * localStorage, and wraps asynchronous auth actions (login, register,
+ * etc.) to update local state as needed.  Localization fields are
+ * stored together in a single object to prevent partial writes and
+ * racing updates.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  // user information and loading flag
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Localization state. These values are persisted in localStorage so that
-  // the user’s selection survives page reloads. See the useEffect hooks
-  // below for persistence logic.
-  const [country, setCountry] = useState<Country | null>(null);
-  const [store, setStore] = useState<string | null>(null);
-  const [warehouse, setWarehouse] = useState<Warehouse | null>(null);
+  // hydrate localization from localStorage
+  const [localization, setLocalization] = useState<Localization>(() => {
+    const saved = safeParse<Localization>(localStorage.getItem('localization'));
+    return saved ?? { country: null, store: null, warehouse: null };
+  });
 
-  /**
-   * Load the persisted localization values on mount. If there is no saved
-   * localization information, the defaults will remain null.
-   */
+  // persist localization whenever it changes
   useEffect(() => {
-    const saved = localStorage.getItem('localization');
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        if (parsed.country) setCountry(parsed.country);
-        if (parsed.store) setStore(parsed.store);
-        if (parsed.warehouse) setWarehouse(parsed.warehouse);
-      } catch (err) {
-        console.error('Failed to parse saved localization:', err);
-      }
-    }
-  }, []);
+    localStorage.setItem('localization', JSON.stringify(localization));
+  }, [localization]);
 
-  /**
-   * Persist localization changes whenever any of the fields change. This
-   * ensures that the selections are restored when the user returns to the
-   * application later.
-   */
-  useEffect(() => {
-    const toSave = JSON.stringify({ country, store, warehouse });
-    localStorage.setItem('localization', toSave);
-  }, [country, store, warehouse]);
-
-  // Initialize authentication on mount. Check for a stored token and
-  // validate it with the server. If valid, set the user. Otherwise remove
-  // the token and any persisted user data. Note: error handling is minimal
-  // here and can be expanded based on your API response structure.
+  // initial auth check on mount
   useEffect(() => {
     const initializeAuth = async () => {
       setIsLoading(true);
@@ -135,6 +143,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const response = await apiService.getMe();
           if (!response.error && response.details?.user) {
             setUser(response.details.user);
+            // optionally store user in localStorage as the original code did
+            localStorage.setItem('user', JSON.stringify(response.details.user));
           } else {
             apiService.removeToken();
             localStorage.removeItem('user');
@@ -151,10 +161,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initializeAuth();
   }, []);
 
-  // Auth actions. These methods wrap the apiService and update local state
-  // accordingly. They mirror the existing implementations in the original
-  // project and have been kept intact. Additional error handling or
-  // side-effects can be added as required.
+  // authentication actions
   const login = async (email: string, password: string): Promise<boolean> => {
     setIsLoading(true);
     try {
@@ -205,7 +212,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: false, message: response.message };
     } catch (error: any) {
       console.error('Registration failed:', error);
-      return { success: false, message: error instanceof Error ? error.message : 'Registration failed' };
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : 'Registration failed',
+      };
     } finally {
       setIsLoading(false);
     }
@@ -278,34 +288,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        login,
-        register,
-        logout,
-        forgotPassword,
-        verifyOtp,
-        resetPassword,
-        isLoading,
-        country,
-        store,
-        warehouse,
-        setCountry,
-        setStore,
-        setWarehouse,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // localization setters update only the relevant field while preserving others
+  const setCountry = (country: Country | null) => {
+    setLocalization((prev) => ({ ...prev, country }));
+  };
+
+  const setStore = (store: string | null) => {
+    setLocalization((prev) => ({ ...prev, store }));
+  };
+
+  const setWarehouse = (warehouse: Warehouse | null) => {
+    setLocalization((prev) => ({ ...prev, warehouse }));
+  };
+
+  // memoize the context value to avoid unnecessary re-renders
+  const value = useMemo<AuthContextType>(
+    () => ({
+      user,
+      login,
+      register,
+      logout,
+      forgotPassword,
+      verifyOtp,
+      resetPassword,
+      isLoading,
+      country: localization.country,
+      store: localization.store,
+      warehouse: localization.warehouse,
+      setCountry,
+      setStore,
+      setWarehouse,
+    }),
+    [user, isLoading, localization]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 /**
- * useAuth returns the current authentication context. If you attempt to use
- * this hook outside of an AuthProvider, it will return null (rather than
- * throwing) to allow store pages that don’t require auth to render.
+ * useAuth returns the current authentication context.  If used outside
+ * of an AuthProvider, it returns null (rather than throwing) to allow
+ * pages that don’t require auth to render.
  */
 export function useAuth(): AuthContextType | null {
   const context = useContext(AuthContext);
