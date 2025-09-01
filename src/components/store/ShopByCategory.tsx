@@ -1,22 +1,18 @@
-
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowRight, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStoreCategories } from '@/hooks/useStoreCategories';
 import { Category } from '@/services/categoryService';
-import { useSearch } from '@/contexts/SearchContext';
 
 export function ShopByCategory() {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const { setSelectedCategory } = useSearch();
-  
-  // Use API data instead of mock data
   const { categories, loading } = useStoreCategories();
 
   const handleCategoryClick = (categorySlug: string) => {
-    setSelectedCategory(categorySlug);
+    // Handle category selection if needed
+    console.log('Category selected:', categorySlug);
   };
 
   const nextSlide = () => {

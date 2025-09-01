@@ -170,7 +170,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       // Reset all fields when adding a new product.
       // NEW: Use the selected store, warehouse and country from context to prefill defaults.
       setFormData({
-        store_id: store?.id || 1,
+        store_id: store ? parseInt(store as string) || 1 : 1,
         category_id: 1,
         name: '',
         slug: '',
@@ -902,16 +902,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   {/* Variant image */}
                   <div>
                     <Label>Variant Image</Label>
-                    <FileUpload
-                      onUpload={(files) => {
-                        if (files.length > 0) {
-                          const file = files[0];
-                          const url = URL.createObjectURL(file);
-                          updateVariantField(variant.id, 'image', url);
-                        }
-                      }}
-                      accept="image/*"
-                    />
+                     <FileUpload
+                       onFileSelect={(files) => {
+                         if (files.length > 0) {
+                           const file = files[0];
+                           const url = URL.createObjectURL(file);
+                           updateVariantField(variant.id, 'image', url);
+                         }
+                       }}
+                       accept="image/*"
+                     />
                     {variant.image && (
                       <div className="mt-2">
                         <img src={variant.image} alt="Variant" className="w-32 h-32 object-cover rounded" />
@@ -1051,7 +1051,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           {/* Images */}
           <div>
             <Label>Main Product Image</Label>
-            <FileUpload onUpload={handleMainImageUpload} accept="image/*" />
+            <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
             {mainImage && (
               <div className="mt-2">
                 <img src={mainImage} alt="Main product" className="w-32 h-32 object-cover rounded" />
@@ -1060,7 +1060,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           </div>
           <div>
             <Label>Additional Images</Label>
-            <FileUpload onUpload={handleThumbnailUpload} accept="image/*" multiple />
+            <FileUpload onFileSelect={handleThumbnailUpload} accept="image/*" maxFiles={10} />
             {thumbnails.length > 0 && (
               <div className="grid grid-cols-4 gap-2 mt-2">
                 {thumbnails.map((thumbnail) => (

@@ -219,8 +219,10 @@ export default function Products() {
           description: item.description || '',
           status: item.status || 'active',
           category_id: parseInt(item.category_id),
+          store_id: 1, // Default store ID
           has_variants: Boolean(item.has_variants),
           is_seller_product: Boolean(item.is_seller_product),
+          seller_product_status: 'not_seller' as const,
           is_on_sale: Boolean(item.is_on_sale),
           is_featured: Boolean(item.is_featured),
           is_new_arrival: Boolean(item.is_new_arrival),
