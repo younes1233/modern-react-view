@@ -48,7 +48,7 @@ class ShelfService {
     warehouseId: number
   ): Promise<ApiResponse<ShelvesDetails>> {
     try {
-      const response = await fetch(`/admin/warehouses/${warehouseId}/shelves`);
+      const response = await fetch(`https://meemhome.com/api/admin/warehouses/${warehouseId}/shelves`);
       
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);

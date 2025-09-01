@@ -36,7 +36,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
   // Pull localization selections from the AuthContext
   const { country, store, warehouse } = useAuth();
   // Fetch shelves for the selected warehouse from context
-  const { shelves = [] } = useShelves(warehouse?.id);
+  const { shelves = [] } = useShelves();
 
   // Maintain form data with default values for all required fields.
   const [formData, setFormData] = useState<CreateProductData>({

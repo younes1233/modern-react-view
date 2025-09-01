@@ -1,26 +1,25 @@
 import { useState, useEffect } from 'react';
 import { shelfService, Shelf } from '../services/shelfService';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 
 /**
- * Custom hook to manage and fetch shelves for a given warehouse.
+ * Custom hook to manage and fetch shelves for the warehouse from AuthContext.
  *
- * This hook accepts a warehouse ID (number or string). When the ID changes,
- * it will automatically refetch the shelves scoped to that warehouse. It
- * returns the list of shelves, loading and error states, and a refetch
- * function for manual refreshes.
- *
- * @param warehouseId The warehouse ID or undefined to reset the list.
+ * This hook automatically fetches shelves when the warehouse changes in the context.
+ * It returns the list of shelves, loading and error states, and a refetch function 
+ * for manual refreshes.
  */
-export const useShelves = (warehouseId?: number | string) => {
+export const useShelves = () => {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { warehouse } = useAuth();
 
   const fetchShelves = async () => {
-    // If no warehouseId is provided, clear the list and stop loading.
-    if (!warehouseId) {
+    // If no warehouse is selected in context, clear the list and stop loading.
+    if (!warehouse?.id) {
       setShelves([]);
       setLoading(false);
       return;
@@ -28,9 +27,7 @@ export const useShelves = (warehouseId?: number | string) => {
     try {
       setLoading(true);
       setError(null);
-      const id =
-        typeof warehouseId === 'string' ? parseInt(warehouseId, 10) : warehouseId;
-      const response = await shelfService.getShelvesByWarehouse(id);
+      const response = await shelfService.getShelvesByWarehouse(warehouse.id);
       if (!response.error && response.details) {
         setShelves(response.details.shelves || []);
       } else {
@@ -56,11 +53,11 @@ export const useShelves = (warehouseId?: number | string) => {
     }
   };
 
-  // Refetch when the warehouseId changes
+  // Refetch when the warehouse changes in context
   useEffect(() => {
     fetchShelves();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [warehouseId]);
+  }, [warehouse?.id]);
 
   return {
     shelves,
