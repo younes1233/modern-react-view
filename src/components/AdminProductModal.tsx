@@ -68,8 +68,8 @@ export function AdminProductModal({
     is_new_arrival: false,
     is_best_seller: null,
     is_vat_exempt: false,
-    cover_image: "",
-    images: [],
+    cover_image: undefined,
+    images: undefined,
     stock: 0,
     warehouse_id: undefined,
     shelf_id: undefined,
@@ -81,8 +81,8 @@ export function AdminProductModal({
     country_id: country?.id, // ← set from context
   });
 
-  const [mainImage, setMainImage] = useState<string>("");
-  const [thumbnails, setThumbnails] = useState<{ id: number; url: string; alt: string }[]>([]);
+  const [mainImage, setMainImage] = useState<File | null>(null);
+  const [thumbnails, setThumbnails] = useState<{ id: number; url: string; alt: string; file: File }[]>([]);
 
   // Prices include only net_price & cost
   const [priceEntries, setPriceEntries] = useState<{ net_price: string; cost: string }[]>([]);
@@ -128,8 +128,8 @@ export function AdminProductModal({
         is_new_arrival: product.flags?.is_new_arrival || false,
         is_best_seller: null,
         is_vat_exempt: product.flags?.is_vat_exempt || false,
-        cover_image: product.media?.cover_image?.image || "",
-        images: product.media?.thumbnails?.map((t) => t.image) || [],
+        cover_image: undefined,
+        images: undefined,
         stock: 0,
         warehouse_id: undefined,
         shelf_id: undefined,
@@ -142,9 +142,17 @@ export function AdminProductModal({
         country_id: country?.id,
       });
 
-      setMainImage(product.media?.cover_image?.image || "");
+      // Set up image previews for editing mode
+      if (product.media?.cover_image?.image) {
+        // For edit mode, we don't have the File object, so we skip setting mainImage
+      }
       setThumbnails(
-        product.media?.thumbnails?.map((t) => ({ id: t.id, url: t.image, alt: t.alt_text })) || []
+        product.media?.thumbnails?.map((t) => ({ 
+          id: t.id, 
+          url: t.image, 
+          alt: t.alt_text, 
+          file: new File([], t.image) // Placeholder file for editing
+        })) || []
       );
       setPriceEntries([]);
       setSpecifications(
@@ -173,8 +181,8 @@ export function AdminProductModal({
         is_new_arrival: false,
         is_best_seller: null,
         is_vat_exempt: false,
-        cover_image: "",
-        images: [],
+        cover_image: undefined,
+        images: undefined,
         stock: 0,
         warehouse_id: warehouse?.id,
         shelf_id: undefined,
@@ -185,7 +193,7 @@ export function AdminProductModal({
         variants: [],
         country_id: country?.id, // ← set from context
       });
-      setMainImage("");
+      setMainImage(null);
       setThumbnails([]);
       setPriceEntries([]);
       setSpecifications([
@@ -212,9 +220,7 @@ export function AdminProductModal({
   // Image handlers
   const handleMainImageUpload = (files: File[]) => {
     if (files.length > 0) {
-      const url = URL.createObjectURL(files[0]);
-      setMainImage(url);
-      updateField("cover_image", url);
+      setMainImage(files[0]);
     }
   };
 
@@ -223,15 +229,13 @@ export function AdminProductModal({
       id: Date.now() + index,
       url: URL.createObjectURL(file),
       alt: file.name,
+      file: file,
     }));
     setThumbnails((prev) => [...prev, ...newThumbnails]);
-    updateField("images", [...(formData.images || []), ...newThumbnails.map((t) => t.url)]);
   };
 
   const removeThumbnail = (id: number) => {
     setThumbnails((prev) => prev.filter((t) => t.id !== id));
-    const updatedImages = (formData.images || []).filter((_, idx) => thumbnails[idx]?.id !== id);
-    updateField("images", updatedImages);
   };
 
   // Pricing handlers (no country_id / vat)
@@ -416,8 +420,8 @@ export function AdminProductModal({
       country_id: formData.country_id, // number (or undefined)
       product_prices: prices as any,
       specifications: specs,
-      cover_image: mainImage || formData.cover_image,
-      images: thumbnails.map((t) => t.url),
+      cover_image: mainImage, // File object
+      images: thumbnails.map((t) => t.file).filter(f => f), // Array of File objects
       variants: variantsPayload as any,
     };
 
@@ -518,7 +522,7 @@ export function AdminProductModal({
                 <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
                 {mainImage && (
                   <div className="mt-2">
-                    <img src={mainImage} alt="Main product" className="h-20 w-20 object-cover rounded" />
+                    <img src={URL.createObjectURL(mainImage)} alt="Main product" className="h-20 w-20 object-cover rounded" />
                   </div>
                 )}
               </div>
