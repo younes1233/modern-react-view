@@ -347,50 +347,15 @@ class AdminProductService extends BaseApiService {
 
   // Create new product
   async createProduct(productData: CreateProductData): Promise<ApiResponse<any>> {
-    console.log('Creating product:', productData);
+    console.log('Creating product with data:', productData);
 
     try {
-      const endpoints = ['/admin/products'];
-
-      for (const endpoint of endpoints) {
-        try {
-          console.log('Trying create endpoint:', endpoint);
-          const response = await this.post<ApiResponse<any>>(endpoint, productData);
-          console.log('Product creation API response:', response);
-          return response;
-        } catch (error) {
-          console.log(`Create endpoint ${endpoint} failed, trying next...`);
-        }
-      }
-
-      throw new Error('All create endpoints failed');
+      const response = await this.post<ApiResponse<any>>('/admin/products', productData);
+      console.log('Product creation API response:', response);
+      return response;
     } catch (error: any) {
-      console.log('Simulating product creation due to API unavailability');
-
-      // Mock product creation - return simple success message
-      return {
-        error: false,
-        message: "Product created successfully (mock)",
-        details: {
-          product: {
-            id: Math.floor(Math.random() * 10000),
-            name: productData.name,
-            slug: productData.slug,
-            description: productData.description || '',
-            status: productData.status,
-            variants: [],
-            pricing: [],
-            flags: {
-              on_sale: productData.is_on_sale || false,
-              is_featured: productData.is_featured || false,
-              is_new_arrival: productData.is_new_arrival || false,
-              is_best_seller: productData.is_best_seller || false,
-              is_vat_exempt: productData.is_vat_exempt || false,
-              seller_product_status: productData.seller_product_status || 'draft'
-            }
-          } as AdminProductAPI
-        }
-      };
+      console.error('Product creation failed:', error);
+      throw new Error(`Failed to create product: ${error.message}`);
     }
   }
 
