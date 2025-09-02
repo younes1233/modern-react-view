@@ -19,6 +19,7 @@ interface User {
   permissions: string[];
   isActive: boolean;
   isEmailVerified: boolean;
+  isSeller: boolean;
   createdAt: string;
   updatedAt: string;
   lastLogin?: string;
