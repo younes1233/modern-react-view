@@ -203,9 +203,9 @@ export interface CreateProductData {
   is_new_arrival?: boolean;
   is_best_seller?: boolean;
   is_vat_exempt?: boolean;
-  // Image handling
-  cover_image?: File; // Changed from string to File
-  images?: File[]; // Changed from string[] to File[]
+  // media
+  cover_image?: string;
+  images?: string[];
   // simple product inventory
   stock?: number;
   warehouse_id?: number;
@@ -349,42 +349,8 @@ class AdminProductService extends BaseApiService {
   async createProduct(productData: CreateProductData): Promise<ApiResponse<any>> {
     console.log('Creating product with data:', productData);
 
-    // Create FormData for file uploads
-    const formData = new FormData();
-    
-    // Add all text fields
-    Object.entries(productData).forEach(([key, value]) => {
-      if (key === 'cover_image' || key === 'images') {
-        // Skip these, handle separately
-        return;
-      }
-      
-      if (value !== undefined && value !== null) {
-        if (typeof value === 'object') {
-          formData.append(key, JSON.stringify(value));
-        } else {
-          formData.append(key, value.toString());
-        }
-      }
-    });
-
-    // Add cover image file if provided
-    if (productData.cover_image) {
-      formData.append('cover_image', productData.cover_image);
-    }
-
-    // Add thumbnail image files if provided
-    if (productData.images && Array.isArray(productData.images)) {
-      productData.images.forEach((imageFile, index) => {
-        formData.append(`images[${index}]`, imageFile);
-      });
-    }
-
     try {
-      const response = await this.request<ApiResponse<any>>('/admin/products', {
-        method: 'POST',
-        body: formData,
-      });
+      const response = await this.post<ApiResponse<any>>('/admin/products', productData);
       console.log('Product creation API response:', response);
       return response;
     } catch (error: any) {
