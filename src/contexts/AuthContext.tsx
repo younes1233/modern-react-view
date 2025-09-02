@@ -168,7 +168,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await apiService.login(email, password);
       if (!response.error && response.details?.user && response.details?.token) {
-        setUser(response.details.user);
+        setUser({ ...response.details.user, isSeller: (response.details.user as any).isSeller || false });
         localStorage.setItem('user', JSON.stringify(response.details.user));
         apiService.setToken(response.details.token);
         return true;
@@ -205,7 +205,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         dateOfBirth
       );
       if (!response.error && response.details?.user && response.details?.token) {
-        setUser(response.details.user);
+        setUser({ ...response.details.user, isSeller: (response.details.user as any).isSeller || false });
         localStorage.setItem('user', JSON.stringify(response.details.user));
         apiService.setToken(response.details.token);
         return { success: true, message: response.message };

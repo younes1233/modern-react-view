@@ -21,6 +21,7 @@ import { AdminProductAPI, CreateProductData } from "@/services/adminProductServi
 import { X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useShelves } from "@/hooks/useShelves";
+import { useDeliveryMethods } from "@/hooks/useDeliveryMethods";
 
 interface AdminProductModalProps {
   isOpen: boolean;
@@ -43,6 +44,7 @@ export function AdminProductModal({
 }: AdminProductModalProps) {
   const { country, store, warehouse, user } = useAuth();
   const { shelves = [] } = useShelves();
+  const { data: deliveryMethods = [], isLoading: deliveryMethodsLoading } = useDeliveryMethods();
 
   // NOTE: We add `country_id` (number) and REMOVE `available_countries`.
   const [formData, setFormData] = useState<CreateProductData & { country_id?: number }>({
@@ -405,7 +407,6 @@ export function AdminProductModal({
     // - exclude available_countries entirely
     // - include numeric country_id from context-backed formData
     const {
-      // @ts-expect-error: ensure we don't accidentally send available_countries if lingering in CreateProductData type
       available_countries,
       ...rest
     } = formData as any;
@@ -637,23 +638,42 @@ export function AdminProductModal({
                 </Select>
               </div>
               <div>
-                <Label>Delivery Method ID</Label>
-                <Input
-                  type="number"
-                  value={formData.delivery_method_id || ""}
-                  onChange={(e) =>
-                    updateField("delivery_method_id", e.target.value ? parseInt(e.target.value, 10) : undefined)
+                <Label>Delivery Method</Label>
+                <Select
+                  value={formData.delivery_method_id?.toString() || ""}
+                  onValueChange={(value) => 
+                    updateField("delivery_method_id", value ? parseInt(value) : undefined)
                   }
-                  placeholder="Delivery Method ID"
-                />
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select delivery method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {deliveryMethodsLoading ? (
+                      <SelectItem value="" disabled>Loading delivery methods...</SelectItem>
+                    ) : deliveryMethods.length > 0 ? (
+                      deliveryMethods.map((method) => (
+                        <SelectItem key={method.id} value={method.id.toString()}>
+                          {method.name} - {method.delivery_company.name}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem value="" disabled>No delivery methods available</SelectItem>
+                    )}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label>Delivery Cost</Label>
                 <Input
                   type="number"
-                  value={formData.delivery_cost || 0}
-                  onChange={(e) => updateField("delivery_cost", parseFloat(e.target.value || "0"))}
-                  placeholder="Delivery Cost"
+                  step="0.01"
+                  min="0"
+                  value={formData.delivery_cost || ""}
+                  onChange={(e) => 
+                    updateField("delivery_cost", e.target.value ? parseFloat(e.target.value) : 0)
+                  }
+                  placeholder="Enter delivery cost"
                 />
               </div>
             </div>
