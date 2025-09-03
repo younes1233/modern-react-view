@@ -22,6 +22,8 @@ import { X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useShelves } from "@/hooks/useShelves";
 import { useDeliveryMethods } from "@/hooks/useDeliveryMethods";
+import { useAttributes } from "@/hooks/useAttributes";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface AdminProductModalProps {
   isOpen: boolean;
@@ -94,7 +96,7 @@ export function AdminProductModal({
     {
       id: number;
       image: string;
-      variations: string;
+      variations: number[];
       variantPrices: { net_price: string; cost: string }[];
       variantSpecs: { id: number; name: string; value: string }[];
       delivery_method_id?: string;
@@ -104,6 +106,7 @@ export function AdminProductModal({
 
   const { toast } = useToast();
   const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
+  const { data: attributes = [], isLoading: attributesLoading } = useAttributes();
 
   useEffect(() => {
     if (product && mode === "edit") {
@@ -269,7 +272,7 @@ export function AdminProductModal({
       {
         id: Date.now(),
         image: "",
-        variations: "",
+        variations: [],
         variantPrices: [],
         variantSpecs: [],
         delivery_method_id: "",
@@ -287,6 +290,20 @@ export function AdminProductModal({
     setVariantEntries((prev) =>
       prev.map((v) => (v.id === variantId ? { ...v, [field]: value } : v))
     );
+
+  const updateVariantAttributeValues = (variantId: number, attributeValueId: number, checked: boolean) => {
+    setVariantEntries((prev) =>
+      prev.map((v) => {
+        if (v.id === variantId) {
+          const updatedVariations = checked
+            ? [...v.variations, attributeValueId]
+            : v.variations.filter(id => id !== attributeValueId);
+          return { ...v, variations: updatedVariations };
+        }
+        return v;
+      })
+    );
+  };
 
   const addVariantPrice = (variantId: number) =>
     setVariantEntries((prev) =>
@@ -377,12 +394,7 @@ export function AdminProductModal({
     let variantsPayload: any[] = [];
     if (formData.has_variants && variantEntries.length > 0) {
       variantsPayload = variantEntries.map((variant) => {
-        const variations = variant.variations
-          .split(",")
-          .map((v) => v.trim())
-          .filter((v) => v.length > 0)
-          .map((v) => parseInt(v, 10))
-          .filter((v) => !isNaN(v));
+        const variations = variant.variations;
 
         const variantPricesParsed = variant.variantPrices
           .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
@@ -796,13 +808,50 @@ export function AdminProductModal({
 
                   {/* Variant variations */}
                   <div>
-                    <Label>Variations (attribute value IDs, comma separated)</Label>
-                    <Input
-                      type="text"
-                      value={variant.variations}
-                      onChange={(e) => updateVariantField(variant.id, "variations", e.target.value)}
-                      placeholder="e.g., 1,2"
-                    />
+                    <Label>Attribute Values</Label>
+                    <div className="space-y-3 mt-2">
+                      {attributesLoading ? (
+                        <div className="text-muted-foreground">Loading attributes...</div>
+                      ) : attributes.length === 0 ? (
+                        <div className="text-muted-foreground">No attributes available</div>
+                      ) : (
+                        attributes.map((attribute) => (
+                          <div key={attribute.id} className="space-y-2">
+                            <Label className="text-sm font-medium">{attribute.name} ({attribute.type})</Label>
+                            <div className="grid grid-cols-2 gap-2">
+                              {attribute.values.map((value) => (
+                                <div key={value.id} className="flex items-center space-x-2">
+                                  <Checkbox
+                                    id={`variant-${variant.id}-attr-${value.id}`}
+                                    checked={variant.variations.includes(value.id)}
+                                    onCheckedChange={(checked) => 
+                                      updateVariantAttributeValues(variant.id, value.id, checked as boolean)
+                                    }
+                                  />
+                                  <label 
+                                    htmlFor={`variant-${variant.id}-attr-${value.id}`}
+                                    className="text-sm cursor-pointer flex items-center space-x-2"
+                                  >
+                                    {value.hex_color && (
+                                      <div 
+                                        className="w-4 h-4 rounded border border-border"
+                                        style={{ backgroundColor: value.hex_color }}
+                                      />
+                                    )}
+                                    <span>{value.value}</span>
+                                  </label>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    {variant.variations.length > 0 && (
+                      <div className="mt-2 text-xs text-muted-foreground">
+                        Selected IDs: {variant.variations.join(', ')}
+                      </div>
+                    )}
                   </div>
 
                   {/* Variant Pricing Overrides (NO Country ID / VAT %) */}
