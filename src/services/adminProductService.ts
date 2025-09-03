@@ -204,8 +204,8 @@ export interface CreateProductData {
   is_best_seller?: boolean;
   is_vat_exempt?: boolean;
   // media
-  cover_image?: string;
-  images?: string[];
+  cover_image?: File | string;
+  images?: (File | string)[];
   // simple product inventory
   stock?: number;
   warehouse_id?: number;
@@ -350,9 +350,55 @@ class AdminProductService extends BaseApiService {
     console.log('Creating product with data:', productData);
 
     try {
-      const response = await this.post<ApiResponse<any>>('/admin/products', productData);
-      console.log('Product creation API response:', response);
-      return response;
+      // Create FormData if we have files
+      const hasFiles = (productData.cover_image instanceof File) || 
+                      (productData.images && productData.images.some(img => img instanceof File));
+
+      if (hasFiles) {
+        const formData = new FormData();
+        
+        // Add all non-file fields
+        Object.entries(productData).forEach(([key, value]) => {
+          if (key === 'cover_image' || key === 'images') return; // Handle separately
+          
+          if (value !== undefined && value !== null) {
+            if (Array.isArray(value) || typeof value === 'object') {
+              formData.append(key, JSON.stringify(value));
+            } else {
+              formData.append(key, value.toString());
+            }
+          }
+        });
+
+        // Handle cover_image
+        if (productData.cover_image instanceof File) {
+          formData.append('cover_image', productData.cover_image);
+        } else if (typeof productData.cover_image === 'string' && productData.cover_image) {
+          formData.append('cover_image', productData.cover_image);
+        }
+
+        // Handle images array
+        if (productData.images && productData.images.length > 0) {
+          productData.images.forEach((image, index) => {
+            if (image instanceof File) {
+              formData.append(`images[${index}]`, image);
+            } else if (typeof image === 'string' && image) {
+              formData.append(`images[${index}]`, image);
+            }
+          });
+        }
+
+        const response = await this.request<ApiResponse<any>>('/admin/products', {
+          method: 'POST',
+          body: formData,
+        });
+        console.log('Product creation API response:', response);
+        return response;
+      } else {
+        const response = await this.post<ApiResponse<any>>('/admin/products', productData);
+        console.log('Product creation API response:', response);
+        return response;
+      }
     } catch (error: any) {
       console.error('Product creation failed:', error);
       throw new Error(`Failed to create product: ${error.message}`);

@@ -83,8 +83,9 @@ export function AdminProductModal({
     country_id: country?.id, // ← set from context
   });
 
-  const [mainImage, setMainImage] = useState<string>("");
-  const [thumbnails, setThumbnails] = useState<{ id: number; url: string; alt: string }[]>([]);
+  const [mainImage, setMainImage] = useState<File | string>("");
+  const [mainImagePreview, setMainImagePreview] = useState<string>("");
+  const [thumbnails, setThumbnails] = useState<{ id: number; file: File | string; url: string; alt: string }[]>([]);
 
   // Prices include only net_price & cost
   const [priceEntries, setPriceEntries] = useState<{ net_price: string; cost: string }[]>([]);
@@ -145,9 +146,11 @@ export function AdminProductModal({
         country_id: country?.id,
       });
 
-      setMainImage(product.media?.cover_image?.image || "");
+      const coverImageUrl = product.media?.cover_image?.image || "";
+      setMainImage(coverImageUrl);
+      setMainImagePreview(coverImageUrl);
       setThumbnails(
-        product.media?.thumbnails?.map((t) => ({ id: t.id, url: t.image, alt: t.alt_text })) || []
+        product.media?.thumbnails?.map((t) => ({ id: t.id, file: t.image, url: t.image, alt: t.alt_text })) || []
       );
       setPriceEntries([]);
       setSpecifications(
@@ -189,6 +192,7 @@ export function AdminProductModal({
         country_id: country?.id, // ← set from context
       });
       setMainImage("");
+      setMainImagePreview("");
       setThumbnails([]);
       setPriceEntries([]);
       setSpecifications([
@@ -215,26 +219,32 @@ export function AdminProductModal({
   // Image handlers
   const handleMainImageUpload = (files: File[]) => {
     if (files.length > 0) {
-      const url = URL.createObjectURL(files[0]);
-      setMainImage(url);
-      updateField("cover_image", url);
+      const file = files[0];
+      const url = URL.createObjectURL(file);
+      setMainImage(file);
+      setMainImagePreview(url);
+      updateField("cover_image", file);
     }
   };
 
   const handleThumbnailUpload = (files: File[]) => {
     const newThumbnails = files.map((file, index) => ({
       id: Date.now() + index,
+      file: file,
       url: URL.createObjectURL(file),
       alt: file.name,
     }));
     setThumbnails((prev) => [...prev, ...newThumbnails]);
-    updateField("images", [...(formData.images || []), ...newThumbnails.map((t) => t.url)]);
+    updateField("images", [...(formData.images || []), ...newThumbnails.map((t) => t.file)]);
   };
 
   const removeThumbnail = (id: number) => {
-    setThumbnails((prev) => prev.filter((t) => t.id !== id));
-    const updatedImages = (formData.images || []).filter((_, idx) => thumbnails[idx]?.id !== id);
-    updateField("images", updatedImages);
+    const thumbnailToRemove = thumbnails.find(t => t.id === id);
+    if (thumbnailToRemove) {
+      setThumbnails((prev) => prev.filter((t) => t.id !== id));
+      const updatedImages = (formData.images || []).filter((img) => img !== thumbnailToRemove.file);
+      updateField("images", updatedImages);
+    }
   };
 
   // Pricing handlers (no country_id / vat)
@@ -429,7 +439,7 @@ export function AdminProductModal({
       product_prices: prices as any,
       specifications: specs,
       cover_image: mainImage || formData.cover_image,
-      images: thumbnails.map((t) => t.url),
+      images: thumbnails.map((t) => t.file),
       variants: variantsPayload as any,
     };
 
@@ -528,9 +538,9 @@ export function AdminProductModal({
               <div>
                 <Label>Main Product Image</Label>
                 <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
-                {mainImage && (
+                {mainImagePreview && (
                   <div className="mt-2">
-                    <img src={mainImage} alt="Main product" className="h-20 w-20 object-cover rounded" />
+                    <img src={mainImagePreview} alt="Main product" className="h-20 w-20 object-cover rounded" />
                   </div>
                 )}
               </div>
