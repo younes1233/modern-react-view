@@ -66,7 +66,7 @@ export function AdminProductModal({
     is_on_sale: false,
     is_featured: false,
     is_new_arrival: false,
-    is_best_seller: null,
+    is_best_seller: false,
     is_vat_exempt: false,
     cover_image: "",
     images: [],
@@ -126,7 +126,7 @@ export function AdminProductModal({
         is_on_sale: product.flags?.on_sale || false,
         is_featured: product.flags?.is_featured || false,
         is_new_arrival: product.flags?.is_new_arrival || false,
-        is_best_seller: null,
+        is_best_seller: false,
         is_vat_exempt: product.flags?.is_vat_exempt || false,
         cover_image: product.media?.cover_image?.image || "",
         images: product.media?.thumbnails?.map((t) => t.image) || [],
@@ -171,7 +171,7 @@ export function AdminProductModal({
         is_on_sale: false,
         is_featured: false,
         is_new_arrival: false,
-        is_best_seller: null,
+        is_best_seller: false,
         is_vat_exempt: false,
         cover_image: "",
         images: [],
@@ -654,7 +654,7 @@ export function AdminProductModal({
                     ) : deliveryMethods.length > 0 ? (
                       deliveryMethods.map((method) => (
                         <SelectItem key={method.id} value={method.id.toString()}>
-                          {method.name} - {method.delivery_company.name}
+                          {method.name} - {method.name}
                         </SelectItem>
                       ))
                     ) : (
