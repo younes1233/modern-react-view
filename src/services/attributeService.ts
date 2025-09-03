@@ -52,7 +52,7 @@ class AttributeService extends BaseApiService {
     console.log('Fetching attributes');
     
     try {
-      const response = await this.get<ApiResponse<AttributesResponse>>('/api/attributes');
+      const response = await this.get<ApiResponse<AttributesResponse>>('/attributes');
       console.log('Attributes API response:', response);
       return response;
     } catch (error: any) {
@@ -65,7 +65,7 @@ class AttributeService extends BaseApiService {
     console.log('Creating attribute with data:', data);
     
     try {
-      const response = await this.post<ApiResponse<{ attribute: Attribute }>>('/api/attributes', data);
+      const response = await this.post<ApiResponse<{ attribute: Attribute }>>('/attributes', data);
       console.log('Create attribute API response:', response);
       return response;
     } catch (error: any) {
@@ -78,7 +78,7 @@ class AttributeService extends BaseApiService {
     console.log('Updating attribute:', id, data);
     
     try {
-      const response = await this.put<ApiResponse<{ attribute: Attribute }>>(`/api/attributes/${id}`, data);
+      const response = await this.put<ApiResponse<{ attribute: Attribute }>>(`/attributes/${id}`, data);
       console.log('Update attribute API response:', response);
       return response;
     } catch (error: any) {
@@ -91,7 +91,7 @@ class AttributeService extends BaseApiService {
     console.log('Deleting attribute with ID:', id);
     
     try {
-      const response = await this.delete<ApiResponse<any>>(`/api/attributes/${id}`);
+      const response = await this.delete<ApiResponse<any>>(`/attributes/${id}`);
       console.log('Delete attribute API response:', response);
       return response;
     } catch (error: any) {
@@ -105,7 +105,7 @@ class AttributeService extends BaseApiService {
     console.log('Fetching attribute values');
     
     try {
-      const response = await this.get<ApiResponse<AttributeValuesResponse>>('/api/attribute-values');
+      const response = await this.get<ApiResponse<AttributeValuesResponse>>('/attribute-values');
       console.log('Attribute values API response:', response);
       return response;
     } catch (error: any) {
@@ -118,7 +118,7 @@ class AttributeService extends BaseApiService {
     console.log('Creating attribute value with data:', data);
     
     try {
-      const response = await this.post<ApiResponse<{ attribute_value: AttributeValue }>>('/api/attribute-values', data);
+      const response = await this.post<ApiResponse<{ attribute_value: AttributeValue }>>('/attribute-values', data);
       console.log('Create attribute value API response:', response);
       return response;
     } catch (error: any) {
@@ -131,7 +131,7 @@ class AttributeService extends BaseApiService {
     console.log('Updating attribute value:', id, data);
     
     try {
-      const response = await this.put<ApiResponse<{ attribute_value: AttributeValue }>>(`/api/attribute-values/${id}`, data);
+      const response = await this.put<ApiResponse<{ attribute_value: AttributeValue }>>(`/attribute-values/${id}`, data);
       console.log('Update attribute value API response:', response);
       return response;
     } catch (error: any) {
@@ -144,7 +144,7 @@ class AttributeService extends BaseApiService {
     console.log('Deleting attribute value with ID:', id);
     
     try {
-      const response = await this.delete<ApiResponse<any>>(`/api/attribute-values/${id}`);
+      const response = await this.delete<ApiResponse<any>>(`/attribute-values/${id}`);
       console.log('Delete attribute value API response:', response);
       return response;
     } catch (error: any) {
