@@ -179,9 +179,9 @@ export default function Products() {
     setIsModalOpen(true);
   };
 
-  const handleSaveProduct = (productData: CreateProductData) => {
+  const handleSaveProduct = (formData: FormData) => {
     if (modalMode === 'add') {
-      createProductMutation.mutate(productData, {
+      createProductMutation.mutate(formData, {
         onSuccess: () => {
           toast.success('Product created successfully');
           setIsModalOpen(false);
@@ -192,7 +192,7 @@ export default function Products() {
         },
       });
     } else if (modalMode === 'edit' && selectedProduct) {
-      updateProductMutation.mutate({ id: selectedProduct.id, data: productData }, {
+      updateProductMutation.mutate({ id: selectedProduct.id, data: formData }, {
         onSuccess: () => {
           toast.success('Product updated successfully');
           setIsModalOpen(false);
@@ -211,23 +211,23 @@ export default function Products() {
 
   const handleMassUploadComplete = async (data: any[]) => {
     try {
-      const promises = data.map((item) =>
-        createProductMutation.mutateAsync({
-          name: item.name,
-          slug: item.slug || item.name.toLowerCase().replace(/\s+/g, '-'),
-          sku: item.sku,
-          description: item.description || '',
-          status: item.status || 'active',
-          category_id: parseInt(item.category_id),
-          store_id: 1, // Default store ID
-          has_variants: Boolean(item.has_variants),
-          is_seller_product: Boolean(item.is_seller_product),
-          seller_product_status: 'not_seller' as const,
-          is_on_sale: Boolean(item.is_on_sale),
-          is_featured: Boolean(item.is_featured),
-          is_new_arrival: Boolean(item.is_new_arrival),
-        }),
-      );
+      const promises = data.map((item) => {
+        const formData = new FormData();
+        formData.append('name', item.name);
+        formData.append('slug', item.slug || item.name.toLowerCase().replace(/\s+/g, '-'));
+        formData.append('sku', item.sku);
+        formData.append('description', item.description || '');
+        formData.append('status', item.status || 'active');
+        formData.append('category_id', parseInt(item.category_id).toString());
+        formData.append('store_id', '1'); // Default store ID
+        formData.append('has_variants', Boolean(item.has_variants) ? '1' : '0');
+        formData.append('is_seller_product', Boolean(item.is_seller_product) ? '1' : '0');
+        formData.append('seller_product_status', 'not_seller');
+        formData.append('is_on_sale', Boolean(item.is_on_sale) ? '1' : '0');
+        formData.append('is_featured', Boolean(item.is_featured) ? '1' : '0');
+        formData.append('is_new_arrival', Boolean(item.is_new_arrival) ? '1' : '0');
+        return createProductMutation.mutateAsync(formData);
+      });
 
       await Promise.all(promises);
       toast.success(`Successfully uploaded ${data.length} products`);

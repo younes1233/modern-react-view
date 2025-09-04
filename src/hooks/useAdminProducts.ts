@@ -129,7 +129,7 @@ export const useCreateProduct = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (productData: CreateProductData) => adminProductService.createProduct(productData),
+    mutationFn: (productData: FormData) => adminProductService.createProduct(productData),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       toast({
@@ -153,7 +153,7 @@ export const useUpdateProduct = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: Partial<CreateProductData> }) => 
+    mutationFn: ({ id, data }: { id: number; data: FormData }) => 
       adminProductService.updateProduct(id, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });

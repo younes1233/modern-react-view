@@ -16,6 +16,7 @@ import { useShelves } from "@/hooks/useShelves";
 import { useDeliveryMethods } from "@/hooks/useDeliveryMethods";
 import { useAttributes } from "@/hooks/useAttributes";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AttributeManager } from "./AttributeManager";
 
 interface AdminProductModalProps {
   isOpen: boolean;
@@ -934,6 +935,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               ))}
             </div>
           )}
+
+          {/* Quick Attribute Management */}
+          <div className="space-y-4">
+            <Label className="text-base font-semibold">Quick Attribute Management</Label>
+            <AttributeManager />
+          </div>
 
           {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4">
