@@ -97,6 +97,7 @@ export const AttributeManager = () => {
                 </SelectContent>
               </Select>
               <Button
+                type="button"
                 onClick={handleCreateAttribute}
                 disabled={createAttribute.isPending}
                 size="sm"
@@ -115,6 +116,7 @@ export const AttributeManager = () => {
                     <span className="text-muted-foreground">({attr.values?.length || 0})</span>
                   </div>
                   <Button
+                    type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => deleteAttribute.mutate(attr.id)}
@@ -165,6 +167,7 @@ export const AttributeManager = () => {
                   />
                 )}
                 <Button
+                  type="button"
                   onClick={handleCreateValue}
                   disabled={createAttributeValue.isPending}
                   size="sm"
@@ -190,6 +193,7 @@ export const AttributeManager = () => {
                       )}
                     </div>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => deleteAttributeValue.mutate(value.id)}
