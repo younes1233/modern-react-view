@@ -1,4 +1,3 @@
-
 export interface ApiResponse<T = any> {
   error: boolean;
   message: string;
@@ -36,7 +35,8 @@ class BaseApiService {
   // Generic request method
   protected async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
+    includeCredentials: boolean = false
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
     
@@ -69,12 +69,13 @@ class BaseApiService {
     const config: RequestInit = {
       ...options,
       headers,
-      credentials: 'include', // Important: includes session cookies for guest cart
+      ...(includeCredentials && { credentials: 'include' }), // Only include credentials when needed
     };
 
     console.log('API Request:', {
       method: config.method || 'GET',
       url,
+      includeCredentials,
       isFormData: options.body instanceof FormData,
       headers: {
         ...headers,
@@ -119,7 +120,9 @@ class BaseApiService {
           console.error('Failed to parse error response:', parseError);
         }
         
-        throw new Error(errorMessage);
+        const error = new Error(errorMessage) as any;
+        error.status = response.status;
+        throw error;
       }
 
       return await response.json();
@@ -129,50 +132,41 @@ class BaseApiService {
     }
   }
 
-  // GET request
-  protected async get<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'GET',
-    });
+  // HTTP method helpers with optional credentials
+  protected get<T>(endpoint: string, includeCredentials: boolean = false): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' }, includeCredentials);
   }
 
-  // POST request
-  protected async post<T>(endpoint: string, data?: any): Promise<T> {
+  protected post<T>(endpoint: string, data?: any, includeCredentials: boolean = false): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: data ? JSON.stringify(data) : undefined,
-    });
+    }, includeCredentials);
   }
 
-  // POST request with FormData
-  protected async postFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  protected postFormData<T>(endpoint: string, formData: FormData, includeCredentials: boolean = false): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'POST',
       body: formData,
-    });
+    }, includeCredentials);
   }
 
-  // PUT request
-  protected async put<T>(endpoint: string, data?: any): Promise<T> {
+  protected put<T>(endpoint: string, data?: any, includeCredentials: boolean = false): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: data ? JSON.stringify(data) : undefined,
-    });
+    }, includeCredentials);
   }
 
-  // PUT request with FormData
-  protected async putFormData<T>(endpoint: string, formData: FormData): Promise<T> {
+  protected putFormData<T>(endpoint: string, formData: FormData, includeCredentials: boolean = false): Promise<T> {
     return this.request<T>(endpoint, {
       method: 'PUT',
       body: formData,
-    });
+    }, includeCredentials);
   }
 
-  // DELETE request
-  protected async delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: 'DELETE',
-    });
+  protected delete<T>(endpoint: string, includeCredentials: boolean = false): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' }, includeCredentials);
   }
 
   // Get current token

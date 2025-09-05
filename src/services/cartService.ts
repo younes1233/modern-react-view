@@ -40,37 +40,37 @@ export interface UpdateCartItemRequest {
 class CartService extends BaseApiService {
   // Get cart (creates session automatically for guests)
   async getCart(): Promise<Cart> {
-    return this.get<Cart>('/cart');
+    return this.get<Cart>('/cart', true); // Include credentials for session
   }
 
   // Get cart item count for header badge
   async getCartCount(): Promise<{ count: number }> {
-    return this.get<{ count: number }>('/cart/count');
+    return this.get<{ count: number }>('/cart/count', true); // Include credentials
   }
 
   // Add item to cart
   async addToCart(data: AddToCartRequest): Promise<Cart> {
-    return this.post<Cart>('/cart/add', data);
+    return this.post<Cart>('/cart/add', data, true); // Include credentials
   }
 
   // Update item quantity
   async updateCartItem(itemId: number, data: UpdateCartItemRequest): Promise<Cart> {
-    return this.put<Cart>(`/cart/items/${itemId}`, data);
+    return this.put<Cart>(`/cart/items/${itemId}`, data, true); // Include credentials
   }
 
   // Remove item from cart
   async removeFromCart(itemId: number): Promise<Cart> {
-    return this.delete<Cart>(`/cart/items/${itemId}`);
+    return this.delete<Cart>(`/cart/items/${itemId}`, true); // Include credentials
   }
 
   // Clear entire cart
   async clearCart(): Promise<{ message: string }> {
-    return this.delete<{ message: string }>('/cart');
+    return this.delete<{ message: string }>('/cart', true); // Include credentials
   }
 
   // Move item to wishlist (requires auth)
   async moveToWishlist(itemId: number): Promise<{ message: string }> {
-    return this.post<{ message: string }>(`/cart/items/${itemId}/move-to-wishlist`);
+    return this.post<{ message: string }>(`/cart/items/${itemId}/move-to-wishlist`, undefined, true); // Include credentials
   }
 }
 
