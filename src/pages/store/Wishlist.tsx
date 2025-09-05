@@ -10,7 +10,7 @@ import { AuthModal } from '@/components/auth/AuthModal';
 import { useState } from 'react';
 
 const Wishlist = () => {
-  const { items, clearWishlist } = useWishlist();
+  const { items, clearWishlist, isLoading } = useWishlist();
   const { user } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
@@ -62,6 +62,7 @@ const Wishlist = () => {
               variant="outline"
               onClick={clearWishlist}
               className="text-red-500 border-red-500 hover:bg-red-50 text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2"
+              disabled={isLoading}
             >
               Clear All
             </Button>

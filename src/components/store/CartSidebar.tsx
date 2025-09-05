@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export function CartSidebar() {
-  const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart } = useCart();
+  const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart, isLoading } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -59,7 +59,7 @@ export function CartSidebar() {
           ) : (
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.product.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div key={item.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
                   <img
                     src={item.product.image}
                     alt={item.product.name}
@@ -86,8 +86,9 @@ export function CartSidebar() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => updateQuantity(item.product.id, item.quantity - 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="w-8 h-8 p-0"
+                          disabled={isLoading}
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -95,8 +96,9 @@ export function CartSidebar() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => updateQuantity(item.product.id, item.quantity + 1)}
+                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="w-8 h-8 p-0"
+                          disabled={isLoading}
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -104,8 +106,9 @@ export function CartSidebar() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => removeFromCart(item.product.id)}
+                        onClick={() => removeFromCart(item.id)}
                         className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
+                        disabled={isLoading}
                       >
                         <X className="w-4 h-4" />
                       </Button>

@@ -69,6 +69,7 @@ class BaseApiService {
     const config: RequestInit = {
       ...options,
       headers,
+      credentials: 'include', // Important: includes session cookies for guest cart
     };
 
     console.log('API Request:', {

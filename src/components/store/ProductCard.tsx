@@ -21,21 +21,21 @@ export function ProductCard({ product }: ProductCardProps) {
   const [showImageZoom, setShowImageZoom] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null);
-  const { addToCart, isInCart } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { addToCart, isInCart, isLoading: cartLoading } = useCart();
+  const { addToWishlist, removeFromWishlist, isInWishlist, isLoading: wishlistLoading } = useWishlist();
   const navigate = useNavigate();
 
-  const handleAddToCart = (e: React.MouseEvent) => {
+  const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    addToCart(product);
+    await addToCart(product);
   };
 
-  const handleWishlistToggle = (e: React.MouseEvent) => {
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+      await removeFromWishlist(product.id);
     } else {
-      addToWishlist(product);
+      await addToWishlist(product);
     }
   };
 
@@ -91,6 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
               size="sm"
               variant="secondary"
               onClick={handleWishlistToggle}
+              disabled={wishlistLoading}
               className={`w-7 h-7 md:w-6 md:h-6 p-0 shadow-md ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 text-white hover:bg-red-600'
@@ -158,6 +159,7 @@ export function ProductCard({ product }: ProductCardProps) {
               <Button
                 size="sm"
                 onClick={handleAddToCart}
+                disabled={cartLoading}
                 className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-1.5 md:px-2 py-0.5 text-xs"
                 variant="outline"
               >
