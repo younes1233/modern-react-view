@@ -79,6 +79,16 @@ export interface HomeSection {
   isActive: boolean;
 }
 
+export interface HeroSlide {
+  id: number;
+  title: string;
+  subtitle: string;
+  backgroundImage: string;
+  ctaText: string;
+  ctaLink: string;
+  order: number;
+}
+
 export interface HeroSection {
   id: number;
   title: string;
@@ -87,6 +97,8 @@ export interface HeroSection {
   ctaText: string;
   ctaLink: string;
   isActive: boolean;
+  isSlider: boolean;
+  slides: HeroSlide[];
 }
 
 export interface Category {
@@ -589,7 +601,9 @@ let sampleHeroSection: HeroSection = {
   backgroundImage: "https://www.hurstdoors.co.uk/wp-content/uploads/2025/02/Composite-Duo-Home-Page-Banners-Feb-2025.jpg",
   ctaText: "Shop Now",
   ctaLink: "/store/categories",
-  isActive: true
+  isActive: true,
+  isSlider: false,
+  slides: []
 };
 
 // Sample categories data
