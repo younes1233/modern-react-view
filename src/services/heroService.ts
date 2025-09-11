@@ -87,7 +87,7 @@ class HeroService extends BaseApiService {
     if (data.cta_link) formData.append('cta_link', data.cta_link);
     formData.append('type', data.type);
     if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
-    formData.append('is_active', data.is_active.toString());
+    formData.append('is_active', data.is_active ? 'true' : 'false');
 
     const response = await this.postFormData<ApiResponse<{ heroes: HeroAPI[] }>>('/admin/heroes', formData);
     return response;
@@ -103,7 +103,7 @@ class HeroService extends BaseApiService {
     if (data.cta_link) formData.append('cta_link', data.cta_link);
     formData.append('type', data.type);
     if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
-    formData.append('is_active', data.is_active.toString());
+    formData.append('is_active', data.is_active ? 'true' : 'false');
 
     const response = await this.putFormData<ApiResponse<{ heroes: HeroAPI[] }>>(`/admin/heroes/${id}`, formData);
     return response;
@@ -125,7 +125,7 @@ class HeroService extends BaseApiService {
     if (data.cta_link) formData.append('cta_link', data.cta_link);
     formData.append('type', data.type);
     if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
-    formData.append('is_active', data.is_active.toString());
+    formData.append('is_active', data.is_active ? 'true' : 'false');
 
     const response = await this.postFormData<ApiResponse<{ slide: HeroAPI }>>(`/admin/heroes/${heroId}/slides`, formData);
     return response;
