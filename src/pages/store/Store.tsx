@@ -33,11 +33,18 @@ const Store = () => {
   const { data: heroes = [], isLoading: heroesLoading } = useHeroes();
   const { deviceType } = useResponsiveImage();
 
+  console.log('Store: Heroes data:', heroes);
+  console.log('Store: Heroes loading state:', heroesLoading);
+
   // Get slides for hero carousel
   const activeHero = heroes.find(hero => hero.is_active);
+  console.log('Store: Active hero found:', activeHero);
+  
   const slides = activeHero?.type === 'slider' && activeHero.slides?.length > 0 
     ? activeHero.slides.sort((a, b) => a.order - b.order)
     : activeHero ? [activeHero] : [];
+  
+  console.log('Store: Final slides array:', slides);
   
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   

@@ -7,10 +7,16 @@ export const useHeroes = () => {
   return useQuery({
     queryKey: ['heroes'],
     queryFn: async () => {
+      console.log('useHeroes: Fetching heroes from API...');
       const response = await heroService.getPublicHeroes();
+      console.log('useHeroes: Raw API response:', response);
+      
       if (response && response.details) {
-        return response.details.filter(hero => hero.is_active);
+        const activeHeroes = response.details.filter(hero => hero.is_active);
+        console.log('useHeroes: Active heroes after filtering:', activeHeroes);
+        return activeHeroes;
       }
+      console.log('useHeroes: No details in response, returning empty array');
       return [];
     }
   });

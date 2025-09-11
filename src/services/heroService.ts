@@ -70,13 +70,18 @@ export interface UpdateSlideRequest {
 class HeroService extends BaseApiService {
   // Get all heroes (public - store front)
   async getPublicHeroes(): Promise<ApiResponse<HeroAPI[]>> {
+    console.log('HeroService: Making GET request to /heroes');
     const response = await this.get<{ success: boolean; data: HeroAPI[] }>('/heroes');
+    console.log('HeroService: Public heroes response:', response);
+    
     // Transform to match ApiResponse structure
-    return {
+    const transformedResponse = {
       error: !response.success,
       message: response.success ? 'Success' : 'Error',
       details: response.data
     };
+    console.log('HeroService: Transformed response:', transformedResponse);
+    return transformedResponse;
   }
 
   // Get all heroes (admin)
