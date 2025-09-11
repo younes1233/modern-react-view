@@ -98,7 +98,7 @@ class HeroService extends BaseApiService {
     formData.append('image', data.image);
     if (data.cta_text) formData.append('cta_text', data.cta_text);
     if (data.cta_link) formData.append('cta_link', data.cta_link);
-    formData.append('is_active', data.is_active ? 'true' : 'false');
+    formData.append('is_active', data.is_active ? '1' : '0');
     formData.append('type', data.type);
 
     const response = await this.postFormData<ApiResponse<HeroAPI>>('/admin/heroes', formData);
@@ -109,7 +109,7 @@ class HeroService extends BaseApiService {
   async createSlider(data: CreateSliderRequest): Promise<ApiResponse<HeroAPI>> {
     const response = await this.post<ApiResponse<HeroAPI>>('/admin/heroes', {
       title: data.title,
-      is_active: data.is_active,
+      is_active: data.is_active ? 1 : 0,
       type: data.type
     });
     return response;
@@ -136,7 +136,7 @@ class HeroService extends BaseApiService {
     if (data.image) formData.append('image', data.image);
     if (data.cta_text) formData.append('cta_text', data.cta_text);
     if (data.cta_link) formData.append('cta_link', data.cta_link);
-    formData.append('is_active', data.is_active ? 'true' : 'false');
+    formData.append('is_active', data.is_active ? '1' : '0');
 
     const response = await this.putFormData<ApiResponse<HeroAPI>>(`/admin/heroes/${id}`, formData);
     return response;
