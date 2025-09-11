@@ -99,21 +99,25 @@ function HeroForm({
   onSave, 
   onCancel, 
   isCreating = false,
-  allHeroes = []
+  allHeroes = [],
+  isAddingSlide = false,
+  parentSliderId
 }: { 
   hero?: HeroAPI; 
   onSave: (data: CreateHeroRequest | UpdateHeroRequest, file?: File) => void;
   onCancel: () => void;
   isCreating?: boolean;
   allHeroes?: HeroAPI[];
+  isAddingSlide?: boolean;
+  parentSliderId?: number;
 }) {
   const [formData, setFormData] = useState({
     title: hero?.title || '',
     subtitle: hero?.subtitle || '',
     cta_text: hero?.cta_text || '',
     cta_link: hero?.cta_link || '',
-    type: hero?.type || 'single' as 'single' | 'slider' | 'slide',
-    parent_id: hero?.parent_id || undefined,
+    type: hero?.type || (isAddingSlide ? 'slide' : 'single') as 'single' | 'slider' | 'slide',
+    parent_id: hero?.parent_id || parentSliderId || undefined,
     is_active: hero?.is_active ?? true,
   });
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
@@ -211,10 +215,11 @@ function HeroForm({
                 value={formData.type}
                 onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'single' | 'slider' | 'slide' }))}
                 className="w-full p-2 border rounded-md bg-background"
+                disabled={isAddingSlide}
               >
-                <option value="single">Single</option>
-                <option value="slider">Slider</option>
-                <option value="slide">Slide</option>
+                <option value="single">single</option>
+                <option value="slider">slider</option>
+                <option value="slide">slide</option>
               </select>
             </div>
 
@@ -412,12 +417,7 @@ export function HeroManagement() {
 
   const handleAddSlide = (data: CreateHeroRequest) => {
     if (addingSlideToHero) {
-      const slideData = {
-        ...data,
-        type: 'slide' as const,
-        parent_id: addingSlideToHero,
-      };
-      addSlide.mutate({ heroId: addingSlideToHero, data: slideData }, {
+      addSlide.mutate({ heroId: addingSlideToHero, data }, {
         onSuccess: () => {
           setAddingSlideToHero(null);
         }
@@ -479,6 +479,8 @@ export function HeroManagement() {
               }}
               isCreating={isCreating || !!addingSlideToHero}
               allHeroes={heroes || []}
+              isAddingSlide={!!addingSlideToHero}
+              parentSliderId={addingSlideToHero || undefined}
             />
           </CardContent>
         </Card>
