@@ -1,129 +1,181 @@
 import BaseApiService, { ApiResponse } from './baseApiService';
 
-export interface HeroImages {
-  original: string;
-  hero: {
-    desktop: string;
-    mobile: string;
-  };
-}
-
+// Data models matching the new API spec
 export interface HeroSlide {
   id: number;
   title: string;
   subtitle: string;
-  images: HeroImages;
+  image_url: string;
   cta_text: string;
   cta_link: string;
   order: number;
-  parent_id: number;
-  is_active: boolean;
-  type: 'single' | 'slider' | 'slide';
-  created_at: string;
-  updated_at: string;
 }
 
 export interface HeroAPI {
   id: number;
   title: string;
-  subtitle: string;
-  images: HeroImages;
-  cta_text: string;
-  cta_link: string;
-  order: number;
-  parent_id: number | null;
-  is_active: boolean;
-  type: 'single' | 'slider' | 'slide';
-  created_at: string;
-  updated_at: string;
-  slides?: HeroAPI[];
-  slides_count?: number;
-}
-
-export interface CreateHeroRequest {
-  title: string;
   subtitle?: string;
-  background_image: File;
+  image_url?: string;
   cta_text?: string;
   cta_link?: string;
-  type: 'single' | 'slider' | 'slide';
-  parent_id?: number;
   is_active: boolean;
+  order: number;
+  type: 'single' | 'slider';
+  slides?: HeroSlide[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateSingleHeroRequest {
+  title: string;
+  subtitle?: string;
+  image: File;
+  cta_text?: string;
+  cta_link?: string;
+  is_active: boolean;
+  type: 'single';
+}
+
+export interface CreateSliderRequest {
+  title: string;
+  is_active: boolean;
+  type: 'slider';
 }
 
 export interface UpdateHeroRequest {
   title: string;
   subtitle?: string;
-  background_image?: File;
+  image?: File;
   cta_text?: string;
   cta_link?: string;
-  type: 'single' | 'slider' | 'slide';
-  parent_id?: number;
   is_active: boolean;
 }
 
+export interface CreateSlideRequest {
+  title: string;
+  subtitle?: string;
+  image: File;
+  cta_text?: string;
+  cta_link?: string;
+}
+
+export interface UpdateSlideRequest {
+  title: string;
+  subtitle?: string;
+  image?: File;
+  cta_text?: string;
+  cta_link?: string;
+}
+
 class HeroService extends BaseApiService {
-  // Get all heroes (admin view - includes all types)
-  async getHeroes(): Promise<ApiResponse<{ heroes: HeroAPI[] }>> {
-    console.log('Fetching heroes from API...');
-    const response = await this.get<ApiResponse<{ heroes: HeroAPI[] }>>('/admin/heroes');
-    console.log('Heroes API response:', response);
-    return response;
+  // Get all heroes (public - store front)
+  async getPublicHeroes(): Promise<ApiResponse<HeroAPI[]>> {
+    const response = await this.get<{ success: boolean; data: HeroAPI[] }>('/heroes');
+    // Transform to match ApiResponse structure
+    return {
+      error: !response.success,
+      message: response.success ? 'Success' : 'Error',
+      details: response.data
+    };
   }
 
-  // Get single hero
-  async getHero(id: number): Promise<ApiResponse<{ hero: HeroAPI }>> {
-    const response = await this.get<ApiResponse<{ hero: HeroAPI }>>(`/admin/heroes/${id}`);
-    return response;
+  // Get all heroes (admin)
+  async getAdminHeroes(): Promise<ApiResponse<HeroAPI[]>> {
+    const response = await this.get<{ success: boolean; data: HeroAPI[] }>('/admin/heroes');
+    // Transform to match ApiResponse structure
+    return {
+      error: !response.success,
+      message: response.success ? 'Success' : 'Error',
+      details: response.data
+    };
   }
 
-  // Create hero - this creates either single, slider, or slide
-  async createHero(data: CreateHeroRequest): Promise<ApiResponse<{ hero: HeroAPI }>> {
+  // Create single hero
+  async createSingleHero(data: CreateSingleHeroRequest): Promise<ApiResponse<HeroAPI>> {
     const formData = new FormData();
     formData.append('title', data.title);
     if (data.subtitle) formData.append('subtitle', data.subtitle);
-    formData.append('background_image', data.background_image);
+    formData.append('image', data.image);
     if (data.cta_text) formData.append('cta_text', data.cta_text);
     if (data.cta_link) formData.append('cta_link', data.cta_link);
+    formData.append('is_active', data.is_active ? 'true' : 'false');
     formData.append('type', data.type);
-    if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
-    formData.append('is_active', data.is_active ? '1' : '0');
 
-    const response = await this.postFormData<ApiResponse<{ hero: HeroAPI }>>('/admin/heroes', formData);
+    const response = await this.postFormData<ApiResponse<HeroAPI>>('/admin/heroes', formData);
     return response;
   }
 
-  // Update hero
-  async updateHero(id: number, data: UpdateHeroRequest): Promise<ApiResponse<{ hero: HeroAPI }>> {
+  // Create slider
+  async createSlider(data: CreateSliderRequest): Promise<ApiResponse<HeroAPI>> {
+    const response = await this.post<ApiResponse<HeroAPI>>('/admin/heroes', {
+      title: data.title,
+      is_active: data.is_active,
+      type: data.type
+    });
+    return response;
+  }
+
+  // Add slide to slider
+  async addSlide(sliderId: number, data: CreateSlideRequest): Promise<ApiResponse<HeroSlide>> {
     const formData = new FormData();
     formData.append('title', data.title);
     if (data.subtitle) formData.append('subtitle', data.subtitle);
-    if (data.background_image) formData.append('background_image', data.background_image);
+    formData.append('image', data.image);
     if (data.cta_text) formData.append('cta_text', data.cta_text);
     if (data.cta_link) formData.append('cta_link', data.cta_link);
-    formData.append('type', data.type);
-    if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
-    formData.append('is_active', data.is_active ? '1' : '0');
 
-    const response = await this.putFormData<ApiResponse<{ hero: HeroAPI }>>(`/admin/heroes/${id}`, formData);
+    const response = await this.postFormData<ApiResponse<HeroSlide>>(`/admin/heroes/${sliderId}/slides`, formData);
     return response;
   }
 
-  // Delete hero
+  // Update hero/slider
+  async updateHero(id: number, data: UpdateHeroRequest): Promise<ApiResponse<HeroAPI>> {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    if (data.subtitle) formData.append('subtitle', data.subtitle);
+    if (data.image) formData.append('image', data.image);
+    if (data.cta_text) formData.append('cta_text', data.cta_text);
+    if (data.cta_link) formData.append('cta_link', data.cta_link);
+    formData.append('is_active', data.is_active ? 'true' : 'false');
+
+    const response = await this.putFormData<ApiResponse<HeroAPI>>(`/admin/heroes/${id}`, formData);
+    return response;
+  }
+
+  // Update slide
+  async updateSlide(sliderId: number, slideId: number, data: UpdateSlideRequest): Promise<ApiResponse<HeroSlide>> {
+    const formData = new FormData();
+    formData.append('title', data.title);
+    if (data.subtitle) formData.append('subtitle', data.subtitle);
+    if (data.image) formData.append('image', data.image);
+    if (data.cta_text) formData.append('cta_text', data.cta_text);
+    if (data.cta_link) formData.append('cta_link', data.cta_link);
+
+    const response = await this.putFormData<ApiResponse<HeroSlide>>(`/admin/heroes/${sliderId}/slides/${slideId}`, formData);
+    return response;
+  }
+
+  // Delete hero/slider
   async deleteHero(id: number): Promise<ApiResponse<{}>> {
     const response = await this.delete<ApiResponse<{}>>(`/admin/heroes/${id}`);
     return response;
   }
 
+  // Delete slide
+  async deleteSlide(sliderId: number, slideId: number): Promise<ApiResponse<{}>> {
+    const response = await this.delete<ApiResponse<{}>>(`/admin/heroes/${sliderId}/slides/${slideId}`);
+    return response;
+  }
+
   // Reorder heroes
-  async reorderHeroes(order: number[]): Promise<ApiResponse<{ heroes: HeroAPI[] }>> {
-    const response = await this.request<ApiResponse<{ heroes: HeroAPI[] }>>('/admin/heroes/reorder', {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ order }),
-    });
+  async reorderHeroes(order: number[]): Promise<ApiResponse<{}>> {
+    const response = await this.post<ApiResponse<{}>>('/admin/heroes/reorder', { order });
+    return response;
+  }
+
+  // Reorder slides in slider
+  async reorderSlides(sliderId: number, order: number[]): Promise<ApiResponse<{}>> {
+    const response = await this.post<ApiResponse<{}>>(`/admin/heroes/${sliderId}/slides/reorder`, { order });
     return response;
   }
 }

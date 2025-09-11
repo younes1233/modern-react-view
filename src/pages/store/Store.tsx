@@ -185,7 +185,7 @@ const Store = () => {
             }}>
               <div className="absolute inset-0">
                 <img
-                  src={deviceType === 'mobile' ? currentSlide.images.hero.mobile : currentSlide.images.hero.desktop}
+                  src={currentSlide.image_url || "/placeholder.svg"}
                   alt="Hero Background"
                   className="w-full h-full object-cover transition-opacity duration-500"
                   style={{
@@ -193,7 +193,7 @@ const Store = () => {
                     transform: 'scale(1.02)',
                   }}
                   onError={(e) => {
-                    e.currentTarget.src = currentSlide.images.original;
+                    e.currentTarget.src = "/placeholder.svg";
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>

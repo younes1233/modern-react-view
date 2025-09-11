@@ -1,101 +1,48 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { heroService, HeroAPI, CreateHeroRequest, UpdateHeroRequest } from '@/services/heroService';
+import { heroService, HeroAPI, CreateSingleHeroRequest, CreateSliderRequest, UpdateHeroRequest, CreateSlideRequest, UpdateSlideRequest } from '@/services/heroService';
 import { useToast } from '@/hooks/use-toast';
 
+// Public heroes for store front
 export const useHeroes = () => {
   return useQuery({
     queryKey: ['heroes'],
     queryFn: async () => {
-      console.log('useHeroes: Fetching heroes...');
-      const response = await heroService.getHeroes();
-      console.log('useHeroes: API response:', response);
+      const response = await heroService.getPublicHeroes();
       return response;
     },
     select: (data) => {
-      console.log('useHeroes: Selecting data:', data);
-      if (data && data.details && data.details.heroes) {
-        // Filter to only include active heroes, but exclude individual slides
-        // Slides will be included as part of their parent slider
-        return data.details.heroes.filter(hero => 
-          hero.is_active && hero.type !== 'slide'
-        );
+      if (data && data.details) {
+        return data.details.filter(hero => hero.is_active);
       }
       return [];
     }
   });
 };
 
+// Admin heroes for management
 export const useAdminHeroes = () => {
   return useQuery({
     queryKey: ['admin-heroes'],
     queryFn: async () => {
-      const response = await heroService.getHeroes();
+      const response = await heroService.getAdminHeroes();
       return response;
     },
     select: (data) => {
-      if (data && data.details && data.details.heroes) {
-        // Process the heroes to build the hierarchy
-        const allHeroes = data.details.heroes;
-        const result: HeroAPI[] = [];
-        
-        // First pass: add all non-slide heroes
-        allHeroes.forEach(hero => {
-          if (hero.type !== 'slide') {
-            result.push({
-              ...hero,
-              slides: [],
-              slides_count: 0
-            });
-          }
-        });
-        
-        // Second pass: add slides to their parent sliders and count them
-        allHeroes.forEach(hero => {
-          if (hero.type === 'slide' && hero.parent_id) {
-            const parent = result.find(h => h.id === hero.parent_id);
-            if (parent) {
-              if (!parent.slides) parent.slides = [];
-              parent.slides.push(hero as HeroAPI);
-            }
-          }
-        });
-        
-        // Third pass: update slides_count for each parent
-        result.forEach(hero => {
-          if (hero.type === 'slider' && hero.slides) {
-            hero.slides_count = hero.slides.length;
-          }
-        });
-        
-        return result;
+      if (data && data.details) {
+        return data.details;
       }
       return [];
     }
   });
 };
 
-export const useHero = (id: number) => {
-  return useQuery({
-    queryKey: ['hero', id],
-    queryFn: async () => {
-      const response = await heroService.getHero(id);
-      return response;
-    },
-    select: (data) => {
-      if (data && data.details && data.details.hero) {
-        return data.details.hero;
-      }
-      return null;
-    }
-  });
-};
-
-export const useCreateHero = () => {
+// Create single hero
+export const useCreateSingleHero = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: (data: CreateHeroRequest) => heroService.createHero(data),
+    mutationFn: (data: CreateSingleHeroRequest) => heroService.createSingleHero(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
@@ -114,6 +61,58 @@ export const useCreateHero = () => {
   });
 };
 
+// Create slider
+export const useCreateSlider = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: (data: CreateSliderRequest) => heroService.createSlider(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['heroes'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
+      toast({
+        title: "Success",
+        description: "Slider created successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to create slider",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+// Add slide to slider
+export const useAddSlide = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ sliderId, data }: { sliderId: number; data: CreateSlideRequest }) => 
+      heroService.addSlide(sliderId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['heroes'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
+      toast({
+        title: "Success",
+        description: "Slide added successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add slide",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+// Update hero
 export const useUpdateHero = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -139,6 +138,33 @@ export const useUpdateHero = () => {
   });
 };
 
+// Update slide
+export const useUpdateSlide = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ sliderId, slideId, data }: { sliderId: number; slideId: number; data: UpdateSlideRequest }) => 
+      heroService.updateSlide(sliderId, slideId, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['heroes'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
+      toast({
+        title: "Success",
+        description: "Slide updated successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to update slide",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+// Delete hero
 export const useDeleteHero = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -163,7 +189,33 @@ export const useDeleteHero = () => {
   });
 };
 
+// Delete slide
+export const useDeleteSlide = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
+  return useMutation({
+    mutationFn: ({ sliderId, slideId }: { sliderId: number; slideId: number }) => 
+      heroService.deleteSlide(sliderId, slideId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['heroes'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
+      toast({
+        title: "Success",
+        description: "Slide deleted successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete slide",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+// Reorder heroes
 export const useReorderHeroes = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -182,6 +234,32 @@ export const useReorderHeroes = () => {
       toast({
         title: "Error",
         description: "Failed to reorder heroes",
+        variant: "destructive"
+      });
+    }
+  });
+};
+
+// Reorder slides
+export const useReorderSlides = () => {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  return useMutation({
+    mutationFn: ({ sliderId, order }: { sliderId: number; order: number[] }) => 
+      heroService.reorderSlides(sliderId, order),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['heroes'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
+      toast({
+        title: "Success",
+        description: "Slides reordered successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to reorder slides",
         variant: "destructive"
       });
     }

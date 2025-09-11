@@ -9,8 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Save, Edit2, Eye, Image, Type, Link as LinkIcon, Monitor, Smartphone, Plus, Upload, Trash2, ChevronLeft, ChevronRight, Play, Pause, RotateCcw, Layers, GripVertical } from "lucide-react";
-import { useAdminHeroes, useCreateHero, useUpdateHero, useDeleteHero, useReorderHeroes } from "@/hooks/useHeroes";
-import { HeroAPI, CreateHeroRequest, UpdateHeroRequest } from "@/services/heroService";
+import { useAdminHeroes, useCreateSingleHero, useCreateSlider, useAddSlide, useUpdateHero, useUpdateSlide, useDeleteHero, useDeleteSlide, useReorderHeroes } from "@/hooks/useHeroes";
+import { HeroAPI, CreateSingleHeroRequest, CreateSliderRequest, UpdateHeroRequest, CreateSlideRequest, UpdateSlideRequest } from "@/services/heroService";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
@@ -22,7 +22,7 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onD
   onEdit: () => void; 
   onDelete: () => void;
   onAddSlide: () => void;
-  onEditSlide: (slide: HeroAPI) => void;
+  onEditSlide: (slide: any) => void;
   onDeleteSlide: (slideId: number) => void;
 }) {
   const {
@@ -56,7 +56,7 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onD
               </Badge>
               {hero.type === 'slider' && (
                 <Badge variant="outline" className="text-xs">
-                  {hero.slides_count || 0} slides
+                  {hero.slides?.length || 0} slides
                 </Badge>
               )}
             </div>
@@ -76,21 +76,24 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onD
           </Button>
         </div>
       </div>
-      <div className="flex gap-3">
-        <div className="w-16 h-12 rounded overflow-hidden bg-muted">
-          <img 
-            src={hero.images.hero.desktop} 
-            alt={hero.title} 
-            className="w-full h-full object-cover" 
-          />
+      
+      {hero.image_url && (
+        <div className="flex gap-3">
+          <div className="w-16 h-12 rounded overflow-hidden bg-muted">
+            <img 
+              src={hero.image_url} 
+              alt={hero.title} 
+              className="w-full h-full object-cover" 
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-muted-foreground truncate">{hero.subtitle}</p>
+            {hero.cta_text && (
+              <p className="text-xs text-primary truncate">{hero.cta_text}</p>
+            )}
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-xs text-muted-foreground truncate">{hero.subtitle}</p>
-          {hero.cta_text && (
-            <p className="text-xs text-primary truncate">{hero.cta_text}</p>
-          )}
-        </div>
-      </div>
+      )}
       
       {/* Show slides if this is a slider with slides */}
       {hero.type === 'slider' && hero.slides && hero.slides.length > 0 && (
@@ -100,7 +103,7 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onD
             <div key={slide.id} className="flex items-center gap-2 bg-muted/50 rounded p-2">
               <div className="w-8 h-6 rounded overflow-hidden bg-muted">
                 <img 
-                  src={slide.images.hero.desktop} 
+                  src={slide.image_url} 
                   alt={slide.title} 
                   className="w-full h-full object-cover" 
                 />
@@ -110,9 +113,6 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onD
                 <p className="text-xs text-muted-foreground truncate">{slide.subtitle}</p>
               </div>
               <div className="flex items-center gap-1">
-                <Badge variant={slide.is_active ? "default" : "secondary"} className="text-xs">
-                  {slide.is_active ? "Active" : "Inactive"}
-                </Badge>
                 <Button size="sm" variant="ghost" onClick={() => onEditSlide(slide)} className="h-6 w-6 p-0">
                   <Edit2 className="w-3 h-3" />
                 </Button>
@@ -134,64 +134,50 @@ function HeroForm({
   onSave, 
   onCancel, 
   isCreating = false,
-  allHeroes = [],
-  isAddingSlide = false,
-  parentSliderId
+  mode = 'single'
 }: { 
-  hero?: HeroAPI; 
-  onSave: (data: CreateHeroRequest | UpdateHeroRequest, file?: File) => void;
+  hero?: HeroAPI | any; 
+  onSave: (data: any) => void;
   onCancel: () => void;
   isCreating?: boolean;
-  allHeroes?: HeroAPI[];
-  isAddingSlide?: boolean;
-  parentSliderId?: number;
+  mode?: 'single' | 'slider' | 'slide';
 }) {
   const [formData, setFormData] = useState({
     title: hero?.title || '',
     subtitle: hero?.subtitle || '',
     cta_text: hero?.cta_text || '',
     cta_link: hero?.cta_link || '',
-    type: hero?.type || (isAddingSlide ? 'slide' : 'single') as 'single' | 'slider' | 'slide',
-    parent_id: hero?.parent_id || parentSliderId || undefined,
     is_active: hero?.is_active ?? true,
   });
-  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
+  const [image, setImage] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string>(
-    hero?.images?.hero?.desktop || ''
-  );
-  const [mobilePreviewImage, setMobilePreviewImage] = useState<string>(
-    hero?.images?.hero?.mobile || ''
+    hero?.image_url || ''
   );
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      setBackgroundImage(file);
+      setImage(file);
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
-      setMobilePreviewImage(imageUrl); // Use same image for mobile preview
     }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!formData.title || (!backgroundImage && isCreating)) {
-      return;
-    }
-
-    // Validation for slide type requiring parent_id
-    if (formData.type === 'slide' && !formData.parent_id) {
-      alert('Please select a parent slider when type is slide.');
+    if (!formData.title || (!image && isCreating && mode !== 'slider')) {
       return;
     }
 
     const data = {
       ...formData,
-      background_image: backgroundImage!,
+      ...(image && { image }),
+      ...(mode === 'single' && { type: 'single' as const }),
+      ...(mode === 'slider' && { type: 'slider' as const }),
     };
 
-    onSave(data, backgroundImage || undefined);
+    onSave(data);
   };
 
   return (
@@ -210,187 +196,124 @@ function HeroForm({
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="subtitle">Subtitle</Label>
-            <Input
-              id="subtitle"
-              value={formData.subtitle}
-              onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
-              placeholder="Enter hero subtitle"
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="cta_text">CTA Text</Label>
-              <Input
-                id="cta_text"
-                value={formData.cta_text}
-                onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
-                placeholder="Shop Now"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="cta_link">CTA Link</Label>
-              <Input
-                id="cta_link"
-                value={formData.cta_link}
-                onChange={(e) => setFormData(prev => ({ ...prev, cta_link: e.target.value }))}
-                placeholder="/collections/all"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type</Label>
-              <select
-                id="type"
-                value={formData.type}
-                onChange={(e) => setFormData(prev => ({ ...prev, type: e.target.value as 'single' | 'slider' | 'slide' }))}
-                className="w-full p-2 border rounded-md bg-background"
-                disabled={isAddingSlide}
-              >
-                <option value="single">single</option>
-                <option value="slider">slider</option>
-                <option value="slide">slide</option>
-              </select>
-            </div>
-
-            {formData.type === 'slide' && (
+          {mode !== 'slider' && (
+            <>
               <div className="space-y-2">
-                <Label htmlFor="parent_id">Parent Slider *</Label>
-                <select
-                  id="parent_id"
-                  value={formData.parent_id || ''}
-                  onChange={(e) => setFormData(prev => ({ ...prev, parent_id: e.target.value ? parseInt(e.target.value) : undefined }))}
-                  className="w-full p-2 border rounded-md bg-background"
-                  required
-                >
-                  <option value="">Select Parent Slider</option>
-                  {allHeroes
-                    .filter(h => h.type === 'slider' && h.id !== hero?.id)
-                    .map(h => (
-                      <option key={h.id} value={h.id}>
-                        {h.title}
-                      </option>
-                    ))
-                  }
-                </select>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Switch
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+                <Label htmlFor="subtitle">Subtitle</Label>
+                <Input
+                  id="subtitle"
+                  value={formData.subtitle}
+                  onChange={(e) => setFormData(prev => ({ ...prev, subtitle: e.target.value }))}
+                  placeholder="Enter hero subtitle"
                 />
-                Active
-              </Label>
-            </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="cta_text">CTA Text</Label>
+                  <Input
+                    id="cta_text"
+                    value={formData.cta_text}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cta_text: e.target.value }))}
+                    placeholder="Shop Now"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="cta_link">CTA Link</Label>
+                  <Input
+                    id="cta_link"
+                    value={formData.cta_link}
+                    onChange={(e) => setFormData(prev => ({ ...prev, cta_link: e.target.value }))}
+                    placeholder="/collections/all"
+                  />
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="space-y-2">
+            <Label className="flex items-center gap-2">
+              <Switch
+                checked={formData.is_active}
+                onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_active: checked }))}
+              />
+              Active
+            </Label>
           </div>
         </div>
 
         {/* Image Upload & Preview */}
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="background_image">Background Image {isCreating && '*'}</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <input
-                id="background_image"
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
-              />
-              <label htmlFor="background_image" className="cursor-pointer">
-                {previewImage ? (
-                  <div className="space-y-2">
+        {mode !== 'slider' && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="image">Image {isCreating && '*'}</Label>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
+                />
+                <label htmlFor="image" className="cursor-pointer">
+                  {previewImage ? (
+                    <div className="space-y-2">
+                      <img 
+                        src={previewImage} 
+                        alt="Preview" 
+                        className="w-full h-32 object-cover rounded-lg mx-auto"
+                      />
+                      <p className="text-sm text-muted-foreground">Click to change image</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
+                      <p className="text-sm text-muted-foreground">
+                        Click to upload image
+                      </p>
+                    </div>
+                  )}
+                </label>
+              </div>
+            </div>
+
+            {previewImage && (
+              <div className="space-y-4">
+                <Label>Preview</Label>
+                
+                {/* Desktop Preview */}
+                <div className="space-y-2">
+                  <Label className="text-sm text-muted-foreground">Desktop</Label>
+                  <div className="relative rounded-lg overflow-hidden h-40">
                     <img 
                       src={previewImage} 
-                      alt="Preview" 
-                      className="w-full h-32 object-cover rounded-lg mx-auto"
+                      alt="Desktop Hero Preview" 
+                      className="w-full h-full object-cover"
                     />
-                    <p className="text-sm text-muted-foreground">Click to change image</p>
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
+                      <div className="absolute inset-0 flex items-center justify-center text-center p-4">
+                        <div>
+                          <h3 className="text-white font-bold text-lg mb-2">
+                            {formData.title || 'Hero Title'}
+                          </h3>
+                          <p className="text-white/90 text-sm mb-3">
+                            {formData.subtitle || 'Hero subtitle'}
+                          </p>
+                          {formData.cta_text && (
+                            <Button size="sm" className="bg-primary">
+                              {formData.cta_text}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                ) : (
-                  <div className="space-y-2">
-                    <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      Click to upload background image
-                    </p>
-                  </div>
-                )}
-              </label>
-            </div>
+                </div>
+              </div>
+            )}
           </div>
-
-          {previewImage && (
-            <div className="space-y-4">
-              <Label>Preview</Label>
-              
-              {/* Desktop Preview */}
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Desktop</Label>
-                <div className="relative rounded-lg overflow-hidden h-40">
-                  <img 
-                    src={previewImage} 
-                    alt="Desktop Hero Preview" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
-                    <div className="absolute inset-0 flex items-center justify-center text-center p-4">
-                      <div>
-                        <h3 className="text-white font-bold text-lg mb-2">
-                          {formData.title || 'Hero Title'}
-                        </h3>
-                        <p className="text-white/90 text-sm mb-3">
-                          {formData.subtitle || 'Hero subtitle'}
-                        </p>
-                        {formData.cta_text && (
-                          <Button size="sm" className="bg-primary">
-                            {formData.cta_text}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile Preview */}
-              <div className="space-y-2">
-                <Label className="text-sm text-muted-foreground">Mobile</Label>
-                <div className="relative rounded-lg overflow-hidden h-32 max-w-48 mx-auto">
-                  <img 
-                    src={mobilePreviewImage || previewImage} 
-                    alt="Mobile Hero Preview" 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
-                    <div className="absolute inset-0 flex items-center justify-center text-center p-2">
-                      <div>
-                        <h3 className="text-white font-bold text-sm mb-1">
-                          {formData.title || 'Hero Title'}
-                        </h3>
-                        <p className="text-white/90 text-xs mb-2">
-                          {formData.subtitle || 'Hero subtitle'}
-                        </p>
-                        {formData.cta_text && (
-                          <Button size="sm" className="bg-primary text-xs px-2 py-1">
-                            {formData.cta_text}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       <div className="flex gap-3 justify-end">
@@ -399,10 +322,10 @@ function HeroForm({
         </Button>
         <Button 
           type="submit" 
-          disabled={!formData.title || (!backgroundImage && isCreating)}
+          disabled={!formData.title || (!image && isCreating && mode !== 'slider')}
         >
           <Save className="w-4 h-4 mr-2" />
-          {isCreating ? 'Create Hero' : 'Update Hero'}
+          {isCreating ? `Create ${mode}` : `Update ${mode}`}
         </Button>
       </div>
     </form>
@@ -411,13 +334,20 @@ function HeroForm({
 
 export function HeroManagement() {
   const [editingHero, setEditingHero] = useState<HeroAPI | null>(null);
+  const [editingSlide, setEditingSlide] = useState<any | null>(null);
+  const [editingSliderId, setEditingSliderId] = useState<number | null>(null);
   const [isCreating, setIsCreating] = useState(false);
+  const [createMode, setCreateMode] = useState<'single' | 'slider'>('single');
   const [addingSlideToHero, setAddingSlideToHero] = useState<number | null>(null);
 
   const { data: heroes, isLoading } = useAdminHeroes();
-  const createHero = useCreateHero();
+  const createSingleHero = useCreateSingleHero();
+  const createSlider = useCreateSlider();
+  const addSlide = useAddSlide();
   const updateHero = useUpdateHero();
+  const updateSlide = useUpdateSlide();
   const deleteHero = useDeleteHero();
+  const deleteSlide = useDeleteSlide();
   const reorderHeroes = useReorderHeroes();
 
   const sensors = useSensors(
@@ -427,12 +357,20 @@ export function HeroManagement() {
     })
   );
 
-  const handleCreateHero = (data: CreateHeroRequest) => {
-    createHero.mutate(data, {
-      onSuccess: () => {
-        setIsCreating(false);
-      }
-    });
+  const handleCreateHero = (data: any) => {
+    if (createMode === 'single') {
+      createSingleHero.mutate(data as CreateSingleHeroRequest, {
+        onSuccess: () => {
+          setIsCreating(false);
+        }
+      });
+    } else {
+      createSlider.mutate(data as CreateSliderRequest, {
+        onSuccess: () => {
+          setIsCreating(false);
+        }
+      });
+    }
   };
 
   const handleUpdateHero = (data: UpdateHeroRequest) => {
@@ -449,22 +387,42 @@ export function HeroManagement() {
     deleteHero.mutate(heroId);
   };
 
-  const handleEditSlide = (slide: HeroAPI) => {
-    setEditingHero(slide);
+  const handleEditSlide = (slide: any) => {
+    const parentSlider = heroes?.find(h => h.slides?.some((s: any) => s.id === slide.id));
+    if (parentSlider) {
+      setEditingSlide(slide);
+      setEditingSliderId(parentSlider.id);
+    }
+  };
+
+  const handleUpdateSlide = (data: UpdateSlideRequest) => {
+    if (editingSlide && editingSliderId) {
+      updateSlide.mutate({ 
+        sliderId: editingSliderId, 
+        slideId: editingSlide.id, 
+        data 
+      }, {
+        onSuccess: () => {
+          setEditingSlide(null);
+          setEditingSliderId(null);
+        }
+      });
+    }
   };
 
   const handleDeleteSlide = (slideId: number) => {
-    deleteHero.mutate(slideId);
+    const parentSlider = heroes?.find(h => h.slides?.some((s: any) => s.id === slideId));
+    if (parentSlider) {
+      deleteSlide.mutate({ sliderId: parentSlider.id, slideId });
+    }
   };
 
-  const handleAddSlide = (data: CreateHeroRequest) => {
+  const handleAddSlide = (data: CreateSlideRequest) => {
     if (addingSlideToHero) {
-      const slideData = {
-        ...data,
-        type: 'slide' as const,
-        parent_id: addingSlideToHero,
-      };
-      createHero.mutate(slideData, {
+      addSlide.mutate({ 
+        sliderId: addingSlideToHero, 
+        data 
+      }, {
         onSuccess: () => {
           setAddingSlideToHero(null);
         }
@@ -475,19 +433,96 @@ export function HeroManagement() {
   const handleDragEnd = (event: any) => {
     const { active, over } = event;
 
-    if (active.id !== over?.id && heroes) {
-      const oldIndex = heroes.findIndex(hero => hero.id === active.id);
-      const newIndex = heroes.findIndex(hero => hero.id === over.id);
+    if (active.id !== over.id && heroes) {
+      const oldIndex = heroes.findIndex((hero) => hero.id === active.id);
+      const newIndex = heroes.findIndex((hero) => hero.id === over.id);
+
+      const newOrder = arrayMove(heroes, oldIndex, newIndex);
+      const orderIds = newOrder.map(hero => hero.id);
       
-      const reorderedHeroes = arrayMove(heroes, oldIndex, newIndex);
-      const order = reorderedHeroes.map(hero => hero.id);
-      
-      reorderHeroes.mutate(order);
+      reorderHeroes.mutate(orderIds);
     }
   };
 
-  if (isLoading) {
-    return <div>Loading heroes...</div>;
+  if (isLoading) return <div>Loading...</div>;
+
+  // Show create form
+  if (isCreating) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Create New {createMode === 'single' ? 'Hero' : 'Slider'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <HeroForm
+            onSave={handleCreateHero}
+            onCancel={() => setIsCreating(false)}
+            isCreating={true}
+            mode={createMode}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show edit hero form
+  if (editingHero) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Edit {editingHero.type === 'single' ? 'Hero' : 'Slider'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <HeroForm
+            hero={editingHero}
+            onSave={handleUpdateHero}
+            onCancel={() => setEditingHero(null)}
+            mode={editingHero.type}
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show edit slide form
+  if (editingSlide) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Edit Slide</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <HeroForm
+            hero={editingSlide}
+            onSave={handleUpdateSlide}
+            onCancel={() => {
+              setEditingSlide(null);
+              setEditingSliderId(null);
+            }}
+            mode="slide"
+          />
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // Show add slide form
+  if (addingSlideToHero) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Add Slide to Slider</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <HeroForm
+            onSave={handleAddSlide}
+            onCancel={() => setAddingSlideToHero(null)}
+            isCreating={true}
+            mode="slide"
+          />
+        </CardContent>
+      </Card>
+    );
   }
 
   return (
@@ -495,61 +530,70 @@ export function HeroManagement() {
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-2xl font-bold">Hero Management</h2>
-          <p className="text-muted-foreground">Manage your store's hero sections and sliders</p>
+          <p className="text-muted-foreground">
+            Manage hero sections and sliders for your store
+          </p>
         </div>
-        <Button onClick={() => setIsCreating(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Hero
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={() => {
+              setCreateMode('single');
+              setIsCreating(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Hero
+          </Button>
+          <Button 
+            variant="outline"
+            onClick={() => {
+              setCreateMode('slider');
+              setIsCreating(true);
+            }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Slider
+          </Button>
+        </div>
       </div>
 
-      <Separator />
-
-      {/* Create/Edit Form */}
-      {(isCreating || editingHero || addingSlideToHero) && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              {isCreating && "Create New Hero"}
-              {editingHero && "Edit Hero"}
-              {addingSlideToHero && "Add Slide"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <HeroForm
-              hero={editingHero || undefined}
-              onSave={isCreating ? handleCreateHero : addingSlideToHero ? handleAddSlide : handleUpdateHero}
-              onCancel={() => {
-                setIsCreating(false);
-                setEditingHero(null);
-                setAddingSlideToHero(null);
-              }}
-              isCreating={isCreating || !!addingSlideToHero}
-              allHeroes={heroes || []}
-              isAddingSlide={!!addingSlideToHero}
-              parentSliderId={addingSlideToHero || undefined}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Heroes List */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Layers className="w-5 h-5" />
-            Heroes ({heroes?.length || 0})
+            Heroes & Sliders
+            {heroes && heroes.length > 0 && (
+              <Badge variant="secondary">{heroes.length}</Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {heroes && heroes.length > 0 ? (
-            <DndContext
+          {!heroes || heroes.length === 0 ? (
+            <div className="text-center py-8">
+              <Image className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-medium mb-2">No heroes found</h3>
+              <p className="text-muted-foreground mb-4">
+                Create your first hero section to get started
+              </p>
+              <Button onClick={() => {
+                setCreateMode('single');
+                setIsCreating(true);
+              }}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create First Hero
+              </Button>
+            </div>
+          ) : (
+            <DndContext 
               sensors={sensors}
               collisionDetection={closestCenter}
               onDragEnd={handleDragEnd}
             >
-              <SortableContext items={heroes.map(h => h.id)} strategy={verticalListSortingStrategy}>
-                <div className="space-y-3">
+              <SortableContext 
+                items={heroes.map(h => h.id)} 
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-4">
                   {heroes.map((hero) => (
                     <SortableHeroItem
                       key={hero.id}
@@ -564,12 +608,6 @@ export function HeroManagement() {
                 </div>
               </SortableContext>
             </DndContext>
-          ) : (
-            <div className="text-center py-8 text-muted-foreground">
-              <Layers className="w-12 h-12 mx-auto mb-4 opacity-50" />
-              <p>No heroes created yet</p>
-              <p className="text-sm">Create your first hero section to get started</p>
-            </div>
           )}
         </CardContent>
       </Card>
