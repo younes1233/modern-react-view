@@ -766,7 +766,10 @@ const ProductDetail = () => {
 
                         <div className="space-y-4">
                           {reviewsData?.details?.reviews && reviewsData.details.reviews.length > 0 ? (
-                            reviewsData.details.reviews.map((review) => (
+                            reviewsData.details.reviews.map((review) => {
+                              console.log('Review data:', review);
+                              console.log('User data:', review.user);
+                              return (
                               <div key={review.id} className="border-b border-gray-100 pb-4">
                                 <div className="flex items-center justify-between mb-2">
                                    <span className="font-medium">
@@ -813,8 +816,9 @@ const ProductDetail = () => {
                                     refetchReviews();
                                   }}
                                 />
-                              </div>
-                            ))
+                               </div>
+                               );
+                            })
                           ) : (
                             <p className="text-gray-500 text-center py-8">
                               No reviews yet. Be the first to review this product!
