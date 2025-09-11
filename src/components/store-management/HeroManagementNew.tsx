@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Save, Edit2, Eye, Image, Type, Link as LinkIcon, Monitor, Smartphone, Plus, Upload, Trash2, ChevronLeft, ChevronRight, Play, Pause, RotateCcw, Layers, GripVertical } from "lucide-react";
-import { useAdminHeroes, useCreateHero, useUpdateHero, useDeleteHero, useAddSlide, useReorderHeroes } from "@/hooks/useHeroes";
+import { useAdminHeroes, useCreateHero, useUpdateHero, useDeleteHero, useReorderHeroes } from "@/hooks/useHeroes";
 import { HeroAPI, CreateHeroRequest, UpdateHeroRequest } from "@/services/heroService";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -408,7 +408,6 @@ export function HeroManagement() {
   const createHero = useCreateHero();
   const updateHero = useUpdateHero();
   const deleteHero = useDeleteHero();
-  const addSlide = useAddSlide();
   const reorderHeroes = useReorderHeroes();
 
   const sensors = useSensors(
@@ -442,7 +441,12 @@ export function HeroManagement() {
 
   const handleAddSlide = (data: CreateHeroRequest) => {
     if (addingSlideToHero) {
-      addSlide.mutate({ heroId: addingSlideToHero, data }, {
+      const slideData = {
+        ...data,
+        type: 'slide' as const,
+        parent_id: addingSlideToHero,
+      };
+      createHero.mutate(slideData, {
         onSuccess: () => {
           setAddingSlideToHero(null);
         }

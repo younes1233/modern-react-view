@@ -34,20 +34,34 @@ export const useAdminHeroes = () => {
     },
     select: (data) => {
       if (data && data.details && data.details.heroes) {
-        // Group heroes: return parent heroes with their slides nested
+        // Process the heroes to build the hierarchy
         const allHeroes = data.details.heroes;
-        const parentHeroes = allHeroes.filter(hero => hero.type !== 'slide');
+        const result: HeroAPI[] = [];
         
-        // Add slides to their parent heroes
-        return parentHeroes.map(parent => {
-          if (parent.type === 'slider') {
-            const slides = allHeroes.filter(hero => 
-              hero.type === 'slide' && hero.parent_id === parent.id
-            );
-            return { ...parent, slides, slides_count: slides.length };
+        // First pass: add all non-slide heroes
+        allHeroes.forEach(hero => {
+          if (hero.type !== 'slide') {
+            result.push({
+              ...hero,
+              slides: [],
+              slides_count: 0
+            });
           }
-          return parent;
         });
+        
+        // Second pass: add slides to their parent sliders
+        allHeroes.forEach(hero => {
+          if (hero.type === 'slide' && hero.parent_id) {
+            const parent = result.find(h => h.id === hero.parent_id);
+            if (parent) {
+              if (!parent.slides) parent.slides = [];
+              parent.slides.push(hero);
+              parent.slides_count = parent.slides.length;
+            }
+          }
+        });
+        
+        return result;
       }
       return [];
     }
@@ -143,30 +157,6 @@ export const useDeleteHero = () => {
   });
 };
 
-export const useAddSlide = () => {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: ({ heroId, data }: { heroId: number; data: CreateHeroRequest }) => 
-      heroService.addSlide(heroId, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['heroes'] });
-      queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Slide added successfully"
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add slide",
-        variant: "destructive"
-      });
-    }
-  });
-};
 
 export const useReorderHeroes = () => {
   const queryClient = useQueryClient();

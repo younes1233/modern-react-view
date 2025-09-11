@@ -63,7 +63,7 @@ export interface UpdateHeroRequest {
 }
 
 class HeroService extends BaseApiService {
-  // Get all heroes
+  // Get all heroes (admin view - includes all types)
   async getHeroes(): Promise<ApiResponse<{ heroes: HeroAPI[] }>> {
     console.log('Fetching heroes from API...');
     const response = await this.get<ApiResponse<{ heroes: HeroAPI[] }>>('/admin/heroes');
@@ -77,8 +77,8 @@ class HeroService extends BaseApiService {
     return response;
   }
 
-  // Create hero
-  async createHero(data: CreateHeroRequest): Promise<ApiResponse<{ heroes: HeroAPI[] }>> {
+  // Create hero - this creates either single, slider, or slide
+  async createHero(data: CreateHeroRequest): Promise<ApiResponse<{ hero: HeroAPI }>> {
     const formData = new FormData();
     formData.append('title', data.title);
     if (data.subtitle) formData.append('subtitle', data.subtitle);
@@ -89,12 +89,12 @@ class HeroService extends BaseApiService {
     if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
     formData.append('is_active', data.is_active ? '1' : '0');
 
-    const response = await this.postFormData<ApiResponse<{ heroes: HeroAPI[] }>>('/admin/heroes', formData);
+    const response = await this.postFormData<ApiResponse<{ hero: HeroAPI }>>('/admin/heroes', formData);
     return response;
   }
 
   // Update hero
-  async updateHero(id: number, data: UpdateHeroRequest): Promise<ApiResponse<{ heroes: HeroAPI[] }>> {
+  async updateHero(id: number, data: UpdateHeroRequest): Promise<ApiResponse<{ hero: HeroAPI }>> {
     const formData = new FormData();
     formData.append('title', data.title);
     if (data.subtitle) formData.append('subtitle', data.subtitle);
@@ -105,29 +105,13 @@ class HeroService extends BaseApiService {
     if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
     formData.append('is_active', data.is_active ? '1' : '0');
 
-    const response = await this.putFormData<ApiResponse<{ heroes: HeroAPI[] }>>(`/admin/heroes/${id}`, formData);
+    const response = await this.putFormData<ApiResponse<{ hero: HeroAPI }>>(`/admin/heroes/${id}`, formData);
     return response;
   }
 
   // Delete hero
   async deleteHero(id: number): Promise<ApiResponse<{}>> {
     const response = await this.delete<ApiResponse<{}>>(`/admin/heroes/${id}`);
-    return response;
-  }
-
-  // Add slide to hero
-  async addSlide(heroId: number, data: CreateHeroRequest): Promise<ApiResponse<{ slide: HeroAPI }>> {
-    const formData = new FormData();
-    formData.append('title', data.title);
-    if (data.subtitle) formData.append('subtitle', data.subtitle);
-    formData.append('background_image', data.background_image);
-    if (data.cta_text) formData.append('cta_text', data.cta_text);
-    if (data.cta_link) formData.append('cta_link', data.cta_link);
-    formData.append('type', data.type);
-    if (data.parent_id) formData.append('parent_id', data.parent_id.toString());
-    formData.append('is_active', data.is_active ? '1' : '0');
-
-    const response = await this.postFormData<ApiResponse<{ slide: HeroAPI }>>(`/admin/heroes/${heroId}/slides`, formData);
     return response;
   }
 
