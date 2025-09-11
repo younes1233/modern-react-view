@@ -49,15 +49,21 @@ export const useAdminHeroes = () => {
           }
         });
         
-        // Second pass: add slides to their parent sliders
+        // Second pass: add slides to their parent sliders and count them
         allHeroes.forEach(hero => {
           if (hero.type === 'slide' && hero.parent_id) {
             const parent = result.find(h => h.id === hero.parent_id);
             if (parent) {
               if (!parent.slides) parent.slides = [];
-              parent.slides.push(hero);
-              parent.slides_count = parent.slides.length;
+              parent.slides.push(hero as HeroAPI);
             }
+          }
+        });
+        
+        // Third pass: update slides_count for each parent
+        result.forEach(hero => {
+          if (hero.type === 'slider' && hero.slides) {
+            hero.slides_count = hero.slides.length;
           }
         });
         

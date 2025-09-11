@@ -17,11 +17,13 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 // Sortable Hero Item Component
-function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide }: { 
+function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onDeleteSlide }: { 
   hero: HeroAPI; 
   onEdit: () => void; 
   onDelete: () => void;
   onAddSlide: () => void;
+  onEditSlide: (slide: HeroAPI) => void;
+  onDeleteSlide: (slideId: number) => void;
 }) {
   const {
     attributes,
@@ -93,7 +95,7 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide }: {
       {/* Show slides if this is a slider with slides */}
       {hero.type === 'slider' && hero.slides && hero.slides.length > 0 && (
         <div className="ml-6 space-y-2 border-l-2 border-muted pl-4">
-          <p className="text-xs font-medium text-muted-foreground">Slides:</p>
+          <p className="text-xs font-medium text-muted-foreground">Slides ({hero.slides.length}):</p>
           {hero.slides.map((slide) => (
             <div key={slide.id} className="flex items-center gap-2 bg-muted/50 rounded p-2">
               <div className="w-8 h-6 rounded overflow-hidden bg-muted">
@@ -107,9 +109,17 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide }: {
                 <p className="text-xs font-medium truncate">{slide.title}</p>
                 <p className="text-xs text-muted-foreground truncate">{slide.subtitle}</p>
               </div>
-              <Badge variant={slide.is_active ? "default" : "secondary"} className="text-xs">
-                {slide.is_active ? "Active" : "Inactive"}
-              </Badge>
+              <div className="flex items-center gap-1">
+                <Badge variant={slide.is_active ? "default" : "secondary"} className="text-xs">
+                  {slide.is_active ? "Active" : "Inactive"}
+                </Badge>
+                <Button size="sm" variant="ghost" onClick={() => onEditSlide(slide)} className="h-6 w-6 p-0">
+                  <Edit2 className="w-3 h-3" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => onDeleteSlide(slide.id)} className="h-6 w-6 p-0">
+                  <Trash2 className="w-3 h-3" />
+                </Button>
+              </div>
             </div>
           ))}
         </div>
@@ -439,6 +449,14 @@ export function HeroManagement() {
     deleteHero.mutate(heroId);
   };
 
+  const handleEditSlide = (slide: HeroAPI) => {
+    setEditingHero(slide);
+  };
+
+  const handleDeleteSlide = (slideId: number) => {
+    deleteHero.mutate(slideId);
+  };
+
   const handleAddSlide = (data: CreateHeroRequest) => {
     if (addingSlideToHero) {
       const slideData = {
@@ -539,6 +557,8 @@ export function HeroManagement() {
                       onEdit={() => setEditingHero(hero)}
                       onDelete={() => handleDeleteHero(hero.id)}
                       onAddSlide={() => setAddingSlideToHero(hero.id)}
+                      onEditSlide={handleEditSlide}
+                      onDeleteSlide={handleDeleteSlide}
                     />
                   ))}
                 </div>

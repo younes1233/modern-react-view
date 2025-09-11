@@ -18,7 +18,7 @@ export interface HeroSlide {
   order: number;
   parent_id: number;
   is_active: boolean;
-  type: string;
+  type: 'single' | 'slider' | 'slide';
   created_at: string;
   updated_at: string;
 }
@@ -36,7 +36,7 @@ export interface HeroAPI {
   type: 'single' | 'slider' | 'slide';
   created_at: string;
   updated_at: string;
-  slides?: HeroSlide[];
+  slides?: HeroAPI[];
   slides_count?: number;
 }
 
