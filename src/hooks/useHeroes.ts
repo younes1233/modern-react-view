@@ -8,11 +8,8 @@ export const useHeroes = () => {
     queryKey: ['heroes'],
     queryFn: async () => {
       const response = await heroService.getPublicHeroes();
-      return response;
-    },
-    select: (data) => {
-      if (data && data.details) {
-        return data.details.filter(hero => hero.is_active);
+      if (response && response.details) {
+        return response.details.filter(hero => hero.is_active);
       }
       return [];
     }
