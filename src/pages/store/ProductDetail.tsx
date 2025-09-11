@@ -676,7 +676,7 @@ const ProductDetail = () => {
                    </div>
                    <span>
                      Delivery: {product.delivery?.symbol || product.pricing.currency.symbol}
-                     {product.delivery?.cost?.toFixed(2) || '0.00'}
+                     {product.delivery?.cost ? Number(product.delivery.cost).toFixed(2) : '0.00'}
                    </span>
                  </div>
                  <div className="flex items-center space-x-3 text-sm text-gray-600">
