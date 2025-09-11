@@ -761,9 +761,9 @@ const ProductDetail = () => {
                             product.reviews.map((review) => (
                               <div key={review.id} className="border-b border-gray-100 pb-4">
                                 <div className="flex items-center justify-between mb-2">
-                                  <span className="font-medium">
-                                    {review.user?.name || `User ${review.user?.id}`}
-                                  </span>
+                                   <span className="font-medium">
+                                     {review.user?.name || 'Anonymous User'}
+                                   </span>
                                   <div className="flex items-center space-x-1">
                                     {renderStars(review.rating)}
                                   </div>
