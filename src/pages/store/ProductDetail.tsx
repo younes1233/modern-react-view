@@ -780,7 +780,7 @@ const ProductDetail = () => {
                                   </div>
                                 </div>
                                 <p className="text-gray-600 text-sm mb-2">{review.comment}</p>
-                                {review.images && (
+                                {review.images && typeof review.images === 'string' && (
                                   <div className="flex space-x-2">
                                     {review.images.split(',').map((image, index) => (
                                       <img
