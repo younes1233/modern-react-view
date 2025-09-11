@@ -17,7 +17,7 @@ import {
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { useHomeSections } from "@/hooks/useHomeSections";
-import { useHeroes } from "@/hooks/useHeroes";
+import { useStoreHeroes } from "@/hooks/useStoreHeroes";
 import { HeroSkeleton } from "@/components/store/HeroSkeleton";
 import { BannerSkeleton } from "@/components/store/BannerSkeleton";
 import { ShopByCategorySkeleton } from "@/components/store/ShopByCategorySkeleton";
@@ -30,19 +30,20 @@ const Store = () => {
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: productListingsLoading } = useProductListings();
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
-  const { data: heroes = [], isLoading: heroesLoading } = useHeroes();
+  const { data: heroes = [], isLoading: heroesLoading } = useStoreHeroes();
   const { deviceType } = useResponsiveImage();
 
   console.log('Store: Heroes data:', heroes);
   console.log('Store: Heroes loading state:', heroesLoading);
 
-  // Get slides for hero carousel
-  const activeHero = heroes.find(hero => hero.is_active);
-  console.log('Store: Active hero found:', activeHero);
+  // Handle hero carousel for different types
+  const sliderHero = heroes?.find(hero => hero.type === 'slider');
+  const singleHeroes = heroes?.filter(hero => hero.type === 'single') || [];
   
-  const slides = activeHero?.type === 'slider' && activeHero.slides?.length > 0 
-    ? activeHero.slides.sort((a, b) => a.order - b.order)
-    : activeHero ? [activeHero] : [];
+  // Use slider slides if available, otherwise use single heroes
+  const slides = sliderHero?.slides?.length > 0 
+    ? sliderHero.slides 
+    : singleHeroes;
   
   console.log('Store: Final slides array:', slides);
   
