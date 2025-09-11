@@ -9,21 +9,69 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Save, Edit2, Eye, Image, Type, Link as LinkIcon, Monitor, Smartphone, Plus, Upload, Trash2, ChevronLeft, ChevronRight, Play, Pause, RotateCcw, Layers, GripVertical } from "lucide-react";
-import { useAdminHeroes, useCreateSingleHero, useCreateSlider, useAddSlide, useUpdateHero, useUpdateSlide, useDeleteHero, useDeleteSlide, useReorderHeroes } from "@/hooks/useHeroes";
+import { useAdminHeroes, useCreateSingleHero, useCreateSlider, useAddSlide, useUpdateHero, useUpdateSlide, useDeleteHero, useDeleteSlide, useReorderHeroes, useReorderSlides } from "@/hooks/useHeroes";
 import { HeroAPI, CreateSingleHeroRequest, CreateSliderRequest, UpdateHeroRequest, CreateSlideRequest, UpdateSlideRequest } from "@/services/heroService";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+// Sortable Slide Item Component
+function SortableSlideItem({ slide, onEdit, onDelete }: { 
+  slide: any; 
+  onEdit: () => void; 
+  onDelete: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+  } = useSortable({ id: slide.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
+
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-2 bg-muted/50 rounded p-2">
+      <button {...attributes} {...listeners} className="cursor-grab hover:cursor-grabbing">
+        <GripVertical className="w-3 h-3 text-muted-foreground" />
+      </button>
+      <div className="w-8 h-6 rounded overflow-hidden bg-muted">
+        <img 
+          src={slide.image_url} 
+          alt={slide.title} 
+          className="w-full h-full object-cover" 
+        />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs font-medium truncate">{slide.title}</p>
+        <p className="text-xs text-muted-foreground truncate">{slide.subtitle}</p>
+      </div>
+      <div className="flex items-center gap-1">
+        <Button size="sm" variant="ghost" onClick={onEdit} className="h-6 w-6 p-0">
+          <Edit2 className="w-3 h-3" />
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onDelete} className="h-6 w-6 p-0">
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // Sortable Hero Item Component
-function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onDeleteSlide }: { 
+function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onDeleteSlide, onReorderSlides }: { 
   hero: HeroAPI; 
   onEdit: () => void; 
   onDelete: () => void;
   onAddSlide: () => void;
   onEditSlide: (slide: any) => void;
   onDeleteSlide: (slideId: number) => void;
+  onReorderSlides: (sliderId: number, order: number[]) => void;
 }) {
   const {
     attributes,
@@ -99,29 +147,38 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide, onEditSlide, onD
       {hero.type === 'slider' && hero.slides && hero.slides.length > 0 && (
         <div className="ml-6 space-y-2 border-l-2 border-muted pl-4">
           <p className="text-xs font-medium text-muted-foreground">Slides ({hero.slides.length}):</p>
-          {hero.slides.map((slide) => (
-            <div key={slide.id} className="flex items-center gap-2 bg-muted/50 rounded p-2">
-              <div className="w-8 h-6 rounded overflow-hidden bg-muted">
-                <img 
-                  src={slide.image_url} 
-                  alt={slide.title} 
-                  className="w-full h-full object-cover" 
-                />
+          <DndContext
+            sensors={useSensors(
+              useSensor(PointerSensor),
+              useSensor(KeyboardSensor, {
+                coordinateGetter: sortableKeyboardCoordinates,
+              })
+            )}
+            collisionDetection={closestCenter}
+            onDragEnd={(event) => {
+              const { active, over } = event;
+              if (active.id !== over?.id) {
+                const oldIndex = hero.slides!.findIndex((slide) => slide.id === active.id);
+                const newIndex = hero.slides!.findIndex((slide) => slide.id === over!.id);
+                const newSlideOrder = arrayMove(hero.slides!, oldIndex, newIndex);
+                const slideIds = newSlideOrder.map(slide => slide.id);
+                onReorderSlides(hero.id, slideIds);
+              }
+            }}
+          >
+            <SortableContext items={hero.slides.map(slide => slide.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-1">
+                {hero.slides.map((slide) => (
+                  <SortableSlideItem
+                    key={slide.id}
+                    slide={slide}
+                    onEdit={() => onEditSlide(slide)}
+                    onDelete={() => onDeleteSlide(slide.id)}
+                  />
+                ))}
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-medium truncate">{slide.title}</p>
-                <p className="text-xs text-muted-foreground truncate">{slide.subtitle}</p>
-              </div>
-              <div className="flex items-center gap-1">
-                <Button size="sm" variant="ghost" onClick={() => onEditSlide(slide)} className="h-6 w-6 p-0">
-                  <Edit2 className="w-3 h-3" />
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => onDeleteSlide(slide.id)} className="h-6 w-6 p-0">
-                  <Trash2 className="w-3 h-3" />
-                </Button>
-              </div>
-            </div>
-          ))}
+            </SortableContext>
+          </DndContext>
         </div>
       )}
     </div>
@@ -349,6 +406,7 @@ export function HeroManagement() {
   const deleteHero = useDeleteHero();
   const deleteSlide = useDeleteSlide();
   const reorderHeroes = useReorderHeroes();
+  const reorderSlides = useReorderSlides();
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -428,6 +486,10 @@ export function HeroManagement() {
         }
       });
     }
+  };
+
+  const handleReorderSlides = (sliderId: number, order: number[]) => {
+    reorderSlides.mutate({ sliderId, order });
   };
 
   const handleDragEnd = (event: any) => {
@@ -603,6 +665,7 @@ export function HeroManagement() {
                       onAddSlide={() => setAddingSlideToHero(hero.id)}
                       onEditSlide={handleEditSlide}
                       onDeleteSlide={handleDeleteSlide}
+                      onReorderSlides={handleReorderSlides}
                     />
                   ))}
                 </div>
