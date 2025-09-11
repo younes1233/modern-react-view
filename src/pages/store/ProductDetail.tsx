@@ -566,13 +566,13 @@ const ProductDetail = () => {
               {/* Price */}
               <div className="space-y-2">
                 <div className="flex items-baseline space-x-3">
-                  <span className="text-3xl lg:text-4xl font-bold text-gray-900">
-                    {product.pricing.currency.symbol}{currentPrice.toFixed(2)}
-                  </span>
+                   <span className="text-3xl lg:text-4xl font-bold text-gray-900">
+                     {product.pricing.currency?.symbol || '$'}{currentPrice ? currentPrice.toFixed(2) : '0.00'}
+                   </span>
                   {originalPrice > currentPrice && (
-                    <span className="text-lg text-gray-500 line-through">
-                      {product.pricing.currency.symbol}{originalPrice.toFixed(2)}
-                    </span>
+                     <span className="text-lg text-gray-500 line-through">
+                       {product.pricing.currency?.symbol || '$'}{originalPrice ? originalPrice.toFixed(2) : '0.00'}
+                     </span>
                   )}
                   {originalPrice > currentPrice && (
                     <Badge className="bg-red-500 text-white">
@@ -674,10 +674,10 @@ const ProductDetail = () => {
                    <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
                      <Truck className="w-3 h-3 text-green-600" />
                    </div>
-                   <span>
-                     Delivery: {product.delivery?.symbol || product.pricing.currency.symbol}
-                     {product.delivery?.cost ? Number(product.delivery.cost).toFixed(2) : '0.00'}
-                   </span>
+                    <span>
+                      Delivery: {product.delivery?.symbol || product.pricing.currency?.symbol || '$'}
+                      {product.delivery?.cost ? Number(product.delivery.cost).toFixed(2) : '0.00'}
+                    </span>
                  </div>
                  <div className="flex items-center space-x-3 text-sm text-gray-600">
                    <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">

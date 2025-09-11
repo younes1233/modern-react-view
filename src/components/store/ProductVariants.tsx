@@ -124,13 +124,13 @@ export const ProductVariants = ({ variants, selectedVariant, onVariantChange }: 
                 <p className="font-medium text-gray-900">Selected Variant</p>
                 <p className="text-sm text-gray-600">SKU: {selectedVariant.sku}</p>
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="font-bold text-lg">
-                    {selectedVariant.currency.symbol}{selectedVariant.price.toFixed(2)}
-                  </span>
+                   <span className="font-bold text-lg">
+                     {selectedVariant.currency?.symbol || '$'}{selectedVariant.price ? selectedVariant.price.toFixed(2) : '0.00'}
+                   </span>
                   {selectedVariant.original_price > selectedVariant.price && (
-                    <span className="text-sm line-through text-gray-500">
-                      {selectedVariant.currency.symbol}{selectedVariant.original_price.toFixed(2)}
-                    </span>
+                     <span className="text-sm line-through text-gray-500">
+                       {selectedVariant.currency?.symbol || '$'}{selectedVariant.original_price ? selectedVariant.original_price.toFixed(2) : '0.00'}
+                     </span>
                   )}
                 </div>
               </div>
