@@ -12,7 +12,10 @@ export const useHeroes = () => {
       console.log('useHeroes: Raw API response:', response);
       
       if (response && response.details) {
-        const activeHeroes = response.details.filter(hero => hero.is_active);
+        const activeHeroes = response.details.filter(hero => {
+          // Handle both boolean true and integer 1 as active
+          return hero.is_active === true || (hero.is_active as any) === 1;
+        });
         console.log('useHeroes: Active heroes after filtering:', activeHeroes);
         return activeHeroes;
       }
