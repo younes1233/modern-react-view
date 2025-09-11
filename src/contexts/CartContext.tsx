@@ -33,6 +33,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Convert API cart items to our CartItem format
   const convertApiCartItems = (apiCart: Cart): CartItem[] => {
+    if (!apiCart?.items) return [];
     return apiCart.items.map(item => ({
       id: item.id,
       product: {
