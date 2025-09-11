@@ -74,11 +74,11 @@ class HeroService extends BaseApiService {
     const response = await this.get<{ success: boolean; data: HeroAPI[] }>('/heroes');
     console.log('HeroService: Public heroes response:', response);
     
-    // Transform to match ApiResponse structure
+    // Return the response data directly since there's no is_active filtering needed
     const transformedResponse = {
       error: !response.success,
       message: response.success ? 'Success' : 'Error',
-      details: response.data
+      details: response.data || []
     };
     console.log('HeroService: Transformed response:', transformedResponse);
     return transformedResponse;
