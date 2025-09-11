@@ -555,7 +555,7 @@ const goAll = () => {
                 <p className="text-xs font-semibold text-blue-600">
                   {(product.currency?.symbol ?? '')}
                   {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
-                  {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
+                   {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
                 </p>
               </div>
             </button>
@@ -641,7 +641,7 @@ const goAll = () => {
                 <p className="text-xs font-semibold text-blue-600">
                   {(product.currency?.symbol ?? '')}
                   {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
-                  {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
+                   {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
                 </p>
               </div>
             </button>

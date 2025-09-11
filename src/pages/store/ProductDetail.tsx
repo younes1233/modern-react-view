@@ -589,9 +589,9 @@ const ProductDetail = () => {
                      ))}
                    </div>
                  )}
-                <p className="text-sm text-gray-600">
-                  Inclusive of VAT ({product.pricing.currency.code})
-                </p>
+                 <p className="text-sm text-gray-600">
+                   Inclusive of VAT ({product.pricing.currency?.code || 'USD'})
+                 </p>
               </div>
 
               {/* Desktop Stock Status */}
