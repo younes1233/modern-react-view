@@ -8,9 +8,10 @@ interface ProductVariationsProps {
   variations: ProductVariation[];
   basePrice: number;
   onVariationChange: (selectedVariations: ProductVariation[]) => void;
+  onImageChange?: (imageIndex: number) => void;
 }
 
-export function ProductVariations({ variations, basePrice, onVariationChange }: ProductVariationsProps) {
+export function ProductVariations({ variations, basePrice, onVariationChange, onImageChange }: ProductVariationsProps) {
   const [selectedVariations, setSelectedVariations] = useState<ProductVariation[]>([]);
 
   // Group variations by type
@@ -23,8 +24,23 @@ export function ProductVariations({ variations, basePrice, onVariationChange }: 
   }, {} as Record<string, ProductVariation[]>);
 
   const handleVariationSelect = (variation: ProductVariation) => {
-    const newSelections = selectedVariations.filter(v => v.type !== variation.type);
-    newSelections.push(variation);
+    const currentSelected = getSelectedVariationForType(variation.type);
+    
+    let newSelections: ProductVariation[];
+    if (currentSelected?.id === variation.id) {
+      // Unselect if clicking the same variation
+      newSelections = selectedVariations.filter(v => v.type !== variation.type);
+    } else {
+      // Select new variation
+      newSelections = selectedVariations.filter(v => v.type !== variation.type);
+      newSelections.push(variation);
+      
+      // Handle image change if variation has an image
+      if (variation.imageIndex !== undefined && onImageChange) {
+        onImageChange(variation.imageIndex);
+      }
+    }
+    
     setSelectedVariations(newSelections);
     onVariationChange(newSelections);
   };

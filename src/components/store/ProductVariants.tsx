@@ -35,10 +35,11 @@ interface ProductVariant {
 interface ProductVariantsProps {
   variants: ProductVariant[];
   selectedVariant?: ProductVariant;
-  onVariantChange: (variant: ProductVariant) => void;
+  onVariantChange: (variant: ProductVariant | null) => void;
+  onImageChange?: (imageIndex: number) => void;
 }
 
-export const ProductVariants = ({ variants, selectedVariant, onVariantChange }: ProductVariantsProps) => {
+export const ProductVariants = ({ variants, selectedVariant, onVariantChange, onImageChange }: ProductVariantsProps) => {
   const [selectedVariations, setSelectedVariations] = useState<{[key: string]: string}>({});
 
   if (!variants || variants.length === 0) return null;
@@ -55,7 +56,22 @@ export const ProductVariants = ({ variants, selectedVariant, onVariantChange }: 
   }, {} as {[key: string]: Set<string>});
 
   const handleVariationSelect = (attribute: string, variation: any) => {
-    const newSelections = { ...selectedVariations, [attribute]: variation.value };
+    let newSelections = { ...selectedVariations };
+    
+    // Check if clicking the same variation to unselect
+    if (selectedVariations[attribute] === variation.value) {
+      // Unselect - remove this attribute
+      delete newSelections[attribute];
+    } else {
+      // Select new variation
+      newSelections[attribute] = variation.value;
+      
+      // Handle image change if variation has an image
+      if (variation.image_index !== undefined && onImageChange) {
+        onImageChange(variation.image_index);
+      }
+    }
+    
     setSelectedVariations(newSelections);
 
     // Find matching variant
@@ -65,9 +81,7 @@ export const ProductVariants = ({ variants, selectedVariant, onVariantChange }: 
       });
     });
 
-    if (matchingVariant) {
-      onVariantChange(matchingVariant);
-    }
+    onVariantChange(matchingVariant || null);
   };
 
   return (

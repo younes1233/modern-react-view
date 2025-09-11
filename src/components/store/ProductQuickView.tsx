@@ -186,6 +186,7 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
                     variations={product.variations}
                     basePrice={product.price}
                     onVariationChange={handleVariationChange}
+                    onImageChange={setSelectedImageIndex}
                   />
                 </div>
               )}

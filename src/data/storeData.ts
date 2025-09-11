@@ -30,6 +30,7 @@ export interface ProductVariation {
   value: string;
   priceModifier: number;
   stock: number;
+  imageIndex?: number;
 }
 
 export interface DisplaySettings {

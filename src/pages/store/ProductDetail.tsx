@@ -614,13 +614,14 @@ const ProductDetail = () => {
                </div>
 
                {/* Product Variants */}
-               {product.variants && product.variants.length > 0 && (
-                 <ProductVariants
-                   variants={product.variants}
-                   selectedVariant={selectedVariant}
-                   onVariantChange={setSelectedVariant}
-                 />
-               )}
+                {product.variants && product.variants.length > 0 && (
+                  <ProductVariants
+                    variants={product.variants}
+                    selectedVariant={selectedVariant}
+                    onVariantChange={setSelectedVariant}
+                    onImageChange={setSelectedImage}
+                  />
+                )}
 
                {/* Active Discounts */}
                {((selectedVariant?.applied_discounts?.length > 0) || product.pricing.applied_discounts.length > 0) && (
