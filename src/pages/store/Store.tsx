@@ -33,33 +33,37 @@ const Store = () => {
   const { data: heroes = [], isLoading: heroesLoading } = useHeroes();
   const { deviceType } = useResponsiveImage();
 
-  // Get active heroes for slider
-  const activeHeroes = heroes.filter(hero => hero.isActive);
-  const [currentHeroIndex, setCurrentHeroIndex] = useState(0);
+  // Get slides for hero carousel
+  const activeHero = heroes.find(hero => hero.isActive);
+  const slides = activeHero?.isSlider && activeHero.slides?.length > 0 
+    ? activeHero.slides.sort((a, b) => a.order - b.order)
+    : activeHero ? [activeHero] : [];
+  
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
   // Auto-slide functionality
   useEffect(() => {
-    if (activeHeroes.length > 1) {
+    if (slides.length > 1) {
       const interval = setInterval(() => {
-        setCurrentHeroIndex((prev) => (prev + 1) % activeHeroes.length);
+        setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
       }, 5000); // Change slide every 5 seconds
       
       return () => clearInterval(interval);
     }
-  }, [activeHeroes.length]);
+  }, [slides.length]);
 
-  const currentHero = activeHeroes[currentHeroIndex];
+  const currentSlide = slides[currentSlideIndex];
   
   const nextSlide = () => {
-    setCurrentHeroIndex((prev) => (prev + 1) % activeHeroes.length);
+    setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
   };
   
   const prevSlide = () => {
-    setCurrentHeroIndex((prev) => (prev - 1 + activeHeroes.length) % activeHeroes.length);
+    setCurrentSlideIndex((prev) => (prev - 1 + slides.length) % slides.length);
   };
   
   const goToSlide = (index: number) => {
-    setCurrentHeroIndex(index);
+    setCurrentSlideIndex(index);
   };
 
   // Unified loading state for smooth transitions
@@ -173,7 +177,7 @@ const Store = () => {
         {heroesLoading ? (
           <HeroSkeleton />
         ) : (
-          currentHero && (
+          currentSlide && (
             <section className="relative w-full overflow-hidden z-10" style={{
               height: 'clamp(300px, 40vh, 600px)',
               minHeight: '300px',
@@ -181,7 +185,7 @@ const Store = () => {
             }}>
               <div className="absolute inset-0">
                 <img
-                  src={deviceType === 'mobile' ? currentHero.images.hero.mobile : currentHero.images.hero.desktop}
+                  src={deviceType === 'mobile' ? currentSlide.images.hero.mobile : currentSlide.images.hero.desktop}
                   alt="Hero Background"
                   className="w-full h-full object-cover transition-opacity duration-500"
                   style={{
@@ -189,14 +193,14 @@ const Store = () => {
                     transform: 'scale(1.02)',
                   }}
                   onError={(e) => {
-                    e.currentTarget.src = currentHero.images.original;
+                    e.currentTarget.src = currentSlide.images.original;
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
               </div>
 
-              {/* Navigation arrows for multiple heroes */}
-              {activeHeroes.length > 1 && (
+              {/* Navigation arrows for multiple slides */}
+              {slides.length > 1 && (
                 <>
                   <button
                     onClick={prevSlide}
@@ -221,22 +225,22 @@ const Store = () => {
                       ✨ Premium Quality
                     </div>
                     <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-2 sm:mb-3 md:mb-4">
-                      {currentHero.title}
+                      {currentSlide.title}
                     </h1>
                     <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-3 sm:mb-4 md:mb-6 max-w-xl">
-                      {currentHero.subtitle}
+                      {currentSlide.subtitle}
                     </p>
                   </div>
 
                   {/* Bottom right: button + contact info with small left margin */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-6 self-end">
-                    {currentHero.ctaText && currentHero.ctaLink && (
+                    {currentSlide.ctaText && currentSlide.ctaLink && (
                       <Button
                         size="lg"
                         className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
-                        onClick={() => window.open(currentHero.ctaLink, '_blank')}
+                        onClick={() => window.open(currentSlide.ctaLink, '_blank')}
                       >
-                        {currentHero.ctaText}
+                        {currentSlide.ctaText}
                       </Button>
                     )}
                     <div className="text-left">
@@ -248,14 +252,14 @@ const Store = () => {
               </div>
 
               {/* Slide indicators */}
-              {activeHeroes.length > 1 && (
+              {slides.length > 1 && (
                 <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
-                  {activeHeroes.map((_, index) => (
+                  {slides.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
                       className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                        index === currentHeroIndex
+                        index === currentSlideIndex
                           ? 'bg-white'
                           : 'bg-white/50 hover:bg-white/70'
                       }`}
