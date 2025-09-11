@@ -98,12 +98,14 @@ function HeroForm({
   hero, 
   onSave, 
   onCancel, 
-  isCreating = false 
+  isCreating = false,
+  allHeroes = []
 }: { 
   hero?: HeroAPI; 
   onSave: (data: CreateHeroRequest | UpdateHeroRequest, file?: File) => void;
   onCancel: () => void;
   isCreating?: boolean;
+  allHeroes?: HeroAPI[];
 }) {
   const [formData, setFormData] = useState({
     title: hero?.title || '',
@@ -111,11 +113,15 @@ function HeroForm({
     cta_text: hero?.cta_text || '',
     cta_link: hero?.cta_link || '',
     type: hero?.type || 'single' as 'single' | 'slider' | 'slide',
+    parent_id: hero?.parent_id || undefined,
     is_active: hero?.is_active ?? true,
   });
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState<string>(
     hero?.images?.hero?.desktop || ''
+  );
+  const [mobilePreviewImage, setMobilePreviewImage] = useState<string>(
+    hero?.images?.hero?.mobile || ''
   );
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,6 +130,7 @@ function HeroForm({
       setBackgroundImage(file);
       const imageUrl = URL.createObjectURL(file);
       setPreviewImage(imageUrl);
+      setMobilePreviewImage(imageUrl); // Use same image for mobile preview
     }
   };
 
@@ -131,6 +138,12 @@ function HeroForm({
     e.preventDefault();
     
     if (!formData.title || (!backgroundImage && isCreating)) {
+      return;
+    }
+
+    // Validation for slide type requiring parent_id
+    if (formData.type === 'slide' && !formData.parent_id) {
+      alert('Please select a parent slider when type is slide.');
       return;
     }
 
@@ -205,6 +218,29 @@ function HeroForm({
               </select>
             </div>
 
+            {formData.type === 'slide' && (
+              <div className="space-y-2">
+                <Label htmlFor="parent_id">Parent Slider *</Label>
+                <select
+                  id="parent_id"
+                  value={formData.parent_id || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, parent_id: e.target.value ? parseInt(e.target.value) : undefined }))}
+                  className="w-full p-2 border rounded-md bg-background"
+                  required
+                >
+                  <option value="">Select Parent Slider</option>
+                  {allHeroes
+                    .filter(h => h.type === 'slider' && h.id !== hero?.id)
+                    .map(h => (
+                      <option key={h.id} value={h.id}>
+                        {h.title}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label className="flex items-center gap-2">
                 <Switch
@@ -252,28 +288,62 @@ function HeroForm({
           </div>
 
           {previewImage && (
-            <div className="space-y-2">
+            <div className="space-y-4">
               <Label>Preview</Label>
-              <div className="relative rounded-lg overflow-hidden h-40">
-                <img 
-                  src={previewImage} 
-                  alt="Hero Preview" 
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
-                  <div className="absolute inset-0 flex items-center justify-center text-center p-4">
-                    <div>
-                      <h3 className="text-white font-bold text-lg mb-2">
-                        {formData.title || 'Hero Title'}
-                      </h3>
-                      <p className="text-white/90 text-sm mb-3">
-                        {formData.subtitle || 'Hero subtitle'}
-                      </p>
-                      {formData.cta_text && (
-                        <Button size="sm" className="bg-primary">
-                          {formData.cta_text}
-                        </Button>
-                      )}
+              
+              {/* Desktop Preview */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Desktop</Label>
+                <div className="relative rounded-lg overflow-hidden h-40">
+                  <img 
+                    src={previewImage} 
+                    alt="Desktop Hero Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
+                    <div className="absolute inset-0 flex items-center justify-center text-center p-4">
+                      <div>
+                        <h3 className="text-white font-bold text-lg mb-2">
+                          {formData.title || 'Hero Title'}
+                        </h3>
+                        <p className="text-white/90 text-sm mb-3">
+                          {formData.subtitle || 'Hero subtitle'}
+                        </p>
+                        {formData.cta_text && (
+                          <Button size="sm" className="bg-primary">
+                            {formData.cta_text}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Mobile Preview */}
+              <div className="space-y-2">
+                <Label className="text-sm text-muted-foreground">Mobile</Label>
+                <div className="relative rounded-lg overflow-hidden h-32 max-w-48 mx-auto">
+                  <img 
+                    src={mobilePreviewImage || previewImage} 
+                    alt="Mobile Hero Preview" 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
+                    <div className="absolute inset-0 flex items-center justify-center text-center p-2">
+                      <div>
+                        <h3 className="text-white font-bold text-sm mb-1">
+                          {formData.title || 'Hero Title'}
+                        </h3>
+                        <p className="text-white/90 text-xs mb-2">
+                          {formData.subtitle || 'Hero subtitle'}
+                        </p>
+                        {formData.cta_text && (
+                          <Button size="sm" className="bg-primary text-xs px-2 py-1">
+                            {formData.cta_text}
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -408,6 +478,7 @@ export function HeroManagement() {
                 setAddingSlideToHero(null);
               }}
               isCreating={isCreating || !!addingSlideToHero}
+              allHeroes={heroes || []}
             />
           </CardContent>
         </Card>
