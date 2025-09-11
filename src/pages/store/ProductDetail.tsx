@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Star, Heart, ShoppingCart, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight, Package, Info } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { ImageZoom } from '@/components/store/ImageZoom';
@@ -19,6 +19,10 @@ import { UserReviewActions } from '@/components/store/UserReviewActions';
 import { useAuth } from '@/hooks/useAuth';
 import { reviewService } from '@/services/reviewService';
 import { useQuery } from '@tanstack/react-query';
+import { ProductVariants } from '@/components/store/ProductVariants';
+import { RelatedProducts } from '@/components/store/RelatedProducts';
+import { ProductAttributes } from '@/components/store/ProductAttributes';
+import { ProductDiscounts } from '@/components/store/ProductDiscounts';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -40,6 +44,9 @@ const ProductDetail = () => {
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [editingReview, setEditingReview] = useState<any>(null);
   const [refreshReviews, setRefreshReviews] = useState(0);
+  
+  // Variant states
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
   // Fetch product from API - now using slug directly
   console.log('ProductDetail: slug from params:', slug);
@@ -174,9 +181,11 @@ const ProductDetail = () => {
     );
   }
 
-  const currentPrice = product.pricing.price;
-  const originalPrice = product.pricing.original_price;
-  const inStock = product.stock === null || product.stock > 0;
+  // Use selected variant pricing if available, otherwise use product pricing
+  const currentPrice = selectedVariant?.price || product.pricing.price;
+  const originalPrice = selectedVariant?.original_price || product.pricing.original_price;
+  const inStock = selectedVariant ? selectedVariant.stock > 0 : (product.stock === null || product.stock > 0);
+  const currentSku = selectedVariant?.sku || product.identifiers.sku;
   
   const allImages = product.media.images.map(img => {
     // Add null checks for image URLs
@@ -571,15 +580,15 @@ const ProductDetail = () => {
                     </Badge>
                   )}
                 </div>
-                {product.pricing.applied_discounts.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {product.pricing.applied_discounts.map((discount, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {discount.label}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+                 {(selectedVariant?.applied_discounts?.length > 0 || product.pricing.applied_discounts.length > 0) && (
+                   <div className="flex flex-wrap gap-2">
+                     {(selectedVariant?.applied_discounts || product.pricing.applied_discounts).map((discount: any, index: number) => (
+                       <Badge key={index} variant="outline" className="text-xs">
+                         {discount.name}
+                       </Badge>
+                     ))}
+                   </div>
+                 )}
                 <p className="text-sm text-gray-600">
                   Inclusive of VAT ({product.pricing.currency.code})
                 </p>
@@ -599,10 +608,27 @@ const ProductDetail = () => {
                 )}
               </div>
 
-              {/* SKU Info */}
-              <div className="text-sm text-gray-600">
-                <span>SKU: {product.identifiers.sku}</span>
-              </div>
+               {/* SKU Info */}
+               <div className="text-sm text-gray-600">
+                 <span>SKU: {currentSku}</span>
+               </div>
+
+               {/* Product Variants */}
+               {product.variants && product.variants.length > 0 && (
+                 <ProductVariants
+                   variants={product.variants}
+                   selectedVariant={selectedVariant}
+                   onVariantChange={setSelectedVariant}
+                 />
+               )}
+
+               {/* Active Discounts */}
+               {((selectedVariant?.applied_discounts?.length > 0) || product.pricing.applied_discounts.length > 0) && (
+                 <ProductDiscounts
+                   discounts={selectedVariant?.applied_discounts || product.pricing.applied_discounts}
+                   currency={product.pricing.currency}
+                 />
+               )}
 
               {/* Quantity & Actions */}
               <div className="space-y-4">
@@ -642,36 +668,50 @@ const ProductDetail = () => {
                 </Button>
               </div>
 
-              {/* Features */}
-              <div className="space-y-3 pt-4 border-t border-gray-100">
-                <div className="flex items-center space-x-3 text-sm text-gray-600">
-                  <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
-                    <Truck className="w-3 h-3 text-green-600" />
-                  </div>
-                  <span>Free delivery on orders over $50</span>
-                </div>
-                <div className="flex items-center space-x-3 text-sm text-gray-600">
-                  <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
-                    <Shield className="w-3 h-3 text-blue-600" />
-                  </div>
-                  <span>1 year warranty included</span>
-                </div>
-                <div className="flex items-center space-x-3 text-sm text-gray-600">
-                  <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
-                    <RotateCcw className="w-3 h-3 text-orange-600" />
-                  </div>
-                  <span>30-day return policy</span>
-                </div>
-              </div>
+               {/* Features */}
+               <div className="space-y-3 pt-4 border-t border-gray-100">
+                 <div className="flex items-center space-x-3 text-sm text-gray-600">
+                   <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                     <Truck className="w-3 h-3 text-green-600" />
+                   </div>
+                   <span>
+                     Delivery: {product.delivery?.symbol || product.pricing.currency.symbol}
+                     {product.delivery?.cost?.toFixed(2) || '0.00'}
+                   </span>
+                 </div>
+                 <div className="flex items-center space-x-3 text-sm text-gray-600">
+                   <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center">
+                     <Shield className="w-3 h-3 text-blue-600" />
+                   </div>
+                   <span>
+                     {product.flags.is_vat_exempt ? 'VAT exempt' : `VAT included (${product.pricing.vat?.rate}%)`}
+                   </span>
+                 </div>
+                 <div className="flex items-center space-x-3 text-sm text-gray-600">
+                   <div className="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
+                     <RotateCcw className="w-3 h-3 text-orange-600" />
+                   </div>
+                   <span>30-day return policy</span>
+                 </div>
+                 {product.identifiers.barcode && (
+                   <div className="flex items-center space-x-3 text-sm text-gray-600">
+                     <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
+                       <Package className="w-3 h-3 text-gray-600" />
+                     </div>
+                     <span>Barcode: {product.identifiers.barcode}</span>
+                   </div>
+                 )}
+               </div>
             </div>
           </div>
 
           {/* Product Details Tabs */}
           <div className="mt-8 lg:mt-12 px-4 sm:px-6 lg:px-8 pb-8">
             <Tabs defaultValue="description" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-gray-50 p-1 rounded-xl">
+              <TabsList className="grid w-full grid-cols-4 bg-gray-50 p-1 rounded-xl">
                 <TabsTrigger value="description" className="rounded-lg">Description</TabsTrigger>
                 <TabsTrigger value="specifications" className="rounded-lg">Specifications</TabsTrigger>
+                <TabsTrigger value="attributes" className="rounded-lg">Attributes</TabsTrigger>
                 <TabsTrigger value="reviews" className="rounded-lg">Reviews</TabsTrigger>
               </TabsList>
               
@@ -685,36 +725,70 @@ const ProductDetail = () => {
                 </Card>
               </TabsContent>
               
-              <TabsContent value="specifications" className="mt-6">
-                <Card className="border-0 shadow-sm">
-                  <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-3">
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-900">SKU:</span>
-                          <span className="text-gray-600">{product.identifiers.sku}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-900">Barcode:</span>
-                          <span className="text-gray-600">{product.identifiers.barcode}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="font-medium text-gray-900">Category:</span>
-                          <span className="text-gray-600">{product.category.name}</span>
-                        </div>
-                      </div>
-                      <div className="space-y-3">
-                        {product.specifications.map((spec, index) => (
-                          <div key={index} className="flex justify-between">
-                            <span className="font-medium text-gray-900">{spec.name}:</span>
-                            <span className="text-gray-600">{spec.value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+               <TabsContent value="specifications" className="mt-6">
+                 <Card className="border-0 shadow-sm">
+                   <CardContent className="p-6">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                       <div className="space-y-3">
+                         <div className="flex justify-between">
+                           <span className="font-medium text-gray-900">SKU:</span>
+                           <span className="text-gray-600">{currentSku}</span>
+                         </div>
+                         {product.identifiers.barcode && (
+                           <div className="flex justify-between">
+                             <span className="font-medium text-gray-900">Barcode:</span>
+                             <span className="text-gray-600">{product.identifiers.barcode}</span>
+                           </div>
+                         )}
+                         {product.identifiers.qr_code && (
+                           <div className="flex justify-between">
+                             <span className="font-medium text-gray-900">QR Code:</span>
+                             <span className="text-gray-600">{product.identifiers.qr_code}</span>
+                           </div>
+                         )}
+                         <div className="flex justify-between">
+                           <span className="font-medium text-gray-900">Category:</span>
+                           <span className="text-gray-600">{product.category.name}</span>
+                         </div>
+                         <div className="flex justify-between">
+                           <span className="font-medium text-gray-900">Store:</span>
+                           <span className="text-gray-600">{product.store}</span>
+                         </div>
+                       </div>
+                       <div className="space-y-3">
+                         {product.specifications && product.specifications.length > 0 ? (
+                           product.specifications.map((spec, index) => (
+                             <div key={index} className="flex justify-between">
+                               <span className="font-medium text-gray-900">{spec.name}:</span>
+                               <span className="text-gray-600">{spec.value}</span>
+                             </div>
+                           ))
+                         ) : (
+                           <div className="text-center text-gray-500 py-4">
+                             <Info className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                             <p>No specifications available</p>
+                           </div>
+                         )}
+                       </div>
+                     </div>
+                   </CardContent>
+                 </Card>
+               </TabsContent>
+
+               <TabsContent value="attributes" className="mt-6">
+                 {product.attributes && product.attributes.length > 0 ? (
+                   <ProductAttributes attributes={product.attributes} />
+                 ) : (
+                   <Card className="border-0 shadow-sm">
+                     <CardContent className="p-6">
+                       <div className="text-center text-gray-500 py-8">
+                         <Info className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                         <p>No attributes available for this product</p>
+                       </div>
+                     </CardContent>
+                   </Card>
+                 )}
+               </TabsContent>
               
               <TabsContent value="reviews" className="mt-6">
                 <Card className="border-0 shadow-sm">
@@ -831,6 +905,13 @@ const ProductDetail = () => {
               </TabsContent>
             </Tabs>
           </div>
+
+          {/* Related Products */}
+          {product.related_products && product.related_products.length > 0 && (
+            <div className="mt-8 lg:mt-12 px-4 sm:px-6 lg:px-8 pb-8">
+              <RelatedProducts products={product.related_products} />
+            </div>
+          )}
         </div>
 
         <ImageZoom
