@@ -6,7 +6,7 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BannerManagement } from "@/components/store-management/BannerManagement";
 import { ProductDisplay } from "@/components/store-management/ProductDisplay";
-import { HeroManagement } from "@/components/store-management/HeroManagement";
+import { HeroManagement } from "@/components/store-management/HeroManagementNew";
 import { StoriesManagement } from "@/components/store-management/StoriesManagement";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Store, Image, Package, Palette, Zap, Grid3X3, TrendingUp, Star, Film } from "lucide-react";

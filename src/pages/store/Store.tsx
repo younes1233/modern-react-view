@@ -34,8 +34,8 @@ const Store = () => {
   const { deviceType } = useResponsiveImage();
 
   // Get slides for hero carousel
-  const activeHero = heroes.find(hero => hero.isActive);
-  const slides = activeHero?.isSlider && activeHero.slides?.length > 0 
+  const activeHero = heroes.find(hero => hero.is_active);
+  const slides = activeHero?.type === 'slider' && activeHero.slides?.length > 0 
     ? activeHero.slides.sort((a, b) => a.order - b.order)
     : activeHero ? [activeHero] : [];
   
@@ -234,13 +234,13 @@ const Store = () => {
 
                   {/* Bottom right: button + contact info with small left margin */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-6 self-end">
-                    {currentSlide.ctaText && currentSlide.ctaLink && (
+                    {currentSlide.cta_text && currentSlide.cta_link && (
                       <Button
                         size="lg"
                         className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
-                        onClick={() => window.open(currentSlide.ctaLink, '_blank')}
+                        onClick={() => window.open(currentSlide.cta_link, '_blank')}
                       >
-                        {currentSlide.ctaText}
+                        {currentSlide.cta_text}
                       </Button>
                     )}
                     <div className="text-left">
