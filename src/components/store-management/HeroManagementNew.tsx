@@ -89,6 +89,31 @@ function SortableHeroItem({ hero, onEdit, onDelete, onAddSlide }: {
           )}
         </div>
       </div>
+      
+      {/* Show slides if this is a slider with slides */}
+      {hero.type === 'slider' && hero.slides && hero.slides.length > 0 && (
+        <div className="ml-6 space-y-2 border-l-2 border-muted pl-4">
+          <p className="text-xs font-medium text-muted-foreground">Slides:</p>
+          {hero.slides.map((slide) => (
+            <div key={slide.id} className="flex items-center gap-2 bg-muted/50 rounded p-2">
+              <div className="w-8 h-6 rounded overflow-hidden bg-muted">
+                <img 
+                  src={slide.images.hero.desktop} 
+                  alt={slide.title} 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-medium truncate">{slide.title}</p>
+                <p className="text-xs text-muted-foreground truncate">{slide.subtitle}</p>
+              </div>
+              <Badge variant={slide.is_active ? "default" : "secondary"} className="text-xs">
+                {slide.is_active ? "Active" : "Inactive"}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

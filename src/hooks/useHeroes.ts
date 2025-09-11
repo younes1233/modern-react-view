@@ -14,7 +14,11 @@ export const useHeroes = () => {
     select: (data) => {
       console.log('useHeroes: Selecting data:', data);
       if (data && data.details && data.details.heroes) {
-        return data.details.heroes.filter(hero => hero.is_active);
+        // Filter to only include active heroes, but exclude individual slides
+        // Slides will be included as part of their parent slider
+        return data.details.heroes.filter(hero => 
+          hero.is_active && hero.type !== 'slide'
+        );
       }
       return [];
     }
@@ -30,7 +34,20 @@ export const useAdminHeroes = () => {
     },
     select: (data) => {
       if (data && data.details && data.details.heroes) {
-        return data.details.heroes;
+        // Group heroes: return parent heroes with their slides nested
+        const allHeroes = data.details.heroes;
+        const parentHeroes = allHeroes.filter(hero => hero.type !== 'slide');
+        
+        // Add slides to their parent heroes
+        return parentHeroes.map(parent => {
+          if (parent.type === 'slider') {
+            const slides = allHeroes.filter(hero => 
+              hero.type === 'slide' && hero.parent_id === parent.id
+            );
+            return { ...parent, slides, slides_count: slides.length };
+          }
+          return parent;
+        });
       }
       return [];
     }
