@@ -17,6 +17,8 @@ import { useResponsiveImage } from '@/contexts/ResponsiveImageContext';
 import { ReviewForm } from '@/components/store/ReviewForm';
 import { UserReviewActions } from '@/components/store/UserReviewActions';
 import { useAuth } from '@/hooks/useAuth';
+import { reviewService } from '@/services/reviewService';
+import { useQuery } from '@tanstack/react-query';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,6 +44,13 @@ const ProductDetail = () => {
   // Fetch product from API - now using slug directly
   console.log('ProductDetail: slug from params:', slug);
   const { data: product, isLoading, error } = useProductDetail(slug || '');
+
+  // Fetch reviews separately
+  const { data: reviewsData, refetch: refetchReviews } = useQuery({
+    queryKey: ['product-reviews', product?.id, refreshReviews],
+    queryFn: () => reviewService.getProductReviews(product!.id.toString()),
+    enabled: !!product?.id,
+  });
   
   // Debug logging
   console.log('ProductDetail: useProductDetail result:', { product, isLoading, error });
@@ -745,8 +754,7 @@ const ProductDetail = () => {
                                 setShowReviewForm(false);
                                 setEditingReview(null);
                                 setRefreshReviews(prev => prev + 1);
-                                // You would need to refetch the product data here
-                                // For now, we just update the state
+                                refetchReviews();
                               }}
                               onCancel={() => {
                                 setShowReviewForm(false);
@@ -757,8 +765,8 @@ const ProductDetail = () => {
                         )}
 
                         <div className="space-y-4">
-                          {product.reviews && product.reviews.length > 0 ? (
-                            product.reviews.map((review) => (
+                          {reviewsData?.details?.reviews && reviewsData.details.reviews.length > 0 ? (
+                            reviewsData.details.reviews.map((review) => (
                               <div key={review.id} className="border-b border-gray-100 pb-4">
                                 <div className="flex items-center justify-between mb-2">
                                    <span className="font-medium">
@@ -802,7 +810,7 @@ const ProductDetail = () => {
                                   }}
                                   onReviewDeleted={() => {
                                     setRefreshReviews(prev => prev + 1);
-                                    // You would need to refetch the product data here
+                                    refetchReviews();
                                   }}
                                 />
                               </div>

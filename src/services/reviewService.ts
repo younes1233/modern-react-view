@@ -34,7 +34,39 @@ interface ReviewApiResponse {
   details: ReviewResponse | ReviewResponse[] | null;
 }
 
+interface GetReviewsResponse {
+  error: boolean;
+  message: string;
+  details: {
+    reviews: ReviewResponse[];
+    statistics: {
+      average_rating: string;
+      total_reviews: string;
+      rating_breakdown: any[];
+    };
+    pagination: {
+      current_page: string;
+      total_pages: string;
+      total: string;
+      per_page: string;
+    };
+  };
+}
+
 class ReviewService extends BaseApiService {
+  /**
+   * Get reviews for a product
+   */
+  async getProductReviews(productId: string): Promise<GetReviewsResponse> {
+    return this.request<GetReviewsResponse>(
+      `/products/${productId}/reviews`,
+      {
+        method: 'GET',
+      },
+      false // public endpoint
+    );
+  }
+
   /**
    * Add a new review for a product
    */
