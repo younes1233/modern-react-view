@@ -187,9 +187,9 @@ const Store = () => {
         ) : (
           currentSlide && (
             <section className="relative w-full overflow-hidden z-10" style={{
-              height: deviceType === 'mobile' ? '400px' : '480px', // Reduced: 768x400 mobile, 1920x480 desktop
-              minHeight: deviceType === 'mobile' ? '400px' : '480px',
-              maxHeight: deviceType === 'mobile' ? '400px' : '480px'
+              height: deviceType === 'mobile' ? '300px' : '360px', // Much smaller: 768x300 mobile, 1920x360 desktop
+              minHeight: deviceType === 'mobile' ? '300px' : '360px',
+              maxHeight: deviceType === 'mobile' ? '300px' : '360px'
             }}>
               <div className="absolute inset-0">
                 <img

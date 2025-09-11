@@ -346,9 +346,12 @@ function HeroForm({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Monitor className="w-3 h-3 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Desktop (1920x480)</Label>
+                    <Label className="text-xs text-muted-foreground">Desktop (1920x360)</Label>
                   </div>
-                  <div className="relative rounded-lg overflow-hidden h-24 border">
+                  <div className="relative rounded-lg overflow-hidden border" style={{
+                    height: '72px', // Proportional to 360px store height (360/5 = 72)
+                    aspectRatio: '1920/360'
+                  }}>
                     <img 
                       src={previewImage} 
                       alt="Desktop Hero Preview" 
@@ -378,9 +381,13 @@ function HeroForm({
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Smartphone className="w-3 h-3 text-muted-foreground" />
-                    <Label className="text-xs text-muted-foreground">Mobile (768x400)</Label>
+                    <Label className="text-xs text-muted-foreground">Mobile (768x300)</Label>
                   </div>
-                  <div className="relative rounded-lg overflow-hidden h-16 w-32 border mx-auto">
+                  <div className="relative rounded-lg overflow-hidden border mx-auto" style={{
+                    height: '60px', // Proportional to 300px store height (300/5 = 60)
+                    width: '154px', // Proportional to 768px store width (768/5 = 154)
+                    aspectRatio: '768/300'
+                  }}>
                     <img 
                       src={previewImage} 
                       alt="Mobile Hero Preview" 
