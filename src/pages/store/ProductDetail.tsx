@@ -209,6 +209,21 @@ const ProductDetail = () => {
     };
   });
 
+  // Get the current image to display (variant image or main product image)
+  const getCurrentImage = () => {
+    if (selectedVariant && selectedVariant.image_url) {
+      return {
+        url: selectedVariant.image_url,
+        alt: `${product.name} - ${selectedVariant.sku}`,
+        zoomUrl: selectedVariant.image_url,
+        thumbnailUrl: selectedVariant.image_url
+      };
+    }
+    return allImages[selectedImage] || allImages[0];
+  };
+
+  const currentImage = getCurrentImage();
+
   const handleAddToCart = () => {
     // Convert API product to cart format
     const cartProduct = {
@@ -365,8 +380,8 @@ const ProductDetail = () => {
                 onMouseEnter={() => window.innerWidth >= 1024 && handleImageInteraction()}
               >
                 <img
-                  src={allImages[selectedImage]?.url}
-                  alt={allImages[selectedImage]?.alt}
+                  src={currentImage?.url}
+                  alt={currentImage?.alt}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 />
                 
@@ -916,11 +931,14 @@ const ProductDetail = () => {
         </div>
 
         <ImageZoom
-          images={allImages.map(img => ({ url: img.zoomUrl, alt: img.alt }))}
-          selectedIndex={selectedImage}
+          images={selectedVariant && selectedVariant.image_url 
+            ? [{ url: currentImage.zoomUrl, alt: currentImage.alt }]
+            : allImages.map(img => ({ url: img.zoomUrl, alt: img.alt }))
+          }
+          selectedIndex={selectedVariant && selectedVariant.image_url ? 0 : selectedImage}
           open={showImageZoom}
           onOpenChange={setShowImageZoom}
-          onImageChange={setSelectedImage}
+          onImageChange={selectedVariant && selectedVariant.image_url ? () => {} : setSelectedImage}
         />
       </div>
     </StoreLayout>
