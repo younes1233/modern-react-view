@@ -14,6 +14,9 @@ import { useProductDetail } from '@/hooks/useProductDetail';
 import { ProductDetailSkeleton } from '@/components/store/ProductDetailSkeleton';
 import { ProductAPI } from '@/services/productService';
 import { useResponsiveImage } from '@/contexts/ResponsiveImageContext';
+import { ReviewForm } from '@/components/store/ReviewForm';
+import { UserReviewActions } from '@/components/store/UserReviewActions';
+import { useAuth } from '@/hooks/useAuth';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -29,6 +32,12 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { getImageUrl } = useResponsiveImage();
+  const { user } = useAuth();
+  
+  // Review states
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [editingReview, setEditingReview] = useState<any>(null);
+  const [refreshReviews, setRefreshReviews] = useState(0);
 
   // Fetch product from API - now using slug directly
   console.log('ProductDetail: slug from params:', slug);
@@ -713,29 +722,97 @@ const ProductDetail = () => {
                            </span>
                         </div>
                       </div>
-                      
-                       <div className="space-y-4">
-                         {product.reviews && product.reviews.length > 0 ? (
-                           product.reviews.map((review) => (
-                             <div key={review.id} className="border-b border-gray-100 pb-4">
-                               <div className="flex items-center justify-between mb-2">
-                                 <span className="font-medium">
-                                   {review.user?.name || `User ${review.user?.id}`}
-                                 </span>
-                                 <div className="flex items-center space-x-1">
-                                   {renderStars(review.rating)}
-                                 </div>
-                               </div>
-                               <p className="text-gray-700">{review.comment}</p>
-                               <p className="text-sm text-gray-500 mt-1">
-                                 {new Date(review.created_at).toLocaleDateString()}
-                               </p>
-                             </div>
-                           ))
-                         ) : (
-                           <p className="text-gray-500 text-center py-4">No reviews yet</p>
-                         )}
-                       </div>
+                       
+                        {/* Add Review Button */}
+                        {user && !showReviewForm && !editingReview && (
+                          <div className="mb-6">
+                            <Button 
+                              onClick={() => setShowReviewForm(true)}
+                              className="w-full"
+                            >
+                              Write a Review
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Review Form */}
+                        {(showReviewForm || editingReview) && (
+                          <div className="mb-6">
+                            <ReviewForm
+                              productId={product.id.toString()}
+                              existingReview={editingReview}
+                              onReviewSubmitted={() => {
+                                setShowReviewForm(false);
+                                setEditingReview(null);
+                                setRefreshReviews(prev => prev + 1);
+                                // You would need to refetch the product data here
+                                // For now, we just update the state
+                              }}
+                              onCancel={() => {
+                                setShowReviewForm(false);
+                                setEditingReview(null);
+                              }}
+                            />
+                          </div>
+                        )}
+
+                        <div className="space-y-4">
+                          {product.reviews && product.reviews.length > 0 ? (
+                            product.reviews.map((review) => (
+                              <div key={review.id} className="border-b border-gray-100 pb-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="font-medium">
+                                    {review.user?.name || `User ${review.user?.id}`}
+                                  </span>
+                                  <div className="flex items-center space-x-1">
+                                    {renderStars(review.rating)}
+                                  </div>
+                                </div>
+                                <p className="text-gray-600 text-sm mb-2">{review.comment}</p>
+                                {review.images && (
+                                  <div className="flex space-x-2">
+                                    {review.images.split(',').map((image, index) => (
+                                      <img
+                                        key={index}
+                                        src={image.trim()}
+                                        alt="Review"
+                                        className="w-16 h-16 object-cover rounded"
+                                      />
+                                    ))}
+                                  </div>
+                                )}
+                                <div className="flex items-center justify-between mt-2">
+                                  <span className="text-xs text-gray-500">
+                                    {new Date(review.created_at).toLocaleDateString()}
+                                  </span>
+                                  {review.is_verified_purchase && (
+                                    <Badge variant="secondary" className="text-xs">
+                                      Verified Purchase
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                {/* User Review Actions */}
+                                <UserReviewActions
+                                  productId={product.id.toString()}
+                                  review={review}
+                                  onEditReview={() => {
+                                    setEditingReview(review);
+                                    setShowReviewForm(false);
+                                  }}
+                                  onReviewDeleted={() => {
+                                    setRefreshReviews(prev => prev + 1);
+                                    // You would need to refetch the product data here
+                                  }}
+                                />
+                              </div>
+                            ))
+                          ) : (
+                            <p className="text-gray-500 text-center py-8">
+                              No reviews yet. Be the first to review this product!
+                            </p>
+                          )}
+                        </div>
                     </div>
                   </CardContent>
                 </Card>
