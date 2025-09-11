@@ -47,7 +47,7 @@ export const ProductDiscounts = ({ discounts, currency }: ProductDiscountsProps)
                 </span>
               </div>
               <span className="font-medium text-green-800">
-                Save {currency.symbol}{discount.discount_amount.toFixed(2)}
+                Save {currency.symbol}{discount.discount_amount ? Number(discount.discount_amount).toFixed(2) : '0.00'}
               </span>
             </div>
           ))}

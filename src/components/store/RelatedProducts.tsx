@@ -128,7 +128,7 @@ export const RelatedProducts = ({ products }: RelatedProductsProps) => {
                 </h4>
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-gray-900">
-                    {product.pricing.currency.symbol}{product.pricing.price.toFixed(2)}
+                    {product.pricing.currency?.symbol || '$'}{product.pricing.price?.toFixed(2) || '0.00'}
                   </span>
                   <Button
                     variant="ghost"
