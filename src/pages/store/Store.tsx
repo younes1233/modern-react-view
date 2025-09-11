@@ -155,12 +155,15 @@ const Store = () => {
             }}>
               <div className="absolute inset-0">
                 <img
-                  src={activeHero.backgroundImage}
+                  src={deviceType === 'mobile' ? activeHero.images.hero.mobile : activeHero.images.hero.desktop}
                   alt="Hero Background"
                   className="w-full h-full object-cover"
                   style={{
                     objectPosition: 'center center',
                     transform: 'scale(1.02)', // Slight scale to prevent gaps on iOS
+                  }}
+                  onError={(e) => {
+                    e.currentTarget.src = activeHero.images.original;
                   }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>

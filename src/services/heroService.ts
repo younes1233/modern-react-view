@@ -1,10 +1,18 @@
 import BaseApiService, { ApiResponse } from './baseApiService';
 
+export interface HeroImages {
+  original: string;
+  hero: {
+    desktop: string;
+    mobile: string;
+  };
+}
+
 export interface HeroSlide {
   id: number;
   title: string;
   subtitle: string;
-  backgroundImage: string;
+  images: HeroImages;
   ctaText: string;
   ctaLink: string;
   order: number;
@@ -14,12 +22,12 @@ export interface HeroAPI {
   id: number;
   title: string;
   subtitle: string;
-  backgroundImage: string;
+  images: HeroImages;
   ctaText: string;
   ctaLink: string;
   isActive: boolean;
   isSlider: boolean;
-  slides: HeroSlide[];
+  slides?: HeroSlide[];
 }
 
 class HeroService extends BaseApiService {
