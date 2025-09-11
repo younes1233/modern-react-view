@@ -13,12 +13,11 @@ import {
   getFeaturedProducts,
   getNewArrivals,
   getProductsOnSale,
-  getHeroSection,
-  HeroSection,
 } from "@/data/storeData";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { useHomeSections } from "@/hooks/useHomeSections";
+import { useHeroes } from "@/hooks/useHeroes";
 import { HeroSkeleton } from "@/components/store/HeroSkeleton";
 import { BannerSkeleton } from "@/components/store/BannerSkeleton";
 import { ShopByCategorySkeleton } from "@/components/store/ShopByCategorySkeleton";
@@ -27,33 +26,19 @@ import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
-  const [heroSection, setHeroSection] = useState<HeroSection | null>(null);
-  const [heroLoading, setHeroLoading] = useState(true);
   
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: productListingsLoading } = useProductListings();
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
+  const { data: heroes = [], isLoading: heroesLoading } = useHeroes();
   const { deviceType } = useResponsiveImage();
+
+  // Get the first active hero (could be single hero or slider)
+  const activeHero = heroes.find(hero => hero.isActive);
 
   // Unified loading state for smooth transitions
   const isGlobalLoading = bannersLoading || productListingsLoading || homeSectionsLoading;
 
-  useEffect(() => {
-    const loadData = () => {
-      setHeroLoading(true);
-      setHeroSection(getHeroSection());
-      setHeroLoading(false);
-    };
-    loadData();
-
-    const handleDataUpdate = () => {
-      loadData();
-    };
-    window.addEventListener("storeDataUpdated", handleDataUpdate);
-    return () => {
-      window.removeEventListener("storeDataUpdated", handleDataUpdate);
-    };
-  }, []);
 
   const toggleFavorite = (productId: string) => {
     setFavorites((prev) =>
@@ -159,10 +144,10 @@ const Store = () => {
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
       <StoreLayout>
         {/* Hero Section with Loading - Reduced height on mobile */}
-        {heroLoading ? (
+        {heroesLoading ? (
           <HeroSkeleton />
         ) : (
-          heroSection && heroSection.isActive && (
+          activeHero && (
             <section className="relative w-full overflow-hidden z-10" style={{
               height: 'clamp(300px, 40vh, 600px)', // Reduced from 50vh to 40vh and min from 400px to 300px
               minHeight: '300px', // Reduced from 400px to 300px
@@ -170,7 +155,7 @@ const Store = () => {
             }}>
               <div className="absolute inset-0">
                 <img
-                  src={heroSection.backgroundImage}
+                  src={activeHero.backgroundImage}
                   alt="Hero Background"
                   className="w-full h-full object-cover"
                   style={{
@@ -189,21 +174,24 @@ const Store = () => {
                       ✨ Premium Quality
                     </div>
                     <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-2 sm:mb-3 md:mb-4">
-                      {heroSection.title}
+                      {activeHero.title}
                     </h1>
                     <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-3 sm:mb-4 md:mb-6 max-w-xl">
-                      {heroSection.subtitle}
+                      {activeHero.subtitle}
                     </p>
                   </div>
 
                   {/* Bottom right: button + contact info with small left margin */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-6 self-end">
-                    <Button
-                      size="lg"
-                      className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
-                    >
-                      {heroSection.ctaText}
-                    </Button>
+                    {activeHero.ctaText && activeHero.ctaLink && (
+                      <Button
+                        size="lg"
+                        className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
+                        onClick={() => window.open(activeHero.ctaLink, '_blank')}
+                      >
+                        {activeHero.ctaText}
+                      </Button>
+                    )}
                     <div className="text-left">
                       <div className="text-sm sm:text-base md:text-lg font-bold text-white">961 76591765</div>
                       <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
