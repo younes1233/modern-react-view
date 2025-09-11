@@ -337,12 +337,18 @@ function HeroForm({
 
             {previewImage && (
               <div className="space-y-4">
-                <Label>Preview</Label>
+                <div className="flex items-center gap-2 mb-2">
+                  <Monitor className="w-4 h-4" />
+                  <Label>Device Preview</Label>
+                </div>
                 
                 {/* Desktop Preview */}
                 <div className="space-y-2">
-                  <Label className="text-sm text-muted-foreground">Desktop</Label>
-                  <div className="relative rounded-lg overflow-hidden h-40">
+                  <div className="flex items-center gap-2">
+                    <Monitor className="w-3 h-3 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Desktop (1920x600)</Label>
+                  </div>
+                  <div className="relative rounded-lg overflow-hidden h-32 border">
                     <img 
                       src={previewImage} 
                       alt="Desktop Hero Preview" 
@@ -351,14 +357,46 @@ function HeroForm({
                     <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
                       <div className="absolute inset-0 flex items-center justify-center text-center p-4">
                         <div>
-                          <h3 className="text-white font-bold text-lg mb-2">
+                          <h3 className="text-white font-bold text-base mb-1">
                             {formData.title || 'Hero Title'}
                           </h3>
-                          <p className="text-white/90 text-sm mb-3">
+                          <p className="text-white/90 text-xs mb-2">
                             {formData.subtitle || 'Hero subtitle'}
                           </p>
                           {formData.cta_text && (
-                            <Button size="sm" className="bg-primary">
+                            <Button size="sm" className="bg-primary text-xs px-2 py-1 h-6">
+                              {formData.cta_text}
+                            </Button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mobile Preview */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-3 h-3 text-muted-foreground" />
+                    <Label className="text-xs text-muted-foreground">Mobile (768x500)</Label>
+                  </div>
+                  <div className="relative rounded-lg overflow-hidden h-20 w-32 border mx-auto">
+                    <img 
+                      src={previewImage} 
+                      alt="Mobile Hero Preview" 
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-br from-black/40 to-transparent">
+                      <div className="absolute inset-0 flex items-center justify-center text-center p-2">
+                        <div>
+                          <h3 className="text-white font-bold text-xs mb-1">
+                            {formData.title || 'Hero Title'}
+                          </h3>
+                          <p className="text-white/90 text-xs mb-1 truncate">
+                            {formData.subtitle || 'Hero subtitle'}
+                          </p>
+                          {formData.cta_text && (
+                            <Button size="sm" className="bg-primary text-xs px-1 py-0.5 h-4">
                               {formData.cta_text}
                             </Button>
                           )}
