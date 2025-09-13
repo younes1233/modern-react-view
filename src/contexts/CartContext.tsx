@@ -97,8 +97,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       // Build request data based on whether we have a variant or not
       const requestData: any = { quantity };
       
+      // Check if product has variants
+      const hasVariants = product.variations && product.variations.length > 0;
+      
       if (productVariantId) {
         requestData.product_variant_id = parseInt(productVariantId);
+      } else if (hasVariants) {
+        // If product has variants but no variant selected, use the first variant
+        requestData.product_variant_id = product.variations[0].id;
       } else {
         requestData.product_id = product.id;
       }
@@ -110,6 +116,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.error('Error adding to cart:', error);
       if (error?.status === 401) {
         toast.error("Please login to manage your cart");
+      } else if (error?.response?.data?.details?.product_id) {
+        toast.error("Please select a variant for this product");
       } else {
         toast.error("Failed to add item to cart");
       }
