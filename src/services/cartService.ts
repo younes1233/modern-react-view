@@ -1,35 +1,43 @@
 import BaseApiService from './baseApiService';
 
 export interface CartItem {
-  id: number;
-  product_variant_id: number;
+  id: string;
+  productId: string;
+  productVariantId: string;
+  isVariant: boolean;
   quantity: number;
+  price: number;
   product: {
-    id: number;
+    id: string;
     name: string;
-    price: number;
-    image: string;
     slug: string;
+    sku: string;
+    image: string;
+    hasVariants: string;
   };
-  product_variant?: {
-    id: number;
-    type: string;
-    value: string;
-    price_modifier: number;
-  };
+  selectedVariations: string;
 }
 
 export interface Cart {
+  id: string;
+  userId: string;
   items: CartItem[];
-  total_items: number;
-  total_amount: number;
-  subtotal: number;
-  tax_amount?: number;
-  shipping_amount?: number;
+  totalItems: number;
+  totalAmount: number;
+  currency: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApiResponse<T> {
+  error: boolean;
+  message: string;
+  details: T;
 }
 
 export interface AddToCartRequest {
-  product_variant_id: number;
+  product_id?: number;
+  product_variant_id?: number;
   quantity: number;
 }
 
@@ -40,37 +48,42 @@ export interface UpdateCartItemRequest {
 class CartService extends BaseApiService {
   // Get cart (creates session automatically for guests)
   async getCart(): Promise<Cart> {
-    return this.get<Cart>('/cart', true); // Include credentials for session
+    const response = await this.get<ApiResponse<Cart>>('/cart', true);
+    return response.details;
   }
 
   // Get cart item count for header badge
-  async getCartCount(): Promise<{ count: number }> {
-    return this.get<{ count: number }>('/cart/count', true); // Include credentials
+  async getCartCount(): Promise<{ count: string }> {
+    const response = await this.get<ApiResponse<{ count: string }>>('/cart/count', true);
+    return response.details;
   }
 
   // Add item to cart
   async addToCart(data: AddToCartRequest): Promise<Cart> {
-    return this.post<Cart>('/cart/add', data, true); // Include credentials
+    const response = await this.post<ApiResponse<Cart>>('/cart/add', data, true);
+    return response.details;
   }
 
   // Update item quantity
-  async updateCartItem(itemId: number, data: UpdateCartItemRequest): Promise<Cart> {
-    return this.put<Cart>(`/cart/items/${itemId}`, data, true); // Include credentials
+  async updateCartItem(itemId: string, data: UpdateCartItemRequest): Promise<CartItem> {
+    const response = await this.put<ApiResponse<CartItem>>(`/cart/items/${itemId}`, data, true);
+    return response.details;
   }
 
   // Remove item from cart
-  async removeFromCart(itemId: number): Promise<Cart> {
-    return this.delete<Cart>(`/cart/items/${itemId}`, true); // Include credentials
+  async removeFromCart(itemId: string): Promise<void> {
+    await this.delete<ApiResponse<any>>(`/cart/items/${itemId}`, true);
   }
 
   // Clear entire cart
-  async clearCart(): Promise<{ message: string }> {
-    return this.delete<{ message: string }>('/cart', true); // Include credentials
+  async clearCart(): Promise<void> {
+    await this.delete<ApiResponse<any>>('/cart/clear', true);
   }
 
   // Move item to wishlist (requires auth)
-  async moveToWishlist(itemId: number): Promise<{ message: string }> {
-    return this.post<{ message: string }>(`/cart/items/${itemId}/move-to-wishlist`, undefined, true); // Include credentials
+  async moveToWishlist(itemId: string): Promise<{ message: string }> {
+    const response = await this.post<ApiResponse<{ message: string }>>(`/cart/items/${itemId}/move-to-wishlist`, undefined, true);
+    return response.details;
   }
 }
 

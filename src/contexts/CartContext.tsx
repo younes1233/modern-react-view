@@ -5,23 +5,26 @@ import { cartService, Cart } from '@/services/cartService';
 import { useAuth } from '@/hooks/useAuth';
 
 export interface CartItem {
-  id: number;
+  id: string;
   product: Product;
   quantity: number;
-  product_variant_id?: number;
+  productVariantId?: string;
+  isVariant?: boolean;
+  price?: number;
+  selectedVariations?: string;
 }
 
 interface CartContextType {
   items: CartItem[];
-  addToCart: (product: Product, quantity?: number, productVariantId?: number) => Promise<void>;
-  removeFromCart: (itemId: number) => Promise<void>;
-  updateQuantity: (itemId: number, quantity: number) => Promise<void>;
+  addToCart: (product: Product, quantity?: number, productVariantId?: string) => Promise<void>;
+  removeFromCart: (itemId: string) => Promise<void>;
+  updateQuantity: (itemId: string, quantity: number) => Promise<void>;
   clearCart: () => Promise<void>;
   getTotalItems: () => number;
   getTotalPrice: () => number;
   isInCart: (productId: number) => boolean;
   isLoading: boolean;
-  moveToWishlist: (itemId: number) => Promise<void>;
+  moveToWishlist: (itemId: string) => Promise<void>;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -37,9 +40,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return apiCart.items.map(item => ({
       id: item.id,
       product: {
-        id: item.product.id,
+        id: parseInt(item.product.id),
         name: item.product.name,
-        price: item.product.price,
+        price: item.price,
         image: item.product.image,
         slug: item.product.slug,
         // Add default values for required Product fields
@@ -56,7 +59,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         variations: []
       },
       quantity: item.quantity,
-      product_variant_id: item.product_variant_id
+      productVariantId: item.productVariantId,
+      isVariant: item.isVariant,
+      price: item.price,
+      selectedVariations: item.selectedVariations
     }));
   };
 
@@ -79,7 +85,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addToCart = async (product: Product, quantity = 1, productVariantId?: number) => {
+  const addToCart = async (product: Product, quantity = 1, productVariantId?: string) => {
     if (!product.inStock) {
       toast.error("This product is out of stock");
       return;
@@ -88,14 +94,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       
-      // Use the first variation if no specific variant is provided
-      const variantId = productVariantId || product.variations[0]?.id || product.id;
+      // Build request data based on whether we have a variant or not
+      const requestData: any = { quantity };
       
-      const cart = await cartService.addToCart({
-        product_variant_id: variantId,
-        quantity
-      });
+      if (productVariantId) {
+        requestData.product_variant_id = parseInt(productVariantId);
+      } else {
+        requestData.product_id = product.id;
+      }
       
+      const cart = await cartService.addToCart(requestData);
       setItems(convertApiCartItems(cart));
       toast.success(`Added ${product.name} to cart`);
     } catch (error: any) {
@@ -110,13 +118,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const removeFromCart = async (itemId: number) => {
+  const removeFromCart = async (itemId: string) => {
     try {
       setIsLoading(true);
       const item = items.find(item => item.id === itemId);
       
-      const cart = await cartService.removeFromCart(itemId);
-      setItems(convertApiCartItems(cart));
+      await cartService.removeFromCart(itemId);
+      await loadCart(); // Reload cart after removal
       
       if (item) {
         toast.success(`Removed ${item.product.name} from cart`);
@@ -129,7 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateQuantity = async (itemId: number, quantity: number) => {
+  const updateQuantity = async (itemId: string, quantity: number) => {
     if (quantity <= 0) {
       await removeFromCart(itemId);
       return;
@@ -137,8 +145,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setIsLoading(true);
-      const cart = await cartService.updateCartItem(itemId, { quantity });
-      setItems(convertApiCartItems(cart));
+      await cartService.updateCartItem(itemId, { quantity });
+      await loadCart(); // Reload cart after update
     } catch (error) {
       console.error('Error updating quantity:', error);
       toast.error("Failed to update quantity");
@@ -161,7 +169,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const moveToWishlist = async (itemId: number) => {
+  const moveToWishlist = async (itemId: string) => {
     if (!user) {
       toast.error("Please login to save to wishlist");
       return;
