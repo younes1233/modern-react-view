@@ -247,9 +247,12 @@ const ProductDetail = () => {
         url: img.thumbnailUrl, 
         alt: img.alt
       })),
-      variations: []
+      variations: product.variants || []
     };
-    addToCart(cartProduct, quantity);
+    
+    // Pass the selected variant ID if one is selected
+    const productVariantId = selectedVariant?.id ? selectedVariant.id.toString() : undefined;
+    addToCart(cartProduct, quantity, productVariantId);
   };
 
   const handleWishlistToggle = () => {
