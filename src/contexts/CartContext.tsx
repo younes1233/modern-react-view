@@ -120,7 +120,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       console.log('API call successful, cart response:', cart);
       setItems(convertApiCartItems(cart));
       toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} of "${product.name}" to cart`, {
-        description: `Price: $${product.price.toFixed(2)} each`,
+        description: product.price ? `Price: $${product.price.toFixed(2)} each` : 'Added to cart successfully',
         duration: 3000,
       });
     } catch (error: any) {
