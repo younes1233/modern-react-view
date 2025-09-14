@@ -487,6 +487,19 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       return;
     }
 
+    // Validate delivery method for non-variant products
+    if (!formData.has_variants && !formData.delivery_method_id) {
+      toast({ title: "Error", description: "Delivery method is required", variant: "destructive" });
+      return;
+    }
+
+    // Validate specifications
+    const validSpecs = specifications.filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
+    if (validSpecs.length === 0) {
+      toast({ title: "Error", description: "At least one specification is required", variant: "destructive" });
+      return;
+    }
+
     const prices = priceEntries
       .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
       .filter((p) => !isNaN(p.net_price) && !isNaN(p.cost));
@@ -744,8 +757,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                 </Select>
               </div>
               <div>
-                <Label>Delivery Method</Label>
-                <Select value={formData.delivery_method_id?.toString() || ''} onValueChange={(value) => updateField('delivery_method_id', value ? (parseInt(value) as any) : (undefined as any))}>
+                <Label>Delivery Method *</Label>
+                <Select value={formData.delivery_method_id?.toString() || ''} onValueChange={(value) => updateField('delivery_method_id', value ? (parseInt(value) as any) : (undefined as any))} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select delivery method" />
                   </SelectTrigger>
@@ -804,7 +817,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
           {/* Specifications */}
           <div className="space-y-2">
-            <Label>Specifications</Label>
+            <Label>Specifications *</Label>
             <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>Add Specification</Button>
             {specifications.map((spec, index) => (
               <div key={spec.id} className="grid grid-cols-3 gap-2 items-center">
