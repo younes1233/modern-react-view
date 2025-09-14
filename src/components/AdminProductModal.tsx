@@ -289,7 +289,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         variants: [],
         country_id: country?.id,
       });
-      setMainImage("");
+      setMainImage(null);
       setMainImagePreview("");
       setThumbnails([]);
       setPriceEntries([]);
@@ -487,16 +487,31 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       return;
     }
 
+    // Validate cover image is required
+    if (!mainImage && !formData.cover_image) {
+      toast({ title: "Error", description: "Cover image is required", variant: "destructive" });
+      return;
+    }
+
     // Validate delivery method for non-variant products
     if (!formData.has_variants && !formData.delivery_method_id) {
       toast({ title: "Error", description: "Delivery method is required", variant: "destructive" });
       return;
     }
 
-    // Validate specifications
+    // Validate specifications - require height, width, length
     const validSpecs = specifications.filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
-    if (validSpecs.length === 0) {
-      toast({ title: "Error", description: "At least one specification is required", variant: "destructive" });
+    const requiredSpecs = ['height', 'width', 'length'];
+    const missingSpecs = requiredSpecs.filter(spec => 
+      !validSpecs.some(s => s.name.toLowerCase() === spec.toLowerCase())
+    );
+    
+    if (missingSpecs.length > 0) {
+      toast({ 
+        title: "Error", 
+        description: `Missing required specifications: ${missingSpecs.join(', ')}`, 
+        variant: "destructive" 
+      });
       return;
     }
 
@@ -664,7 +679,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             <Label className="text-base font-semibold">Product Images</Label>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Main Product Image</Label>
+                <Label>Main Product Image *</Label>
                 <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
                 {mainImagePreview && (
                   <div className="mt-2">
