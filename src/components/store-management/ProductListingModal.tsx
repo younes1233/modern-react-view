@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Search } from "lucide-react";
 import { ProductListingAPI, CreateProductListingRequest, UpdateProductListingRequest } from "@/services/productListingService";
 import { useQuery } from "@tanstack/react-query";
-import { productService, ProductAPI } from "@/services/productService";
+import { adminProductService, AdminProductAPI } from "@/services/adminProductService";
 import { useFlatCategories } from "@/hooks/useCategories";
 
 interface ProductListingModalProps {
@@ -39,21 +39,17 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
 
   // Fetch products from API
   const { data: productsResponse, isLoading: isLoadingProducts } = useQuery({
-    queryKey: ['products', searchTerm],
+    queryKey: ['admin-products', searchTerm],
     queryFn: async () => {
-      console.log('Fetching products for product listing modal...');
-      if (searchTerm.trim()) {
-        // Use search when there's a search term
-        return await productService.searchProducts(searchTerm, 1, 1, {
-          limit: 50 // Get more products for better suggestions
-        });
-      } else {
-        // Get general products list
-        return await productService.getProducts(1, 1, 1, 50);
-      }
+      console.log('Fetching admin products for product listing modal...');
+      return await adminProductService.getAdminProducts({
+        q: searchTerm.trim() || undefined,
+        page: 1,
+        limit: 50
+      });
     },
     select: (data) => {
-      console.log('Processing products data:', data);
+      console.log('Processing admin products data:', data);
       if (data && data.details && data.details.products) {
         if (Array.isArray(data.details.products.data)) {
           return data.details.products.data;
@@ -67,7 +63,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  const products: ProductAPI[] = productsResponse || [];
+  const products: AdminProductAPI[] = productsResponse || [];
 
   useEffect(() => {
     if (mode === 'edit' && listing) {
@@ -227,14 +223,14 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                           onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
                         />
                         <img 
-                          src={product.media?.cover_image.image || '/placeholder.svg'} 
+                          src={typeof product.media?.cover_image === 'string' ? product.media.cover_image : product.media?.cover_image?.image || '/placeholder.svg'} 
                           alt={product.name} 
                           className="w-12 h-12 object-cover rounded"
                         />
                         <div className="flex-1">
                           <p className="font-medium text-sm">{product.name}</p>
                           <p className="text-sm text-gray-500">
-                            {product.pricing?.currency?.symbol || '$'}{product.pricing?.price || 0}
+                            {product.pricing?.[0]?.currency?.symbol || '$'}{product.pricing?.[0]?.net_price || 0}
                           </p>
                           {product.identifiers?.sku && (
                             <p className="text-xs text-gray-400">SKU: {product.identifiers.sku}</p>
