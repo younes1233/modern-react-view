@@ -64,6 +64,10 @@ export function CartSidebar() {
                     src={item.product.image}
                     alt={item.product.name}
                     className="w-16 h-16 object-cover rounded-md cursor-pointer"
+                    onError={(e) => {
+                      console.error(`Failed to load image: ${item.product.image}`);
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
                     onClick={() => {
                       navigate(`/store/product/${item.product.slug}`);
                       setIsOpen(false);
