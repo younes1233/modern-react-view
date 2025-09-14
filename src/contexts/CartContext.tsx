@@ -111,7 +111,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       const cart = await cartService.addToCart(requestData);
       setItems(convertApiCartItems(cart));
-      toast.success(`Added ${product.name} to cart`);
+      toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} of "${product.name}" to cart`, {
+        description: `Price: $${product.price.toFixed(2)} each`,
+        duration: 3000,
+      });
     } catch (error: any) {
       console.error('Error adding to cart:', error);
       if (error?.status === 401) {
