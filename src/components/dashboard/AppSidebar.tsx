@@ -13,6 +13,9 @@ import {
   RotateCcw,
   ChevronRight,
   Tag,
+  Globe,
+  CheckCircle,
+  UserCheck
 } from "lucide-react"
 
 import {
@@ -115,6 +118,27 @@ const analyticsItems = [
   },
 ]
 
+const managementItems = [
+  {
+    title: "User Management",
+    url: "/user-management",
+    icon: UserCheck,
+    description: "Manage users & roles"
+  },
+  {
+    title: "Product Approval",
+    url: "/product-approval",
+    icon: CheckCircle,
+    description: "Review submissions"
+  },
+  {
+    title: "Localization",
+    url: "/localization",
+    icon: Globe,
+    description: "Countries & warehouses"
+  },
+]
+
 export function AppSidebar() {
   const location = useLocation()
 
@@ -205,6 +229,7 @@ export function AppSidebar() {
         {renderMenuGroup(catalogItems, "Catalog")}
         {renderMenuGroup(businessItems, "Business")}
         {renderMenuGroup(storeItems, "Store")}
+        {renderMenuGroup(managementItems, "Management")}
         {renderMenuGroup(analyticsItems, "Analytics")}
       </SidebarContent>
 

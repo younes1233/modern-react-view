@@ -615,9 +615,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogHeader>
+      {/* <DialogHeader>
         <DialogTitle>{mode === 'add' ? 'Add New Product' : 'Edit Product'}</DialogTitle>
-      </DialogHeader>
+      </DialogHeader> */}
       <DialogContent className="max-h-[80vh] overflow-y-auto p-6 w-full max-w-4xl">
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Basic Information */}
