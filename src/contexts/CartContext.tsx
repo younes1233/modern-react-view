@@ -86,6 +86,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addToCart = async (product: Product, quantity = 1, productVariantId?: string) => {
+    console.log('addToCart called with:', { product: product.name, quantity, productVariantId, inStock: product.inStock });
+    
     if (!product.inStock) {
       toast.error("This product is out of stock");
       return;
@@ -99,17 +101,23 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       
       // Check if product has variants
       const hasVariants = product.variations && product.variations.length > 0;
+      console.log('Product variants check:', { hasVariants, variationsLength: product.variations?.length });
       
       if (productVariantId) {
         requestData.product_variant_id = parseInt(productVariantId);
+        console.log('Using provided variant ID:', requestData.product_variant_id);
       } else if (hasVariants) {
         // If product has variants but no variant selected, use the first variant
         requestData.product_variant_id = product.variations[0].id;
+        console.log('Using first variant ID:', requestData.product_variant_id);
       } else {
         requestData.product_id = product.id;
+        console.log('Using product ID:', requestData.product_id);
       }
       
+      console.log('Making API call with data:', requestData);
       const cart = await cartService.addToCart(requestData);
+      console.log('API call successful, cart response:', cart);
       setItems(convertApiCartItems(cart));
       toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} of "${product.name}" to cart`, {
         description: `Price: $${product.price.toFixed(2)} each`,
@@ -117,6 +125,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       });
     } catch (error: any) {
       console.error('Error adding to cart:', error);
+      console.error('Error details:', { status: error?.status, response: error?.response?.data });
       if (error?.status === 401) {
         toast.error("Please login to manage your cart");
       } else if (error?.response?.data?.details?.product_id) {
