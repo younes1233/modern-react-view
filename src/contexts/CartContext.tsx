@@ -43,7 +43,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         id: parseInt(item.product.id),
         name: item.product.name,
         price: item.price,
-        image: item.product.image,
+        image: item.product.cover_image || item.product.image,
         slug: item.product.slug,
         // Add default values for required Product fields
         description: '',

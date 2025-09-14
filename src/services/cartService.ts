@@ -13,6 +13,7 @@ export interface CartItem {
     slug: string;
     sku: string;
     image: string;
+    cover_image?: string;
     hasVariants: string;
   };
   selectedVariations: string;
