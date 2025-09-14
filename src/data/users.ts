@@ -34,44 +34,6 @@ export const demoUsers: User[] = [
     isActive: true,
     createdAt: '2024-01-01T00:00:00Z',
     lastLogin: '2024-01-15T10:30:00Z'
-  },
-  {
-    id: '2',
-    email: 'manager@example.com',
-    name: 'Store Manager',
-    role: 'manager',
-    isActive: true,
-    createdAt: '2024-01-02T00:00:00Z',
-    lastLogin: '2024-01-15T09:15:00Z'
-  },
-  {
-    id: '3',
-    email: 'seller1@example.com',
-    name: 'John Seller',
-    role: 'seller',
-    isActive: true,
-    createdAt: '2024-01-03T00:00:00Z',
-    lastLogin: '2024-01-15T08:45:00Z',
-    sellerId: 'seller_001'
-  },
-  {
-    id: '4',
-    email: 'seller2@example.com',
-    name: 'Jane Vendor',
-    role: 'seller',
-    isActive: true,
-    createdAt: '2024-01-04T00:00:00Z',
-    lastLogin: '2024-01-14T16:20:00Z',
-    sellerId: 'seller_002'
-  },
-  {
-    id: '5',
-    email: 'customer@example.com',
-    name: 'Regular Customer',
-    role: 'customer',
-    isActive: true,
-    createdAt: '2024-01-05T00:00:00Z',
-    lastLogin: '2024-01-15T12:00:00Z'
   }
 ];
 
