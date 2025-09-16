@@ -35,7 +35,6 @@ export function CategoryModal({
     image: '',
     icon: '',
     description: '',
-    order: 0,
     is_active: true,
     featured: false
   });
@@ -64,7 +63,6 @@ export function CategoryModal({
         image: '',
         icon: '',
         description: '',
-        order: 0,
         is_active: true,
         featured: false,
         parent_id: category?.parent_id || undefined
@@ -231,17 +229,6 @@ export function CategoryModal({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="order">Order *</Label>
-              <Input
-                id="order"
-                type="number"
-                value={formData.order}
-                onChange={(e) => setFormData(prev => ({ ...prev, order: parseInt(e.target.value) || 0 }))}
-                placeholder="Display order"
-                required
-              />
-            </div>
 
             <div className="space-y-2">
               <Label htmlFor="status">Status</Label>

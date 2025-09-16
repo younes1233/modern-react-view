@@ -18,7 +18,7 @@ export interface Category {
   icon: string;
   description?: string;
   category_image?: string;
-  order: number;
+  order?: number;
   is_active: boolean;
   featured: boolean;
   seo_title?: string;
@@ -131,7 +131,6 @@ class CategoryService extends BaseApiService {
     // Add text fields only if they exist
     if (categoryData.name) formData.append('name', categoryData.name);
     if (categoryData.slug) formData.append('slug', categoryData.slug);
-    if (categoryData.order !== undefined) formData.append('order', categoryData.order.toString());
     if (categoryData.is_active !== undefined) formData.append('is_active', categoryData.is_active ? '1' : '0');
     if (categoryData.featured !== undefined) formData.append('featured', categoryData.featured ? '1' : '0');
     if (categoryData.description !== undefined) formData.append('description', categoryData.description || '');
