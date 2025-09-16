@@ -127,7 +127,7 @@ const Store = () => {
                   e.currentTarget.src = '/placeholder.svg';
                 }}
               />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/50 to-transparent flex items-center">
+              <div className="absolute inset-0 from-black/50 to-transparent flex items-center">
                 <div className="p-3 sm:p-4 md:p-8 text-white">
                   <h2 className="text-lg sm:text-xl md:text-2xl lg:text-4xl font-bold mb-1 sm:mb-2">{banner.title}</h2>
                   {banner.subtitle && (
