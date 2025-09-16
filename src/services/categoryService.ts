@@ -128,10 +128,9 @@ class CategoryService extends BaseApiService {
   async updateCategory(id: number, categoryData: Partial<Category>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
     const formData = new FormData();
     
-    // Add text fields only if they exist
+    // Add text fields only if they exist (exclude order field)
     if (categoryData.name) formData.append('name', categoryData.name);
     if (categoryData.slug) formData.append('slug', categoryData.slug);
-    if (categoryData.order !== undefined) formData.append('order', categoryData.order.toString());
     if (categoryData.is_active !== undefined) formData.append('is_active', categoryData.is_active ? '1' : '0');
     if (categoryData.featured !== undefined) formData.append('featured', categoryData.featured ? '1' : '0');
     if (categoryData.description !== undefined) formData.append('description', categoryData.description || '');
