@@ -124,7 +124,7 @@ class CategoryService extends BaseApiService {
     return this.postFormData<ApiResponse<Category>>('/admin/categories', formData);
   }
 
-  // Update category with file upload
+  // Update category with file upload - only send changed fields
   async updateCategory(id: number, categoryData: Partial<Category>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
     console.log('CategoryService.updateCategory called with:', {
       id,
@@ -135,29 +135,28 @@ class CategoryService extends BaseApiService {
 
     const formData = new FormData();
     
-    // Add text fields (same structure as createCategory)
-    if (categoryData.name) formData.append('name', categoryData.name);
-    if (categoryData.slug) formData.append('slug', categoryData.slug);
+    // Only add fields that are provided (changed)
+    if (categoryData.name !== undefined) formData.append('name', categoryData.name);
+    if (categoryData.slug !== undefined) formData.append('slug', categoryData.slug);
     if (categoryData.is_active !== undefined) formData.append('is_active', categoryData.is_active ? '1' : '0');
     if (categoryData.featured !== undefined) formData.append('featured', categoryData.featured ? '1' : '0');
-    
-    if (categoryData.description) formData.append('description', categoryData.description);
-    if (categoryData.seo_title) formData.append('seo_title', categoryData.seo_title);
-    if (categoryData.seo_description) formData.append('seo_description', categoryData.seo_description);
-    if (categoryData.parent_id) formData.append('parent_id', categoryData.parent_id.toString());
+    if (categoryData.description !== undefined) formData.append('description', categoryData.description || '');
+    if (categoryData.seo_title !== undefined) formData.append('seo_title', categoryData.seo_title || '');
+    if (categoryData.seo_description !== undefined) formData.append('seo_description', categoryData.seo_description || '');
+    if (categoryData.parent_id !== undefined) formData.append('parent_id', categoryData.parent_id ? categoryData.parent_id.toString() : '');
     
     // Add image file if provided
     if (imageFile) {
       formData.append('image', imageFile);
-    } else if (categoryData.image) {
-      formData.append('image_url', categoryData.image);
+    } else if (categoryData.image !== undefined) {
+      formData.append('image_url', categoryData.image || '');
     }
     
     // Add icon file if provided  
     if (iconFile) {
       formData.append('icon', iconFile);
-    } else if (categoryData.icon) {
-      formData.append('icon_url', categoryData.icon);
+    } else if (categoryData.icon !== undefined) {
+      formData.append('icon_url', categoryData.icon || '');
     }
 
     // Log FormData contents
