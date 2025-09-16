@@ -100,6 +100,16 @@ export function CategoryModal({
       return;
     }
 
+    // For new categories, require image (upload file or URL)
+    if (mode === 'add' && !imageFile && !formData.image?.trim()) {
+      toast({
+        title: "Validation Error", 
+        description: "Category image is required (upload file or provide URL)",
+        variant: "destructive"
+      });
+      return;
+    }
+
     // For new categories, require either file upload or URL for icon
     if (mode === 'add' && !iconFile && !formData.icon?.trim()) {
       toast({
@@ -329,7 +339,7 @@ export function CategoryModal({
           <div className="space-y-4">
             <Label className="flex items-center gap-2">
               <Image className="w-4 h-4" />
-              Category Image
+              Category Image *
             </Label>
             
             <FileUpload
@@ -341,7 +351,7 @@ export function CategoryModal({
 
             {/* Image URL Input as fallback */}
             <div className="space-y-2">
-              <Label htmlFor="image">Or provide image URL</Label>
+              <Label htmlFor="image">Or provide image URL *</Label>
               <Input
                 id="image"
                 value={formData.image || ''}
@@ -352,6 +362,7 @@ export function CategoryModal({
                   }
                 }}
                 placeholder="https://example.com/image.jpg"
+                required={mode === 'add' && !imageFile}
               />
             </div>
 

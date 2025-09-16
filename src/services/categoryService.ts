@@ -96,10 +96,9 @@ class CategoryService extends BaseApiService {
   async createCategory(categoryData: Omit<Category, 'id' | 'created_at' | 'updated_at'>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
     const formData = new FormData();
     
-    // Add text fields
+    // Add text fields (exclude order field for creation)
     formData.append('name', categoryData.name);
     formData.append('slug', categoryData.slug);
-    formData.append('order', categoryData.order.toString());
     formData.append('is_active', categoryData.is_active ? '1' : '0');
     formData.append('featured', categoryData.featured ? '1' : '0');
     
