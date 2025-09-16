@@ -163,14 +163,18 @@ export function CategoryModal({
 
     const allCategories = flattenCategories(categories);
     
+    // Remove duplicates by creating a Map with unique IDs
+    const uniqueCategories = Array.from(
+      new Map(allCategories.map(cat => [cat.id, cat])).values()
+    ).filter(cat => cat.id !== undefined);
+    
     if (mode === 'edit' && category?.id) {
-      return allCategories.filter(cat => 
+      return uniqueCategories.filter(cat => 
         cat.id !== category.id && 
-        cat.id !== undefined && 
         !isDescendantOf(cat, category.id)
       );
     }
-    return allCategories.filter(cat => cat.id !== undefined);
+    return uniqueCategories;
   };
 
   const isDescendantOf = (category: Category, ancestorId: number): boolean => {
@@ -310,13 +314,11 @@ export function CategoryModal({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="none">No Parent (Root Category)</SelectItem>
-                {parentCategories
-                  .filter(cat => cat.id !== undefined)
-                  .map((cat) => (
-                    <SelectItem key={cat.id} value={cat.id!.toString()}>
-                      {cat.level && cat.level > 0 ? `${' '.repeat(cat.level * 2)}└ ${cat.name}` : cat.name}
-                    </SelectItem>
-                  ))}
+                {parentCategories.map((cat, index) => (
+                  <SelectItem key={`parent-${cat.id}-${index}`} value={cat.id!.toString()}>
+                    {cat.level && cat.level > 0 ? `${' '.repeat(cat.level * 2)}└ ${cat.name}` : cat.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
