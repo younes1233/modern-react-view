@@ -59,6 +59,7 @@ const Categories = () => {
 
   const loadCategories = async () => {
     try {
+      console.log('Loading categories...');
       setLoading(true);
       const filters = {
         search: searchTerm || undefined,
@@ -66,6 +67,8 @@ const Categories = () => {
       };
       
       const response = await categoryService.getCategories();
+      console.log('Categories API response:', response);
+      
       if (!response.error) {
         let categoriesData: Category[] = [];
         
@@ -74,6 +77,8 @@ const Categories = () => {
         } else if (response.details && typeof response.details === 'object' && Array.isArray((response.details as any).categories)) {
           categoriesData = (response.details as any).categories;
         }
+        
+        console.log('Processed categories data:', categoriesData);
         
         const sanitizedCategories = categoriesData.map(category => ({
           ...category,
@@ -86,8 +91,10 @@ const Categories = () => {
           order: category.order ?? 0
         }));
         
+        console.log('Setting categories state with:', sanitizedCategories);
         setCategories(sanitizedCategories);
       } else {
+        console.error('Categories API error:', response);
         toast({
           title: "Error",
           description: response.message || "Failed to load categories",
@@ -195,24 +202,30 @@ const Categories = () => {
 
   const handleSaveCategory = async (categoryData: Category, imageFile?: File, iconFile?: File) => {
     try {
+      console.log('Saving category:', { modalMode, categoryData, selectedCategory });
       let response;
       
       if (modalMode === 'add') {
         response = await categoryService.createCategory(categoryData, imageFile, iconFile);
       } else if (selectedCategory?.id) {
+        console.log('Updating category with ID:', selectedCategory.id);
         response = await categoryService.updateCategory(selectedCategory.id, categoryData, imageFile, iconFile);
       }
+
+      console.log('Category save response:', response);
 
       if (response && !response.error) {
         toast({
           title: "Success",
           description: `Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`
         });
+        console.log('Reloading categories after successful save...');
         // Force reload categories and stats
         await loadCategories();
         await loadStats();
         setIsAddDialogOpen(false); // Close modal after successful save
       } else {
+        console.error('Category save failed:', response);
         toast({
           title: "Error",
           description: response?.message || `Failed to ${modalMode} category`,
