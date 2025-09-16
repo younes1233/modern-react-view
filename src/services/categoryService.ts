@@ -135,15 +135,16 @@ class CategoryService extends BaseApiService {
 
     const formData = new FormData();
     
-    // Add text fields - include all fields to ensure they're sent
-    formData.append('name', categoryData.name || '');
-    formData.append('slug', categoryData.slug || '');
-    formData.append('is_active', categoryData.is_active ? '1' : '0');
-    formData.append('featured', categoryData.featured ? '1' : '0');
-    formData.append('description', categoryData.description || '');
-    formData.append('seo_title', categoryData.seo_title || '');
-    formData.append('seo_description', categoryData.seo_description || '');
-    formData.append('parent_id', categoryData.parent_id ? categoryData.parent_id.toString() : '');
+    // Add text fields (same structure as createCategory)
+    if (categoryData.name) formData.append('name', categoryData.name);
+    if (categoryData.slug) formData.append('slug', categoryData.slug);
+    if (categoryData.is_active !== undefined) formData.append('is_active', categoryData.is_active ? '1' : '0');
+    if (categoryData.featured !== undefined) formData.append('featured', categoryData.featured ? '1' : '0');
+    
+    if (categoryData.description) formData.append('description', categoryData.description);
+    if (categoryData.seo_title) formData.append('seo_title', categoryData.seo_title);
+    if (categoryData.seo_description) formData.append('seo_description', categoryData.seo_description);
+    if (categoryData.parent_id) formData.append('parent_id', categoryData.parent_id.toString());
     
     // Add image file if provided
     if (imageFile) {
@@ -152,7 +153,7 @@ class CategoryService extends BaseApiService {
       formData.append('image_url', categoryData.image);
     }
     
-    // Add icon file if provided
+    // Add icon file if provided  
     if (iconFile) {
       formData.append('icon', iconFile);
     } else if (categoryData.icon) {
