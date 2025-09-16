@@ -116,7 +116,7 @@ const Store = () => {
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
           <div className="w-full max-w-full overflow-hidden bg-white">
-            <div className="relative rounded-2xl overflow-hidden shadow-lg bg-white" style={{ aspectRatio: '4/1' }}>
+            <div className="relative overflow-hidden shadow-lg bg-white" style={{ aspectRatio: '4/1' }}>
               <img
                 src={bannerImage}
                 alt={banner.images?.alt || banner.title}
