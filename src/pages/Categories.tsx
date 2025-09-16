@@ -208,7 +208,10 @@ const Categories = () => {
           title: "Success",
           description: `Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`
         });
-        loadCategories();
+        // Force reload categories and stats
+        await loadCategories();
+        await loadStats();
+        setIsAddDialogOpen(false); // Close modal after successful save
       } else {
         toast({
           title: "Error",

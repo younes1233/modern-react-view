@@ -119,7 +119,6 @@ export function CategoryModal({
     }
 
     onSave(formData, imageFile || undefined, iconFile || undefined);
-    onClose();
   };
 
   const handleImageUpload = (files: File[]) => {
