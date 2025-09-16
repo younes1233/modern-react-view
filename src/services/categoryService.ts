@@ -126,17 +126,24 @@ class CategoryService extends BaseApiService {
 
   // Update category with file upload
   async updateCategory(id: number, categoryData: Partial<Category>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
+    console.log('CategoryService.updateCategory called with:', {
+      id,
+      categoryData,
+      imageFile: imageFile?.name,
+      iconFile: iconFile?.name
+    });
+
     const formData = new FormData();
     
-    // Add text fields only if they exist
-    if (categoryData.name) formData.append('name', categoryData.name);
-    if (categoryData.slug) formData.append('slug', categoryData.slug);
-    if (categoryData.is_active !== undefined) formData.append('is_active', categoryData.is_active ? '1' : '0');
-    if (categoryData.featured !== undefined) formData.append('featured', categoryData.featured ? '1' : '0');
-    if (categoryData.description !== undefined) formData.append('description', categoryData.description || '');
-    if (categoryData.seo_title !== undefined) formData.append('seo_title', categoryData.seo_title || '');
-    if (categoryData.seo_description !== undefined) formData.append('seo_description', categoryData.seo_description || '');
-    if (categoryData.parent_id !== undefined) formData.append('parent_id', categoryData.parent_id ? categoryData.parent_id.toString() : '');
+    // Add text fields - include all fields to ensure they're sent
+    formData.append('name', categoryData.name || '');
+    formData.append('slug', categoryData.slug || '');
+    formData.append('is_active', categoryData.is_active ? '1' : '0');
+    formData.append('featured', categoryData.featured ? '1' : '0');
+    formData.append('description', categoryData.description || '');
+    formData.append('seo_title', categoryData.seo_title || '');
+    formData.append('seo_description', categoryData.seo_description || '');
+    formData.append('parent_id', categoryData.parent_id ? categoryData.parent_id.toString() : '');
     
     // Add image file if provided
     if (imageFile) {
@@ -152,7 +159,15 @@ class CategoryService extends BaseApiService {
       formData.append('icon_url', categoryData.icon);
     }
 
-    return this.putFormData<ApiResponse<Category>>(`/admin/categories/${id}`, formData);
+    // Log FormData contents
+    console.log('FormData being sent:');
+    for (const [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
+    }
+
+    const result = await this.putFormData<ApiResponse<Category>>(`/admin/categories/${id}`, formData);
+    console.log('Update API response:', result);
+    return result;
   }
 
   // Delete category
