@@ -41,6 +41,7 @@ import Unauthorized from "@/pages/Unauthorized";
 
 // Store Pages
 import Store from "@/pages/store/Store";
+import ComingSoon from "./pages/store/ComingSoon";
 import ProductDetail from "@/pages/store/ProductDetail";
 import StoreCategories from "@/pages/store/StoreCategories";
 import Checkout from "@/pages/store/Checkout";
@@ -70,13 +71,14 @@ function App() {
                       <StoreThemeHandler />
                       <Routes>
                         {/* Public Auth Routes */}
-                        <Route path="/login" element={<Login />} />
+                        {/* <Route path="/login" element={<Login />} /> */}
                         <Route path="/role-login" element={<RoleLogin />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/unauthorized" element={<Unauthorized />} />
 
                         {/* Store Routes (Public) */}
-                        <Route path="/store" element={<Store />} />
+                        {/* <Route path="/store" element={<Store />} /> */}
+                        <Route path="/store" element={<ComingSoon />} />
                         <Route path="/store/product/:slug" element={<ProductDetail />} />
                         <Route path="/store/categories" element={<StoreCategories />} />
                         <Route path="/store/checkout" element={<Checkout />} />
