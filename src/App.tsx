@@ -77,8 +77,8 @@ function App() {
                         <Route path="/unauthorized" element={<Unauthorized />} />
 
                         {/* Store Routes (Public) */}
-                        {/* <Route path="/store" element={<Store />} /> */}
-                        <Route path="/store" element={<ComingSoon />} />
+                        <Route path="/store" element={<Store />} />
+                        <Route path="/" element={<ComingSoon />} />
                         <Route path="/store/product/:slug" element={<ProductDetail />} />
                         <Route path="/store/categories" element={<StoreCategories />} />
                         <Route path="/store/checkout" element={<Checkout />} />
