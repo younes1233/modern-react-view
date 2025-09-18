@@ -202,7 +202,12 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         >
           <SelectTrigger className="w-[80px] h-9 border-gray-200 bg-white hover:bg-gray-50 transition-colors text-xs">
             <div className="flex items-center gap-1">
-              <DollarSign className="w-3 h-3 text-gray-500" />
+              {/* <DollarSign className="w-3 h-3 text-gray-500" /> */}
+              {selectedCurrency && (
+                  <span className="text-[8px] text-gray-500 font-medium">
+                    {selectedCurrency.symbol}
+                  </span>
+                )}
               <SelectValue placeholder="Currency">
                 {selectedCurrency && (
                   <span className="text-xs text-gray-600 font-medium">
