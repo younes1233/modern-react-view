@@ -30,6 +30,8 @@ export function CountryCurrencySelector() {
   const [selectedCurrency, setSelectedCurrency] = useState<SelectedCurrency | null>(null);
   const [availableCurrencies, setAvailableCurrencies] = useState<SelectedCurrency[]>([]);
 
+  
+
   // Load from localStorage on mount
   useEffect(() => {
     const savedCountry = localStorage.getItem('selectedCountry');

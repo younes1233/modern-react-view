@@ -13,8 +13,8 @@ export function useStoreCountries() {
       setError(null);
       const response = await storeCountryService.getCountries();
       
-      if (!response.error && response.details?.data) {
-        setCountries(response.details.data);
+      if (response && response.data) {
+        setCountries(response.data);
       } else {
         setError('Failed to load countries');
       }

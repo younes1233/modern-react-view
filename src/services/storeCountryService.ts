@@ -33,8 +33,8 @@ export interface StoreCountriesResponse {
 }
 
 class StoreCountryService extends BaseApiService {
-  async getCountries(): Promise<ApiResponse<StoreCountriesResponse>> {
-    return this.get<ApiResponse<StoreCountriesResponse>>('/countries');
+  async getCountries(): Promise<StoreCountriesResponse> {
+    return this.get<StoreCountriesResponse>('/countries');
   }
 }
 
