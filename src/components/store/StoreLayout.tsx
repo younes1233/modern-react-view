@@ -350,6 +350,9 @@ const goAll = () => {
             </div>
           </div>
         </div>
+
+        {/* Mobile Country/Currency Selector - Under search bar */}
+        <CountryCurrencySelector variant="mobile" />
       </header>
 
       {/* Enhanced Mobile Menu Overlay */}

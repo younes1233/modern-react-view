@@ -24,7 +24,11 @@ interface SelectedCurrency {
   symbol: string;
 }
 
-export function CountryCurrencySelector() {
+interface CountryCurrencySelectorProps {
+  variant?: 'desktop' | 'mobile';
+}
+
+export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrencySelectorProps) {
   const { countries, loading } = useStoreCountries();
   const [selectedCountry, setSelectedCountry] = useState<SelectedCountry | null>(null);
   const [selectedCurrency, setSelectedCurrency] = useState<SelectedCurrency | null>(null);
@@ -105,6 +109,14 @@ export function CountryCurrencySelector() {
   };
 
   if (loading) {
+    if (variant === 'mobile') {
+      return (
+        <div className="lg:hidden flex items-center justify-center gap-3 px-4 py-2">
+          <div className="w-[120px] h-8 bg-gray-100 animate-pulse rounded"></div>
+          <div className="w-[80px] h-8 bg-gray-100 animate-pulse rounded"></div>
+        </div>
+      );
+    }
     return (
       <div className="hidden lg:flex items-center gap-2 text-sm">
         <div className="w-[140px] h-8 bg-gray-100 animate-pulse rounded"></div>
@@ -117,6 +129,84 @@ export function CountryCurrencySelector() {
     return null;
   }
 
+  // Mobile variant
+  if (variant === 'mobile') {
+    return (
+      <div className="lg:hidden flex items-center justify-center gap-3 px-4 py-2 bg-white border-b border-gray-100">
+        {/* Country Selector - Mobile */}
+        <Select
+          value={selectedCountry?.id.toString() || ''}
+          onValueChange={handleCountryChange}
+        >
+          <SelectTrigger className="w-[120px] h-9 border-gray-200 bg-white hover:bg-gray-50 transition-colors text-xs">
+            <div className="flex items-center gap-2">
+              <Globe className="w-3 h-3 text-gray-500" />
+              <SelectValue placeholder="Country">
+                {selectedCountry && (
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm">{selectedCountry.flag}</span>
+                    <span className="text-xs text-gray-600 truncate">
+                      {selectedCountry.name.substring(0, 6)}
+                    </span>
+                  </div>
+                )}
+              </SelectValue>
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
+            {countries.map((country) => (
+              <SelectItem 
+                key={country.id} 
+                value={country.id.toString()}
+                className="hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm">{country.flag}</span>
+                  <span className="text-sm">{country.name}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Currency Selector - Mobile */}
+        <Select
+          value={selectedCurrency?.id.toString() || ''}
+          onValueChange={handleCurrencyChange}
+          disabled={!selectedCountry || availableCurrencies.length === 0}
+        >
+          <SelectTrigger className="w-[80px] h-9 border-gray-200 bg-white hover:bg-gray-50 transition-colors text-xs">
+            <div className="flex items-center gap-1">
+              <DollarSign className="w-3 h-3 text-gray-500" />
+              <SelectValue placeholder="Currency">
+                {selectedCurrency && (
+                  <span className="text-xs text-gray-600 font-medium">
+                    {selectedCurrency.code}
+                  </span>
+                )}
+              </SelectValue>
+            </div>
+          </SelectTrigger>
+          <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
+            {availableCurrencies.map((currency) => (
+              <SelectItem 
+                key={currency.id} 
+                value={currency.id.toString()}
+                className="hover:bg-gray-50 cursor-pointer"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{currency.code}</span>
+                  <span className="text-xs text-gray-500">({currency.symbol})</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+    );
+  }
+
+  // Desktop variant
   return (
     <div className="hidden lg:flex items-center gap-2 text-sm">
       {/* Country Selector */}
