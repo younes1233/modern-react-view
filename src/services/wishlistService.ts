@@ -29,17 +29,17 @@ export interface AddToWishlistRequest {
 class WishlistService extends BaseApiService {
   // Get user's wishlist (requires auth)
   async getWishlist(): Promise<Wishlist> {
-    return this.get<Wishlist>('/wishlist', true); // Include credentials
+    return this.get<Wishlist>('/auth/wishlist', true); // Include credentials
   }
 
   // Add product to wishlist (requires auth)
   async addToWishlist(data: AddToWishlistRequest): Promise<Wishlist> {
-    return this.post<Wishlist>('/wishlist/add', data, true); // Include credentials
+    return this.post<Wishlist>('/auth/wishlist/add', data, true); // Include credentials
   }
 
   // Remove product from wishlist (requires auth)
   async removeFromWishlist(productId: number): Promise<Wishlist> {
-    return this.delete<Wishlist>(`/wishlist/remove/${productId}`, true); // Include credentials
+    return this.delete<Wishlist>(`/auth/wishlist/remove/${productId}`, true); // Include credentials
   }
 
   // Clear entire wishlist (requires auth)
@@ -49,12 +49,12 @@ class WishlistService extends BaseApiService {
 
   // Check if product is in wishlist (requires auth)
   async isInWishlist(productId: number): Promise<{ is_in_wishlist: boolean }> {
-    return this.get<{ is_in_wishlist: boolean }>(`/wishlist/check/${productId}`, true); // Include credentials
+    return this.get<{ is_in_wishlist: boolean }>(`/auth/wishlist/check/${productId}`, true); // Include credentials
   }
 
   // Move item to cart (requires auth)
   async moveToCart(productId: number, quantity: number = 1): Promise<{ message: string }> {
-    return this.post<{ message: string }>(`/wishlist/move-to-cart/${productId}`, { quantity }, true); // Include credentials
+    return this.post<{ message: string }>(`/auth/wishlist/move-to-cart/${productId}`, { quantity }, true); // Include credentials
   }
 }
 
