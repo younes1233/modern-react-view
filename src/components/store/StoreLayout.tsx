@@ -15,6 +15,7 @@ import { Separator } from '@/components/ui/separator';
 import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import * as Portal from '@radix-ui/react-portal';
+import { CountryCurrencySelector } from './CountryCurrencySelector';
 
 interface StoreLayoutProps {
   children: ReactNode;
@@ -224,6 +225,8 @@ const goAll = () => {
 
             {/* Desktop Actions */}
          <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
+              {/* Country and Currency Selectors */}
+              <CountryCurrencySelector />
   <Link to="/store/wishlist">
     <Button
       variant="ghost"
