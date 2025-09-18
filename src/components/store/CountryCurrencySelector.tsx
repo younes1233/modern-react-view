@@ -58,6 +58,31 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
     }
   }, []);
 
+  // Set default country and currency on first load
+  useEffect(() => {
+    if (countries.length > 0 && !selectedCountry) {
+      const firstCountry = countries[0];
+      const countryData = {
+        id: firstCountry.id,
+        name: firstCountry.name,
+        flag: firstCountry.flag,
+        iso_code: firstCountry.iso_code,
+      };
+      setSelectedCountry(countryData);
+      localStorage.setItem('selectedCountry', JSON.stringify(countryData));
+      
+      // Set base currency for the first country
+      const baseCurrency = {
+        id: firstCountry.base_currency.id,
+        code: firstCountry.base_currency.code,
+        name: firstCountry.base_currency.name,
+        symbol: firstCountry.base_currency.symbol,
+      };
+      setSelectedCurrency(baseCurrency);
+      localStorage.setItem('selectedCurrency', JSON.stringify(baseCurrency));
+    }
+  }, [countries, selectedCountry]);
+
   // Update available currencies when country changes
   useEffect(() => {
     if (selectedCountry && countries.length > 0) {
