@@ -280,7 +280,7 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
           <div className="flex items-center gap-2">
             {/* <DollarSign className="w-3 h-3 text-gray-500" /> */}
              {selectedCurrency && (
-                <span className="text-xs text-gray-600 font-medium">
+                <span className="text-[10px] text-gray-500 font-medium">
                   {selectedCurrency.symbol}
                 </span>
               )}
