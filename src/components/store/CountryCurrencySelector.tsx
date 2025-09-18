@@ -102,7 +102,16 @@ export function CountryCurrencySelector() {
     }
   };
 
-  if (loading || countries.length === 0) {
+  if (loading) {
+    return (
+      <div className="hidden lg:flex items-center gap-2 text-sm">
+        <div className="w-[140px] h-8 bg-gray-100 animate-pulse rounded"></div>
+        <div className="w-[100px] h-8 bg-gray-100 animate-pulse rounded"></div>
+      </div>
+    );
+  }
+
+  if (countries.length === 0) {
     return null;
   }
 
@@ -128,7 +137,7 @@ export function CountryCurrencySelector() {
             </SelectValue>
           </div>
         </SelectTrigger>
-        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[60]">
+        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
           {countries.map((country) => (
             <SelectItem 
               key={country.id} 
@@ -162,7 +171,7 @@ export function CountryCurrencySelector() {
             </SelectValue>
           </div>
         </SelectTrigger>
-        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[60]">
+        <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
           {availableCurrencies.map((currency) => (
             <SelectItem 
               key={currency.id} 
