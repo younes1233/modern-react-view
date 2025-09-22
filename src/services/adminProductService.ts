@@ -139,7 +139,7 @@ export interface CreateProductData {
   stock?: number;
   warehouse_id?: number;
   shelf_id?: number;
-  delivery_method_id?: number;
+  delivery_type?: number;
   delivery_cost?: number;
   available_countries?: number[];
   product_prices?: Array<{ country_id: number; net_price: number; cost: number; vat_percentage?: number }>;

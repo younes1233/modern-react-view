@@ -82,7 +82,7 @@ function buildFormDataFromPayload(payload: any) {
     ["stock", payload.stock],
     ["warehouse_id", payload.warehouse_id],
     ["shelf_id", payload.shelf_id],
-    ["delivery_method_id", payload.delivery_method_id],
+    ["delivery_type", payload.delivery_type],
   ];
   scalars.forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== "") fd.append(k, String(v));
@@ -98,7 +98,7 @@ function buildFormDataFromPayload(payload: any) {
   appendBool(fd, "is_vat_exempt", !!payload.is_vat_exempt);
 
   // ---- Delivery cost rule ----
-  if (!payload.delivery_method_id && payload.delivery_cost != null) {
+  if (!payload.delivery_type && payload.delivery_cost != null) {
     fd.append("delivery_cost", String(payload.delivery_cost));
   }
 
@@ -135,8 +135,8 @@ function buildFormDataFromPayload(payload: any) {
     appendArrayOfObjects(fd, `variants[${i}][product_variant_prices]`, v.product_variant_prices || []);
     appendArrayOfObjects(fd, `variants[${i}][product_variant_specifications]`, v.product_variant_specifications || []);
 
-    if (v.delivery_method_id != null && v.delivery_method_id !== "") {
-      fd.append(`variants[${i}][delivery_method_id]`, String(v.delivery_method_id));
+    if (v.delivery_type != null && v.delivery_type !== "") {
+      fd.append(`variants[${i}][delivery_type]`, String(v.delivery_type));
     } else if (v.delivery_cost != null && v.delivery_cost !== "") {
       fd.append(`variants[${i}][delivery_cost]`, String(v.delivery_cost));
     }
@@ -151,7 +151,7 @@ type VariantEntry = {
   variations: number[];
   variantPrices: { net_price: string; cost: string }[];
   variantSpecs: { id: number; name: string; value: string }[];
-  delivery_method_id?: string;
+  delivery_type?: string;
   delivery_cost?: string;
 };
 
@@ -187,7 +187,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       stock: 0,
       warehouse_id: undefined,
       shelf_id: undefined,
-      delivery_method_id: undefined,
+      delivery_type: undefined,
       delivery_cost: 0,
       product_prices: [],
       specifications: [],
@@ -236,7 +236,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         stock: 0,
         warehouse_id: undefined,
         shelf_id: undefined,
-        delivery_method_id: undefined,
+        delivery_type: undefined,
         delivery_cost: 0,
         product_prices: [],
         specifications: product.specifications?.map((s) => ({ name: s.name, value: s.value })) || [],
@@ -282,7 +282,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         stock: 0,
         warehouse_id: warehouse?.id,
         shelf_id: undefined,
-        delivery_method_id: undefined,
+        delivery_type: undefined,
         delivery_cost: 0,
         product_prices: [],
         specifications: [],
@@ -384,7 +384,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         variations: [],
         variantPrices: [],
         variantSpecs: [],
-        delivery_method_id: "",
+        delivery_type: "",
         delivery_cost: "",
       },
     ]);
@@ -393,7 +393,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
   const updateVariantField = (
     variantId: number,
-    field: "image" | "variations" | "delivery_method_id" | "delivery_cost",
+    field: "image" | "variations" | "delivery_type" | "delivery_cost",
     value: any
   ) =>
     setVariantEntries((prev) =>
@@ -494,7 +494,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     }
 
     // Validate delivery method for non-variant products
-    if (!formData.has_variants && !formData.delivery_method_id) {
+    if (!formData.has_variants && !formData.delivery_type) {
       toast({ title: "Error", description: "Delivery method is required", variant: "destructive" });
       return;
     }
@@ -535,14 +535,14 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           .map((s) => ({ name: s.name, value: s.value }))
           .filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
 
-        const delivery_method_id = variant.delivery_method_id ? parseInt(variant.delivery_method_id, 10) : undefined;
-        const delivery_cost = delivery_method_id ? undefined : (variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined);
+        const delivery_type = variant.delivery_type ? parseInt(variant.delivery_type, 10) : undefined;
+        const delivery_cost = delivery_type ? undefined : (variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined);
 
         return {
           image: variant.image,
           variations,
           product_variant_prices: variantPricesParsed.length > 0 ? (variantPricesParsed as any) : [],
-          delivery_method_id,
+          delivery_type,
           delivery_cost,
           product_variant_specifications: variantSpecsParsed.length > 0 ? variantSpecsParsed : [],
         };
@@ -586,7 +586,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             variations: (v.variations || []).join(', '),
             prices: v.product_variant_prices?.length ?? 0,
             specs: v.product_variant_specifications?.length ?? 0,
-            delivery_method_id: v.delivery_method_id ?? '',
+            delivery_type: v.delivery_type ?? '',
             delivery_cost: v.delivery_cost ?? '',
           }))
         );
@@ -773,7 +773,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               </div>
               <div>
                 <Label>Delivery Method *</Label>
-                <Select value={formData.delivery_method_id?.toString() || ''} onValueChange={(value) => updateField('delivery_method_id', value ? (parseInt(value) as any) : (undefined as any))} required>
+                <Select value={formData.delivery_type?.toString() || ''} onValueChange={(value) => updateField('delivery_type', value ? (parseInt(value) as any) : (undefined as any))} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select delivery method" />
                   </SelectTrigger>
@@ -795,7 +795,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               <div>
                 <Label>Delivery Cost</Label>
                 <Input type="number" step="0.01" min="0" value={formData.delivery_cost || ''} onChange={(e) => updateField('delivery_cost', e.target.value ? (parseFloat(e.target.value) as any) : (0 as any))} placeholder="Enter delivery cost" />
-                {formData.delivery_method_id && (
+                {formData.delivery_type && (
                   <div className="text-xs text-muted-foreground mt-1">Delivery cost will be ignored when a delivery method is selected.</div>
                 )}
               </div>
@@ -948,13 +948,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   {/* Variant delivery overrides */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label>Delivery Method ID (override)</Label>
-                      <Input type="number" value={variant.delivery_method_id || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_method_id', e.target.value)} placeholder="Delivery Method ID" />
+                      <Label>Delivery Type (override)</Label>
+                      <Input type="number" value={variant.delivery_type || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_type', e.target.value)} placeholder="Delivery Type" />
                     </div>
                     <div>
                       <Label>Delivery Cost (override)</Label>
                       <Input type="number" value={variant.delivery_cost || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)} placeholder="Delivery Cost" />
-                      {variant.delivery_method_id && (
+                      {variant.delivery_type && (
                         <div className="text-xs text-muted-foreground mt-1">Will be ignored when delivery method is set.</div>
                       )}
                     </div>
