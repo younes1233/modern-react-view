@@ -13,7 +13,7 @@ import { AdminProductAPI, CreateProductData } from "@/services/adminProductServi
 import { X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useShelves } from "@/hooks/useShelves";
-import { useDeliveryMethods } from "@/hooks/useDeliveryMethods";
+
 import { useAttributes } from "@/hooks/useAttributes";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AttributeManager } from "./AttributeManager";
@@ -155,10 +155,14 @@ type VariantEntry = {
   delivery_cost?: string;
 };
 
+const DELIVERY_TYPES = [
+  { value: 'meemhome', label: 'Meemhome Delivery' },
+  { value: 'company', label: 'Delivery Company' }
+];
+
 export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: AdminProductModalProps) {
   const { country, store, warehouse, user } = useAuth();
   const { shelves = [] } = useShelves();
-  const { data: deliveryMethods = [], isLoading: deliveryMethodsLoading } = useDeliveryMethods();
 
   const [formData, setFormData] = useState<CreateProductData & { country_id?: number }>(
     {
@@ -535,7 +539,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           .map((s) => ({ name: s.name, value: s.value }))
           .filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
 
-        const delivery_type = variant.delivery_type ? parseInt(variant.delivery_type, 10) : undefined;
+        const delivery_type = variant.delivery_type || undefined;
         const delivery_cost = delivery_type ? undefined : (variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined);
 
         return {
@@ -773,22 +777,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
               </div>
               <div>
                 <Label>Delivery Method *</Label>
-                <Select value={formData.delivery_type?.toString() || ''} onValueChange={(value) => updateField('delivery_type', value ? (parseInt(value) as any) : (undefined as any))} required>
+                <Select value={formData.delivery_type || ''} onValueChange={(value) => updateField('delivery_type', value)} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select delivery method" />
                   </SelectTrigger>
                   <SelectContent>
-                    {deliveryMethodsLoading ? (
-                      <SelectItem value="" disabled>Loading delivery methods...</SelectItem>
-                    ) : deliveryMethods.length > 0 ? (
-                      deliveryMethods.map((method) => (
-                        <SelectItem key={method.id} value={method.id.toString()}>
-                          {method.name} - {method.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="" disabled>No delivery methods available</SelectItem>
-                    )}
+                    {DELIVERY_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -949,7 +947,19 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <Label>Delivery Type (override)</Label>
-                      <Input type="number" value={variant.delivery_type || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_type', e.target.value)} placeholder="Delivery Type" />
+                      <Select value={variant.delivery_type || ''} onValueChange={(value) => updateVariantField(variant.id, 'delivery_type', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select delivery method" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">Use main product delivery method</SelectItem>
+                          {DELIVERY_TYPES.map((type) => (
+                            <SelectItem key={type.value} value={type.value}>
+                              {type.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
                     <div>
                       <Label>Delivery Cost (override)</Label>
