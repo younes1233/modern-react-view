@@ -43,6 +43,10 @@ interface Product {
   isFeatured: boolean;
   isNewArrival: boolean;
   inStock: boolean;
+  weight?: string;
+  height?: string;
+  width?: string;
+  length?: string;
 }
 
 interface ProductModalProps {
@@ -69,7 +73,11 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
     rating: 5,
     isFeatured: false,
     isNewArrival: false,
-    inStock: true
+    inStock: true,
+    weight: '29 kg',
+    height: '66 cm',
+    width: '66 cm',
+    length: '66 cm'
   });
   
   const [newThumbnail, setNewThumbnail] = useState({ url: '', alt: '' });
@@ -96,7 +104,11 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
         rating: 5,
         isFeatured: false,
         isNewArrival: false,
-        inStock: true
+        inStock: true,
+        weight: '29 kg',
+        height: '66 cm',
+        width: '66 cm',
+        length: '66 cm'
       });
     }
   }, [product, mode, isOpen]);
@@ -354,6 +366,58 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
                     />
                     <span>New Arrival</span>
                   </label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Physical Dimensions */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg">Physical Dimensions</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="weight">Weight</Label>
+                  <Input
+                    id="weight"
+                    value={formData.weight || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, weight: e.target.value }))}
+                    placeholder="e.g., 29 kg"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="height">Height</Label>
+                  <Input
+                    id="height"
+                    value={formData.height || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, height: e.target.value }))}
+                    placeholder="e.g., 66 cm"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="width">Width</Label>
+                  <Input
+                    id="width"
+                    value={formData.width || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, width: e.target.value }))}
+                    placeholder="e.g., 66 cm"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="length">Length</Label>
+                  <Input
+                    id="length"
+                    value={formData.length || ''}
+                    onChange={(e) => setFormData(prev => ({ ...prev, length: e.target.value }))}
+                    placeholder="e.g., 66 cm"
+                  />
                 </div>
               </div>
             </CardContent>
