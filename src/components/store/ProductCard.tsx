@@ -138,11 +138,11 @@ export function ProductCard({ product }: ProductCardProps) {
             </div>
 
             {/* Sales count - if available */}
-            {product.reviews && product.reviews > 0 && (
+            {/* {product.reviews && product.reviews > 0 && (
               <div className="text-xs text-gray-500 mb-2">
                 {product.reviews}+ Sold
               </div>
-            )}
+            )} */}
 
             {/* Bottom Section with Express and Add to Cart */}
             <div className="flex items-center justify-between mt-auto">
