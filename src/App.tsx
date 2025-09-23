@@ -33,7 +33,7 @@ import Inventory from "@/pages/Inventory";
 import StoreManagement from "@/pages/StoreManagement";
 
 // Auth Pages
-import Login from "@/pages/Login";
+// import Login from "@/pages/Login";
 import RoleLogin from "@/pages/RoleLogin";
 import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/NotFound";
@@ -86,7 +86,7 @@ function App() {
                         <Route path="/store/wishlist" element={<Wishlist />} />
 
                         {/* Protected Admin Routes */}
-                        <Route path="/" element={
+                        <Route path="/dashboard" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Index />

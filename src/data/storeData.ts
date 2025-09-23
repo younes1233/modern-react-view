@@ -753,7 +753,7 @@ let sampleHomeSections: HomeSection[] = [
 ];
 
 const sampleDisplaySettings: DisplaySettings = {
-  layout: 'grid',
+  layout: 'list',
   gridColumns: 3,
   productsPerPage: 12,
   showPricing: true,
