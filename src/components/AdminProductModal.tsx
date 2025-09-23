@@ -527,6 +527,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           return;
         }
       }
+
+      // Ensure we have product prices as fallback for variants
+      if (priceEntries.length === 0) {
+        toast({ title: "Error", description: "Product prices are required as fallback when using variants", variant: "destructive" });
+        return;
+      }
     }
 
     // Validate specifications - require height, width, length
@@ -565,19 +571,28 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           .map((s) => ({ name: s.name, value: s.value }))
           .filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
 
-        const delivery_type = variant.delivery_type || "meemhome";
-        const delivery_cost = variant.delivery_cost ? parseFloat(variant.delivery_cost) : 0;
+        // Only set delivery_type if it's not "inherit" and is a valid type
+        const delivery_type = variant.delivery_type && variant.delivery_type !== "inherit" ? variant.delivery_type : undefined;
+        const delivery_cost = delivery_type === "meemhome" && variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined;
         const stock = variant.stock || 0;
 
-        return {
+        const variantData: any = {
           image: variant.image,
           variations,
           stock,
           product_variant_prices: variantPricesParsed.length > 0 ? (variantPricesParsed as any) : [],
-          delivery_type,
-          delivery_cost,
           product_variant_specifications: variantSpecsParsed.length > 0 ? variantSpecsParsed : [],
         };
+
+        // Only add delivery fields if they have valid values
+        if (delivery_type) {
+          variantData.delivery_type = delivery_type;
+        }
+        if (delivery_cost !== undefined) {
+          variantData.delivery_cost = delivery_cost;
+        }
+
+        return variantData;
       });
     }
 
@@ -845,7 +860,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
           {/* Product Prices */}
           <div className="space-y-2">
-            <Label>Product Prices</Label>
+            <Label>Product Prices {formData.has_variants && '*'}</Label>
+            {formData.has_variants && (
+              <div className="text-xs text-muted-foreground mb-2">
+                Product prices are required as fallback for variants without specific pricing.
+              </div>
+            )}
             <Button type="button" variant="secondary" size="sm" onClick={addPriceEntry}>Add Price</Button>
             {priceEntries.map((entry, index) => (
               <div key={index} className="grid grid-cols-3 gap-2 items-center">
