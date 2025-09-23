@@ -11,6 +11,7 @@ import { ProductQuickView } from './ProductQuickView';
 import { ImageZoom } from './ImageZoom';
 import { useNavigate } from 'react-router-dom';
 import { Package } from "lucide-react";
+import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
 
 interface ProductCardProps {
   product: Product;
@@ -23,7 +24,11 @@ export function ProductCard({ product }: ProductCardProps) {
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null);
   const { addToCart, isInCart, isLoading: cartLoading } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist, isLoading: wishlistLoading } = useWishlist();
+  const { selectedCurrency } = useCountryCurrency();
   const navigate = useNavigate();
+
+  // Get currency symbol from product data or fallback to selected currency
+  const currencySymbol = (product as any).currency?.symbol || selectedCurrency?.symbol || '$';
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -118,12 +123,12 @@ export function ProductCard({ product }: ProductCardProps) {
             {/* Price Section - Updated layout */}
             <div className="flex items-center gap-1.5 mb-2">
               <span className="text-lg md:text-xl font-bold text-gray-900">
-                ${product.price}
+                {currencySymbol}{product.price}
               </span>
               {product.isOnSale && (
                 <>
                   <span className="text-sm text-gray-500 line-through">
-                    ${originalPrice}
+                    {currencySymbol}{originalPrice}
                   </span>
                   <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
                     -{discountPercentage}%
