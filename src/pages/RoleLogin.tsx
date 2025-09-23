@@ -24,7 +24,7 @@ const RoleLogin = () => {
       if (user.role === 'customer') {
         navigate('/store', { replace: true });
       } else {
-        navigate('/', { replace: true });
+        navigate('/dashboard', { replace: true });
       }
     }
   }, [user, isLoading, navigate]);
