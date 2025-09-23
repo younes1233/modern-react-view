@@ -94,7 +94,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/products" element={
+                        <Route path="/dashboard/products" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Products />
@@ -102,7 +102,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/categories" element={
+                        <Route path="/dashboard/categories" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Categories />
@@ -110,7 +110,7 @@ function App() {
                           </ProtectedRoute>
                         } />
 
-                        <Route path="/inventory" element={
+                        <Route path="/dashboard/inventory" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Inventory />
@@ -118,7 +118,7 @@ function App() {
                           </ProtectedRoute>
                         } />
 
-                        <Route path="/store-management" element={
+                        <Route path="/dashboard/store-management" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <StoreManagement />
@@ -126,7 +126,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/orders" element={
+                        <Route path="/dashboard/orders" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Orders />
@@ -134,7 +134,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/customers" element={
+                        <Route path="/dashboard/customers" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Customers />
@@ -142,7 +142,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/returns" element={
+                        <Route path="/dashboard/returns" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Returns />
@@ -150,7 +150,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/coupons" element={
+                        <Route path="/dashboard/coupons" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Coupons />
@@ -158,7 +158,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/analytics" element={
+                        <Route path="/dashboard/analytics" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <Analytics />
@@ -166,7 +166,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/sales-report" element={
+                        <Route path="/dashboard/sales-report" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
                               <SalesReport />
@@ -175,7 +175,7 @@ function App() {
                         } />
 
                         {/* Super Admin Only Routes */}
-                        <Route path="/user-management" element={
+                        <Route path="/dashboard/user-management" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin']}>
                               <UserManagement />
@@ -183,7 +183,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/product-approval" element={
+                        <Route path="/dashboard/product-approval" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin']}>
                               <ProductApproval />
@@ -191,7 +191,7 @@ function App() {
                           </ProtectedRoute>
                         } />
                         
-                        <Route path="/localization" element={
+                        <Route path="/dashboard/localization" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['super_admin']}>
                               <Localization />
@@ -200,7 +200,7 @@ function App() {
                         } />
 
                         {/* Seller Routes */}
-                        <Route path="/seller-products" element={
+                        <Route path="/dashboard/seller-products" element={
                           <ProtectedRoute>
                             <RoleProtectedRoute allowedRoles={['seller']}>
                               <SellerProducts />
