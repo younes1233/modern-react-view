@@ -48,7 +48,17 @@ const RoleLogin = () => {
         title: 'Success',
         description: 'Login successful!',
       });
-      // Navigation will be handled by the useEffect above
+      
+      // Direct navigation after successful login
+      // The user state should be available now since login() returned true
+      setTimeout(() => {
+        const currentUser = JSON.parse(localStorage.getItem('roleUser') || '{}');
+        if (currentUser.role === 'customer') {
+          navigate('/store', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
+      }, 100); // Small delay to ensure state is updated
     } else {
       toast({
         title: 'Error',
