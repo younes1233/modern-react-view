@@ -38,46 +38,46 @@ import { useRoleAuth } from "@/contexts/RoleAuthContext"
 const roleMenuItems = {
   super_admin: {
     main: [
-      { title: "Dashboard", url: "/", icon: Home, description: "Overview & analytics" },
+      { title: "Dashboard", url: "/dashboard", icon: Home, description: "Overview & analytics" },
     ],
     catalog: [
-      { title: "Products", url: "/products", icon: Package, description: "Manage inventory" },
-      { title: "Categories", url: "/categories", icon: Settings, description: "Product categories" },
-      { title: "Inventory", url: "/inventory", icon: Package2, description: "Stock management" },
+      { title: "Products", url: "/dashboard/products", icon: Package, description: "Manage inventory" },
+      { title: "Categories", url: "/dashboard/categories", icon: Settings, description: "Product categories" },
+      { title: "Inventory", url: "/dashboard/inventory", icon: Package2, description: "Stock management" },
     ],
     business: [
-      { title: "Orders", url: "/orders", icon: ShoppingCart, description: "Order management", badge: "12" },
-      { title: "Returns", url: "/returns", icon: RotateCcw, description: "Return requests", badge: "3" },
-      { title: "Customers", url: "/customers", icon: Users, description: "Customer database" },
-      { title: "Coupons", url: "/coupons", icon: Tag, description: "Discount management" },
+      { title: "Orders", url: "/dashboard/orders", icon: ShoppingCart, description: "Order management", badge: "12" },
+      { title: "Returns", url: "/dashboard/returns", icon: RotateCcw, description: "Return requests", badge: "3" },
+      { title: "Customers", url: "/dashboard/customers", icon: Users, description: "Customer database" },
+      { title: "Coupons", url: "/dashboard/coupons", icon: Tag, description: "Discount management" },
     ],
     management: [
-      { title: "User Management", url: "/user-management", icon: UserCheck, description: "Manage users & roles" },
-      { title: "Product Approval", url: "/product-approval", icon: CheckCircle, description: "Review submissions" },
-      { title: "Localization", url: "/localization", icon: Globe, description: "Countries & warehouses" },
+      { title: "User Management", url: "/dashboard/user-management", icon: UserCheck, description: "Manage users & roles" },
+      { title: "Product Approval", url: "/dashboard/product-approval", icon: CheckCircle, description: "Review submissions" },
+      { title: "Localization", url: "/dashboard/localization", icon: Globe, description: "Countries & warehouses" },
     ],
     store: [
-      { title: "Store Management", url: "/store-management", icon: Store, description: "Store settings" },
+      { title: "Store Management", url: "/dashboard/store-management", icon: Store, description: "Store settings" },
     ],
     analytics: [
-      { title: "Analytics", url: "/analytics", icon: BarChart3, description: "Performance metrics" },
-      { title: "Sales Report", url: "/sales-report", icon: FileText, description: "Revenue insights" },
+      { title: "Analytics", url: "/dashboard/analytics", icon: BarChart3, description: "Performance metrics" },
+      { title: "Sales Report", url: "/dashboard/sales-report", icon: FileText, description: "Revenue insights" },
     ],
   },
   manager: {
     catalog: [
-      { title: "Products", url: "/products", icon: Package, description: "Manage inventory" },
-      { title: "Categories", url: "/categories", icon: Settings, description: "Product categories" },
+      { title: "Products", url: "/dashboard/products", icon: Package, description: "Manage inventory" },
+      { title: "Categories", url: "/dashboard/categories", icon: Settings, description: "Product categories" },
     ],
     business: [
-      { title: "Orders", url: "/orders", icon: ShoppingCart, description: "Order management", badge: "12" },
-      { title: "Returns", url: "/returns", icon: RotateCcw, description: "Return requests", badge: "3" },
-      { title: "Customers", url: "/customers", icon: Users, description: "Customer database" },
+      { title: "Orders", url: "/dashboard/orders", icon: ShoppingCart, description: "Order management", badge: "12" },
+      { title: "Returns", url: "/dashboard/returns", icon: RotateCcw, description: "Return requests", badge: "3" },
+      { title: "Customers", url: "/dashboard/customers", icon: Users, description: "Customer database" },
     ],
   },
   seller: {
     main: [
-      { title: "My Products", url: "/seller-products", icon: Package, description: "Manage your products" },
+      { title: "My Products", url: "/dashboard/seller-products", icon: Package, description: "Manage your products" },
     ],
   },
 };

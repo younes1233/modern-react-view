@@ -38,7 +38,7 @@ import { Separator } from "@/components/ui/separator"
 const mainItems = [
   {
     title: "Dashboard",
-    url: "/",
+    url: "/dashboard",
     icon: Home,
     description: "Overview & analytics"
   },
@@ -47,19 +47,19 @@ const mainItems = [
 const catalogItems = [
   {
     title: "Products",
-    url: "/products",
+    url: "/dashboard/products",
     icon: Package,
     description: "Manage inventory"
   },
   {
     title: "Categories",
-    url: "/categories",
+    url: "/dashboard/categories",
     icon: Settings,
     description: "Product categories"
   },
   {
     title: "Inventory",
-    url: "/inventory",
+    url: "/dashboard/inventory",
     icon: Package2,
     description: "Stock management"
   },
@@ -68,27 +68,27 @@ const catalogItems = [
 const businessItems = [
   {
     title: "Orders",
-    url: "/orders",
+    url: "/dashboard/orders",
     icon: ShoppingCart,
     description: "Order management",
     badge: "12"
   },
   {
     title: "Returns",
-    url: "/returns",
+    url: "/dashboard/returns",
     icon: RotateCcw,
     description: "Return requests",
     badge: "3"
   },
   {
     title: "Customers",
-    url: "/customers",
+    url: "/dashboard/customers",
     icon: Users,
     description: "Customer database"
   },
   {
     title: "Coupons",
-    url: "/coupons",
+    url: "/dashboard/coupons",
     icon: Tag,
     description: "Discount management"
   },
@@ -97,7 +97,7 @@ const businessItems = [
 const storeItems = [
   {
     title: "Store Management",
-    url: "/store-management",
+    url: "/dashboard/store-management",
     icon: Store,
     description: "Store settings"
   },
@@ -106,13 +106,13 @@ const storeItems = [
 const analyticsItems = [
   {
     title: "Analytics",
-    url: "/analytics",
+    url: "/dashboard/analytics",
     icon: BarChart3,
     description: "Performance metrics"
   },
   {
     title: "Sales Report",
-    url: "/sales-report",
+    url: "/dashboard/sales-report",
     icon: FileText,
     description: "Revenue insights"
   },
@@ -121,19 +121,19 @@ const analyticsItems = [
 const managementItems = [
   {
     title: "User Management",
-    url: "/user-management",
+    url: "/dashboard/user-management",
     icon: UserCheck,
     description: "Manage users & roles"
   },
   {
     title: "Product Approval",
-    url: "/product-approval",
+    url: "/dashboard/product-approval",
     icon: CheckCircle,
     description: "Review submissions"
   },
   {
     title: "Localization",
-    url: "/localization",
+    url: "/dashboard/localization",
     icon: Globe,
     description: "Countries & warehouses"
   },
