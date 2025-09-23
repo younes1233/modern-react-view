@@ -136,13 +136,12 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="title">Title *</Label>
+              <Label htmlFor="title">Title</Label>
               <Input
                 id="title"
                 value={formData.title}
                 onChange={(e) => updateField('title', e.target.value)}
                 placeholder="e.g., Featured Products"
-                required
               />
             </div>
 
@@ -306,7 +305,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!formData.title.trim()}>
+            <Button type="submit">
               {mode === 'add' ? 'Add Listing' : 'Save Changes'}
             </Button>
           </div>
