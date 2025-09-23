@@ -235,8 +235,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         is_new_arrival: !!product.flags?.is_new_arrival,
         is_best_seller: false,
         is_vat_exempt: !!product.flags?.is_vat_exempt,
-        cover_image: product.media?.cover_image?.image || "",
-        images: product.media?.thumbnails?.map((t) => t.image) || [],
+        cover_image: product.media?.cover_image?.urls?.original || "",
+        images: product.media?.thumbnails?.map((t) => t.urls?.original) || [],
         stock: 0,
         warehouse_id: undefined,
         shelf_id: undefined,
@@ -248,11 +248,11 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         country_id: country?.id,
       });
 
-      const coverImageUrl = product.media?.cover_image?.image || "";
+      const coverImageUrl = product.media?.cover_image?.urls?.original || "";
       setMainImage(coverImageUrl);
       setMainImagePreview(coverImageUrl);
       setThumbnails(
-        product.media?.thumbnails?.map((t) => ({ id: t.id, file: t.image, url: t.image, alt: t.alt_text })) || []
+        product.media?.thumbnails?.map((t) => ({ id: t.id, file: t.urls?.original || "", url: t.urls?.original || "", alt: t.alt_text })) || []
       );
       setPriceEntries([]);
       setSpecifications(

@@ -223,7 +223,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                           onCheckedChange={(checked) => handleProductSelection(product.id, checked as boolean)}
                         />
                         <img 
-                          src={typeof product.media?.cover_image === 'string' ? product.media.cover_image : product.media?.cover_image?.image || '/placeholder.svg'} 
+                          src={typeof product.media?.cover_image === 'string' ? product.media.cover_image : product.media?.cover_image?.urls?.original || '/placeholder.svg'} 
                           alt={product.name} 
                           className="w-12 h-12 object-cover rounded"
                         />

@@ -439,56 +439,17 @@ export default function Products() {
                         {products.map((product) => (
                           <TableRow key={product.id}>
                             <TableCell>
-                              {(() => {
-                                if (product.media?.cover_image) {
-                                  return (
-                                    <img
-                                      src={product.media.cover_image.image}
-                                      alt={product.media.cover_image.alt_text || product.name}
-                                      className="h-12 w-12 rounded-md object-cover"
-                                      onError={(e) => {
-                                        console.error('Image failed to load:', product.media?.cover_image?.image);
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                        const parent = target.parentElement;
-                                        if (parent) {
-                                          parent.innerHTML = `<div class="h-12 w-12 rounded-md bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/25">
-                                            <span class="text-xs text-muted-foreground">No image</span>
-                                          </div>`;
-                                        }
-                                      }}
-                                      onLoad={() => console.log('Image loaded successfully:', product.media?.cover_image?.image)}
-                                    />
-                                  );
-                                } else if (product.media?.thumbnails && product.media.thumbnails.length > 0) {
-                                  return (
-                                    <img
-                                      src={product.media.thumbnails[0].image}
-                                      alt={product.media.thumbnails[0].alt_text || product.name}
-                                      className="h-12 w-12 rounded-md object-cover"
-                                      onError={(e) => {
-                                        console.error('Thumbnail image failed to load:', product.media?.thumbnails?.[0]?.image);
-                                        const target = e.target as HTMLImageElement;
-                                        target.style.display = 'none';
-                                        const parent = target.parentElement;
-                                        if (parent) {
-                                          parent.innerHTML = `<div class="h-12 w-12 rounded-md bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/25">
-                                            <span class="text-xs text-muted-foreground">No image</span>
-                                          </div>`;
-                                        }
-                                      }}
-                                      onLoad={() => console.log('Thumbnail image loaded successfully:', product.media?.thumbnails?.[0]?.image)}
-                                    />
-                                  );
-                                } else {
-                                  console.log('No image data found for product:', product.name, 'Media:', product.media);
-                                  return (
-                                    <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center border-2 border-dashed border-muted-foreground/25">
-                                      <span className="text-xs text-muted-foreground">No image</span>
-                                    </div>
-                                  );
-                                }
-                              })()}
+                              {product.media?.cover_image?.urls?.original ? (
+                                <img
+                                  src={product.media.cover_image.urls.original}
+                                  alt={product.media.cover_image.alt_text || product.name}
+                                  className="h-12 w-12 rounded-md object-cover"
+                                />
+                              ) : (
+                                <div className="h-12 w-12 rounded-md bg-muted flex items-center justify-center">
+                                  <span className="text-xs text-muted-foreground">No image</span>
+                                </div>
+                              )}
                             </TableCell>
                             <TableCell>
                               <div>

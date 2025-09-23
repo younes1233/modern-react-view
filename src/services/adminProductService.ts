@@ -37,21 +37,33 @@ export interface AdminProductAPI {
   media: {
     cover_image: {
       id: number;
-      image: string;
       alt_text: string;
       is_cover: boolean;
       order: number;
       created_at: string;
       updated_at: string;
+      urls: {
+        original: string;
+        catalog: string;
+        main: string;
+        thumbnails: string;
+        zoom: string;
+      };
     } | null;
     thumbnails: Array<{
       id: number;
-      image: string;
       alt_text: string;
       is_cover: boolean;
       order: number;
       created_at: string;
       updated_at: string;
+      urls: {
+        original: string;
+        catalog: string;
+        main: string;
+        thumbnails: string;
+        zoom: string;
+      };
     }>;
   };
   status: 'active' | 'inactive' | 'draft';
