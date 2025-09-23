@@ -23,6 +23,7 @@ import { ProductVariants } from '@/components/store/ProductVariants';
 import { RelatedProducts } from '@/components/store/RelatedProducts';
 import { ProductAttributes } from '@/components/store/ProductAttributes';
 import { ProductDiscounts } from '@/components/store/ProductDiscounts';
+import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -39,6 +40,7 @@ const ProductDetail = () => {
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const { getImageUrl } = useResponsiveImage();
   const { user } = useAuth();
+  const { selectedCountry, selectedCurrency } = useCountryCurrency();
   
   // Review states
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -48,9 +50,13 @@ const ProductDetail = () => {
   // Variant states
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
-  // Fetch product from API - now using slug directly
+  // Fetch product from API with selected country and currency
   console.log('ProductDetail: slug from params:', slug);
-  const { data: product, isLoading, error } = useProductDetail(slug || '');
+  const { data: product, isLoading, error } = useProductDetail(
+    slug || '', 
+    selectedCountry?.id || 1, 
+    selectedCurrency?.id
+  );
 
   // Fetch reviews separately
   const { data: reviewsData, refetch: refetchReviews } = useQuery({

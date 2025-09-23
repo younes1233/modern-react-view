@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useStoreCountries } from '@/hooks/useStoreCountries';
+import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
 
 interface SelectedCountry {
   id: number;
@@ -30,33 +31,8 @@ interface CountryCurrencySelectorProps {
 
 export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrencySelectorProps) {
   const { countries, loading } = useStoreCountries();
-  const [selectedCountry, setSelectedCountry] = useState<SelectedCountry | null>(null);
-  const [selectedCurrency, setSelectedCurrency] = useState<SelectedCurrency | null>(null);
+  const { selectedCountry, selectedCurrency, setSelectedCountry, setSelectedCurrency } = useCountryCurrency();
   const [availableCurrencies, setAvailableCurrencies] = useState<SelectedCurrency[]>([]);
-
-  
-
-  // Load from localStorage on mount
-  useEffect(() => {
-    const savedCountry = localStorage.getItem('selectedCountry');
-    const savedCurrency = localStorage.getItem('selectedCurrency');
-    
-    if (savedCountry) {
-      try {
-        setSelectedCountry(JSON.parse(savedCountry));
-      } catch (e) {
-        console.error('Error parsing saved country:', e);
-      }
-    }
-    
-    if (savedCurrency) {
-      try {
-        setSelectedCurrency(JSON.parse(savedCurrency));
-      } catch (e) {
-        console.error('Error parsing saved currency:', e);
-      }
-    }
-  }, []);
 
   // Set default country and currency on first load
   useEffect(() => {
@@ -69,7 +45,6 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         iso_code: firstCountry.iso_code,
       };
       setSelectedCountry(countryData);
-      localStorage.setItem('selectedCountry', JSON.stringify(countryData));
       
       // Set base currency for the first country
       const baseCurrency = {
@@ -79,9 +54,8 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         symbol: firstCountry.base_currency.symbol,
       };
       setSelectedCurrency(baseCurrency);
-      localStorage.setItem('selectedCurrency', JSON.stringify(baseCurrency));
     }
-  }, [countries, selectedCountry]);
+  }, [countries, selectedCountry, setSelectedCountry, setSelectedCurrency]);
 
   // Update available currencies when country changes
   useEffect(() => {
@@ -99,11 +73,10 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
             symbol: country.base_currency.symbol,
           };
           setSelectedCurrency(baseCurrency);
-          localStorage.setItem('selectedCurrency', JSON.stringify(baseCurrency));
         }
       }
     }
-  }, [selectedCountry, countries, selectedCurrency]);
+  }, [selectedCountry, countries, selectedCurrency, setSelectedCurrency]);
 
   const handleCountryChange = (countryId: string) => {
     const country = countries.find(c => c.id === parseInt(countryId));
@@ -115,7 +88,6 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         iso_code: country.iso_code,
       };
       setSelectedCountry(countryData);
-      localStorage.setItem('selectedCountry', JSON.stringify(countryData));
     }
   };
 
@@ -129,7 +101,6 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         symbol: currency.symbol,
       };
       setSelectedCurrency(currencyData);
-      localStorage.setItem('selectedCurrency', JSON.stringify(currencyData));
     }
   };
 

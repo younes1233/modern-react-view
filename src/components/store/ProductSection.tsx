@@ -7,6 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
+import { useCountryCurrency } from "@/contexts/CountryCurrencyContext";
 
 interface ProductSectionProps {
   listing: {
@@ -80,10 +81,14 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const { getImageUrl } = useResponsiveImage();
+  const { selectedCountry, selectedCurrency } = useCountryCurrency();
 
-  // Use the API to get products for this listing
-  // Default to Lebanon (1) and USD (1) for now
-  const { data: listingData, isLoading, error } = useProductListingProducts(listing.id, 1, 1);
+  // Use the API to get products for this listing with selected country and currency
+  const { data: listingData, isLoading, error } = useProductListingProducts(
+    listing.id, 
+    selectedCountry?.id || 1, 
+    selectedCurrency?.id || 1
+  );
   
   console.log(`ProductSection for "${listing.title}":`, {
     listing,
@@ -104,6 +109,7 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
       image: responsiveImage, // Use responsive image selection
       price: apiProduct.pricing.price,
       originalPrice: apiProduct.pricing.original_price,
+      currency: apiProduct.pricing.currency,
       category: 'general', // Default category since not provided in new format
       rating: apiProduct.rating.average,
       reviews: apiProduct.rating.count,

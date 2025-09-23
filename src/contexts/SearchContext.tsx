@@ -1,6 +1,7 @@
 // src/context/SearchContext.tsx
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import productService from '@/services/productService';
+import { useCountryCurrency } from './CountryCurrencyContext';
 
 export interface UIProduct {
   name: string;
@@ -30,17 +31,16 @@ const SearchContext = createContext<SearchContextType | undefined>(undefined);
 
 export function SearchProvider({
   children,
-  countryId = 1,
   debounceMs = 300,
 }: {
   children: React.ReactNode;
-  countryId?: number;
   debounceMs?: number;
 }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [results, setResults] = useState<UIProduct[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const { selectedCountry } = useCountryCurrency();
 
   // optional client-side extras
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
@@ -63,7 +63,8 @@ export function SearchProvider({
 
     const t = setTimeout(async () => {
       try {
-        const res = await productService.searchByQuery(countryId, q, abort.signal);
+        // Use selected country ID from context
+        const res = await productService.searchByQuery(selectedCountry?.id || 1, q, abort.signal);
         if (res.error) throw new Error(res.message || 'API error');
 
         const items = (res.details?.products ?? []) as UIProduct[];
@@ -82,7 +83,7 @@ export function SearchProvider({
       abort.abort();
       clearTimeout(t);
     };
-  }, [searchQuery, countryId, debounceMs]);
+  }, [searchQuery, selectedCountry?.id, debounceMs]);
 
   // backend already returns newest-first; we add optional price/name sorting
   const filteredResults = useMemo(() => {

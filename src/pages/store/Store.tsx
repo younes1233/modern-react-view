@@ -8,30 +8,33 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Star, Heart, ShoppingCart, Zap, Shield, Truck } from "lucide-react";
-import {
-  getProducts,
-  getFeaturedProducts,
-  getNewArrivals,
-  getProductsOnSale,
-} from "@/data/storeData";
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { useHomeSections } from "@/hooks/useHomeSections";
 import { useStoreHeroes } from "@/hooks/useStoreHeroes";
+import { useSaleProducts } from "@/hooks/useProducts";
 import { HeroSkeleton } from "@/components/store/HeroSkeleton";
 import { BannerSkeleton } from "@/components/store/BannerSkeleton";
 import { ShopByCategorySkeleton } from "@/components/store/ShopByCategorySkeleton";
 import { ProductSectionSkeleton } from "@/components/store/ProductSectionSkeleton";
 import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
+import { useCountryCurrency } from "@/contexts/CountryCurrencyContext";
 
 const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   
+  const { selectedCountry, selectedCurrency } = useCountryCurrency();
   const { banners, isLoading: bannersLoading } = useBanners();
   const { productListings, isLoading: productListingsLoading } = useProductListings();
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();
   const { data: heroes = [], isLoading: heroesLoading } = useStoreHeroes();
   const { deviceType } = useResponsiveImage();
+  
+  // Use real API for sale products with selected country and currency
+  const { data: saleProducts = [], isLoading: saleProductsLoading } = useSaleProducts(
+    selectedCountry?.id || 1, 
+    selectedCurrency?.id || 1
+  );
 
   console.log('Store: Heroes data:', heroes);
   console.log('Store: Heroes loading state:', heroesLoading);
@@ -84,8 +87,29 @@ const Store = () => {
     );
   };
 
-  const products = getProducts();
-  const bestSellers = getProductsOnSale();
+  // Convert API products to legacy format for ProductCard
+  const convertAPIProductToLegacy = (apiProduct: any) => {
+    return {
+      id: apiProduct.id,
+      name: apiProduct.name,
+      slug: apiProduct.slug,
+      description: apiProduct.short_description || '',
+      price: apiProduct.pricing?.price || 0,
+      originalPrice: apiProduct.pricing?.original_price,
+      currency: apiProduct.pricing?.currency,
+      category: 'general',
+      image: apiProduct.cover_image?.desktop || apiProduct.cover_image?.mobile || '/placeholder.svg',
+      inStock: apiProduct.stock > 0,
+      rating: apiProduct.rating?.average || 0,
+      reviews: apiProduct.rating?.count || 0,
+      isFeatured: apiProduct.flags?.is_featured || false,
+      isNewArrival: apiProduct.flags?.is_new_arrival || false,
+      isOnSale: apiProduct.flags?.on_sale || false,
+      sku: apiProduct.sku || '',
+      thumbnails: [],
+      variations: []
+    };
+  };
 
   const getSectionContent = (section: any) => {
     if (!section.is_active) return null;
@@ -319,14 +343,18 @@ const Store = () => {
               <div className="max-w-7xl mx-auto">
                 <div className="mb-12">
                   <div className="bg-cyan-500 text-white px-6 py-2 rounded-t-lg inline-block">
-                    <h2 className="text-2xl lg:text-3xl font-bold">Electronic</h2>
+                    <h2 className="text-2xl lg:text-3xl font-bold">Sale Products</h2>
                   </div>
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                  {bestSellers.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+                {saleProductsLoading ? (
+                  <ProductSectionSkeleton />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
+                    {saleProducts.map((product) => (
+                      <ProductCard key={product.id} product={convertAPIProductToLegacy(product)} />
+                    ))}
+                  </div>
+                )}
 
                 {/* Pagination dots */}
                 <div className="flex justify-center mt-8 space-x-2">
