@@ -76,6 +76,23 @@ export function CategoryModal({
     setIconFile(null);
   }, [mode, category, isOpen]);
 
+  const generateSlug = (name: string) => {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  };
+
+  const handleNameChange = (name: string) => {
+    setFormData(prev => ({
+      ...prev,
+      name,
+      slug: generateSlug(name)
+    }));
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -212,25 +229,25 @@ export function CategoryModal({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Category Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter category name"
-                required
-              />
-            </div>
+               <Input
+                 id="name"
+                 value={formData.name}
+                 onChange={(e) => handleNameChange(e.target.value)}
+                 placeholder="Enter category name"
+                 required
+               />
+             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="slug">Slug *</Label>
-              <Input
-                id="slug"
-                value={formData.slug}
-                onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                placeholder="category-slug"
-                required
-              />
-            </div>
+             <div className="space-y-2">
+               <Label htmlFor="slug">Slug *</Label>
+               <Input
+                 id="slug"
+                 value={formData.slug}
+                 onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
+                 placeholder="category-slug"
+                 required
+               />
+             </div>
 
 
             <div className="space-y-2">
