@@ -303,10 +303,10 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       setThumbnails([]);
       setPriceEntries([]);
       setSpecifications([
-        { id: Date.now(), name: "weight", value: "" },
-        { id: Date.now() + 1, name: "height", value: "" },
-        { id: Date.now() + 2, name: "width", value: "" },
-        { id: Date.now() + 3, name: "length", value: "" },
+        { id: Date.now(), name: "weight", value: "29 kg" },
+        { id: Date.now() + 1, name: "height", value: "66 cm" },
+        { id: Date.now() + 2, name: "width", value: "66 cm" },
+        { id: Date.now() + 3, name: "length", value: "66 cm" },
       ]);
       setVariantEntries([]);
     }
