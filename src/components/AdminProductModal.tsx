@@ -97,8 +97,8 @@ function buildFormDataFromPayload(payload: any) {
   appendBool(fd, "is_best_seller", !!payload.is_best_seller);
   appendBool(fd, "is_vat_exempt", !!payload.is_vat_exempt);
 
-  // ---- Delivery cost rule ----
-  if (!payload.delivery_type && payload.delivery_cost != null) {
+  // ---- Delivery cost ----
+  if (payload.delivery_cost != null && payload.delivery_cost !== "") {
     fd.append("delivery_cost", String(payload.delivery_cost));
   }
 
@@ -137,8 +137,12 @@ function buildFormDataFromPayload(payload: any) {
 
     if (v.delivery_type != null && v.delivery_type !== "") {
       fd.append(`variants[${i}][delivery_type]`, String(v.delivery_type));
-    } else if (v.delivery_cost != null && v.delivery_cost !== "") {
+    }
+    if (v.delivery_cost != null && v.delivery_cost !== "") {
       fd.append(`variants[${i}][delivery_cost]`, String(v.delivery_cost));
+    }
+    if (v.stock != null && v.stock !== "") {
+      fd.append(`variants[${i}][stock]`, String(v.stock));
     }
   });
 
@@ -153,6 +157,7 @@ type VariantEntry = {
   variantSpecs: { id: number; name: string; value: string }[];
   delivery_type?: string;
   delivery_cost?: string;
+  stock?: number;
 };
 
 const DELIVERY_TYPES = [
@@ -191,8 +196,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       stock: 0,
       warehouse_id: undefined,
       shelf_id: undefined,
-      delivery_type: undefined,
-      delivery_cost: 0,
+        delivery_type: "meemhome",
+        delivery_cost: 0,
       product_prices: [],
       specifications: [],
       variants: [],
@@ -286,7 +291,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         stock: 0,
         warehouse_id: warehouse?.id,
         shelf_id: undefined,
-        delivery_type: undefined,
+        delivery_type: "meemhome",
         delivery_cost: 0,
         product_prices: [],
         specifications: [],
@@ -388,8 +393,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         variations: [],
         variantPrices: [],
         variantSpecs: [],
-        delivery_type: "",
-        delivery_cost: "",
+        delivery_type: "meemhome",
+        delivery_cost: "0",
+        stock: 0,
       },
     ]);
   const removeVariant = (variantId: number) =>
@@ -397,7 +403,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
   const updateVariantField = (
     variantId: number,
-    field: "image" | "variations" | "delivery_type" | "delivery_cost",
+    field: "image" | "variations" | "delivery_type" | "delivery_cost" | "stock",
     value: any
   ) =>
     setVariantEntries((prev) =>
@@ -503,6 +509,26 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       return;
     }
 
+    // Validate variants if has_variants is true
+    if (formData.has_variants) {
+      if (variantEntries.length === 0) {
+        toast({ title: "Error", description: "At least one variant is required when 'Has Variants' is enabled", variant: "destructive" });
+        return;
+      }
+      
+      for (let i = 0; i < variantEntries.length; i++) {
+        const variant = variantEntries[i];
+        if (variant.variations.length === 0) {
+          toast({ title: "Error", description: `Variant ${i + 1} must have at least one attribute value selected`, variant: "destructive" });
+          return;
+        }
+        if (!variant.stock || variant.stock <= 0) {
+          toast({ title: "Error", description: `Variant ${i + 1} must have stock quantity greater than 0`, variant: "destructive" });
+          return;
+        }
+      }
+    }
+
     // Validate specifications - require height, width, length
     const validSpecs = specifications.filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
     const requiredSpecs = ['height', 'width', 'length'];
@@ -539,12 +565,14 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           .map((s) => ({ name: s.name, value: s.value }))
           .filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
 
-        const delivery_type = variant.delivery_type || undefined;
-        const delivery_cost = delivery_type ? undefined : (variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined);
+        const delivery_type = variant.delivery_type || "meemhome";
+        const delivery_cost = variant.delivery_cost ? parseFloat(variant.delivery_cost) : 0;
+        const stock = variant.stock || 0;
 
         return {
           image: variant.image,
           variations,
+          stock,
           product_variant_prices: variantPricesParsed.length > 0 ? (variantPricesParsed as any) : [],
           delivery_type,
           delivery_cost,
@@ -943,32 +971,39 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                     ))}
                   </div>
 
-                  {/* Variant delivery overrides */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Delivery Type (override)</Label>
-                      <Select value={variant.delivery_type || ''} onValueChange={(value) => updateVariantField(variant.id, 'delivery_type', value)}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select delivery method" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="inherit">Use main product delivery method</SelectItem>
-                          {DELIVERY_TYPES.map((type) => (
-                            <SelectItem key={type.value} value={type.value}>
-                              {type.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div>
-                      <Label>Delivery Cost (override)</Label>
-                      <Input type="number" value={variant.delivery_cost || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)} placeholder="Delivery Cost" />
-                      {variant.delivery_type && (
-                        <div className="text-xs text-muted-foreground mt-1">Will be ignored when delivery method is set.</div>
-                      )}
-                    </div>
-                  </div>
+                   {/* Variant delivery overrides */}
+                   <div className="grid grid-cols-3 gap-4">
+                     <div>
+                       <Label>Stock *</Label>
+                       <Input 
+                         type="number" 
+                         value={variant.stock || ''} 
+                         onChange={(e) => updateVariantField(variant.id, 'stock', parseInt(e.target.value) || 0)} 
+                         placeholder="Stock quantity" 
+                         required
+                       />
+                     </div>
+                     <div>
+                       <Label>Delivery Type (override)</Label>
+                       <Select value={variant.delivery_type || ''} onValueChange={(value) => updateVariantField(variant.id, 'delivery_type', value)}>
+                         <SelectTrigger>
+                           <SelectValue placeholder="Select delivery method" />
+                         </SelectTrigger>
+                         <SelectContent>
+                           <SelectItem value="inherit">Use main product delivery method</SelectItem>
+                           {DELIVERY_TYPES.map((type) => (
+                             <SelectItem key={type.value} value={type.value}>
+                               {type.label}
+                             </SelectItem>
+                           ))}
+                         </SelectContent>
+                       </Select>
+                     </div>
+                     <div>
+                       <Label>Delivery Cost</Label>
+                       <Input type="number" value={variant.delivery_cost || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)} placeholder="Delivery Cost" />
+                     </div>
+                   </div>
                 </div>
               ))}
             </div>
