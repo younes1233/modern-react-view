@@ -952,7 +952,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                           <SelectValue placeholder="Select delivery method" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="">Use main product delivery method</SelectItem>
+                          <SelectItem value="inherit">Use main product delivery method</SelectItem>
                           {DELIVERY_TYPES.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
                               {type.label}
