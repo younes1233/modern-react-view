@@ -491,7 +491,16 @@ export const UserList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {users.map((user) => {
+                  // Debug logging to identify object fields
+                  console.log('User data:', user);
+                  Object.keys(user).forEach(key => {
+                    if (typeof user[key] === 'object' && user[key] !== null && !Array.isArray(user[key])) {
+                      console.log(`Object field found - ${key}:`, user[key]);
+                    }
+                  });
+                  
+                  return (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div>
@@ -501,7 +510,12 @@ export const UserList = () => {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={user.role}
+                        value={(() => {
+                          if (!user.role) return '';
+                          if (typeof user.role === 'string') return user.role;
+                          if (typeof user.role === 'object' && user.role.name) return user.role.name;
+                          return '';
+                        })()}
                         onValueChange={(value) => handleRoleChange(user.id, value)}
                         disabled={loading}
                       >
@@ -595,7 +609,8 @@ export const UserList = () => {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

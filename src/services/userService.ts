@@ -70,7 +70,7 @@ export interface UserAPIResponse {
   isPhoneVerified: boolean;
   phoneVerifiedAt: string;
   avatar: string;
-  role: string;
+  role: string | { id: string; name: string } | null;
   permissions: string | { id: string; name: string } | null;
   isActive: string;
   isEmailVerified: boolean;
