@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,28 +33,73 @@ import {
   Search, 
   Shield, 
   UserCheck, 
-  UserX 
+  UserX,
+  Loader2
 } from "lucide-react";
-import { demoUsers, User } from "@/data/users";
 import { roleService } from "@/services/roleService";
+import { userService, UserAPIResponse } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 
 export const UserList = () => {
-  const [users, setUsers] = useState<User[]>(demoUsers);
+  const [users, setUsers] = useState<UserAPIResponse[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    current_page: "1",
+    per_page: "20",
+    total: "0",
+    last_page: "1"
+  });
   const [newUser, setNewUser] = useState({
-    name: '',
+    firstName: '',
+    lastName: '',
     email: '',
-    role: 'seller' as User['role']
+    phone: '',
+    password: '',
+    role: 'seller'
   });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchAvailableRoles();
-  }, []);
+    fetchUsers();
+  }, [currentPage, searchTerm, roleFilter]);
+
+  const fetchUsers = async () => {
+    setLoading(true);
+    try {
+      const response = await userService.getUsers(
+        currentPage, 
+        20, 
+        searchTerm || undefined, 
+        roleFilter !== "all" ? roleFilter : undefined
+      );
+      
+      if (!response.error) {
+        setUsers(response.details.users);
+        setPagination(response.details.pagination);
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to fetch users",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchAvailableRoles = async () => {
     try {
@@ -68,15 +112,8 @@ export const UserList = () => {
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || user.role === roleFilter;
-    return matchesSearch && matchesRole;
-  });
-
-  const handleAddUser = () => {
-    if (!newUser.name || !newUser.email || !newUser.role) {
+  const handleAddUser = async () => {
+    if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.password || !newUser.role) {
       toast({
         title: "Error",
         description: "Please fill in all required fields",
@@ -94,61 +131,89 @@ export const UserList = () => {
       return;
     }
 
-    const user: User = {
-      id: `u${Date.now()}`,
-      name: newUser.name,
-      email: newUser.email,
-      role: newUser.role,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      lastLogin: undefined,
-      sellerId: newUser.role === 'seller' ? `s${Date.now()}` : undefined
-    };
-
-    setUsers(prev => [...prev, user]);
-    setNewUser({ name: '', email: '', role: 'seller' });
-    setIsAddModalOpen(false);
-    
-    toast({
-      title: "User Added",
-      description: `${user.name} has been added as ${user.role}`,
-    });
+    try {
+      setLoading(true);
+      const response = await userService.createUser(newUser);
+      
+      if (!response.error) {
+        setNewUser({ 
+          firstName: '', 
+          lastName: '', 
+          email: '', 
+          phone: '', 
+          password: '', 
+          role: 'seller' 
+        });
+        setIsAddModalOpen(false);
+        await fetchUsers(); // Refresh the list
+        
+        toast({
+          title: "User Added",
+          description: `${newUser.firstName} ${newUser.lastName} has been added as ${newUser.role}`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to add user",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add user",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleToggleUserStatus = (userId: string) => {
-    setUsers(prev => prev.map(user => 
-      user.id === userId 
-        ? { ...user, isActive: !user.isActive }
-        : user
-    ));
-    
-    const user = users.find(u => u.id === userId);
-    toast({
-      title: "User Status Updated",
-      description: `${user?.name} has been ${user?.isActive ? 'deactivated' : 'activated'}`,
-    });
+  const handleToggleUserStatus = async (userId: string) => {
+    try {
+      const response = await userService.toggleUserStatus(userId);
+      
+      if (!response.error) {
+        await fetchUsers(); // Refresh the list
+        const user = users.find(u => u.id === userId);
+        toast({
+          title: "User Status Updated",
+          description: `${user?.firstName} ${user?.lastName} status has been updated`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to update user status",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      // In a real app, you would call the API here
-      // await roleService.assignRoleToUser(parseInt(userId), newRole);
+      const response = await userService.updateUserRole(userId, newRole);
       
-      setUsers(prev => prev.map(user => 
-        user.id === userId 
-          ? { 
-              ...user, 
-              role: newRole as User['role'],
-              sellerId: newRole === 'seller' ? `s${Date.now()}` : undefined
-            }
-          : user
-      ));
-      
-      const user = users.find(u => u.id === userId);
-      toast({
-        title: "Role Updated",
-        description: `${user?.name}'s role has been changed to ${newRole}`,
-      });
+      if (!response.error) {
+        await fetchUsers(); // Refresh the list
+        const user = users.find(u => u.id === userId);
+        toast({
+          title: "Role Updated",
+          description: `${user?.firstName} ${user?.lastName}'s role has been changed to ${newRole}`,
+        });
+      } else {
+        toast({
+          title: "Error",
+          description: response.message || "Failed to update user role",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -168,14 +233,34 @@ export const UserList = () => {
     }
   };
 
+  const getStatusBadgeColor = (isActive: string | boolean) => {
+    const active = typeof isActive === 'string' ? isActive === 'true' || isActive === '1' : isActive;
+    return active 
+      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+  };
+
+  const isUserActive = (isActive: string | boolean) => {
+    return typeof isActive === 'string' ? isActive === 'true' || isActive === '1' : isActive;
+  };
+
   const roleStats = {
     total: users.length,
-    active: users.filter(u => u.isActive).length,
+    active: users.filter(u => isUserActive(u.isActive)).length,
     super_admin: users.filter(u => u.role === 'super_admin').length,
     manager: users.filter(u => u.role === 'manager').length,
     seller: users.filter(u => u.role === 'seller').length,
     customer: users.filter(u => u.role === 'customer').length,
   };
+
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCurrentPage(1); // Reset to first page when searching
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, roleFilter]);
 
   return (
     <div className="space-y-6">
@@ -186,7 +271,7 @@ export const UserList = () => {
         </div>
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogTrigger asChild>
-            <Button className="gap-2">
+            <Button className="gap-2" disabled={loading}>
               <UserPlus className="w-4 h-4" />
               Add User
             </Button>
@@ -199,14 +284,25 @@ export const UserList = () => {
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  value={newUser.name}
-                  onChange={(e) => setNewUser(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Enter full name"
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label htmlFor="firstName">First Name *</Label>
+                  <Input
+                    id="firstName"
+                    value={newUser.firstName}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, firstName: e.target.value }))}
+                    placeholder="Enter first name"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="lastName">Last Name *</Label>
+                  <Input
+                    id="lastName"
+                    value={newUser.lastName}
+                    onChange={(e) => setNewUser(prev => ({ ...prev, lastName: e.target.value }))}
+                    placeholder="Enter last name"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="email">Email *</Label>
@@ -219,10 +315,29 @@ export const UserList = () => {
                 />
               </div>
               <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={newUser.phone}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, phone: e.target.value }))}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="password">Password *</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={newUser.password}
+                  onChange={(e) => setNewUser(prev => ({ ...prev, password: e.target.value }))}
+                  placeholder="Enter password"
+                />
+              </div>
+              <div>
                 <Label htmlFor="role">Role *</Label>
                 <Select 
                   value={newUser.role} 
-                  onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value as User['role'] }))}
+                  onValueChange={(value) => setNewUser(prev => ({ ...prev, role: value }))}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
@@ -234,8 +349,15 @@ export const UserList = () => {
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleAddUser} className="w-full">
-                Add User
+              <Button onClick={handleAddUser} className="w-full" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Adding...
+                  </>
+                ) : (
+                  'Add User'
+                )}
               </Button>
             </div>
           </DialogContent>
@@ -250,7 +372,7 @@ export const UserList = () => {
               <Users className="w-5 h-5 text-blue-600" />
               <div>
                 <p className="text-sm text-muted-foreground">Total Users</p>
-                <p className="text-2xl font-bold">{roleStats.total}</p>
+                <p className="text-2xl font-bold">{pagination.total}</p>
               </div>
             </div>
           </CardContent>
@@ -347,75 +469,113 @@ export const UserList = () => {
             </Select>
           </div>
 
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{user.name}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Select
-                      value={user.role}
-                      onValueChange={(value) => handleRoleChange(user.id, value)}
-                    >
-                      <SelectTrigger className="w-32">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {availableRoles.map(role => (
-                          <SelectItem key={role} value={role}>{role}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getRoleBadgeColor(user.role)}>
-                      {user.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    {user.lastLogin 
-                      ? new Date(user.lastLogin).toLocaleDateString()
-                      : 'Never'
-                    }
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleUserStatus(user.id)}
-                      className="gap-2"
-                    >
-                      {user.isActive ? (
-                        <>
-                          <UserX className="w-4 h-4" />
-                          Deactivate
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck className="w-4 h-4" />
-                          Activate
-                        </>
-                      )}
-                    </Button>
-                  </TableCell>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="w-8 h-8 animate-spin" />
+              <span className="ml-2">Loading users...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Last Login</TableHead>
+                  <TableHead>Actions</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {users.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{user.firstName} {user.lastName}</p>
+                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Select
+                        value={user.role}
+                        onValueChange={(value) => handleRoleChange(user.id, value)}
+                        disabled={loading}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableRoles.map(role => (
+                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={getStatusBadgeColor(user.isActive)}>
+                        {isUserActive(user.isActive) ? 'Active' : 'Inactive'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {user.lastLogin 
+                        ? new Date(user.lastLogin).toLocaleDateString()
+                        : 'Never'
+                      }
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleUserStatus(user.id)}
+                        className="gap-2"
+                        disabled={loading}
+                      >
+                        {isUserActive(user.isActive) ? (
+                          <>
+                            <UserX className="w-4 h-4" />
+                            Deactivate
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="w-4 h-4" />
+                            Activate
+                          </>
+                        )}
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+
+          {/* Pagination */}
+          {parseInt(pagination.last_page) > 1 && (
+            <div className="flex justify-between items-center mt-4">
+              <p className="text-sm text-muted-foreground">
+                Showing {((parseInt(pagination.current_page) - 1) * parseInt(pagination.per_page)) + 1} to{' '}
+                {Math.min(parseInt(pagination.current_page) * parseInt(pagination.per_page), parseInt(pagination.total))} of{' '}
+                {pagination.total} users
+              </p>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1 || loading}
+                >
+                  Previous
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentPage(prev => Math.min(parseInt(pagination.last_page), prev + 1))}
+                  disabled={currentPage === parseInt(pagination.last_page) || loading}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
