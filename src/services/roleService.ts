@@ -36,7 +36,7 @@ export interface AssignableRolesResponse {
   error: boolean;
   message: string;
   details: {
-    roles: string[];
+    roles: { id: number; name: string }[];
   };
 }
 

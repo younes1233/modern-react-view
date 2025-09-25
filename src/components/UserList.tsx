@@ -45,7 +45,7 @@ export const UserList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [availableRoles, setAvailableRoles] = useState<{id: number; name: string}[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pagination, setPagination] = useState({
@@ -106,15 +106,19 @@ export const UserList = () => {
       const response = await roleService.getAssignableRoles();
       console.log('Roles response:', response);
       if (!response.error && response.details?.roles) {
-        // Ensure all roles are strings
-        const stringRoles = response.details.roles.map(role => getStringValue(role));
-        console.log('Processed roles:', stringRoles);
-        setAvailableRoles(stringRoles);
+        // Keep the full role objects with id and name
+        setAvailableRoles(response.details.roles);
+        console.log('Processed roles:', response.details.roles);
       }
     } catch (error) {
       console.error('Failed to fetch available roles:', error);
       // Fallback to default roles
-      setAvailableRoles(['super_admin', 'manager', 'seller', 'customer']);
+      setAvailableRoles([
+        {id: 1, name: 'user'},
+        {id: 2, name: 'seller'},
+        {id: 3, name: 'super_admin'},
+        {id: 4, name: 'data entry'}
+      ]);
     }
   };
 
@@ -202,30 +206,50 @@ export const UserList = () => {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
+  const handleRoleChange = async (userId: string, newRoleName: string) => {
+    if (loading) return;
+    
     try {
-      const response = await userService.updateUserRole(userId, newRole);
+      setLoading(true);
       
-      if (!response.error) {
-        await fetchUsers(); // Refresh the list
-        const user = users.find(u => u.id === userId);
-        toast({
-          title: "Role Updated",
-          description: `${user?.firstName} ${user?.lastName}'s role has been changed to ${newRole}`,
-        });
-      } else {
+      // Find the role object by name to get the ID
+      const roleObj = availableRoles.find(role => role.name === newRoleName);
+      if (!roleObj) {
         toast({
           title: "Error",
-          description: response.message || "Failed to update user role",
+          description: "Invalid role selected",
           variant: "destructive"
         });
+        return;
       }
+
+      const response = await userService.assignRole(userId, roleObj.id);
+      
+      if (response.error) {
+        toast({
+          title: "Error", 
+          description: response.message || "Failed to assign role",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "Success",
+        description: "Role assigned successfully"
+      });
+
+      // Refresh users list
+      await fetchUsers();
     } catch (error) {
+      console.error('Failed to assign role:', error);
       toast({
         title: "Error",
-        description: "Failed to update user role",
+        description: "Failed to assign role",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -274,7 +298,7 @@ export const UserList = () => {
     super_admin: users.filter(u => getStringValue(u.role) === 'super_admin').length,
     manager: users.filter(u => getStringValue(u.role) === 'manager').length,
     seller: users.filter(u => getStringValue(u.role) === 'seller').length,
-    customer: users.filter(u => getStringValue(u.role) === 'customer').length,
+    customer: users.filter(u => getStringValue(u.role) === 'customer' || getStringValue(u.role) === 'user').length,
   };
 
   // Debounced search effect
@@ -368,8 +392,8 @@ export const UserList = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoles.map(role => (
-                      <SelectItem key={getStringValue(role)} value={getStringValue(role)}>
-                        {getStringValue(role)}
+                      <SelectItem key={role.id} value={role.name}>
+                        {role.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -547,8 +571,8 @@ export const UserList = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {availableRoles.map(role => (
-                            <SelectItem key={getStringValue(role)} value={getStringValue(role)}>
-                              {getStringValue(role)}
+                            <SelectItem key={role.id} value={role.name}>
+                              {role.name}
                             </SelectItem>
                           ))}
                         </SelectContent>

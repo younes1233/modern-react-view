@@ -159,6 +159,10 @@ class UserService extends BaseApiService {
   async updateUserRole(userId: string, role: string): Promise<ApiResponse<{ user: UserAPIResponse }>> {
     return this.put<ApiResponse<{ user: UserAPIResponse }>>(`/users/${userId}/role`, { role }, true);
   }
+
+  async assignRole(userId: string, roleId: number): Promise<ApiResponse<{ user: string }>> {
+    return this.post<ApiResponse<{ user: string }>>(`/users/${userId}/assign-role`, { role_id: roleId }, true);
+  }
 }
 
 // Create and export a singleton instance
