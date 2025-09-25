@@ -207,7 +207,18 @@ export const UserList = () => {
   };
 
   const handleRoleChange = async (userId: string, newRoleName: string) => {
+    console.log('handleRoleChange called with userId:', userId, 'newRoleName:', newRoleName);
+    
     if (loading) return;
+    
+    if (!userId || userId === '') {
+      toast({
+        title: "Error",
+        description: "Invalid user ID - cannot assign role",
+        variant: "destructive"
+      });
+      return;
+    }
     
     try {
       setLoading(true);
@@ -223,6 +234,7 @@ export const UserList = () => {
         return;
       }
 
+      console.log('Assigning role:', roleObj.id, 'to user:', userId);
       const response = await userService.assignRole(userId, roleObj.id);
       
       if (response.error) {
@@ -545,6 +557,8 @@ export const UserList = () => {
                   // Comprehensive debug logging
                   console.log('=== USER DEBUG ===');
                   console.log('Full user object:', user);
+                  console.log('User ID:', user.id, 'Type:', typeof user.id);
+                  console.log('User email:', user.email);
                   Object.entries(user).forEach(([key, value]) => {
                     if (value && typeof value === 'object' && !Array.isArray(value)) {
                       console.log(`OBJECT FIELD DETECTED - ${key}:`, value);
@@ -553,7 +567,7 @@ export const UserList = () => {
                   console.log('==================');
                   
                   return (
-                  <TableRow key={user.id}>
+                  <TableRow key={user.email || Math.random()}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{getStringValue(user.firstName)} {getStringValue(user.lastName)}</p>
