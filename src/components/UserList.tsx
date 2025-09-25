@@ -481,6 +481,11 @@ export const UserList = () => {
                   <TableHead>User</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
+                  <TableHead>Permissions</TableHead>
+                  <TableHead>Email Verified</TableHead>
+                  <TableHead>Is Seller</TableHead>
+                  <TableHead>Created At</TableHead>
+                  <TableHead>Updated At</TableHead>
                   <TableHead>Last Login</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
@@ -516,10 +521,48 @@ export const UserList = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {user.lastLogin 
-                        ? new Date(user.lastLogin).toLocaleDateString()
-                        : 'Never'
-                      }
+                      <span className="text-sm">{user.permissions || 'N/A'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-2">
+                        <Badge className={user.isEmailVerified ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'}>
+                          {user.isEmailVerified ? 'Verified' : 'Unverified'}
+                        </Badge>
+                        {user.emailVerifiedAt && (
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(user.emailVerifiedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={user.isSeller ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'}>
+                        {user.isSeller ? 'Yes' : 'No'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">
+                        {user.createdAt 
+                          ? new Date(user.createdAt).toLocaleDateString()
+                          : 'N/A'
+                        }
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">
+                        {user.updatedAt 
+                          ? new Date(user.updatedAt).toLocaleDateString()
+                          : 'N/A'
+                        }
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm">
+                        {user.lastLogin 
+                          ? new Date(user.lastLogin).toLocaleDateString()
+                          : 'Never'
+                        }
+                      </span>
                     </TableCell>
                     <TableCell>
                       <Button
