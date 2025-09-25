@@ -104,11 +104,17 @@ export const UserList = () => {
   const fetchAvailableRoles = async () => {
     try {
       const response = await roleService.getAssignableRoles();
-      if (!response.error) {
-        setAvailableRoles(response.details.roles);
+      console.log('Roles response:', response);
+      if (!response.error && response.details?.roles) {
+        // Ensure all roles are strings
+        const stringRoles = response.details.roles.map(role => getStringValue(role));
+        console.log('Processed roles:', stringRoles);
+        setAvailableRoles(stringRoles);
       }
     } catch (error) {
       console.error('Failed to fetch available roles:', error);
+      // Fallback to default roles
+      setAvailableRoles(['super_admin', 'manager', 'seller', 'customer']);
     }
   };
 
@@ -362,7 +368,9 @@ export const UserList = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {availableRoles.map(role => (
-                      <SelectItem key={role} value={role}>{role}</SelectItem>
+                      <SelectItem key={getStringValue(role)} value={getStringValue(role)}>
+                        {getStringValue(role)}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -509,7 +517,18 @@ export const UserList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => (
+                {users.map((user) => {
+                  // Comprehensive debug logging
+                  console.log('=== USER DEBUG ===');
+                  console.log('Full user object:', user);
+                  Object.entries(user).forEach(([key, value]) => {
+                    if (value && typeof value === 'object' && !Array.isArray(value)) {
+                      console.log(`OBJECT FIELD DETECTED - ${key}:`, value);
+                    }
+                  });
+                  console.log('==================');
+                  
+                  return (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div>
@@ -528,7 +547,9 @@ export const UserList = () => {
                         </SelectTrigger>
                         <SelectContent>
                           {availableRoles.map(role => (
-                            <SelectItem key={role} value={role}>{role}</SelectItem>
+                            <SelectItem key={getStringValue(role)} value={getStringValue(role)}>
+                              {getStringValue(role)}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -620,7 +641,8 @@ export const UserList = () => {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}
