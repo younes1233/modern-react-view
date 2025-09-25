@@ -39,6 +39,7 @@ import {
 import { roleService } from "@/services/roleService";
 import { userService, UserAPIResponse } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
+import { PermissionsCell } from "@/components/PermissionsCell";
 
 export const UserList = () => {
   const [users, setUsers] = useState<UserAPIResponse[]>([]);
@@ -612,9 +613,10 @@ export const UserList = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">
-                        {getStringValue(user.permissions) || 'N/A'}
-                      </span>
+                      <PermissionsCell 
+                        permissions={getStringValue(user.permissions) || 'N/A'}
+                        userName={`${getStringValue(user.firstName)} ${getStringValue(user.lastName)}`}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
