@@ -555,12 +555,46 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
       .filter((p) => !isNaN(p.net_price) && !isNaN(p.cost));
 
+    // Validate that net price is always larger than cost
+    for (let i = 0; i < prices.length; i++) {
+      const price = prices[i];
+      if (price.net_price <= price.cost) {
+        toast({ 
+          title: "Error", 
+          description: `Net price must be larger than cost in price entry ${i + 1}`, 
+          variant: "destructive" 
+        });
+        return;
+      }
+    }
+
     const specs = specifications
       .map((s) => ({ name: s.name, value: s.value }))
       .filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
 
     let variantsPayload: any[] = [];
     if (formData.has_variants && variantEntries.length > 0) {
+      // Validate variant prices first
+      for (let variantIndex = 0; variantIndex < variantEntries.length; variantIndex++) {
+        const variant = variantEntries[variantIndex];
+        const variantPricesParsed = variant.variantPrices
+          .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
+          .filter((p) => !isNaN(p.net_price) && !isNaN(p.cost));
+
+        // Validate that net price is always larger than cost for variant prices
+        for (let j = 0; j < variantPricesParsed.length; j++) {
+          const variantPrice = variantPricesParsed[j];
+          if (variantPrice.net_price <= variantPrice.cost) {
+            toast({ 
+              title: "Error", 
+              description: `Net price must be larger than cost in variant ${variantIndex + 1}, price entry ${j + 1}`, 
+              variant: "destructive" 
+            });
+            return;
+          }
+        }
+      }
+
       variantsPayload = variantEntries.map((variant) => {
         const variations = variant.variations;
         const variantPricesParsed = variant.variantPrices
