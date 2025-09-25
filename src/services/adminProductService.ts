@@ -127,7 +127,7 @@ export interface AdminProductsResponse {
 
 export interface CreateProductData {
   store_id: number;
-  category_id: number;
+  category_id?: number;
   name: string;
   slug: string;
   sku: string;

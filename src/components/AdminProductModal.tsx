@@ -172,7 +172,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
   const [formData, setFormData] = useState<CreateProductData & { country_id?: number }>(
     {
       store_id: 1,
-      category_id: 1,
+      category_id: undefined,
       name: "",
       slug: "",
       sku: "",
@@ -221,7 +221,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     if (product && mode === "edit") {
       setFormData({
         store_id: product.store?.id || 1,
-        category_id: product.category?.id || 1,
+        category_id: product.category?.id || undefined,
         name: product.name,
         slug: product.slug,
         sku: product.identifiers?.sku || "",
@@ -267,7 +267,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     } else {
       setFormData({
         store_id: store ? parseInt(store as string) || 1 : 1,
-        category_id: 1,
+        category_id: undefined,
         name: "",
         slug: "",
         sku: "",
@@ -738,10 +738,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             </div>
             <div>
               <Label>Category</Label>
-              <Select value={String(formData.category_id)} onValueChange={(v) => updateField('category_id', parseInt(v, 10) as any)}>
+              <Select 
+                value={formData.category_id ? String(formData.category_id) : undefined} 
+                onValueChange={(v) => updateField('category_id', v ? parseInt(v, 10) : undefined as any)}
+              >
                 <SelectTrigger>
-                  <SelectValue>
-                    {categories.find((c) => c.id === formData.category_id)?.name || 'Select category'}
+                  <SelectValue placeholder="Select category">
+                    {categories.find((c) => c.id === formData.category_id)?.name}
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
