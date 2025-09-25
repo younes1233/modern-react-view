@@ -521,7 +521,16 @@ export const UserList = () => {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm">{user.permissions || 'N/A'}</span>
+                      <span className="text-sm">
+                        {(() => {
+                          if (!user.permissions) return 'N/A';
+                          if (typeof user.permissions === 'string') return user.permissions;
+                          if (typeof user.permissions === 'object' && user.permissions.name) {
+                            return user.permissions.name;
+                          }
+                          return 'N/A';
+                        })()}
+                      </span>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">

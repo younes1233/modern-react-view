@@ -71,7 +71,7 @@ export interface UserAPIResponse {
   phoneVerifiedAt: string;
   avatar: string;
   role: string;
-  permissions: string;
+  permissions: string | { id: string; name: string } | null;
   isActive: string;
   isEmailVerified: boolean;
   emailVerifiedAt: string;
