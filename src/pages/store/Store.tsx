@@ -253,9 +253,9 @@ const Store = () => {
                 <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
                   {/* Left side: title + subtitle */}
                   <div className="max-w-2xl text-white">
-                    <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
+                    {/* <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
                       ✨ Premium Quality
-                    </div>
+                    </div> */}
                     <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-2 sm:mb-3 md:mb-4">
                       {currentSlide.title}
                     </h1>
@@ -275,10 +275,10 @@ const Store = () => {
                         {currentSlide.cta_text}
                       </Button>
                     )}
-                    <div className="text-left">
+                    {/* <div className="text-left">
                       <div className="text-sm sm:text-base md:text-lg font-bold text-white">961 76591765</div>
                       <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
