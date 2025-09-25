@@ -253,20 +253,22 @@ export const UserList = () => {
       : isActive;
   };
 
-  const getUserRole = (role: string | { id: string; name: string } | null) => {
-    if (!role) return '';
-    if (typeof role === 'string') return role;
-    if (typeof role === 'object' && role.name) return role.name;
-    return '';
+  // Helper function to safely extract string value from potentially object field
+  const getStringValue = (field: any): string => {
+    if (!field) return '';
+    if (typeof field === 'string') return field;
+    if (typeof field === 'object' && field.name) return field.name;
+    if (typeof field === 'object' && field.id) return field.id.toString();
+    return String(field);
   };
 
   const roleStats = {
     total: users.length,
     active: users.filter(u => isUserActive(u.isActive)).length,
-    super_admin: users.filter(u => getUserRole(u.role) === 'super_admin').length,
-    manager: users.filter(u => getUserRole(u.role) === 'manager').length,
-    seller: users.filter(u => getUserRole(u.role) === 'seller').length,
-    customer: users.filter(u => getUserRole(u.role) === 'customer').length,
+    super_admin: users.filter(u => getStringValue(u.role) === 'super_admin').length,
+    manager: users.filter(u => getStringValue(u.role) === 'manager').length,
+    seller: users.filter(u => getStringValue(u.role) === 'seller').length,
+    customer: users.filter(u => getStringValue(u.role) === 'customer').length,
   };
 
   // Debounced search effect
@@ -511,13 +513,13 @@ export const UserList = () => {
                   <TableRow key={user.id}>
                     <TableCell>
                       <div>
-                        <p className="font-medium">{user.firstName} {user.lastName}</p>
-                        <p className="text-sm text-muted-foreground">{user.email}</p>
+                        <p className="font-medium">{getStringValue(user.firstName)} {getStringValue(user.lastName)}</p>
+                        <p className="text-sm text-muted-foreground">{getStringValue(user.email)}</p>
                       </div>
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={getUserRole(user.role)}
+                        value={getStringValue(user.role)}
                         onValueChange={(value) => handleRoleChange(user.id, value)}
                         disabled={loading}
                       >
@@ -552,14 +554,7 @@ export const UserList = () => {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {(() => {
-                          if (!user.permissions) return 'N/A';
-                          if (typeof user.permissions === 'string') return user.permissions;
-                          if (typeof user.permissions === 'object' && user.permissions.name) {
-                            return user.permissions.name;
-                          }
-                          return 'N/A';
-                        })()}
+                        {getStringValue(user.permissions) || 'N/A'}
                       </span>
                     </TableCell>
                     <TableCell>
@@ -569,7 +564,7 @@ export const UserList = () => {
                         </Badge>
                         {user.emailVerifiedAt && (
                           <span className="text-xs text-muted-foreground">
-                            {new Date(user.emailVerifiedAt).toLocaleDateString()}
+                            {getStringValue(user.emailVerifiedAt) ? new Date(getStringValue(user.emailVerifiedAt)).toLocaleDateString() : ''}
                           </span>
                         )}
                       </div>
@@ -581,24 +576,24 @@ export const UserList = () => {
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {user.createdAt 
-                          ? new Date(user.createdAt).toLocaleDateString()
+                        {getStringValue(user.createdAt) 
+                          ? new Date(getStringValue(user.createdAt)).toLocaleDateString()
                           : 'N/A'
                         }
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {user.updatedAt 
-                          ? new Date(user.updatedAt).toLocaleDateString()
+                        {getStringValue(user.updatedAt) 
+                          ? new Date(getStringValue(user.updatedAt)).toLocaleDateString()
                           : 'N/A'
                         }
                       </span>
                     </TableCell>
                     <TableCell>
                       <span className="text-sm">
-                        {user.lastLogin 
-                          ? new Date(user.lastLogin).toLocaleDateString()
+                        {getStringValue(user.lastLogin) 
+                          ? new Date(getStringValue(user.lastLogin)).toLocaleDateString()
                           : 'Never'
                         }
                       </span>
