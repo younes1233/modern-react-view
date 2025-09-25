@@ -233,24 +233,40 @@ export const UserList = () => {
     }
   };
 
-  const getStatusBadgeColor = (isActive: string | boolean) => {
-    const active = typeof isActive === 'string' ? isActive === 'true' || isActive === '1' : isActive;
+  const getStatusBadgeColor = (isActive: string | boolean | { id: string; name: string }) => {
+    const active = typeof isActive === 'object' && isActive?.name 
+      ? isActive.name === 'active' || isActive.name === 'Active'
+      : typeof isActive === 'string' 
+        ? isActive === 'true' || isActive === '1' || isActive === 'active' || isActive === 'Active'
+        : isActive;
     return active 
       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
       : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
   };
 
-  const isUserActive = (isActive: string | boolean) => {
-    return typeof isActive === 'string' ? isActive === 'true' || isActive === '1' : isActive;
+  const isUserActive = (isActive: string | boolean | { id: string; name: string }) => {
+    if (typeof isActive === 'object' && isActive?.name) {
+      return isActive.name === 'active' || isActive.name === 'Active';
+    }
+    return typeof isActive === 'string' 
+      ? isActive === 'true' || isActive === '1' || isActive === 'active' || isActive === 'Active'
+      : isActive;
+  };
+
+  const getUserRole = (role: string | { id: string; name: string } | null) => {
+    if (!role) return '';
+    if (typeof role === 'string') return role;
+    if (typeof role === 'object' && role.name) return role.name;
+    return '';
   };
 
   const roleStats = {
     total: users.length,
     active: users.filter(u => isUserActive(u.isActive)).length,
-    super_admin: users.filter(u => u.role === 'super_admin').length,
-    manager: users.filter(u => u.role === 'manager').length,
-    seller: users.filter(u => u.role === 'seller').length,
-    customer: users.filter(u => u.role === 'customer').length,
+    super_admin: users.filter(u => getUserRole(u.role) === 'super_admin').length,
+    manager: users.filter(u => getUserRole(u.role) === 'manager').length,
+    seller: users.filter(u => getUserRole(u.role) === 'seller').length,
+    customer: users.filter(u => getUserRole(u.role) === 'customer').length,
   };
 
   // Debounced search effect
@@ -491,16 +507,7 @@ export const UserList = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {users.map((user) => {
-                  // Debug logging to identify object fields
-                  console.log('User data:', user);
-                  Object.keys(user).forEach(key => {
-                    if (typeof user[key] === 'object' && user[key] !== null && !Array.isArray(user[key])) {
-                      console.log(`Object field found - ${key}:`, user[key]);
-                    }
-                  });
-                  
-                  return (
+                {users.map((user) => (
                   <TableRow key={user.id}>
                     <TableCell>
                       <div>
@@ -510,12 +517,7 @@ export const UserList = () => {
                     </TableCell>
                     <TableCell>
                       <Select
-                        value={(() => {
-                          if (!user.role) return '';
-                          if (typeof user.role === 'string') return user.role;
-                          if (typeof user.role === 'object' && user.role.name) return user.role.name;
-                          return '';
-                        })()}
+                        value={getUserRole(user.role)}
                         onValueChange={(value) => handleRoleChange(user.id, value)}
                         disabled={loading}
                       >
@@ -530,8 +532,22 @@ export const UserList = () => {
                       </Select>
                     </TableCell>
                     <TableCell>
-                      <Badge className={getStatusBadgeColor(user.isActive)}>
-                        {isUserActive(user.isActive) ? 'Active' : 'Inactive'}
+                      <Badge className={(() => {
+                        const active = typeof user.isActive === 'object' && user.isActive?.name 
+                          ? user.isActive.name === 'active' || user.isActive.name === 'Active'
+                          : typeof user.isActive === 'string' 
+                            ? user.isActive === 'active' || user.isActive === 'Active' || user.isActive === '1'
+                            : user.isActive === true;
+                        return getStatusBadgeColor(active ? 'active' : 'inactive');
+                      })()}>
+                        {(() => {
+                          const active = typeof user.isActive === 'object' && user.isActive?.name 
+                            ? user.isActive.name === 'active' || user.isActive.name === 'Active'
+                            : typeof user.isActive === 'string' 
+                              ? user.isActive === 'active' || user.isActive === 'Active' || user.isActive === '1'
+                              : user.isActive === true;
+                          return active ? 'Active' : 'Inactive';
+                        })()}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -609,8 +625,7 @@ export const UserList = () => {
                       </Button>
                     </TableCell>
                   </TableRow>
-                  );
-                })}
+                ))}
               </TableBody>
             </Table>
           )}

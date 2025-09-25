@@ -72,7 +72,7 @@ export interface UserAPIResponse {
   avatar: string;
   role: string | { id: string; name: string } | null;
   permissions: string | { id: string; name: string } | null;
-  isActive: string;
+  isActive: string | { id: string; name: string } | boolean;
   isEmailVerified: boolean;
   emailVerifiedAt: string;
   isSeller: boolean;
