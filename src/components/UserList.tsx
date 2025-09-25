@@ -179,7 +179,7 @@ export const UserList = () => {
     }
   };
 
-  const handleToggleUserStatus = async (userId: string) => {
+  const handleToggleUserStatus = async (userId: number) => {
     try {
       const response = await userService.toggleUserStatus(userId);
       
@@ -206,12 +206,12 @@ export const UserList = () => {
     }
   };
 
-  const handleRoleChange = async (userId: string, newRoleName: string) => {
+  const handleRoleChange = async (userId: number, newRoleName: string) => {
     console.log('handleRoleChange called with userId:', userId, 'newRoleName:', newRoleName);
     
     if (loading) return;
     
-    if (!userId || userId === '') {
+    if (!userId || userId === 0) {
       toast({
         title: "Error",
         description: "Invalid user ID - cannot assign role",
@@ -567,7 +567,7 @@ export const UserList = () => {
                   console.log('==================');
                   
                   return (
-                  <TableRow key={user.email || Math.random()}>
+                  <TableRow key={user.id || Math.random()}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{getStringValue(user.firstName)} {getStringValue(user.lastName)}</p>

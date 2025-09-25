@@ -62,7 +62,7 @@ export interface UserWishlist {
 }
 
 export interface UserAPIResponse {
-  id: string;
+  id: number;
   email: string;
   firstName: string;
   lastName: string;
@@ -144,23 +144,23 @@ class UserService extends BaseApiService {
     }, true);
   }
 
-  async updateUser(userId: string, userData: Partial<UserAPIResponse>): Promise<ApiResponse<{ user: UserAPIResponse }>> {
+  async updateUser(userId: number, userData: Partial<UserAPIResponse>): Promise<ApiResponse<{ user: UserAPIResponse }>> {
     return this.put<ApiResponse<{ user: UserAPIResponse }>>(`/users/${userId}`, userData, true);
   }
 
-  async deleteUser(userId: string): Promise<ApiResponse<{}>> {
+  async deleteUser(userId: number): Promise<ApiResponse<{}>> {
     return this.delete<ApiResponse<{}>>(`/users/${userId}`, true);
   }
 
-  async toggleUserStatus(userId: string): Promise<ApiResponse<{ user: UserAPIResponse }>> {
+  async toggleUserStatus(userId: number): Promise<ApiResponse<{ user: UserAPIResponse }>> {
     return this.post<ApiResponse<{ user: UserAPIResponse }>>(`/users/${userId}/toggle-status`, {}, true);
   }
 
-  async updateUserRole(userId: string, role: string): Promise<ApiResponse<{ user: UserAPIResponse }>> {
+  async updateUserRole(userId: number, role: string): Promise<ApiResponse<{ user: UserAPIResponse }>> {
     return this.put<ApiResponse<{ user: UserAPIResponse }>>(`/users/${userId}/role`, { role }, true);
   }
 
-  async assignRole(userId: string, roleId: number): Promise<ApiResponse<{ user: string }>> {
+  async assignRole(userId: number, roleId: number): Promise<ApiResponse<{ user: string }>> {
     return this.post<ApiResponse<{ user: string }>>(`/users/${userId}/assign-role`, { role_id: roleId }, true);
   }
 }
