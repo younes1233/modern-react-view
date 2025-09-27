@@ -163,10 +163,10 @@ const goAll = () => {
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
               <Link to="/store" className="hover:scale-105 transition-transform duration-300">
-                <img 
-                  src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png" 
-                  alt="Meem Home" 
-                  className="h-12 md:h-20 lg:h-24 w-auto object-contain"
+                <img
+                  src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png"
+                  alt="Meem Home"
+                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
                 />
               </Link>
             </div>
