@@ -1,94 +1,123 @@
-
-import { useState } from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Heart, ShoppingCart, Eye, Star, ZoomIn } from 'lucide-react';
-import { Product } from '@/data/storeData';
-import { useCart } from '@/contexts/CartContext';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { ProductQuickView } from './ProductQuickView';
-import { ImageZoom } from './ImageZoom';
-import { useNavigate } from 'react-router-dom';
-import { Package } from "lucide-react";
-import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
+import { useState } from 'react'
+import { Card, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Heart, ShoppingCart, Star, Package } from 'lucide-react'
+import { Product } from '@/data/storeData'
+import { useCart } from '@/contexts/CartContext'
+import { useWishlist } from '@/contexts/WishlistContext'
+import { useNavigate } from 'react-router-dom'
+import { useCountryCurrency } from '@/contexts/CountryCurrencyContext'
 
 interface ProductCardProps {
-  product: Product;
+  product: Product
 }
 
 export function ProductCard({ product }: ProductCardProps) {
-  const [showQuickView, setShowQuickView] = useState(false);
-  const [showImageZoom, setShowImageZoom] = useState(false);
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
-  const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null);
-  const { addToCart, isInCart, isLoading: cartLoading } = useCart();
-  const { addToWishlist, removeFromWishlist, isInWishlist, isLoading: wishlistLoading } = useWishlist();
-  const { selectedCurrency } = useCountryCurrency();
-  const navigate = useNavigate();
+  const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
+  const { addToCart, isInCart, isLoading: cartLoading } = useCart()
+  const {
+    addToWishlist,
+    removeFromWishlist,
+    isInWishlist,
+    isLoading: wishlistLoading,
+  } = useWishlist()
+  const { selectedCurrency } = useCountryCurrency()
+  const navigate = useNavigate()
 
   // Get currency symbol from product data or fallback to selected currency
-  const currencySymbol = (product as any).currency?.symbol || selectedCurrency?.symbol || '$';
+  const currencySymbol =
+    (product as any).currency?.symbol || selectedCurrency?.symbol || '$'
 
   const handleAddToCart = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await addToCart(product);
-  };
+    e.stopPropagation()
+    await addToCart(product)
+  }
 
   const handleWishlistToggle = async (e: React.MouseEvent) => {
-    e.stopPropagation();
+    e.stopPropagation()
     if (isInWishlist(product.id)) {
-      await removeFromWishlist(product.id);
+      await removeFromWishlist(product.id)
     } else {
-      await addToWishlist(product);
+      await addToWishlist(product)
     }
-  };
+  }
 
-  const handleQuickView = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowQuickView(true);
-  };
 
   const handleProductClick = () => {
-    navigate(`/store/product/${product.slug}`);
-  };
+    navigate(`/store/product/${product.slug}`)
+  }
 
-  const currentImage = hoveredThumbnail !== null 
-    ? product.thumbnails[hoveredThumbnail]?.url || product.image
-    : product.image;
+  const currentImage =
+    hoveredThumbnail !== null
+      ? product.thumbnails[hoveredThumbnail]?.url || product.image
+      : product.image
 
   const allImages = [
     { url: product.image, alt: product.name },
-    ...product.thumbnails.map(thumb => ({ url: thumb.url, alt: thumb.alt }))
-  ];
+    ...product.thumbnails.map((thumb) => ({ url: thumb.url, alt: thumb.alt })),
+  ]
 
-  const discountPercentage = product.originalPrice 
-    ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
-    : Math.floor(Math.random() * 30) + 10;
-  
-  const originalPrice = product.originalPrice || Math.floor(product.price * 1.3);
+  const discountPercentage = product.originalPrice
+    ? Math.round(
+        ((product.originalPrice - product.price) / product.originalPrice) * 100
+      )
+    : 0
+
+  const originalPrice = product.originalPrice
 
   return (
     <>
       <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
-        <div className="relative overflow-hidden bg-white" onClick={handleProductClick}>
+        <div
+          className="relative overflow-hidden bg-white"
+          onClick={handleProductClick}
+        >
           {/* Product Image - Taller with better containment */}
-          <div className="aspect-[4/6] md:aspect-[4/5] bg-white overflow-hidden">
+          <div className="aspect-[1/1] md:aspect-[1/1] bg-white overflow-hidden">
             <img
               src={currentImage}
               alt={product.name}
               className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
             />
           </div>
-          
-          {/* Discount badge - Top Left */}
-          {product.isOnSale && (
-            <div className="absolute top-0.5 left-0.5 md:top-1 md:left-1">
+
+          {/* Thumbnail Navigation - Show on hover if thumbnails exist */}
+          {product.thumbnails && product.thumbnails.length > 0 && (
+            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="flex space-x-1">
+                <button
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    hoveredThumbnail === null ? 'bg-white' : 'bg-white/50'
+                  }`}
+                  onMouseEnter={() => setHoveredThumbnail(null)}
+                />
+                {product.thumbnails.map((_, index) => (
+                  <button
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-colors ${
+                      hoveredThumbnail === index ? 'bg-white' : 'bg-white/50'
+                    }`}
+                    onMouseEnter={() => setHoveredThumbnail(index)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Badges - Top Left */}
+          <div className="absolute top-0.5 left-0.5 md:top-1 md:left-1 flex flex-col gap-1">
+            {product.isOnSale && discountPercentage > 0 && (
               <Badge className="bg-red-500 text-white text-xs px-1 py-0.5 rounded">
                 -{discountPercentage}%
               </Badge>
-            </div>
-          )}
+            )}
+            {product.isNewArrival && (
+              <Badge className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
+                NEW
+              </Badge>
+            )}
+          </div>
 
           {/* Wishlist button - Top Right */}
           <div className="absolute top-0.5 right-0.5 md:top-1 md:right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
@@ -97,37 +126,51 @@ export function ProductCard({ product }: ProductCardProps) {
               variant="secondary"
               onClick={handleWishlistToggle}
               disabled={wishlistLoading}
-              className={`w-7 h-7 md:w-6 md:h-6 p-0 shadow-md ${
+              className={`w-9 h-9 md:w-7 md:h-7 p-0 shadow-md ${
                 isInWishlist(product.id)
                   ? 'bg-red-500 text-white hover:bg-red-600'
                   : 'bg-white/90 hover:bg-white'
               }`}
             >
-              <Heart className={`w-2.5 h-2.5 md:w-3 md:h-3 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
+              <Heart
+                className={`w-2.5 h-2.5 md:w-3 md:h-3 ${
+                  isInWishlist(product.id) ? 'fill-current' : ''
+                }`}
+              />
             </Button>
           </div>
         </div>
 
-        <CardContent className="p-3 md:p-4 flex flex-col justify-between flex-1" onClick={handleProductClick}>
-          <div className="space-y-1 md:space-y-1.5 flex-1">
-            {/* Product Name - 2 lines with ellipsis */}
-            <h3 className="font-normal text-xs md:text-sm text-gray-800 line-clamp-2 leading-tight min-h-[2rem] md:min-h-[2.5rem]">
-              {product.name}
-            </h3>
+        <CardContent
+          className="p-3 flex flex-col flex-1"
+          onClick={handleProductClick}
+        >
+          {/* Top Content - Fixed height for consistent cards */}
+          <div className="flex-1">
+            {/* Product Name with Rating Badge - Fixed height for 2 lines */}
+            <div className="flex items-start justify-between gap-2 h-10">
+              <h3 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight flex-1">
+                {product.name}
+              </h3>
+              <div className="flex items-center bg-amber-50 border border-amber-200 rounded-full px-2 py-1 flex-shrink-0">
+                <Star className="w-3 h-3 text-amber-500 fill-current mr-1" />
+                <span className="text-xs font-medium text-amber-700">
+                  {product.rating ? product.rating.toFixed(1) : '0.0'}
+                </span>
+              </div>
+            </div>
+          </div>
 
-            {/* Product Description - 2 lines with ellipsis */}
-            <p className="text-xs text-gray-600 line-clamp-2 leading-tight min-h-[1.5rem] mb-2">
-              {product.description || 'High-quality product with excellent features and reliable performance for everyday use.'}
-            </p>
-
-            {/* Price Section - Updated layout */}
-            <div className="flex items-center gap-1.5 mb-2">
-              <span className="text-lg md:text-xl font-bold text-gray-900">
+          {/* Bottom Section - Always at bottom with tighter spacing */}
+          <div className="space-y-2 mt-auto pt-2">
+            {/* Price Section - Clean and modern */}
+            <div className="flex items-center gap-2">
+              <span className="text-base md:text-lg font-semibold text-gray-900">
                 {currencySymbol}{product.price}
               </span>
-              {product.isOnSale && (
+              {product.isOnSale && originalPrice && (
                 <>
-                  <span className="text-sm text-gray-500 line-through">
+                  <span className="text-xs text-gray-400 line-through">
                     {currencySymbol}{originalPrice}
                   </span>
                   <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
@@ -137,57 +180,29 @@ export function ProductCard({ product }: ProductCardProps) {
               )}
             </div>
 
-            {/* Sales count - if available */}
-            {/* {product.reviews && product.reviews > 0 && (
-              <div className="text-xs text-gray-500 mb-2">
-                {product.reviews}+ Sold
+            {/* Express and Cart Section - Aligned and balanced */}
+            <div className="flex items-center justify-between">
+              {/* Simplified Express Badge */}
+              <div className="flex items-center bg-red-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
+                <Package size={10} className="text-white mr-1" />
+                <span>EXPRESS</span>
               </div>
-            )} */}
 
-            {/* Bottom Section with Express and Add to Cart */}
-            <div className="flex items-center justify-between mt-auto">
-              {/* Express Badge */}
-              <div className="flex items-center">
-                <div
-                  className="flex items-center bg-red-600 text-white text-[10px] pl-1.5 pr-2 py-[2px] gap-[2px]"
-                  style={{
-                    clipPath: 'polygon(0 0, 88% 0, 100% 50%, 88% 95%, 0 100%)',
-                    borderTopLeftRadius: '9999px',
-                    borderBottomLeftRadius: '9999px'
-                  }}
-                >
-                  <Package size={10} className="text-white" />
-                  <span>express</span>
-                </div>
-              </div>
-              {/* Add to Cart Button - Only icon, no text */}
+              {/* Add to Cart Button - Same shape as wishlist */}
               <Button
                 size="sm"
                 onClick={handleAddToCart}
                 disabled={cartLoading}
-                className="bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300 rounded-md px-1.5 md:px-2 py-0.5 text-xs"
+                className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-lg w-9 h-9 p-0 flex items-center justify-center shadow-sm hover:shadow transition-all duration-200"
                 variant="outline"
               >
-                <ShoppingCart className="w-3 h-3" />
+                <ShoppingCart className="w-4 h-4 text-gray-600" />
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <ProductQuickView
-        product={product}
-        open={showQuickView}
-        onOpenChange={setShowQuickView}
-      />
-
-      <ImageZoom
-        images={allImages}
-        selectedIndex={selectedImageIndex}
-        open={showImageZoom}
-        onOpenChange={setShowImageZoom}
-        onImageChange={setSelectedImageIndex}
-      />
     </>
-  );
+  )
 }

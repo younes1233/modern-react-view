@@ -1,21 +1,9 @@
 
 import BaseApiService, { ApiResponse } from './baseApiService';
+import { ProductListing } from '@/data/storeData';
 
-export interface ProductListingAPI {
-  id: number;
-  title: string;
-  subtitle?: string;
-  type: 'featured' | 'newArrivals' | 'sale' | 'category' | 'custom';
-  products?: any[];
-  max_products: number;
-  layout: 'grid' | 'slider';
-  show_title: boolean;
-  is_active: boolean;
-  order: number;
-  created_at: string;
-  updated_at: string;
-  category_id?: number;
-}
+// Use the unified ProductListing interface that matches API snake_case
+export type ProductListingAPI = ProductListing;
 
 export interface CreateProductListingRequest {
   title: string;

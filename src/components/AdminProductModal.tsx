@@ -257,37 +257,45 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
     if (firstErrorField) {
       setTimeout(() => {
-        // Debug: Log all modal-related elements
-        const dialog = document.querySelector('[role="dialog"]');
-        const overflowContainer = document.querySelector('.overflow-y-auto');
-        const maxHeightContainer = document.querySelector('.max-h-\\[80vh\\]');
-        const errorElements = document.querySelectorAll('.text-red-600');
+        // Check if it's a variant-specific error
+        if (firstErrorField.startsWith('variant_') && firstErrorField.includes('_attributes')) {
+          // Extract variant ID from error key like "variant_123_attributes"
+          const variantId = firstErrorField.split('_')[1];
+          console.log('Scrolling to variant attributes for variant ID:', variantId);
 
-        console.log('Dialog:', dialog);
-        console.log('Overflow container:', overflowContainer);
-        console.log('Max height container:', maxHeightContainer);
-        console.log('Error elements:', errorElements);
-
-        // Find the first validation error element using our unique class
-        const validationError = document.querySelector('.validation-error') as HTMLElement;
-        if (validationError) {
-          console.log('Found validation error element:', validationError);
-
-          // Get the modal content container for scrolling
-          const modalContent = document.querySelector('[role="dialog"]') as HTMLElement;
-
-          if (modalContent) {
-            console.log('Using scroll container:', modalContent);
-
-            // Simply scroll the validation error into view within the modal
-            validationError.scrollIntoView({
+          // Find the specific variant's attribute section
+          const variantAttributeSection = document.querySelector(`[data-variant-id="${variantId}"] .variant-attributes`) as HTMLElement;
+          if (variantAttributeSection) {
+            console.log('Found variant attribute section:', variantAttributeSection);
+            variantAttributeSection.scrollIntoView({
               behavior: 'smooth',
               block: 'center',
               inline: 'nearest'
             });
 
-            console.log('Scrolled to validation error');
+            // Add a temporary highlight to draw attention
+            variantAttributeSection.classList.add('ring-2', 'ring-red-500', 'ring-opacity-50');
+            setTimeout(() => {
+              variantAttributeSection.classList.remove('ring-2', 'ring-red-500', 'ring-opacity-50');
+            }, 3000);
+
+            console.log('Scrolled to variant attribute section');
+            return;
           }
+        }
+
+        // Default behavior for other errors
+        const validationError = document.querySelector('.validation-error') as HTMLElement;
+        if (validationError) {
+          console.log('Found validation error element:', validationError);
+
+          validationError.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+
+          console.log('Scrolled to validation error');
         }
       }, 200);
     }
@@ -523,6 +531,22 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       // Auto-populate SEO title only if user hasn't manually edited it
       seo_title: seoTitleEdited ? prev.seo_title : name
     }));
+
+    // Clear validation errors for name and slug when user types
+    if (validationErrors.name) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.name;
+        return newErrors;
+      });
+    }
+    if (validationErrors.slug) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.slug;
+        return newErrors;
+      });
+    }
   };
 
   const handleDescriptionChange = (description: string) => {
@@ -757,6 +781,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     // Validate variants when has_variants is true
     if (formData.has_variants && variantEntries.length === 0) {
       errors.variants = ["At least one variant is required when 'Has Variants' is enabled. Please add a variant or disable 'Has Variants'."];
+    }
+
+    // Validate that each variant has at least one attribute selected
+    if (formData.has_variants && variantEntries.length > 0) {
+      for (let i = 0; i < variantEntries.length; i++) {
+        const variant = variantEntries[i];
+        if (!variant.variations || variant.variations.length === 0) {
+          errors[`variant_${variant.id}_attributes`] = [`Variant ${i + 1} must have at least one attribute value selected`];
+        }
+      }
     }
 
     if (Object.keys(errors).length > 0) {
@@ -1080,7 +1114,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           <p className="text-sm text-gray-600 mt-1">Fill in the information below to {mode === 'add' ? 'create' : 'update'} your product</p>
         </div>
         <div className="px-6 pb-6">
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8" noValidate>
           {/* 1. Essential Product Information */}
           <div className="space-y-4 p-6 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/60 shadow-sm">
             <div className="flex items-center gap-2">
@@ -1448,7 +1482,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
               </div>
               {renderFieldError('variants')}
               {variantEntries.map((variant) => (
-                <div key={variant.id} className="border p-4 rounded space-y-2">
+                <div key={variant.id} className="border p-4 rounded space-y-2" data-variant-id={variant.id}>
                   <div className="flex justify-between items-center mb-2">
                     <Label>Variant</Label>
                     <Button type="button" variant="destructive" size="sm" onClick={() => removeVariant(variant.id)}>Remove</Button>
@@ -1481,8 +1515,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                   </div>
 
                   {/* Variant variations */}
-                  <div>
+                  <div className="variant-attributes">
                     <Label>Attribute Values *</Label>
+                    {renderFieldError(`variant_${variant.id}_attributes`)}
                     {attributesLoading ? (
                       <div className="text-muted-foreground mt-2">Loading attributes...</div>
                     ) : attributes.length === 0 ? (
@@ -1526,6 +1561,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                                         : v
                                     )
                                   );
+
+                                  // Clear validation error for this variant's attributes when user selects an attribute
+                                  const errorKey = `variant_${variant.id}_attributes`;
+                                  if (validationErrors[errorKey]) {
+                                    setValidationErrors((prev) => {
+                                      const newErrors = { ...prev };
+                                      delete newErrors[errorKey];
+                                      return newErrors;
+                                    });
+                                  }
                                 }}
                                 placeholder={`Select ${attribute.name.toLowerCase()}...`}
                                 searchPlaceholder={`Search ${attribute.name.toLowerCase()}...`}

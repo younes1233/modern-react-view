@@ -312,6 +312,7 @@ const ProductDetail = () => {
         toast.success("Link copied to clipboard!", {
           description: "Product link has been copied to your clipboard.",
           duration: 2000,
+          dismissible: true,
         });
       }
     } catch (error) {
@@ -322,10 +323,12 @@ const ProductDetail = () => {
           toast.success("Link copied to clipboard!", {
             description: "Product link has been copied to your clipboard.",
             duration: 2000,
+            dismissible: true,
           });
         } catch (clipboardError) {
           toast.error("Unable to share", {
             description: "Please copy the URL manually from your browser.",
+            dismissible: true,
           });
         }
       }

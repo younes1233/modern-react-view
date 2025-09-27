@@ -13,19 +13,37 @@ import { ProductListingAPI, CreateProductListingRequest, UpdateProductListingReq
 import { useQuery } from "@tanstack/react-query";
 import { adminProductService, AdminProductAPI } from "@/services/adminProductService";
 import { useFlatCategories } from "@/hooks/useCategories";
+import { useFormValidation } from "@/hooks/useFormValidation";
+import { useFieldError } from "@/components/ui/form-error-display";
+import { createFieldUpdater } from "@/utils/validation";
 
 interface ProductListingModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (listing: CreateProductListingRequest | UpdateProductListingRequest) => void;
+  onSave: (listing: CreateProductListingRequest | UpdateProductListingRequest) => Promise<void>;
   listing: ProductListingAPI | null;
   mode: 'add' | 'edit';
 }
 
 export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: ProductListingModalProps) {
+  // Initialize validation system
+  const {
+    validationErrors,
+    setErrors,
+    clearErrors,
+    clearFieldError,
+    handleBackendErrors,
+    showToastError
+  } = useFormValidation({
+    enableScrollToError: true,
+    scrollDelay: 200
+  });
+
+  // Use field error renderer
+  const renderFieldError = useFieldError(validationErrors);
+
   const [formData, setFormData] = useState<CreateProductListingRequest>({
     title: '',
-    subtitle: '',
     type: 'featured',
     max_products: 8,
     layout: 'grid',
@@ -67,21 +85,29 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
 
   useEffect(() => {
     if (mode === 'edit' && listing) {
-      setFormData({
+      const baseFormData = {
         title: listing.title,
-        subtitle: listing.subtitle || '',
         type: listing.type,
-        category_id: listing.category_id,
-        products: listing.products?.map(p => p.id) || [],
         max_products: listing.max_products,
         layout: listing.layout,
         show_title: listing.show_title,
         is_active: listing.is_active
-      });
+      };
+
+      // Only include category_id if type is 'category'
+      if (listing.type === 'category' && listing.category_id) {
+        baseFormData.category_id = listing.category_id;
+      }
+
+      // Only include products if type is 'custom'
+      if (listing.type === 'custom' && listing.products) {
+        baseFormData.products = listing.products.map(p => p.id);
+      }
+
+      setFormData(baseFormData);
     } else {
       setFormData({
         title: '',
-        subtitle: '',
         type: 'featured',
         max_products: 8,
         layout: 'grid',
@@ -92,16 +118,145 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
     setSearchTerm('');
   }, [mode, listing, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    onSave(formData);
+  // Create field updater with automatic error clearing
+  const updateField = createFieldUpdater(setFormData, clearFieldError);
+
+  // Auto-populate title based on listing type and category
+  const updateTypeAndTitle = (type: string) => {
+    setFormData(prev => {
+      let newTitle = '';
+
+      // Auto-populate title based on type
+      if (type !== 'custom') {
+        switch (type) {
+          case 'featured':
+            newTitle = 'Featured Products';
+            break;
+          case 'newArrivals':
+            newTitle = 'New Arrivals';
+            break;
+          case 'sale':
+            newTitle = 'On Sale';
+            break;
+          case 'category':
+            // For category, we'll set the title when category is selected
+            const selectedCategory = categories.find(cat => cat.id === prev.category_id);
+            newTitle = selectedCategory ? selectedCategory.name : 'Category Products';
+            break;
+          default:
+            newTitle = 'Product Listing';
+        }
+      } else {
+        // For custom type, clear the title to force user input
+        newTitle = '';
+      }
+
+      return {
+        ...prev,
+        type,
+        title: newTitle,
+        // Clear category_id when switching away from category type
+        ...(type !== 'category' && { category_id: undefined })
+      };
+    });
+
+    // Clear validation errors
+    clearFieldError('type');
+    if (type !== 'custom') {
+      clearFieldError('title'); // Clear title error since we're auto-populating
+    }
+    // Don't clear title error for custom type - user needs to enter title manually
   };
 
-  const updateField = <K extends keyof CreateProductListingRequest>(
-    field: K,
-    value: CreateProductListingRequest[K]
-  ) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // Update category and auto-populate title for category type
+  const updateCategoryAndTitle = (categoryId: number) => {
+    const selectedCategory = categories.find(cat => cat.id === categoryId);
+
+    setFormData(prev => ({
+      ...prev,
+      category_id: categoryId,
+      // Auto-populate title with category name for category type
+      title: formData.type === 'category' && selectedCategory ? selectedCategory.name : prev.title
+    }));
+
+    clearFieldError('category_id');
+    if (formData.type === 'category') {
+      clearFieldError('title'); // Clear title error since we're auto-populating
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // Clear previous errors
+    clearErrors();
+
+    // Validation logic
+    const errors: Record<string, string[]> = {};
+
+    // Basic validation
+    if (!formData.title?.trim()) {
+      errors.title = ["Title is required"];
+    }
+
+    if (!formData.type) {
+      errors.type = ["Listing type is required"];
+    }
+
+    // Category validation for category type
+    if (formData.type === 'category' && !formData.category_id) {
+      errors.category_id = ["Category is required for category listings"];
+    }
+
+    // Custom products validation (backend requires at least 2 products)
+    if (formData.type === 'custom') {
+      if (!formData.products || formData.products.length === 0) {
+        errors.products = ["Products are required for custom listings"];
+      } else if (formData.products.length < 2) {
+        errors.products = ["You must select at least 2 products for custom listings"];
+      } else if (formData.products.length > formData.max_products) {
+        errors.products = [`You cannot select more than ${formData.max_products} products`];
+      }
+    }
+
+    // Max products validation
+    if (formData.max_products < 2 || formData.max_products > 20) {
+      errors.max_products = ["Maximum products must be between 2 and 20"];
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
+      return;
+    }
+
+    try {
+      // Prepare clean data based on listing type to match backend expectations
+      const cleanData: CreateProductListingRequest | UpdateProductListingRequest = {
+        title: formData.title,
+        type: formData.type,
+        max_products: formData.max_products,
+        layout: formData.layout,
+        show_title: formData.show_title,
+        is_active: formData.is_active
+      };
+
+      // Only include category_id if type is 'category'
+      if (formData.type === 'category' && formData.category_id) {
+        cleanData.category_id = formData.category_id;
+      }
+
+      // Only include products if type is 'custom'
+      if (formData.type === 'custom' && formData.products) {
+        cleanData.products = formData.products;
+      }
+
+      await onSave(cleanData);
+      clearErrors();
+      onClose();
+    } catch (error: any) {
+      console.error('Save failed:', error);
+      handleBackendErrors(error);
+    }
   };
 
   const handleProductSelection = (productId: number, checked: boolean) => {
@@ -116,6 +271,17 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
         products: (prev.products || []).filter(id => id !== productId)
       }));
     }
+
+    // Clear products validation error when user selects/deselects products
+    if (validationErrors.products) {
+      clearFieldError('products');
+    }
+  };
+
+  // Handle modal close with error clearing
+  const handleClose = () => {
+    clearErrors();
+    onClose();
   };
 
 
@@ -125,7 +291,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
@@ -133,21 +299,11 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => updateField('title', e.target.value)}
-                placeholder="e.g., Featured Products"
-              />
-            </div>
-
-            <div>
               <Label htmlFor="type">Listing Type *</Label>
-              <Select value={formData.type} onValueChange={(value: any) => updateField('type', value)}>
+              <Select value={formData.type} onValueChange={(value: any) => updateTypeAndTitle(value)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -159,44 +315,52 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                   <SelectItem value="custom">Custom Selection</SelectItem>
                 </SelectContent>
               </Select>
+              {renderFieldError('type')}
             </div>
+
+            {formData.type === 'category' && (
+              <div>
+                <Label htmlFor="categoryFilter">Category *</Label>
+                <Select value={formData.category_id?.toString()} onValueChange={(value) => updateCategoryAndTitle(parseInt(value))}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {isLoadingCategories ? (
+                      <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                    ) : (
+                      categories.map((category) => (
+                        <SelectItem key={category.id} value={category.id.toString()}>
+                          {category.name}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                {renderFieldError('category_id')}
+              </div>
+            )}
           </div>
 
           <div>
-            <Label htmlFor="subtitle">Subtitle</Label>
+            <Label htmlFor="title">Title *</Label>
             <Input
-              id="subtitle"
-              value={formData.subtitle}
-              onChange={(e) => updateField('subtitle', e.target.value)}
-              placeholder="Optional subtitle"
+              id="title"
+              value={formData.title}
+              onChange={(e) => updateField('title', e.target.value)}
+              placeholder={
+                formData.type === 'custom'
+                  ? "Enter a custom title for this listing"
+                  : "Auto-populated (can be customized)"
+              }
             />
+            {renderFieldError('title')}
           </div>
-
-          {formData.type === 'category' && (
-            <div>
-              <Label htmlFor="categoryFilter">Category</Label>
-              <Select value={formData.category_id?.toString()} onValueChange={(value) => updateField('category_id', parseInt(value))}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {isLoadingCategories ? (
-                    <SelectItem value="loading" disabled>Loading categories...</SelectItem>
-                  ) : (
-                    categories.map((category) => (
-                      <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
 
           {formData.type === 'custom' && (
             <div className="space-y-4">
-              <Label>Select Products</Label>
+              <Label>Select Products *</Label>
+              {renderFieldError('products')}
               
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -267,6 +431,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
                 <span>2</span>
                 <span>20</span>
               </div>
+              {renderFieldError('max_products')}
             </div>
 
             <div>
@@ -302,7 +467,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit">

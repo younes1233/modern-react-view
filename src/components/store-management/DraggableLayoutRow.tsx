@@ -70,7 +70,7 @@ export function DraggableLayoutRow({
   };
 
   return (
-    <tr 
+    <tr
       ref={setNodeRef}
       style={style}
       className={`border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors ${

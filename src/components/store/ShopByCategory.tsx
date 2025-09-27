@@ -100,7 +100,7 @@ export function ShopByCategory() {
           </div>
         </div>
 
-        {/* Mobile & Tablet: Horizontal Scroll - No changes needed */}
+        {/* Mobile & Tablet: Original Card Design */}
         <div className="lg:hidden">
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {categories.map((category) => (
@@ -142,6 +142,7 @@ export function ShopByCategory() {
             ))}
           </div>
         </div>
+
       </div>
     </section>
   );

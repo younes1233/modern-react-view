@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useProductListingProducts } from "@/hooks/useProductListings";
 import { ProductCard } from "./ProductCard";
 import { ProductSectionSkeleton } from "./ProductSectionSkeleton";
@@ -15,10 +15,10 @@ interface ProductSectionProps {
     title: string;
     subtitle?: string;
     type: string;
-    maxProducts: number;
+    max_products: number;
     layout: string;
-    showTitle: boolean;
-    isActive: boolean;
+    show_title: boolean;
+    is_active: boolean;
     order: number;
   };
   disableIndividualLoading?: boolean;
@@ -78,6 +78,7 @@ interface NewProductAPI {
 }
 
 export function ProductSection({ listing, disableIndividualLoading = false }: ProductSectionProps) {
+  // All hooks must be called at the top level, before any conditional returns
   const [currentSlide, setCurrentSlide] = useState(0);
   const isMobile = useIsMobile();
   const { getImageUrl } = useResponsiveImage();
@@ -85,23 +86,16 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
 
   // Use the API to get products for this listing with selected country and currency
   const { data: listingData, isLoading, error } = useProductListingProducts(
-    listing.id, 
-    selectedCountry?.id || 1, 
+    listing.id,
+    selectedCountry?.id || 1,
     selectedCurrency?.id || 1
   );
-  
-  console.log(`ProductSection for "${listing.title}":`, {
-    listing,
-    listingData,
-    isLoading,
-    error
-  });
 
-  // Convert new API product to legacy format for ProductCard
-  const convertNewAPIProductToLegacy = (apiProduct: NewProductAPI) => {
+  // Memoized product conversion function
+  const convertNewAPIProductToLegacy = useCallback((apiProduct: NewProductAPI) => {
     // Get responsive image using the responsive image context
     const responsiveImage = getImageUrl(apiProduct.cover_image);
-    
+
     return {
       id: apiProduct.id,
       name: apiProduct.name,
@@ -124,47 +118,93 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
       inStock: apiProduct.stock > 0,
       variations: []
     };
-  };
+  }, [getImageUrl]);
 
-  // Ensure apiProducts is always an array, even if API call fails
-  const apiProducts = Array.isArray(listingData?.products) ? listingData.products : [];
-  const products = apiProducts.map(convertNewAPIProductToLegacy);
+  // Memoized products processing
+  const products = useMemo(() => {
+    // Ensure apiProducts is always an array, even if API call fails
+    const apiProducts = Array.isArray(listingData?.products) ? listingData.products : [];
 
-  if (!listing.isActive) {
+    // Respect max_products limit from listing configuration
+    const limitedApiProducts = apiProducts.slice(0, listing.max_products);
+    return limitedApiProducts.map(convertNewAPIProductToLegacy);
+  }, [listingData?.products, listing.max_products, convertNewAPIProductToLegacy]);
+
+  // Memoized slider configuration - always called
+  const sliderConfig = useMemo(() => {
+    const productsPerSlide = 6;
+    const totalSlides = Math.ceil(products.length / productsPerSlide);
+    return { productsPerSlide, totalSlides };
+  }, [products.length]);
+
+  const { productsPerSlide, totalSlides } = sliderConfig;
+
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  }, [totalSlides]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  }, [totalSlides]);
+
+  const goToSlide = useCallback((slideIndex: number) => {
+    setCurrentSlide(slideIndex);
+  }, []);
+
+  console.log(`ProductSection for "${listing.title}":`, {
+    listing,
+    listingData,
+    isLoading,
+    error,
+    layoutType: listing.layout,
+    isGrid: listing.layout === 'grid',
+    isSlider: listing.layout === 'slider'
+  });
+
+  // Early returns after all hooks are called
+  if (!listing.is_active) {
     return null;
   }
 
   if (isLoading && !disableIndividualLoading) {
-    return <ProductSectionSkeleton showTitle={listing.showTitle} isMobile={isMobile} />;
+    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout} />;
   }
 
-  if (error || products.length === 0) {
-    console.log(`ProductSection "${listing.title}" not showing: error=${error}, products=${products.length}`);
-    return null;
+  // Better error handling
+  if (error) {
+    console.error(`ProductSection "${listing.title}" error:`, error);
+    return (
+      <section className="py-2 md:py-4 bg-white">
+        <div className="w-full max-w-full px-2 md:px-4">
+          {listing.show_title && (
+            <div className="mb-2 md:mb-4 relative">
+              <div className="relative bg-gradient-to-r from-red-100 to-pink-100 pt-6 md:pt-10 overflow-visible w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] absolute">
+                <h2 className="absolute -top-3 md:-top-6 text-xl md:text-3xl font-bold text-red-600 ml-4 md:ml-8 z-10">
+                  {listing.title}
+                </h2>
+                <p className="text-red-500 text-sm md:text-base ml-4 md:ml-8">
+                  Failed to load products. Please try again later.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </section>
+    );
   }
 
-  // Desktop slider configuration
-  const productsPerSlide = 6;
-  const totalSlides = Math.ceil(products.length / productsPerSlide);
-
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % totalSlides);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
-  };
-
-  const goToSlide = (slideIndex: number) => {
-    setCurrentSlide(slideIndex);
-  };
+  // Empty state - show skeleton instead of empty message
+  if (products.length === 0) {
+    console.log(`ProductSection "${listing.title}" has no products - showing skeleton`);
+    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout} />;
+  }
 
   return (
     <section className="py-2 md:py-4 bg-white overflow-hidden animate-fade-in transition-all duration-300">
       <div className="w-full max-w-full px-2 md:px-4">
         <div className="mx-auto">
           {/* Header Section */}
-          {listing.showTitle && (
+          {listing.show_title && (
             <div className="mb-2 md:mb-4 relative">
               <div className="relative bg-gradient-to-r from-cyan-100 to-blue-100 pt-6 md:pt-10 overflow-visible w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] absolute">
                 <h2 className="absolute -top-3 md:-top-6 text-xl md:text-3xl font-bold text-cyan-600 ml-4 md:ml-8 z-10">
@@ -180,51 +220,70 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
           )}
 
           <div className="relative overflow-hidden">
-            {/* Mobile: Horizontal scroll container */}
-            {isMobile ? (
-              <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
-                  {products.map((product: any) => (
-                    <div
-                      key={product.id}
-                      className="flex-shrink-0"
-                      style={{ width: 'calc(40vw - 8px)' }}
-                    >
-                      <ProductCard product={product} />
-                    </div>
-                  ))}
-                </div>
+            {/* Universal Layout - Grid or Slider for all devices */}
+            {listing.layout === 'grid' ? (
+              /* Grid Layout - Modern staggered design */
+              <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+                {products.map((product: any, index: number) => (
+                  <div
+                    key={product.id}
+                    className={`${
+                      index % 3 === 1 ? 'mt-4 md:mt-6' :
+                      index % 5 === 3 ? 'mt-2 md:mt-4' : ''
+                    }`}
+                  >
+                    <ProductCard product={product} />
+                  </div>
+                ))}
               </div>
             ) : (
-              /* Desktop: Slider with navigation */
-              <div className="overflow-hidden">
-                <div 
-                  className="flex transition-transform duration-300 ease-in-out"
-                  style={{ transform: `translateX(-${currentSlide * 100}%)` }}
-                >
-                  {Array.from({ length: totalSlides }).map((_, slideIndex) => {
-                    const slideStartIndex = slideIndex * productsPerSlide;
-                    const slideProducts = products.slice(slideStartIndex, slideStartIndex + productsPerSlide);
-                    
-                    return (
+              /* Slider Layout - Responsive for all devices */
+              isMobile ? (
+                /* Mobile Slider: Horizontal scroll */
+                <div className="overflow-x-auto scrollbar-hide">
+                  <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+                    {products.map((product: any) => (
                       <div
-                        key={slideIndex}
-                        className="w-full flex-shrink-0"
+                        key={product.id}
+                        className="flex-shrink-0"
+                        style={{ width: 'calc(40vw - 8px)' }}
                       >
-                        <div className="grid gap-2 grid-cols-6">
-                          {slideProducts.map((product: any) => (
-                            <ProductCard key={product.id} product={product} />
-                          ))}
-                        </div>
+                        <ProductCard product={product} />
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                /* Desktop Slider: Slides with navigation */
+                <div className="overflow-hidden">
+                  <div
+                    className="flex transition-transform duration-300 ease-in-out"
+                    style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+                  >
+                    {Array.from({ length: totalSlides }).map((_, slideIndex) => {
+                      const slideStartIndex = slideIndex * productsPerSlide;
+                      const slideProducts = products.slice(slideStartIndex, slideStartIndex + productsPerSlide);
+
+                      return (
+                        <div
+                          key={slideIndex}
+                          className="w-full flex-shrink-0"
+                        >
+                          <div className="grid gap-2 grid-cols-6">
+                            {slideProducts.map((product: any) => (
+                              <ProductCard key={product.id} product={product} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )
             )}
 
-            {/* Navigation Arrows - Desktop only */}
-            {!isMobile && totalSlides > 1 && (
+            {/* Navigation Arrows - Desktop Slider only */}
+            {!isMobile && listing.layout === 'slider' && totalSlides > 1 && (
               <>
                 <Button
                   variant="outline"
@@ -245,8 +304,8 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
               </>
             )}
 
-            {/* Modern Pagination Dots - Desktop only */}
-            {!isMobile && totalSlides > 1 && (
+            {/* Modern Pagination Dots - Desktop Slider only */}
+            {!isMobile && listing.layout === 'slider' && totalSlides > 1 && (
               <div className="flex justify-end mt-4 space-x-2 pr-4">
                 {Array.from({ length: totalSlides }).map((_, index) => (
                   <button

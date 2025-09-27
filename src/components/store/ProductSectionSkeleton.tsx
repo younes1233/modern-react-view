@@ -5,9 +5,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 interface ProductSectionSkeletonProps {
   showTitle?: boolean;
   isMobile?: boolean;
+  layout?: 'grid' | 'slider';
 }
 
-export function ProductSectionSkeleton({ showTitle = true, isMobile = false }: ProductSectionSkeletonProps) {
+export function ProductSectionSkeleton({ showTitle = true, isMobile = false, layout = 'slider' }: ProductSectionSkeletonProps) {
   const productsCount = isMobile ? 4 : 6;
 
   return (
@@ -25,40 +26,59 @@ export function ProductSectionSkeleton({ showTitle = true, isMobile = false }: P
           )}
 
           <div className="relative overflow-hidden">
-            {/* Mobile: Horizontal scroll container */}
-            {isMobile ? (
-              <div className="overflow-x-auto scrollbar-hide">
-                <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
-                  {Array.from({ length: productsCount }).map((_, index) => (
-                    <div
-                      key={index}
-                      className="flex-shrink-0"
-                      style={{ width: 'calc(40vw - 8px)' }}
-                    >
-                      <ProductCardSkeleton />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              /* Desktop: Grid */
-              <div className="grid gap-2 grid-cols-6">
+            {/* Universal Layout - Grid or Slider for all devices */}
+            {layout === 'grid' ? (
+              /* Grid Layout - Modern staggered design */
+              <div className="grid gap-2 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
                 {Array.from({ length: productsCount }).map((_, index) => (
-                  <ProductCardSkeleton key={index} />
+                  <div
+                    key={index}
+                    className={`${
+                      index % 3 === 1 ? 'mt-4 md:mt-6' :
+                      index % 5 === 3 ? 'mt-2 md:mt-4' : ''
+                    }`}
+                  >
+                    <ProductCardSkeleton />
+                  </div>
                 ))}
               </div>
+            ) : (
+              /* Slider Layout - Responsive for all devices */
+              isMobile ? (
+                /* Mobile Slider: Horizontal scroll */
+                <div className="overflow-x-auto scrollbar-hide">
+                  <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
+                    {Array.from({ length: productsCount }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="flex-shrink-0"
+                        style={{ width: 'calc(40vw - 8px)' }}
+                      >
+                        <ProductCardSkeleton />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Desktop Slider: Grid layout for skeleton */
+                <div className="grid gap-2 grid-cols-6">
+                  {Array.from({ length: productsCount }).map((_, index) => (
+                    <ProductCardSkeleton key={index} />
+                  ))}
+                </div>
+              )
             )}
 
-            {/* Navigation Arrows Skeleton - Desktop only */}
-            {!isMobile && (
+            {/* Navigation Arrows Skeleton - Desktop Slider only */}
+            {!isMobile && layout === 'slider' && (
               <>
                 <Skeleton className="absolute top-1/2 left-0 transform -translate-y-1/2 w-8 h-12 rounded-md" />
                 <Skeleton className="absolute top-1/2 right-0 transform -translate-y-1/2 w-8 h-12 rounded-md" />
               </>
             )}
 
-            {/* Pagination Dots Skeleton - Desktop only */}
-            {!isMobile && (
+            {/* Pagination Dots Skeleton - Desktop Slider only */}
+            {!isMobile && layout === 'slider' && (
               <div className="flex justify-end mt-4 space-x-2 pr-4">
                 {Array.from({ length: 3 }).map((_, index) => (
                   <Skeleton key={index} className="w-3 h-3 rounded-full" />

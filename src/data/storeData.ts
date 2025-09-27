@@ -63,13 +63,15 @@ export interface ProductListing {
   title: string;
   subtitle?: string;
   type: 'featured' | 'newArrivals' | 'sale' | 'category' | 'custom';
-  categoryFilter?: string;
-  productIds?: number[];
-  maxProducts: number;
+  category_id?: number;
+  products?: any[];
+  max_products: number;
   layout: 'grid' | 'slider';
-  showTitle: boolean;
-  isActive: boolean;
+  show_title: boolean;
+  is_active: boolean;
   order: number;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface HomeSection {

@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BannerModal } from "./BannerModal";
-import { Plus, Edit, Trash2, Eye, EyeOff, GripVertical, ArrowUp, ArrowDown } from "lucide-react";
+import { Plus, Edit, Trash2, Eye, EyeOff } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +30,6 @@ function BannerManagement() {
     addBanner, 
     updateBanner, 
     deleteBanner, 
-    reorderBanners 
   } = useBanners();
 
   const { getResponsiveImage } = useResponsiveImage();
@@ -67,36 +66,7 @@ function BannerManagement() {
     }
   };
 
-  const handleMoveUp = async (index: number) => {
-    if (index > 0) {
-      const newBanners = [...banners];
-      [newBanners[index], newBanners[index - 1]] = [newBanners[index - 1], newBanners[index]];
-      const reorderedIds = newBanners.map(b => b.id);
-      await reorderBanners(reorderedIds);
-    }
-  };
 
-  const handleMoveDown = async (index: number) => {
-    if (index < banners.length - 1) {
-      const newBanners = [...banners];
-      [newBanners[index], newBanners[index + 1]] = [newBanners[index + 1], newBanners[index]];
-      const reorderedIds = newBanners.map(b => b.id);
-      await reorderBanners(reorderedIds);
-    }
-  };
-
-  const getPositionBadge = (position: string) => {
-    const variants = {
-      hero: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-      secondary: "bg-green-100 text-green-800 hover:bg-green-200",
-      sidebar: "bg-purple-100 text-purple-800 hover:bg-purple-200"
-    };
-    return (
-      <Badge className={variants[position as keyof typeof variants]}>
-        {position.charAt(0).toUpperCase() + position.slice(1)}
-      </Badge>
-    );
-  };
 
   if (error) {
     return (
@@ -145,10 +115,7 @@ function BannerManagement() {
               <table className="w-full">
                 <thead className="bg-gray-50 dark:bg-gray-800 border-b">
                   <tr className="text-left">
-                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Order</th>
                     <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Banner</th>
-                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Position</th>
-                    <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
                     <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                   </tr>
                 </thead>
@@ -156,37 +123,11 @@ function BannerManagement() {
                   {banners.map((banner, index) => (
                     <tr key={banner.id} className="border-b hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
                       <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <GripVertical className="w-4 h-4 text-gray-400" />
-                          <div className="flex flex-col gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMoveUp(index)}
-                              disabled={index === 0 || isLoading}
-                              className="h-6 w-6 p-0"
-                            >
-                              <ArrowUp className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleMoveDown(index)}
-                              disabled={index === banners.length - 1 || isLoading}
-                              className="h-6 w-6 p-0"
-                            >
-                              <ArrowDown className="w-3 h-3" />
-                            </Button>
-                          </div>
-                          <span className="font-medium">{banner.order}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
                         <div className="flex items-center gap-3">
-                          <img 
-                            src={getResponsiveImage(banner.images)} 
-                            alt={banner.images.alt || banner.title} 
-                            className="w-16 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
+                          <img
+                            src={getResponsiveImage(banner.images)}
+                            alt={banner.images.alt || banner.title}
+                            className="w-full h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover max-w-xs"
                           />
                           <div>
                             <span className="font-medium text-gray-900 dark:text-gray-100">{banner.title}</span>
@@ -196,22 +137,17 @@ function BannerManagement() {
                           </div>
                         </div>
                       </td>
-                      <td className="p-4">{getPositionBadge(banner.position)}</td>
-                      <td className="p-4">
-                        <Badge variant={banner.isActive ? "default" : "secondary"}>
-                          {banner.isActive ? "Active" : "Inactive"}
-                        </Badge>
-                      </td>
                       <td className="p-4">
                         <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
+                          <Button
+                            variant="ghost"
+                            size="sm"
                             onClick={() => handleToggleActive(banner.id)}
                             title={banner.isActive ? "Deactivate" : "Activate"}
                             disabled={isLoading}
+                            className={banner.isActive ? "text-green-600 hover:text-green-700 hover:bg-green-50" : "text-gray-400 hover:text-gray-600 hover:bg-gray-50"}
                           >
-                            {banner.isActive ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            {banner.isActive ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                           </Button>
                           <Button 
                             variant="ghost" 

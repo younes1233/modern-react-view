@@ -176,22 +176,10 @@ const Store = () => {
 
       const listing = productListings.find((l) => l.id === section.item_id && l.is_active) || section.item;
       if (!listing) return null;
-      
-      const convertedListing = {
-        id: listing.id,
-        title: listing.title,
-        subtitle: listing.subtitle,
-        type: listing.type,
-        maxProducts: listing.max_products || listing.maxProducts,
-        layout: listing.layout,
-        showTitle: listing.show_title !== undefined ? listing.show_title : listing.showTitle,
-        isActive: listing.is_active !== undefined ? listing.is_active : listing.isActive,
-        order: listing.order
-      };
-      
+
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
-          <ProductSection listing={convertedListing} disableIndividualLoading />
+          <ProductSection listing={listing} disableIndividualLoading />
         </section>
       );
     }
