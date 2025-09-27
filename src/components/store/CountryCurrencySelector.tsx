@@ -125,115 +125,29 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
     return null;
   }
 
-  // Mobile variant
-  if (variant === 'mobile') {
-    return (
-      <div className="lg:hidden flex items-center justify-center gap-3 px-4 py-2 bg-white border-b border-gray-100">
-        {/* Country Selector - Mobile */}
-        <Select
-          value={selectedCountry?.id.toString() || ''}
-          onValueChange={handleCountryChange}
-        >
-          <SelectTrigger className="w-[120px] h-9 border-gray-200 bg-white hover:bg-gray-50 transition-colors text-xs">
-            <div className="flex items-center gap-2">
-              {/* <Globe className="w-3 h-3 text-gray-500" /> */}
-              <SelectValue placeholder="Country">
-                {selectedCountry && (
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm">{selectedCountry.flag}</span>
-                    <span className="text-xs text-gray-600 truncate">
-                      {selectedCountry.name.substring(0, 6)}
-                    </span>
-                  </div>
-                )}
-              </SelectValue>
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
-            {countries.map((country) => (
-              <SelectItem 
-                key={country.id} 
-                value={country.id.toString()}
-                className="hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm">{country.flag}</span>
-                  <span className="text-sm">{country.name}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+  // Unified icon-only design for both mobile and desktop
+  const containerClass = variant === 'mobile'
+    ? "lg:hidden flex items-center justify-center gap-2 px-4 py-2 bg-white border-b border-gray-100"
+    : "hidden lg:flex items-center gap-2 text-sm";
 
-        {/* Currency Selector - Mobile */}
-        <Select
-          value={selectedCurrency?.id.toString() || ''}
-          onValueChange={handleCurrencyChange}
-          disabled={!selectedCountry || availableCurrencies.length === 0}
-        >
-          <SelectTrigger className="w-[80px] h-9 border-gray-200 bg-white hover:bg-gray-50 transition-colors text-xs">
-            <div className="flex items-center gap-1">
-              {/* <DollarSign className="w-3 h-3 text-gray-500" /> */}
-              {/* {selectedCurrency && (
-                  <span className="text-[8px] text-gray-500 font-medium">
-                    {selectedCurrency.symbol}
-                  </span>
-                )} */}
-              <SelectValue placeholder="Currency">
-                {selectedCurrency && (
-                  <span className="text-xs text-gray-600 font-medium">
-                    {selectedCurrency.code}
-                  </span>
-                )}
-              </SelectValue>
-            </div>
-          </SelectTrigger>
-          <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
-            {availableCurrencies.map((currency) => (
-              <SelectItem 
-                key={currency.id} 
-                value={currency.id.toString()}
-                className="hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{currency.code}</span>
-                  <span className="text-xs text-gray-500">({currency.symbol})</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-    );
-  }
-
-  // Desktop variant
   return (
-    <div className="hidden lg:flex items-center gap-2 text-sm">
-      {/* Country Selector */}
+    <div className={containerClass}>
+      {/* Country Selector - Icon Only */}
       <Select
         value={selectedCountry?.id.toString() || ''}
         onValueChange={handleCountryChange}
       >
-        <SelectTrigger className="w-[140px] h-8 border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-          <div className="flex items-center gap-2">
-            <Globe className="w-3 h-3 text-gray-500" />
-            <SelectValue placeholder="Country">
-              {selectedCountry && (
-                <div className="flex items-center gap-1">
-                  <span className="text-lg">{selectedCountry.flag}</span>
-                  <span className="text-xs text-gray-600 truncate">
-                    {selectedCountry.name.substring(0, 8)}
-                  </span>
-                </div>
-              )}
-            </SelectValue>
-          </div>
+        <SelectTrigger className="w-10 h-8 border-gray-200 bg-white hover:bg-gray-50 transition-colors p-0 justify-center">
+          <SelectValue placeholder="🌍">
+            {selectedCountry && (
+              <span className="text-lg">{selectedCountry.flag}</span>
+            )}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
           {countries.map((country) => (
-            <SelectItem 
-              key={country.id} 
+            <SelectItem
+              key={country.id}
               value={country.id.toString()}
               className="hover:bg-gray-50 cursor-pointer"
             >
@@ -246,33 +160,23 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         </SelectContent>
       </Select>
 
-      {/* Currency Selector */}
+      {/* Currency Selector - Icon Only */}
       <Select
         value={selectedCurrency?.id.toString() || ''}
         onValueChange={handleCurrencyChange}
         disabled={!selectedCountry || availableCurrencies.length === 0}
       >
-        <SelectTrigger className="w-[100px] h-8 border-gray-200 bg-white hover:bg-gray-50 transition-colors">
-          <div className="flex items-center gap-2">
-            {/* <DollarSign className="w-3 h-3 text-gray-500" /> */}
-             {selectedCurrency && (
-                <span className="text-[10px] text-gray-500 font-medium">
-                  {selectedCurrency.symbol}
-                </span>
-              )}
-            <SelectValue placeholder="Currency">
-              {selectedCurrency && (
-                <span className="text-xs text-gray-600 font-medium">
-                  {selectedCurrency.code}
-                </span>
-              )}
-            </SelectValue>
-          </div>
+        <SelectTrigger className="w-10 h-8 border-gray-200 bg-white hover:bg-gray-50 transition-colors p-0 justify-center">
+          <SelectValue placeholder="💰">
+            {selectedCurrency && (
+              <span className="text-sm font-medium">{selectedCurrency.symbol}</span>
+            )}
+          </SelectValue>
         </SelectTrigger>
         <SelectContent className="bg-white border border-gray-200 shadow-lg z-[100]">
           {availableCurrencies.map((currency) => (
-            <SelectItem 
-              key={currency.id} 
+            <SelectItem
+              key={currency.id}
               value={currency.id.toString()}
               className="hover:bg-gray-50 cursor-pointer"
             >
