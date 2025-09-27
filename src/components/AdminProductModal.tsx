@@ -13,17 +13,21 @@ import { AdminProductAPI, CreateProductData } from "@/services/adminProductServi
 import { X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useShelves } from "@/hooks/useShelves";
+import { cn } from "@/lib/utils";
 
 import { useAttributes } from "@/hooks/useAttributes";
 import { Checkbox } from "@/components/ui/checkbox";
 import { AttributeManager } from "./AttributeManager";
+import { MultiSelect, MultiSelectOption } from "@/components/ui/multi-select";
+import { ProductVariantForm, VariantEntry } from "./ProductVariantForm";
 
 interface AdminProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (formData: FormData) => void; // parent posts with multipart/form-data
+  onSave: (formData: FormData) => Promise<void>; // parent posts with multipart/form-data
   product?: AdminProductAPI | null;
   mode: "add" | "edit";
+  isLoading?: boolean; // Add loading state prop
 }
 
 const DEBUG_PRODUCTS = true; // flip to false in production
@@ -80,12 +84,20 @@ function buildFormDataFromPayload(payload: any) {
     ["qr_code", payload.qr_code],
     ["serial_number", payload.serial_number],
     ["stock", payload.stock],
-    ["warehouse_id", payload.warehouse_id],
-    ["shelf_id", payload.shelf_id],
     ["delivery_type", payload.delivery_type],
   ];
+
+  // Only include shelf_id in create mode
+  if (payload.mode === 'create') {
+    scalars.push(["shelf_id", payload.shelf_id]);
+  }
   scalars.forEach(([k, v]) => {
-    if (v !== undefined && v !== null && v !== "") fd.append(k, String(v));
+    if (v !== undefined && v !== null && v !== "") {
+      fd.append(k, String(v));
+    } else if (k === 'category_id') {
+      // Send empty string for nullable category_id when undefined
+      fd.append(k, '');
+    }
   });
 
   // ---- Booleans as 1/0 ----
@@ -144,28 +156,23 @@ function buildFormDataFromPayload(payload: any) {
     if (v.stock != null && v.stock !== "") {
       fd.append(`variants[${i}][stock]`, String(v.stock));
     }
+    // Only send shelf_id in create mode
+    if (payload.mode === 'create' && v.shelf_id != null && v.shelf_id !== "") {
+      fd.append(`variants[${i}][shelf_id]`, String(v.shelf_id));
+    }
   });
 
   return fd;
 }
 
-type VariantEntry = {
-  id: number;
-  image: File | string;
-  variations: number[];
-  variantPrices: { net_price: string; cost: string }[];
-  variantSpecs: { id: number; name: string; value: string }[];
-  delivery_type?: string;
-  delivery_cost?: string;
-  stock?: number;
-};
+// VariantEntry type is now imported from ProductVariantForm
 
 const DELIVERY_TYPES = [
   { value: 'meemhome', label: 'Meemhome Delivery' },
   { value: 'company', label: 'Delivery Company' }
 ];
 
-export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: AdminProductModalProps) {
+export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLoading = false }: AdminProductModalProps) {
   const { country, store, warehouse, user } = useAuth();
   const { shelves = [] } = useShelves();
 
@@ -193,11 +200,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       is_vat_exempt: false,
       cover_image: "",
       images: [],
-      stock: 0,
+      stock: '',
       warehouse_id: undefined,
       shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
+      net_price: '',
+      cost_price: '',
       product_prices: [],
       specifications: [],
       variants: [],
@@ -213,9 +222,87 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
   const [specifications, setSpecifications] = useState<{ id: number; name: string; value: string }[]>([]);
   const [variantEntries, setVariantEntries] = useState<VariantEntry[]>([]);
 
+  // Track if SEO fields have been manually edited
+  const [seoTitleEdited, setSeoTitleEdited] = useState(false);
+  const [seoDescriptionEdited, setSeoDescriptionEdited] = useState(false);
+
+  // Double click outside protection
+  const [lastClickTime, setLastClickTime] = useState(0);
+  const [clickConfirmNeeded, setClickConfirmNeeded] = useState(false);
+
+  // Validation errors state
+  const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
+
+  // Helper function to render validation errors for a field
+  const renderFieldError = (fieldName: string) => {
+    const errors = validationErrors[fieldName];
+    if (!errors || errors.length === 0) return null;
+
+    return (
+      <div className="validation-error text-red-600 text-sm mt-1" data-field={fieldName}>
+        {errors.map((error, index) => (
+          <div key={index}>{error}</div>
+        ))}
+      </div>
+    );
+  };
+
+  // Helper function to scroll to first error field within the modal
+  const scrollToFirstError = () => {
+    console.log('Current validation errors:', validationErrors);
+    const errorKeys = Object.keys(validationErrors);
+    console.log('Error keys:', errorKeys);
+    const firstErrorField = errorKeys[0];
+    console.log('Scrolling to error field:', firstErrorField);
+
+    if (firstErrorField) {
+      setTimeout(() => {
+        // Debug: Log all modal-related elements
+        const dialog = document.querySelector('[role="dialog"]');
+        const overflowContainer = document.querySelector('.overflow-y-auto');
+        const maxHeightContainer = document.querySelector('.max-h-\\[80vh\\]');
+        const errorElements = document.querySelectorAll('.text-red-600');
+
+        console.log('Dialog:', dialog);
+        console.log('Overflow container:', overflowContainer);
+        console.log('Max height container:', maxHeightContainer);
+        console.log('Error elements:', errorElements);
+
+        // Find the first validation error element using our unique class
+        const validationError = document.querySelector('.validation-error') as HTMLElement;
+        if (validationError) {
+          console.log('Found validation error element:', validationError);
+
+          // Get the modal content container for scrolling
+          const modalContent = document.querySelector('[role="dialog"]') as HTMLElement;
+
+          if (modalContent) {
+            console.log('Using scroll container:', modalContent);
+
+            // Simply scroll the validation error into view within the modal
+            validationError.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'nearest'
+            });
+
+            console.log('Scrolled to validation error');
+          }
+        }
+      }, 200);
+    }
+  };
+
   const { toast } = useToast();
   const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
   const { data: attributes = [], isLoading: attributesLoading } = useAttributes();
+
+  // Scroll to first error when validation errors change
+  useEffect(() => {
+    if (Object.keys(validationErrors).length > 0) {
+      scrollToFirstError();
+    }
+  }, [validationErrors]);
 
   useEffect(() => {
     if (product && mode === "edit") {
@@ -241,15 +328,85 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         is_best_seller: false,
         is_vat_exempt: !!product.flags?.is_vat_exempt,
         cover_image: product.media?.cover_image?.urls?.original || "",
-        images: product.media?.thumbnails?.map((t) => t.urls?.original) || [],
-        stock: 0,
-        warehouse_id: undefined,
-        shelf_id: undefined,
-        delivery_type: undefined,
-        delivery_cost: 0,
+        images: product.media?.additional_images?.map((t: any) => t.urls?.original) || [],
+        stock: (() => {
+          // Debug logging for stock population
+          console.log('Product available_countries:', product.available_countries);
+          console.log('Product full data for debugging:', {
+            hasAvailableCountries: !!product.available_countries?.length,
+            firstCountryInventory: product.available_countries?.[0]?.inventory,
+            hasVariants: product.variants?.length > 0,
+            productKeys: Object.keys(product)
+          });
+
+          // If available_countries exists, use it
+          if (product.available_countries?.length > 0) {
+            if (!product.variants?.length) {
+              // Simple product
+              return product.available_countries[0]?.inventory?.[0]?.stock || "";
+            } else {
+              // Product with variants
+              const firstVariant = product.available_countries[0]?.inventory?.[0];
+              return firstVariant?.inventories?.[0]?.stock || "";
+            }
+          }
+
+          // Fallback: if available_countries is missing, return empty for now
+          // User will need to enter stock manually
+          return "";
+        })(),
+        warehouse_id: (() => {
+          if (product.available_countries?.length > 0) {
+            if (!product.variants?.length) {
+              return product.available_countries[0]?.inventory?.[0]?.warehouse?.id || warehouse?.id;
+            }
+            const firstVariant = product.available_countries[0]?.inventory?.[0];
+            return firstVariant?.inventories?.[0]?.warehouse?.id || warehouse?.id;
+          }
+          return warehouse?.id; // Fallback to current warehouse
+        })(),
+        shelf_id: (() => {
+          if (product.available_countries?.length > 0) {
+            if (!product.variants?.length) {
+              return product.available_countries[0]?.inventory?.[0]?.shelf?.id || undefined;
+            }
+            const firstVariant = product.available_countries[0]?.inventory?.[0];
+            return firstVariant?.inventories?.[0]?.shelf?.id || undefined;
+          }
+          return undefined; // No fallback for shelf
+        })(),
+        delivery_type: product.delivery?.delivery_type || "meemhome",
+        delivery_cost: product.delivery?.delivery_cost || 0,
         product_prices: [],
-        specifications: product.specifications?.map((s) => ({ name: s.name, value: s.value })) || [],
-        variants: [],
+        cost_price: product.pricing?.[0]?.cost || "",
+        net_price: product.pricing?.[0]?.net_price || "",
+        variants: product.variants?.map(variant => ({
+          id: variant.id,
+          sku: variant.identifiers?.sku || "",
+          barcode: variant.identifiers?.barcode || "",
+          qr_code: variant.identifiers?.qr_code || "",
+          serial_number: variant.identifiers?.serial_number || "",
+          image: variant.image || "",
+          variations: variant.variations?.map(variation => ({
+            attribute: variation.attribute,
+            value: variation.value,
+            slug: variation.slug,
+            type: variation.type,
+            hex_color: variation.hex_color,
+            image: variation.image
+          })) || [],
+          product_variant_prices: variant.prices?.map(price => ({
+            id: price.id,
+            country_id: price.country.id,
+            net_price: parseFloat(price.net_price),
+            cost: parseFloat(price.cost),
+            vat_percentage: price.vat_percentage
+          })) || [],
+          stock: variant.stock?.[0]?.stock || 0,
+          warehouse_id: variant.stock?.[0]?.warehouse_id || undefined,
+          delivery_type: "meemhome", // Default or get from variant if available
+          delivery_cost: 0 // Default or get from variant if available
+        })) || [],
         country_id: country?.id,
       });
 
@@ -257,13 +414,50 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       setMainImage(coverImageUrl);
       setMainImagePreview(coverImageUrl);
       setThumbnails(
-        product.media?.thumbnails?.map((t) => ({ id: t.id, file: t.urls?.original || "", url: t.urls?.original || "", alt: t.alt_text })) || []
+        product.media?.additional_images?.map((t: any) => ({ id: t.id, file: t.urls?.original || "", url: t.urls?.original || "", alt: t.alt_text })) || []
       );
       setPriceEntries([]);
-      setSpecifications(
-        product.specifications?.map((s) => ({ id: s.id, name: s.name, value: s.value })) || []
+      const existingSpecs = product.specifications?.map((s: any) => ({ id: s.id, name: s.name, value: s.value })) || [];
+      const requiredSpecs = ["weight", "height", "width", "length"];
+
+      const allSpecs = requiredSpecs.map((reqSpec, index) => {
+        const existing = existingSpecs.find(spec => spec.name.toLowerCase() === reqSpec.toLowerCase());
+        return existing || { id: Date.now() + index, name: reqSpec, value: "" };
+      });
+
+      const additionalSpecs = existingSpecs.filter(spec =>
+        !requiredSpecs.some(req => req.toLowerCase() === spec.name.toLowerCase())
       );
-      setVariantEntries([]);
+
+      setSpecifications([...allSpecs, ...additionalSpecs]);
+
+      // Populate variant entries for UI form fields
+      console.log('🔍 Original product variants data:', product.variants);
+      const variantEntries = product.variants?.map(variant => ({
+        id: variant.id,
+        image: variant.image || "",
+        variations: variant.variations?.map(variation => {
+          // Use the attribute value ID from the API response
+          // Fallback: if id is missing, log the issue and return 0 temporarily
+          if (!variation.id) {
+            console.warn('⚠️ Missing variation.id for:', variation);
+            return 0; // Temporary fallback
+          }
+          return variation.id;
+        }) || [],
+        variantPrices: variant.prices?.[0] ? {
+          net_price: variant.prices[0].net_price.toString(),
+          cost: variant.prices[0].cost.toString()
+        } : { net_price: "", cost: "" },
+        variantSpecs: [], // May need to map variant specifications if available
+        delivery_type: "inherit", // Default or get from variant data
+        delivery_cost: "", // Default or get from variant data
+        stock: variant.stock?.[0]?.stock || 0,
+        shelf_id: undefined // Variants don't inherit shelf by default
+      })) || [];
+
+      console.log('🔍 Setting variant entries for edit mode:', variantEntries);
+      setVariantEntries(variantEntries);
     } else {
       setFormData({
         store_id: store ? parseInt(store as string) || 1 : 1,
@@ -288,11 +482,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         is_vat_exempt: false,
         cover_image: "",
         images: [],
-        stock: 0,
+        stock: '',
         warehouse_id: warehouse?.id,
         shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
+        net_price: '',
+        cost_price: '',
         product_prices: [],
         specifications: [],
         variants: [],
@@ -303,12 +499,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       setThumbnails([]);
       setPriceEntries([]);
       setSpecifications([
-        { id: Date.now(), name: "weight", value: "29 kg" },
-        { id: Date.now() + 1, name: "height", value: "66 cm" },
-        { id: Date.now() + 2, name: "width", value: "66 cm" },
-        { id: Date.now() + 3, name: "length", value: "66 cm" },
+        { id: Date.now(), name: "weight", value: "29" },
+        { id: Date.now() + 1, name: "height", value: "66" },
+        { id: Date.now() + 2, name: "width", value: "66" },
+        { id: Date.now() + 3, name: "length", value: "66" },
       ]);
       setVariantEntries([]);
+      setSeoTitleEdited(false);
+      setSeoDescriptionEdited(false);
+      setClickConfirmNeeded(false);
+      setLastClickTime(0);
     }
   }, [product, mode, isOpen, store, warehouse, user?.isSeller, country?.id]);
 
@@ -316,13 +516,38 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     name.toLowerCase().replace(/[^a-z0-9 -]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").trim();
 
   const handleNameChange = (name: string) => {
-    setFormData((prev) => ({ ...prev, name, slug: generateSlug(name) }));
+    setFormData((prev) => ({
+      ...prev,
+      name,
+      slug: generateSlug(name),
+      // Auto-populate SEO title only if user hasn't manually edited it
+      seo_title: seoTitleEdited ? prev.seo_title : name
+    }));
+  };
+
+  const handleDescriptionChange = (description: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      description,
+      // Auto-populate SEO description only if user hasn't manually edited it
+      seo_description: seoDescriptionEdited ? prev.seo_description : description
+    }));
   };
 
   const updateField = <K extends keyof (CreateProductData & { country_id?: number })>(
     field: K,
     value: (CreateProductData & { country_id?: number })[K]
-  ) => setFormData((prev) => ({ ...prev, [field]: value }));
+  ) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field as string]) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field as string];
+        return newErrors;
+      });
+    }
+  };
 
   // Image handlers
   const handleMainImageUpload = (files: File[]) => {
@@ -384,20 +609,30 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     setSpecifications((prev) => (index < 4 ? prev : prev.filter((_, idx) => idx !== index)));
 
   // Variants
-  const addVariant = () =>
+  const addVariant = () => {
     setVariantEntries((prev) => [
       ...prev,
       {
         id: Date.now(),
         image: "",
         variations: [],
-        variantPrices: [],
+        variantPrices: { net_price: "", cost: "" },
         variantSpecs: [],
-        delivery_type: "meemhome",
-        delivery_cost: "0",
+        delivery_type: "inherit",
+        delivery_cost: "",
         stock: 0,
+        shelf_id: undefined,
       },
     ]);
+    // Clear validation error when variant is added
+    if (validationErrors.variants) {
+      setValidationErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors.variants;
+        return newErrors;
+      });
+    }
+  };
   const removeVariant = (variantId: number) =>
     setVariantEntries((prev) => prev.filter((v) => v.id !== variantId));
 
@@ -410,47 +645,21 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       prev.map((v) => (v.id === variantId ? { ...v, [field]: value } : v))
     );
 
-  const updateVariantAttributeValues = (variantId: number, attributeValueId: number, checked: boolean) => {
-    setVariantEntries((prev) =>
-      prev.map((v) => {
-        if (v.id === variantId) {
-          const updatedVariations = checked
-            ? [...v.variations, attributeValueId]
-            : v.variations.filter(id => id !== attributeValueId);
-          return { ...v, variations: updatedVariations };
-        }
-        return v;
-      })
-    );
-  };
 
-  const addVariantPrice = (variantId: number) =>
-    setVariantEntries((prev) =>
-      prev.map((v) =>
-        v.id === variantId ? { ...v, variantPrices: [...v.variantPrices, { net_price: "", cost: "" }] } : v
-      )
-    );
 
   const updateVariantPrice = (
     variantId: number,
-    index: number,
     field: keyof { net_price: string; cost: string },
     value: string
   ) =>
     setVariantEntries((prev) =>
       prev.map((v) =>
         v.id === variantId
-          ? { ...v, variantPrices: v.variantPrices.map((p, idx) => (idx === index ? { ...p, [field]: value } : p)) }
+          ? { ...v, variantPrices: { ...v.variantPrices, [field]: value } }
           : v
       )
     );
 
-  const removeVariantPrice = (variantId: number, index: number) =>
-    setVariantEntries((prev) =>
-      prev.map((v) =>
-        v.id === variantId ? { ...v, variantPrices: v.variantPrices.filter((_, idx) => idx !== index) } : v
-      )
-    );
 
   const addVariantSpec = (variantId: number) =>
     setVariantEntries((prev) =>
@@ -489,17 +698,75 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
     }
   };
 
+  // Handle close with double click outside protection
+  const handleClose = () => {
+    const currentTime = Date.now();
+    const timeDiff = currentTime - lastClickTime;
+
+    if (timeDiff < 800) { // 800ms window for double click
+      // Clear validation errors when closing modal
+      setValidationErrors({});
+      onClose();
+      setClickConfirmNeeded(false);
+      setLastClickTime(0);
+    } else {
+      setLastClickTime(currentTime);
+      setClickConfirmNeeded(true);
+      toast({
+        title: "Click again to exit",
+        description: "Click outside the form again to close it",
+        variant: "default"
+      });
+
+      // Reset confirmation after 2 seconds
+      setTimeout(() => {
+        setClickConfirmNeeded(false);
+        setLastClickTime(0);
+      }, 2000);
+    }
+  };
+
+  // Cancel button should close immediately without double-click requirement
+  const handleCancel = () => {
+    setValidationErrors({});
+    setClickConfirmNeeded(false);
+    setLastClickTime(0);
+    onClose();
+  };
+
   // Submit
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.sku) {
-      toast({ title: "Error", description: "Please fill in all required fields", variant: "destructive" });
+
+    // Prevent submission if already loading
+    if (isLoading) {
+      return;
+    }
+
+    // Clear any previous validation errors
+    setValidationErrors({});
+
+    const errors: Record<string, string[]> = {};
+
+    if (!formData.name) errors.name = ["Product name is required"];
+    if (!formData.sku) errors.sku = ["SKU is required"];
+    if (!formData.slug) errors.slug = ["URL slug is required"];
+    if (!formData.net_price) errors.net_price = ["Net price is required"];
+    if (!formData.cost_price) errors.cost_price = ["Cost price is required"];
+
+    // Validate variants when has_variants is true
+    if (formData.has_variants && variantEntries.length === 0) {
+      errors.variants = ["At least one variant is required when 'Has Variants' is enabled. Please add a variant or disable 'Has Variants'."];
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
       return;
     }
 
     // Validate cover image is required
     if (!mainImage && !formData.cover_image) {
-      toast({ title: "Error", description: "Cover image is required", variant: "destructive" });
+      setValidationErrors({ cover_image: ["Cover image is required"] });
       return;
     }
 
@@ -515,7 +782,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         toast({ title: "Error", description: "At least one variant is required when 'Has Variants' is enabled", variant: "destructive" });
         return;
       }
-      
+
       for (let i = 0; i < variantEntries.length; i++) {
         const variant = variantEntries[i];
         if (variant.variations.length === 0) {
@@ -528,41 +795,96 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
         }
       }
 
-      // Ensure we have product prices as fallback for variants
-      if (priceEntries.length === 0) {
-        toast({ title: "Error", description: "Product prices are required as fallback when using variants", variant: "destructive" });
+      // Check which variants have prices (backend fallback logic)
+      const variantsWithoutPrice = [];
+      for (let i = 0; i < variantEntries.length; i++) {
+        const variant = variantEntries[i];
+        const hasVariantPrice = variant.variantPrices.net_price && variant.variantPrices.cost;
+
+        if (!hasVariantPrice) {
+          variantsWithoutPrice.push(i);
+        }
+      }
+
+      // If some variants lack prices, product price is required as fallback
+      if (variantsWithoutPrice.length > 0 && (!formData.cost_price || !formData.net_price)) {
+        toast({
+          title: "Error",
+          description: `Product prices are required as fallback for variants ${variantsWithoutPrice.map(i => i + 1).join(', ')} that don't have pricing`,
+          variant: "destructive"
+        });
         return;
       }
     }
 
-    // Validate specifications - require height, width, length
+    // Validate specifications with backend fallback logic
     const validSpecs = specifications.filter((s) => s.name.trim() !== "" && s.value.trim() !== "");
-    const requiredSpecs = ['height', 'width', 'length'];
-    const missingSpecs = requiredSpecs.filter(spec => 
-      !validSpecs.some(s => s.name.toLowerCase() === spec.toLowerCase())
-    );
-    
-    if (missingSpecs.length > 0) {
-      toast({ 
-        title: "Error", 
-        description: `Missing required specifications: ${missingSpecs.join(', ')}`, 
-        variant: "destructive" 
-      });
-      return;
+    const requiredSpecNames = ['weight', 'height', 'width', 'length']; // ✅ Include weight as per backend
+
+    let mustCheckProductSpecifications = false;
+
+    if (formData.has_variants && variantEntries.length > 0) {
+      // Check each variant for missing specs
+      for (let variantIndex = 0; variantIndex < variantEntries.length; variantIndex++) {
+        const variant = variantEntries[variantIndex];
+        const variantSpecNames = variant.variantSpecs
+          .map(s => s.name.toLowerCase().trim())
+          .filter(name => name !== "");
+
+        const missingInVariant = requiredSpecNames.filter(reqSpec =>
+          !variantSpecNames.includes(reqSpec.toLowerCase())
+        );
+
+        if (missingInVariant.length > 0) {
+          mustCheckProductSpecifications = true;
+          break;
+        }
+      }
+    } else {
+      // No variants, so product specs must have all required specs
+      mustCheckProductSpecifications = true;
     }
 
-    const prices = priceEntries
-      .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
-      .filter((p) => !isNaN(p.net_price) && !isNaN(p.cost));
+    if (mustCheckProductSpecifications) {
+      const productSpecNames = validSpecs
+        .map(s => s.name.toLowerCase().trim());
 
-    // Validate that net price is always larger than cost
+      const missingInProduct = requiredSpecNames.filter(reqSpec =>
+        !productSpecNames.includes(reqSpec.toLowerCase())
+      );
+
+      if (missingInProduct.length > 0) {
+        toast({
+          title: "Error",
+          description: `Missing required product specifications: ${missingInProduct.join(', ')}`,
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    // Build prices array from the single cost_price and net_price fields
+    const prices = [];
+    if (formData.cost_price && formData.net_price) {
+      const costPrice = parseFloat(formData.cost_price);
+      const netPrice = parseFloat(formData.net_price);
+      if (!isNaN(costPrice) && !isNaN(netPrice)) {
+        prices.push({
+          net_price: netPrice,
+          cost: costPrice,
+          country_id: (formData as any).country_id
+        });
+      }
+    }
+
+    // Validate that net price is greater than cost (allow equal for special cases)
     for (let i = 0; i < prices.length; i++) {
       const price = prices[i];
-      if (price.net_price <= price.cost) {
-        toast({ 
-          title: "Error", 
-          description: `Net price must be larger than cost in price entry ${i + 1}`, 
-          variant: "destructive" 
+      if (price.net_price < price.cost) {
+        toast({
+          title: "Error",
+          description: `Net price cannot be less than cost in price entry ${i + 1}`,
+          variant: "destructive"
         });
         return;
       }
@@ -574,32 +896,58 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
     let variantsPayload: any[] = [];
     if (formData.has_variants && variantEntries.length > 0) {
-      // Validate variant prices first
+      // Validate variant prices and delivery settings
       for (let variantIndex = 0; variantIndex < variantEntries.length; variantIndex++) {
         const variant = variantEntries[variantIndex];
-        const variantPricesParsed = variant.variantPrices
-          .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
-          .filter((p) => !isNaN(p.net_price) && !isNaN(p.cost));
 
-        // Validate that net price is always larger than cost for variant prices
-        for (let j = 0; j < variantPricesParsed.length; j++) {
-          const variantPrice = variantPricesParsed[j];
-          if (variantPrice.net_price <= variantPrice.cost) {
-            toast({ 
-              title: "Error", 
-              description: `Net price must be larger than cost in variant ${variantIndex + 1}, price entry ${j + 1}`, 
-              variant: "destructive" 
+        // Validate variant pricing
+        if (variant.variantPrices.net_price && variant.variantPrices.cost) {
+          const netPrice = parseFloat(variant.variantPrices.net_price);
+          const cost = parseFloat(variant.variantPrices.cost);
+
+          if (!isNaN(netPrice) && !isNaN(cost) && netPrice < cost) {
+            toast({
+              title: "Error",
+              description: `Net price cannot be less than cost in variant ${variantIndex + 1}`,
+              variant: "destructive"
             });
             return;
           }
+        }
+
+        // Validate variant delivery settings (inherit from product if not set)
+        const variantDeliveryType = variant.delivery_type || formData.delivery_type;
+        const variantDeliveryCost = variant.delivery_cost;
+
+        if (variantDeliveryType === 'company' && variantDeliveryCost) {
+          toast({
+            title: "Error",
+            description: `Variant ${variantIndex + 1}: Delivery cost cannot be set for company delivery type`,
+            variant: "destructive"
+          });
+          return;
+        }
+
+        if (variantDeliveryType === 'meemhome' && !variantDeliveryCost && !formData.delivery_cost) {
+          toast({
+            title: "Error",
+            description: `Variant ${variantIndex + 1}: Delivery cost is required for meemhome delivery type`,
+            variant: "destructive"
+          });
+          return;
         }
       }
 
       variantsPayload = variantEntries.map((variant) => {
         const variations = variant.variations;
-        const variantPricesParsed = variant.variantPrices
-          .map((p) => ({ net_price: parseFloat(p.net_price), cost: parseFloat(p.cost) }))
-          .filter((p) => !isNaN(p.net_price) && !isNaN(p.cost));
+        const variantPricesParsed = [];
+        if (variant.variantPrices.net_price && variant.variantPrices.cost) {
+          const netPrice = parseFloat(variant.variantPrices.net_price);
+          const cost = parseFloat(variant.variantPrices.cost);
+          if (!isNaN(netPrice) && !isNaN(cost)) {
+            variantPricesParsed.push({ net_price: netPrice, cost: cost });
+          }
+        }
 
         const variantSpecsParsed = variant.variantSpecs
           .map((s) => ({ name: s.name, value: s.value }))
@@ -626,11 +974,16 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
           variantData.delivery_cost = delivery_cost;
         }
 
+        // Only add shelf_id if it's explicitly set (override) and in create mode
+        if (mode === 'create' && variant.shelf_id !== undefined) {
+          variantData.shelf_id = variant.shelf_id;
+        }
+
         return variantData;
       });
     }
 
-    const sanitized: CreateProductData & { country_id?: number } = {
+    const sanitized: CreateProductData & { country_id?: number; mode?: string } = {
       ...(formData as CreateProductData),
       has_variants: formData.has_variants === true,
       is_seller_product: formData.is_seller_product === true,
@@ -645,6 +998,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       cover_image: (mainImage || formData.cover_image) as any,
       images: thumbnails.map((t) => t.file) as any,
       variants: variantsPayload as any,
+      mode: mode,
     };
 
     if (DEBUG_PRODUCTS) {
@@ -690,77 +1044,313 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
       console.groupEnd();
     }
 
-    onSave(fd);
-    onClose();
+    try {
+      await onSave(fd);
+      // Clear any previous validation errors on success
+      setValidationErrors({});
+      // Only close modal if save was successful
+      onClose();
+    } catch (error: any) {
+      // Keep modal open on error so user can see the error message and try again
+      console.error('Save failed:', error);
+      console.log('Error details:', error.details);
+      console.log('Error response:', error.response);
+
+      // Extract validation errors from the error response
+      // Backend returns errors like: response.details.slug, response.details.name, etc.
+      if (error.response && error.response.details) {
+        console.log('Setting validation errors:', error.response.details);
+        setValidationErrors(error.response.details);
+      } else {
+        console.log('No validation errors found, clearing state');
+        // Clear validation errors if it's not a validation error
+        setValidationErrors({});
+      }
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       {/* <DialogHeader>
         <DialogTitle>{mode === 'add' ? 'Add New Product' : 'Edit Product'}</DialogTitle>
       </DialogHeader> */}
-      <DialogContent className="max-h-[80vh] overflow-y-auto p-6 w-full max-w-4xl">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Basic Information */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Product Name *</Label>
-              <Input type="text" value={formData.name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Enter product name" required />
+      <DialogContent className="max-h-[85vh] overflow-y-auto p-0 w-full max-w-5xl bg-gradient-to-br from-gray-50/30 to-white">
+        <div className="sticky top-0 bg-white/95 backdrop-blur-sm border-b border-gray-200/50 p-6 mb-6 z-10">
+          <h2 className="text-2xl font-bold text-gray-900">{mode === 'add' ? 'Create New Product' : 'Edit Product'}</h2>
+          <p className="text-sm text-gray-600 mt-1">Fill in the information below to {mode === 'add' ? 'create' : 'update'} your product</p>
+        </div>
+        <div className="px-6 pb-6">
+          <form onSubmit={handleSubmit} className="space-y-8">
+          {/* 1. Essential Product Information */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-gray-50 to-gray-100/50 rounded-xl border border-gray-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Essential Information</Label>
             </div>
-            <div>
-              <Label>SKU *</Label>
-              <Input type="text" value={formData.sku} onChange={(e) => updateField('sku', e.target.value)} placeholder="Enter SKU" required />
-            </div>
-            <div>
-              <Label>URL Slug</Label>
-              <Input type="text" value={formData.slug} onChange={(e) => updateField('slug', e.target.value)} placeholder="product-url-slug" />
-            </div>
-            <div className="col-span-2">
-              <Label>Description</Label>
-              <Textarea value={formData.description} onChange={(e) => updateField('description', e.target.value)} placeholder="Product description" rows={3} />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Product Name *</Label>
+                <Input type="text" value={formData.name} onChange={(e) => handleNameChange(e.target.value)} placeholder="Enter product name" required />
+                {renderFieldError('name')}
+              </div>
+              <div>
+                <Label>Category</Label>
+                <Select
+                  value={formData.category_id ? String(formData.category_id) : "0"}
+                  onValueChange={(v) => updateField('category_id', v === "0" ? undefined : parseInt(v, 10) as any)}
+                >
+                  <SelectTrigger>
+                    <SelectValue>
+                      {formData.category_id ? categories.find((c) => c.id === formData.category_id)?.name : "No category"}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="0">No category</SelectItem>
+                    {!categoriesLoading && categories.map((category) => (
+                      <SelectItem key={category.id} value={String(category.id)}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>SKU *</Label>
+                <Input type="text" value={formData.sku} onChange={(e) => updateField('sku', e.target.value)} placeholder="Enter SKU" required />
+                {renderFieldError('sku')}
+              </div>
+              <div>
+                <Label>Serial Number</Label>
+                <Input type="text" value={formData.serial_number} onChange={(e) => updateField('serial_number', e.target.value)} placeholder="Serial Number" />
+              </div>
+              <div>
+                <Label>URL Slug *</Label>
+                <Input type="text" value={formData.slug} onChange={(e) => updateField('slug', e.target.value)} placeholder="product-url-slug" required />
+                {renderFieldError('slug')}
+              </div>
+              <div>
+                <Label>Status</Label>
+                <Select value={formData.status} onValueChange={(value) => updateField('status', value as any)}>
+                  <SelectTrigger>
+                    <SelectValue>{formData.status}</SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="col-span-2">
+                <Label>Description</Label>
+                <Textarea value={formData.description} onChange={(e) => handleDescriptionChange(e.target.value)} placeholder="Product description" rows={3} />
+              </div>
             </div>
           </div>
 
-          {/* Category and Status */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(value) => updateField('status', value as any)}>
-                <SelectTrigger>
-                  <SelectValue>{formData.status}</SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="draft">Draft</SelectItem>
-                </SelectContent>
-              </Select>
+          {/* 2. Pricing */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-amber-50 to-yellow-50/50 rounded-xl border border-amber-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-amber-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Pricing *</Label>
             </div>
-            <div>
-              <Label>Category</Label>
-              <Select 
-                value={formData.category_id ? String(formData.category_id) : undefined} 
-                onValueChange={(v) => updateField('category_id', v ? parseInt(v, 10) : undefined as any)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select category">
-                    {categories.find((c) => c.id === formData.category_id)?.name}
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {!categoriesLoading && categories.map((category) => (
-                    <SelectItem key={category.id} value={String(category.id)}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <Label>Cost Price *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.cost_price || ''}
+                  onChange={(e) => updateField('cost_price', e.target.value)}
+                  placeholder="Enter cost price"
+                  required
+                />
+                {renderFieldError('cost_price')}
+              </div>
+              <div>
+                <Label>Net Price *</Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.net_price || ''}
+                  onChange={(e) => updateField('net_price', e.target.value)}
+                  placeholder="Enter net price"
+                  required
+                />
+                {renderFieldError('net_price')}
+              </div>
+              <div className="flex items-center space-x-2 mt-6">
+                <Switch checked={!!formData.is_vat_exempt} onCheckedChange={(checked) => updateField('is_vat_exempt', checked as any)} />
+                <Label>VAT Exempt</Label>
+              </div>
+            </div>
+            {formData.net_price && formData.cost_price && parseFloat(formData.net_price) < parseFloat(formData.cost_price) && (
+              <p className="text-sm text-red-600">Net price cannot be less than cost price</p>
+            )}
+          </div>
+
+          {/* 3. Product Type - Critical Toggle */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50/50 rounded-xl border border-blue-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Product Configuration</Label>
+            </div>
+            <div className="flex items-center space-x-2 p-4 border rounded-lg bg-blue-50">
+              <Switch
+                checked={!!formData.has_variants}
+                onCheckedChange={(checked) => {
+                  updateField('has_variants', checked as any);
+                  // Auto-add a default variant when enabling variants
+                  if (checked && variantEntries.length === 0) {
+                    setVariantEntries([{
+                      id: Date.now(),
+                      image: "",
+                      variations: [],
+                      variantPrices: { net_price: "", cost: "" },
+                      variantSpecs: [],
+                      delivery_type: "inherit",
+                      delivery_cost: "",
+                      stock: 0,
+                      shelf_id: undefined,
+                    }]);
+                  }
+                  // Clear variants when disabling
+                  if (!checked) {
+                    setVariantEntries([]);
+                  }
+                  // Clear validation error when toggling has_variants
+                  if (validationErrors.variants) {
+                    setValidationErrors((prev) => {
+                      const newErrors = { ...prev };
+                      delete newErrors.variants;
+                      return newErrors;
+                    });
+                  }
+                }}
+              />
+              <Label className="font-medium">This product has variants (sizes, colors, etc.)</Label>
+            </div>
+            <p className="text-sm text-muted-foreground">⚠️ Enable this before setting up inventory and delivery to avoid losing data</p>
+          </div>
+
+          {/* 4. Inventory & Logistics */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-purple-50 to-violet-50/50 rounded-xl border border-purple-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Inventory & Logistics</Label>
+            </div>
+
+            <div className="space-y-4">
+              {/* Stock - Only for non-variant products */}
+              {!formData.has_variants && (
+                <div>
+                  <Label>Stock *</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={formData.stock || ''}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      // Only allow digits 0-9, prevent scientific notation
+                      if (value === '' || (/^\d+$/.test(value) && !value.includes('e'))) {
+                        updateField('stock', value as any);
+                      }
+                    }}
+                    onKeyDown={(e) => {
+                      // Prevent 'e', 'E', '+', '-', '.' from being typed
+                      if (['e', 'E', '+', '-', '.'].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    placeholder="Enter stock quantity"
+                    required
+                  />
+                  {renderFieldError('stock')}
+                </div>
+              )}
+
+              {/* Shelf - Always show in create mode (needed for variant inheritance) */}
+              {mode === 'add' && (
+                <div>
+                  <Label>Shelf {formData.has_variants ? '(Default for variants)' : ''}</Label>
+                  <Select
+                    value={formData.shelf_id ? String(formData.shelf_id) : "0"}
+                    onValueChange={(value) => updateField('shelf_id', value === "0" ? undefined : parseInt(value, 10) as any)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue>
+                        {formData.shelf_id ? shelves.find((s) => s.id === formData.shelf_id)?.name : "No shelf"}
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">No shelf</SelectItem>
+                      {shelves.map((shelf) => (
+                        <SelectItem key={shelf.id} value={String(shelf.id)}>
+                          {shelf.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {formData.has_variants && (
+                    <div className="text-xs text-muted-foreground mt-1">
+                      This will be the default shelf for variants unless overridden
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Delivery Settings - Always show (used as fallback for variants) */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>
+                  Delivery Method *
+                  {formData.has_variants && <span className="text-xs text-muted-foreground ml-1">(fallback for variants)</span>}
+                </Label>
+                <Select value={formData.delivery_type || ''} onValueChange={(value) => updateField('delivery_type', value)} required>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select delivery method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {DELIVERY_TYPES.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {renderFieldError('delivery_type')}
+              </div>
+              <div>
+                <Label>
+                  Delivery Cost {formData.delivery_type === 'meemhome' ? '*' : ''}
+                  {formData.has_variants && <span className="text-xs text-muted-foreground ml-1">(fallback for variants)</span>}
+                </Label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={formData.delivery_cost || ''}
+                  onChange={(e) => updateField('delivery_cost', e.target.value ? (parseFloat(e.target.value) as any) : (0 as any))}
+                  placeholder="Enter delivery cost"
+                  disabled={formData.delivery_type === 'company'}
+                  required={formData.delivery_type === 'meemhome'}
+                />
+                {formData.delivery_type === 'company' && (
+                  <div className="text-xs text-muted-foreground mt-1">Delivery cost is handled by the delivery company</div>
+                )}
+                {renderFieldError('delivery_cost')}
+              </div>
             </div>
           </div>
 
-          {/* Product Images */}
-          <div className="space-y-4">
-            <Label className="text-base font-semibold">Product Images</Label>
+          {/* 5. Product Images */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-green-50 to-emerald-50/50 rounded-xl border border-green-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Product Images</Label>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Main Product Image *</Label>
@@ -770,6 +1360,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                     <img src={mainImagePreview} alt="Main product" className="h-20 w-20 object-cover rounded" />
                   </div>
                 )}
+                {renderFieldError('cover_image')}
               </div>
               <div>
                 <Label>Additional Images</Label>
@@ -790,147 +1381,72 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
             </div>
           </div>
 
-          {/* Product Settings */}
-          <div className="space-y-4">
-            <Label className="text-base font-semibold">Product Settings</Label>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-              <div className="flex items-center space-x-2">
-                <Switch checked={!!formData.has_variants} onCheckedChange={(checked) => updateField('has_variants', checked as any)} />
-                <Label>Has Variants</Label>
+
+          {/* 6. Product Specifications */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-rose-50 to-pink-50/50 rounded-xl border border-rose-200/60 shadow-sm">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-rose-500 rounded-full"></div>
+                <Label className="text-lg font-semibold text-gray-900">Product Specifications *</Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <Switch checked={!!formData.is_on_sale} onCheckedChange={(checked) => handleExclusiveFlagChange('is_on_sale', checked)} disabled={(formData.is_featured || formData.is_new_arrival) && !formData.is_on_sale} />
-                <Label>On Sale</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch checked={!!formData.is_featured} onCheckedChange={(checked) => handleExclusiveFlagChange('is_featured', checked)} disabled={(formData.is_on_sale || formData.is_new_arrival) && !formData.is_featured} />
-                <Label>Featured</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch checked={!!formData.is_new_arrival} onCheckedChange={(checked) => handleExclusiveFlagChange('is_new_arrival', checked)} disabled={(formData.is_on_sale || formData.is_featured) && !formData.is_new_arrival} />
-                <Label>New Arrival</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Switch checked={!!formData.is_vat_exempt} onCheckedChange={(checked) => updateField('is_vat_exempt', checked as any)} />
-                <Label>VAT Exempt</Label>
-              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="hover:bg-primary hover:text-primary-foreground transition-all duration-200 active:scale-95 hover:shadow-md"
+                onClick={addSpecification}
+              >
+                Add Specification
+              </Button>
             </div>
+            {renderFieldError('specifications')}
+            {specifications.map((spec, index) => {
+              const isRequired = index < 4;
+              const unitMap: Record<string, string> = {
+                weight: 'kg',
+                height: 'cm',
+                width: 'cm',
+                length: 'cm'
+              };
+              const unit = unitMap[spec.name.toLowerCase()];
+
+              return (
+                <div key={spec.id} className="grid grid-cols-3 gap-2 items-center">
+                  <Input
+                    type="text"
+                    value={spec.name}
+                    onChange={(e) => updateSpecification(index, 'name', e.target.value)}
+                    placeholder="Name"
+                    disabled={isRequired}
+                    className={isRequired ? "bg-gray-100" : ""}
+                  />
+                  <div className="relative">
+                    <Input
+                      type="text"
+                      value={spec.value}
+                      onChange={(e) => updateSpecification(index, 'value', e.target.value)}
+                      placeholder="Value"
+                    />
+                    {unit && (
+                      <span className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500 pointer-events-none">
+                        {unit}
+                      </span>
+                    )}
+                  </div>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => removeSpecification(index)} disabled={isRequired}>Remove</Button>
+                </div>
+              );
+            })}
           </div>
 
-          {/* Identifiers */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Barcode</Label>
-              <Input type="text" value={formData.barcode} onChange={(e) => updateField('barcode', e.target.value)} placeholder="Barcode" />
-            </div>
-            <div>
-              <Label>QR Code</Label>
-              <Input type="text" value={formData.qr_code} onChange={(e) => updateField('qr_code', e.target.value)} placeholder="QR Code" />
-            </div>
-            <div>
-              <Label>Serial Number</Label>
-              <Input type="text" value={formData.serial_number} onChange={(e) => updateField('serial_number', e.target.value)} placeholder="Serial Number" />
-            </div>
-          </div>
-
-          {/* Inventory and Delivery */}
-          {!formData.has_variants && (
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label>Stock</Label>
-                <Input type="number" value={formData.stock} onChange={(e) => updateField('stock', parseInt(e.target.value || '0', 10) as any)} placeholder="Stock quantity" />
-              </div>
-              <div>
-                <Label>Shelf</Label>
-                <Select value={formData.shelf_id ? String(formData.shelf_id) : ''} onValueChange={(value) => updateField('shelf_id', value ? (parseInt(value, 10) as any) : (undefined as any))}>
-                  <SelectTrigger>
-                    <SelectValue>{shelves.find((s) => s.id === formData.shelf_id)?.name || 'Select Shelf'}</SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {shelves.map((shelf) => (
-                      <SelectItem key={shelf.id} value={String(shelf.id)}>
-                        {shelf.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Delivery Method *</Label>
-                <Select value={formData.delivery_type || ''} onValueChange={(value) => updateField('delivery_type', value)} required>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select delivery method" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {DELIVERY_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        {type.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Delivery Cost</Label>
-                <Input type="number" step="0.01" min="0" value={formData.delivery_cost || ''} onChange={(e) => updateField('delivery_cost', e.target.value ? (parseFloat(e.target.value) as any) : (0 as any))} placeholder="Enter delivery cost" />
-                {formData.delivery_type && (
-                  <div className="text-xs text-muted-foreground mt-1">Delivery cost will be ignored when a delivery method is selected.</div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* SEO Information */}
-          <div className="space-y-4">
-            <Label className="text-base font-semibold">SEO & Meta Information</Label>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
-                <Label>SEO Title</Label>
-                <Input type="text" value={formData.seo_title} onChange={(e) => updateField('seo_title', e.target.value)} placeholder="SEO Title for search engines" />
-              </div>
-              <div>
-                <Label>SEO Description</Label>
-                <Textarea value={formData.seo_description} onChange={(e) => updateField('seo_description', e.target.value)} placeholder="SEO description for search engines" rows={2} />
-              </div>
-            </div>
-          </div>
-
-          {/* Product Prices */}
-          <div className="space-y-2">
-            <Label>Product Prices {formData.has_variants && '*'}</Label>
-            {formData.has_variants && (
-              <div className="text-xs text-muted-foreground mb-2">
-                Product prices are required as fallback for variants without specific pricing.
-              </div>
-            )}
-            <Button type="button" variant="secondary" size="sm" onClick={addPriceEntry}>Add Price</Button>
-            {priceEntries.map((entry, index) => (
-              <div key={index} className="grid grid-cols-3 gap-2 items-center">
-                <Input type="number" value={entry.net_price} onChange={(e) => updatePriceEntry(index, 'net_price', e.target.value)} placeholder="Net Price" />
-                <Input type="number" value={entry.cost} onChange={(e) => updatePriceEntry(index, 'cost', e.target.value)} placeholder="Cost" />
-                <Button type="button" variant="destructive" size="sm" onClick={() => removePriceEntry(index)}>Remove</Button>
-              </div>
-            ))}
-          </div>
-
-          {/* Specifications */}
-          <div className="space-y-2">
-            <Label>Specifications *</Label>
-            <Button type="button" variant="secondary" size="sm" onClick={addSpecification}>Add Specification</Button>
-            {specifications.map((spec, index) => (
-              <div key={spec.id} className="grid grid-cols-3 gap-2 items-center">
-                <Input type="text" value={spec.name} onChange={(e) => updateSpecification(index, 'name', e.target.value)} placeholder="Name" />
-                <Input type="text" value={spec.value} onChange={(e) => updateSpecification(index, 'value', e.target.value)} placeholder="Value" />
-                <Button type="button" variant="destructive" size="sm" onClick={() => removeSpecification(index)} disabled={index < 4}>Remove</Button>
-              </div>
-            ))}
-          </div>
-
-          {/* Variants */}
+          {/* 7. Product Variants - Only show if has_variants is true */}
           {formData.has_variants && (
-            <div className="space-y-4">
-              <Label>Variants</Label>
-              <Button type="button" variant="secondary" size="sm" onClick={addVariant}>Add Variant</Button>
+            <div className="space-y-4 p-6 bg-gradient-to-r from-cyan-50 to-teal-50/50 rounded-xl border border-cyan-200/60 shadow-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-cyan-500 rounded-full"></div>
+                <Label className="text-lg font-semibold text-gray-900">Product Variants</Label>
+              </div>
+              {renderFieldError('variants')}
               {variantEntries.map((variant) => (
                 <div key={variant.id} className="border p-4 rounded space-y-2">
                   <div className="flex justify-between items-center mb-2">
@@ -966,59 +1482,112 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
 
                   {/* Variant variations */}
                   <div>
-                    <Label>Attribute Values</Label>
-                    <div className="space-y-3 mt-2">
-                      {attributesLoading ? (
-                        <div className="text-muted-foreground">Loading attributes...</div>
-                      ) : attributes.length === 0 ? (
-                        <div className="text-muted-foreground">No attributes available</div>
-                      ) : (
-                        attributes.map((attribute) => (
-                          <div key={attribute.id} className="space-y-2">
-                            <Label className="text-sm font-medium">{attribute.name} ({attribute.type})</Label>
-                            <div className="grid grid-cols-2 gap-2">
-                              {attribute.values.map((value: any) => (
-                                <div key={value.id} className="flex items-center space-x-2">
-                                  <Checkbox
-                                    id={`variant-${variant.id}-attr-${value.id}`}
-                                    checked={variant.variations.includes(value.id)}
-                                    onCheckedChange={(checked) => updateVariantAttributeValues(variant.id, value.id, checked as boolean)}
-                                  />
-                                  <label htmlFor={`variant-${variant.id}-attr-${value.id}`} className="text-sm cursor-pointer flex items-center space-x-2">
-                                    {value.hex_color && (
-                                      <div className="w-4 h-4 rounded border border-border" style={{ backgroundColor: value.hex_color }} />
-                                    )}
-                                    <span>{value.value}</span>
-                                  </label>
-                                </div>
-                              ))}
+                    <Label>Attribute Values *</Label>
+                    {attributesLoading ? (
+                      <div className="text-muted-foreground mt-2">Loading attributes...</div>
+                    ) : attributes.length === 0 ? (
+                      <div className="text-muted-foreground mt-2">No attributes available</div>
+                    ) : (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+                        {attributes.map((attribute) => {
+                          const attributeOptions: MultiSelectOption[] = attribute.values.map((value: any) => ({
+                            id: value.id,
+                            label: value.value,
+                            value: value.value.toLowerCase(),
+                            color: value.hex_color || undefined
+                          }));
+
+                          // Find the currently selected value for this attribute
+                          const selectedAttributeValue = variant.variations.find(varId =>
+                            attribute.values.some((val: any) => val.id === varId)
+                          ) || null;
+
+                          return (
+                            <div key={attribute.id} className="space-y-2">
+                              <Label className="text-sm font-medium">{attribute.name} ({attribute.type})</Label>
+                              <MultiSelect
+                                options={attributeOptions}
+                                selected={selectedAttributeValue}
+                                onSelectionChange={(selected) => {
+                                  // Remove any existing values for this attribute
+                                  const otherAttributeValues = variant.variations.filter(varId =>
+                                    !attribute.values.some((val: any) => val.id === varId)
+                                  );
+
+                                  // Add the new selected value (if any)
+                                  const newVariations = selected
+                                    ? [...otherAttributeValues, selected as number]
+                                    : otherAttributeValues;
+
+                                  setVariantEntries(prev =>
+                                    prev.map(v =>
+                                      v.id === variant.id
+                                        ? { ...v, variations: newVariations }
+                                        : v
+                                    )
+                                  );
+                                }}
+                                placeholder={`Select ${attribute.name.toLowerCase()}...`}
+                                searchPlaceholder={`Search ${attribute.name.toLowerCase()}...`}
+                              />
                             </div>
-                          </div>
-                        ))
-                      )}
-                    </div>
+                          );
+                        })}
+                      </div>
+                    )}
                     {variant.variations.length > 0 && (
-                      <div className="mt-2 text-xs text-muted-foreground">Selected IDs: {variant.variations.join(', ')}</div>
+                      <div className="mt-3 p-2 bg-muted/50 rounded-md">
+                        <div className="text-xs text-muted-foreground">Selected attribute values: {variant.variations.join(', ')}</div>
+                      </div>
                     )}
                   </div>
 
                   {/* Variant Pricing Overrides */}
                   <div className="space-y-2">
                     <Label>Variant Prices (overrides)</Label>
-                    <Button type="button" variant="secondary" size="sm" onClick={() => addVariantPrice(variant.id)}>Add Price</Button>
-                    {variant.variantPrices.map((p, idx) => (
-                      <div key={idx} className="grid grid-cols-3 gap-2 items-center">
-                        <Input type="number" value={p.net_price} onChange={(e) => updateVariantPrice(variant.id, idx, 'net_price', e.target.value)} placeholder="Net Price" />
-                        <Input type="number" value={p.cost} onChange={(e) => updateVariantPrice(variant.id, idx, 'cost', e.target.value)} placeholder="Cost" />
-                        <Button type="button" variant="destructive" size="sm" onClick={() => removeVariantPrice(variant.id, idx)}>Remove</Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Cost Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={variant.variantPrices.cost}
+                          onChange={(e) => updateVariantPrice(variant.id, 'cost', e.target.value)}
+                          placeholder="Cost (optional)"
+                        />
                       </div>
-                    ))}
+                      <div>
+                        <Label>Net Price</Label>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={variant.variantPrices.net_price}
+                          onChange={(e) => updateVariantPrice(variant.id, 'net_price', e.target.value)}
+                          placeholder="Net Price (optional)"
+                        />
+                      </div>
+                    </div>
+                    {variant.variantPrices.net_price && variant.variantPrices.cost && parseFloat(variant.variantPrices.net_price) < parseFloat(variant.variantPrices.cost) && (
+                      <p className="text-sm text-red-600">Net price cannot be less than cost price</p>
+                    )}
                   </div>
 
                   {/* Variant Specs Overrides */}
-                  <div className="space-y-2">
-                    <Label>Variant Specifications (overrides)</Label>
-                    <Button type="button" variant="secondary" size="sm" onClick={() => addVariantSpec(variant.id)}>Add Spec</Button>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <Label>Variant Specifications (overrides)</Label>
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        className="hover:bg-primary hover:text-primary-foreground transition-all duration-200 active:scale-95 hover:shadow-md"
+                        onClick={() => addVariantSpec(variant.id)}
+                      >
+                        Add Specification
+                      </Button>
+                    </div>
                     {variant.variantSpecs.map((spec, idx) => (
                       <div key={idx} className="grid grid-cols-3 gap-2 items-center">
                         <Input type="text" value={spec.name} onChange={(e) => updateVariantSpec(variant.id, idx, 'name', e.target.value)} placeholder="Name" />
@@ -1028,18 +1597,53 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                     ))}
                   </div>
 
-                   {/* Variant delivery overrides */}
-                   <div className="grid grid-cols-3 gap-4">
+                   {/* Variant inventory and delivery overrides */}
+                   <div className={cn(
+                     "grid gap-4",
+                     mode === 'create' ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-3"
+                   )}>
                      <div>
                        <Label>Stock *</Label>
-                       <Input 
-                         type="number" 
-                         value={variant.stock || ''} 
-                         onChange={(e) => updateVariantField(variant.id, 'stock', parseInt(e.target.value) || 0)} 
-                         placeholder="Stock quantity" 
+                       <Input
+                         type="number"
+                         value={variant.stock || ''}
+                         onChange={(e) => updateVariantField(variant.id, 'stock', parseInt(e.target.value) || 0)}
+                         placeholder="Stock quantity"
                          required
                        />
                      </div>
+
+                     {/* Only show shelf override in create mode */}
+                     {mode === 'add' && (
+                       <div>
+                         <Label>Shelf (override)</Label>
+                         <Select
+                           value={variant.shelf_id ? String(variant.shelf_id) : "inherit"}
+                           onValueChange={(value) => updateVariantField(variant.id, 'shelf_id', value === "inherit" ? undefined : parseInt(value))}
+                         >
+                           <SelectTrigger>
+                             <SelectValue>
+                               {variant.shelf_id
+                                 ? shelves.find((s) => s.id === variant.shelf_id)?.name || "Unknown shelf"
+                                 : formData.shelf_id
+                                   ? `Use main: ${shelves.find((s) => s.id === formData.shelf_id)?.name || "No shelf"}`
+                                   : "Use main: No shelf"
+                               }
+                             </SelectValue>
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="inherit">Use main product shelf</SelectItem>
+                             <SelectItem value="0">No shelf</SelectItem>
+                             {shelves.map((shelf) => (
+                               <SelectItem key={shelf.id} value={String(shelf.id)}>
+                                 {shelf.name}
+                               </SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     )}
+
                      <div>
                        <Label>Delivery Type (override)</Label>
                        <Select value={variant.delivery_type || ''} onValueChange={(value) => updateVariantField(variant.id, 'delivery_type', value)}>
@@ -1057,27 +1661,143 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode }: Ad
                        </Select>
                      </div>
                      <div>
-                       <Label>Delivery Cost</Label>
-                       <Input type="number" value={variant.delivery_cost || ''} onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)} placeholder="Delivery Cost" />
+                       <Label>
+                         Delivery Cost {
+                           (variant.delivery_type === 'meemhome' || (!variant.delivery_type && formData.delivery_type === 'meemhome'))
+                           ? '*'
+                           : ''
+                         }
+                       </Label>
+                       <Input
+                         type="number"
+                         value={
+                           (!variant.delivery_type || variant.delivery_type === 'inherit')
+                             ? formData.delivery_cost || ''
+                             : variant.delivery_cost || ''
+                         }
+                         onChange={(e) => updateVariantField(variant.id, 'delivery_cost', e.target.value)}
+                         placeholder={
+                           (!variant.delivery_type || variant.delivery_type === 'inherit')
+                             ? `Use main product cost: ${formData.delivery_cost || '0'}`
+                             : "Delivery Cost"
+                         }
+                         disabled={
+                           (!variant.delivery_type || variant.delivery_type === 'inherit') ||
+                           variant.delivery_type === 'company' ||
+                           (!variant.delivery_type && formData.delivery_type === 'company')
+                         }
+                         required={variant.delivery_type === 'meemhome' || (!variant.delivery_type && formData.delivery_type === 'meemhome')}
+                       />
+                       {(!variant.delivery_type || variant.delivery_type === 'inherit') && (
+                         <div className="text-xs text-muted-foreground mt-1">
+                           Use main product delivery cost: {formData.delivery_cost || '0'}
+                         </div>
+                       )}
+                       {(variant.delivery_type === 'company' || (!variant.delivery_type && formData.delivery_type === 'company')) && (
+                         <div className="text-xs text-muted-foreground mt-1">Delivery cost is handled by the delivery company</div>
+                       )}
                      </div>
                    </div>
                 </div>
               ))}
+
+              {/* Add Variant button - moved to bottom */}
+              <div className="pt-4">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  className="w-full hover:bg-primary hover:text-primary-foreground transition-all duration-200 active:scale-95 hover:shadow-md"
+                  onClick={addVariant}
+                >
+                  Add Another Variant
+                </Button>
+              </div>
             </div>
           )}
 
+          {/* 8. Marketing & Promotion */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-orange-50 to-amber-50/50 rounded-xl border border-orange-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Marketing & Promotion</Label>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div className="flex items-center space-x-2">
+                <Switch checked={!!formData.is_on_sale} onCheckedChange={(checked) => handleExclusiveFlagChange('is_on_sale', checked)} disabled={(formData.is_featured || formData.is_new_arrival) && !formData.is_on_sale} />
+                <Label>On Sale</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch checked={!!formData.is_featured} onCheckedChange={(checked) => handleExclusiveFlagChange('is_featured', checked)} disabled={(formData.is_on_sale || formData.is_new_arrival) && !formData.is_featured} />
+                <Label>Featured</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch checked={!!formData.is_new_arrival} onCheckedChange={(checked) => handleExclusiveFlagChange('is_new_arrival', checked)} disabled={(formData.is_on_sale || formData.is_featured) && !formData.is_new_arrival} />
+                <Label>New Arrival</Label>
+              </div>
+            </div>
+          </div>
+
+          {/* 9. SEO & Meta Information */}
+          <div className="space-y-4 p-6 bg-gradient-to-r from-slate-50 to-gray-50/50 rounded-xl border border-slate-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-slate-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">SEO & Meta Information</Label>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
+              <div>
+                <Label>SEO Title</Label>
+                <Input
+                  type="text"
+                  value={formData.seo_title}
+                  onChange={(e) => {
+                    setSeoTitleEdited(true);
+                    updateField('seo_title', e.target.value);
+                  }}
+                  placeholder={formData.name ? `Auto-filled: ${formData.name}` : "SEO Title for search engines"}
+                />
+              </div>
+              <div>
+                <Label>SEO Description</Label>
+                <Textarea
+                  value={formData.seo_description}
+                  onChange={(e) => {
+                    setSeoDescriptionEdited(true);
+                    updateField('seo_description', e.target.value);
+                  }}
+                  placeholder={formData.description ? `Auto-filled: ${formData.description.substring(0, 60)}...` : "SEO description for search engines"}
+                  rows={2}
+                />
+              </div>
+            </div>
+          </div>
+
           {/* Quick Attribute Management */}
-          <div className="space-y-4">
-            <Label className="text-base font-semibold">Quick Attribute Management</Label>
+          <div className="space-y-4 p-6 bg-gradient-to-r from-emerald-50 to-teal-50/50 rounded-xl border border-emerald-200/60 shadow-sm">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              <Label className="text-lg font-semibold text-gray-900">Quick Attribute Management</Label>
+            </div>
             <AttributeManager />
           </div>
 
           {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
-            <Button type="submit">{mode === 'add' ? 'Create Product' : 'Update Product'}</Button>
+            <Button type="button" variant="secondary" onClick={handleCancel} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>{mode === 'add' ? 'Creating...' : 'Updating...'}</span>
+                </div>
+              ) : (
+                mode === 'add' ? 'Create Product' : 'Update Product'
+              )}
+            </Button>
           </div>
         </form>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -153,8 +153,10 @@ export const useUpdateProduct = () => {
   const { toast } = useToast();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: FormData }) => 
-      adminProductService.updateProduct(id, data),
+    mutationFn: ({ id, data }: { id: number; data: FormData }) => {
+      console.log('🚀 useUpdateProduct mutationFn called', { id, dataKeys: Array.from(data.keys()) });
+      return adminProductService.updateProduct(id, data);
+    },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['admin-product'] });

@@ -56,7 +56,9 @@
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.4.6",
+    "qrcode.react": "^4.2.0",
     "react": "^18.3.1",
+    "react-barcode": "^1.6.1",
     "react-day-picker": "^9.9.0",
     "react-dom": "^18.3.1",
     "react-dropzone": "^14.3.8",
@@ -91,9 +93,8 @@
     "vite": "^5.4.1"
   },
   "overrides": {
-  "react-day-picker": {
-    "date-fns": "^3.0.0"
+    "react-day-picker": {
+      "date-fns": "^3.0.0"
+    }
   }
-}
-
 }

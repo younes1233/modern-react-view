@@ -179,29 +179,52 @@ export default function Products() {
     setIsModalOpen(true);
   };
 
-  const handleSaveProduct = (formData: FormData) => {
-    if (modalMode === 'add') {
-      createProductMutation.mutate(formData, {
-        onSuccess: () => {
-          toast.success('Product created successfully');
-          setIsModalOpen(false);
-          refetch();
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to create product');
-        },
-      });
-    } else if (modalMode === 'edit' && selectedProduct) {
-      updateProductMutation.mutate({ id: selectedProduct.id, data: formData }, {
-        onSuccess: () => {
-          toast.success('Product updated successfully');
-          setIsModalOpen(false);
-          refetch();
-        },
-        onError: (error: any) => {
-          toast.error(error.message || 'Failed to update product');
-        },
-      });
+  const handleSaveProduct = async (formData: FormData) => {
+    console.log('🔥 handleSaveProduct called', {
+      modalMode,
+      selectedProductId: selectedProduct?.id,
+      formDataKeys: Array.from(formData.keys())
+    });
+
+    try {
+      if (modalMode === 'add') {
+        console.log('📝 Creating product...');
+        await createProductMutation.mutateAsync(formData);
+        toast.success('Product created successfully');
+        setIsModalOpen(false);
+        refetch();
+      } else if (modalMode === 'edit' && selectedProduct) {
+        console.log('✏️ Updating product...', { id: selectedProduct.id });
+        await updateProductMutation.mutateAsync({ id: selectedProduct.id, data: formData });
+        toast.success('Product updated successfully');
+        setIsModalOpen(false);
+        refetch();
+      } else {
+        console.error('❌ Invalid state for handleSaveProduct', {
+          modalMode,
+          hasSelectedProduct: !!selectedProduct,
+          selectedProductId: selectedProduct?.id
+        });
+      }
+    } catch (error: any) {
+      // Don't close modal on error, let user see the error and try again
+      console.error('Product save error:', error);
+
+      // Only show toast for non-validation errors
+      if (!error.details || Object.keys(error.details).length === 0) {
+        toast.error(error.message || 'Failed to save product');
+      }
+
+      // Structure the error for validation display in modal
+      // Backend validation errors are already in error.details from BaseApiService
+      const structuredError = {
+        ...error,
+        response: {
+          details: error.details || {} // Backend validation errors are here
+        }
+      };
+
+      throw structuredError; // Re-throw so modal knows there was an error
     }
   };
 

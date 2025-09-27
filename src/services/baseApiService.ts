@@ -122,6 +122,7 @@ class BaseApiService {
         
         const error = new Error(errorMessage) as any;
         error.status = response.status;
+        error.details = errorData.errors || errorData.details || {}; // Preserve validation errors
         throw error;
       }
 

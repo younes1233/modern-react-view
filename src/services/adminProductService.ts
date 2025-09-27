@@ -99,7 +99,7 @@ export interface AdminProductAPI {
       currency: any;
     }>;
     stock?: Array<{ id: number; warehouse_id: number; warehouse_country_id: number; stock: number }>;
-    variations: Array<{ attribute: string; type: string; value: string; slug: string; hex_color: string | null; image: string | null }>;
+    variations: Array<{ id: number; attribute: string; type: string; value: string; slug: string; hex_color: string | null; image: string | null }>;
     created_at: string;
     updated_at: string;
   }>;
@@ -149,7 +149,6 @@ export interface CreateProductData {
   cover_image?: File | string;
   images?: (File | string)[];
   stock?: number;
-  warehouse_id?: number;
   shelf_id?: number;
   delivery_type?: string;
   delivery_cost?: number;
@@ -244,20 +243,26 @@ class AdminProductService extends BaseApiService {
       }
     } catch (error: any) {
       console.error('Product creation failed:', error);
-      throw new Error(`Failed to create product: ${error.message}`);
+      const newError = new Error(`Failed to create product: ${error.message}`) as any;
+      newError.details = error.details; // Preserve validation errors
+      newError.status = error.status;
+      throw newError;
     }
   }
 
   // Supports FormData if files are included
   async updateProduct(id: number, data: FormData | Partial<CreateProductData>): Promise<ApiResponse<any>> {
-    console.log('Updating product:', id, data instanceof FormData ? '[FormData]' : data);
+    console.log('🔧 AdminProductService.updateProduct called:', {
+      id,
+      dataType: data instanceof FormData ? 'FormData' : 'Object',
+      dataKeys: data instanceof FormData ? Array.from(data.keys()) : Object.keys(data)
+    });
     try {
       const endpoint = `/admin/products/${id}`;
       if (data instanceof FormData) {
-        // If your backend requires POST + _method=PUT, use:
-        // data.append('_method', 'PUT');
-        // return await this.postFormData<ApiResponse<any>>(endpoint, data);
-        const response = await this.putFormData<ApiResponse<any>>(endpoint, data);
+        // Laravel requires POST + _method=PUT for FormData with file uploads
+        data.append('_method', 'PUT');
+        const response = await this.postFormData<ApiResponse<any>>(endpoint, data);
         console.log('Product update API response:', response);
         return response;
       } else {
@@ -266,30 +271,11 @@ class AdminProductService extends BaseApiService {
         return response;
       }
     } catch (error: any) {
-      console.log('Simulating product update due to API unavailability');
-      return {
-        error: false,
-        message: 'Product updated successfully (mock)',
-        details: {
-          product: {
-            id,
-            name: (data as any).name || 'Updated Product',
-            slug: (data as any).slug || 'updated-product',
-            description: (data as any).description || '',
-            status: (data as any).status || 'active',
-            variants: [],
-            pricing: [],
-            flags: {
-              on_sale: (data as any).is_on_sale || false,
-              is_featured: (data as any).is_featured || false,
-              is_new_arrival: (data as any).is_new_arrival || false,
-              is_best_seller: (data as any).is_best_seller || false,
-              is_vat_exempt: (data as any).is_vat_exempt || false,
-              seller_product_status: (data as any).seller_product_status || 'draft',
-            },
-          } as AdminProductAPI,
-        },
-      };
+      console.error('Product update failed:', error);
+      const newError = new Error(`Failed to update product: ${error.message}`) as any;
+      newError.details = error.details; // Preserve validation errors
+      newError.status = error.status;
+      throw newError;
     }
   }
 

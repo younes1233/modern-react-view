@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { Star, Heart, ShoppingCart, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight, Package, Info } from 'lucide-react';
+import { Star, Heart, ShoppingCart, Plus, Minus, Truck, Shield, RotateCcw, ZoomIn, Share, ChevronRight, Package, Info, Copy, Check } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { ImageZoom } from '@/components/store/ImageZoom';
@@ -24,6 +24,7 @@ import { RelatedProducts } from '@/components/store/RelatedProducts';
 import { ProductAttributes } from '@/components/store/ProductAttributes';
 import { ProductDiscounts } from '@/components/store/ProductDiscounts';
 import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
+import { toast } from 'sonner';
 
 const ProductDetail = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -41,12 +42,15 @@ const ProductDetail = () => {
   const { getImageUrl } = useResponsiveImage();
   const { user } = useAuth();
   const { selectedCountry, selectedCurrency } = useCountryCurrency();
-  
+
   // Review states
   const [showReviewForm, setShowReviewForm] = useState(false);
   const [editingReview, setEditingReview] = useState<any>(null);
   const [refreshReviews, setRefreshReviews] = useState(0);
-  
+  const [scrollToReview, setScrollToReview] = useState(false);
+  const [activeTab, setActiveTab] = useState("description");
+  const [skuCopied, setSkuCopied] = useState(false);
+
   // Variant states
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
 
@@ -83,6 +87,37 @@ const ProductDetail = () => {
       return () => clearTimeout(timer);
     }
   }, [product]);
+
+  // Handle scroll to review form
+  useEffect(() => {
+    if (scrollToReview && showReviewForm) {
+      // Switch to reviews tab
+      setActiveTab("reviews");
+
+      // Wait for tab content to render, then scroll
+      const timer = setTimeout(() => {
+        const reviewForm = document.querySelector('#review-form');
+        if (reviewForm) {
+          reviewForm.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center'
+          });
+        } else {
+          // Fallback: scroll to tabs section
+          const tabsSection = document.querySelector('[data-orientation="horizontal"]');
+          if (tabsSection) {
+            tabsSection.scrollIntoView({
+              behavior: 'smooth',
+              block: 'start'
+            });
+          }
+        }
+        setScrollToReview(false);
+      }, 300);
+
+      return () => clearTimeout(timer);
+    }
+  }, [scrollToReview, showReviewForm]);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     const touch = e.touches[0];
@@ -239,7 +274,7 @@ const ProductDetail = () => {
       price: currentPrice,
       originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
       image: allImages[0]?.url || '',
-      category: product.category.name,
+      category: product.category?.name || 'Uncategorized',
       inStock,
       rating: 0, // Rating not available in new format
       reviews: 0, // Reviews count not available in new format
@@ -261,6 +296,64 @@ const ProductDetail = () => {
     addToCart(cartProduct, quantity, productVariantId);
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: product.name,
+      text: `Check out ${product.name} - ${product.description}`,
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast.success("Link copied to clipboard!", {
+          description: "Product link has been copied to your clipboard.",
+          duration: 2000,
+        });
+      }
+    } catch (error) {
+      if (error.name !== 'AbortError') {
+        // Fallback to clipboard if share fails
+        try {
+          await navigator.clipboard.writeText(window.location.href);
+          toast.success("Link copied to clipboard!", {
+            description: "Product link has been copied to your clipboard.",
+            duration: 2000,
+          });
+        } catch (clipboardError) {
+          toast.error("Unable to share", {
+            description: "Please copy the URL manually from your browser.",
+          });
+        }
+      }
+    }
+  };
+
+  const handleCopySku = async () => {
+    try {
+      await navigator.clipboard.writeText(currentSku);
+      setSkuCopied(true);
+      toast.success("SKU copied to clipboard!", {
+        description: currentSku,
+        duration: 2000,
+        dismissible: true,
+      });
+
+      // Reset copied state after 2 seconds
+      setTimeout(() => {
+        setSkuCopied(false);
+      }, 2000);
+    } catch (error) {
+      toast.error("Unable to copy SKU", {
+        description: "Please copy the SKU manually.",
+        dismissible: true,
+      });
+    }
+  };
+
   const handleWishlistToggle = () => {
     const wishlistProduct = {
       id: product.id,
@@ -269,7 +362,7 @@ const ProductDetail = () => {
       price: currentPrice,
       originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
       image: allImages[0]?.url || '',
-      category: product.category.name,
+      category: product.category?.name || 'Uncategorized',
       inStock,
       rating: 0, // Rating not available in new format
       reviews: 0, // Reviews count not available in new format
@@ -305,10 +398,10 @@ const ProductDetail = () => {
   // Breadcrumb data
   const breadcrumbs = [
     { label: 'Home', path: '/store' },
-    ...product.category.path.map(cat => ({
+    ...(product.category?.path?.map(cat => ({
       label: cat.name,
       path: `/store/categories/${cat.slug}`,
-    })),
+    })) || []),
     { label: product.name, path: '', current: true }
   ];
 
@@ -429,7 +522,10 @@ const ProductDetail = () => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleShare();
+                    }}
                     className="p-2 bg-white/90 hover:bg-white shadow-lg rounded-full w-9 h-9 text-gray-700"
                   >
                     <Share className="w-4 h-4" />
@@ -541,9 +637,11 @@ const ProductDetail = () => {
               {/* Brand & Category */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="capitalize text-xs">
-                    {product.category.name}
-                  </Badge>
+                  {product.category && (
+                    <Badge variant="secondary" className="capitalize text-xs">
+                      {product.category.name}
+                    </Badge>
+                  )}
                   {product.flags.is_featured && (
                     <Badge className="bg-cyan-500 text-xs">Featured</Badge>
                   )}
@@ -555,7 +653,7 @@ const ProductDetail = () => {
                   )}
                 </div>
                 <div className="hidden lg:flex items-center space-x-2">
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" onClick={handleShare}>
                     <Share className="w-4 h-4" />
                   </Button>
                   <Button
@@ -578,13 +676,25 @@ const ProductDetail = () => {
               </div>
               
                {/* Rating */}
-               <div className="flex items-center space-x-3">
+               <div className="flex items-center space-x-4">
                  <div className="flex items-center space-x-1">
                    {renderStars(0)} {/* No rating in new format */}
                  </div>
                  <span className="text-sm text-gray-600">
                    No reviews yet
                  </span>
+                 {user && (
+                   <button
+                     onClick={() => {
+                       setShowReviewForm(true);
+                       setEditingReview(null);
+                       setScrollToReview(true);
+                     }}
+                     className="text-sm text-cyan-600 hover:text-cyan-700 font-medium underline decoration-1 underline-offset-2 hover:underline-offset-1 transition-all duration-200"
+                   >
+                     Write a review
+                   </button>
+                 )}
                </div>
 
               {/* Price */}
@@ -633,8 +743,19 @@ const ProductDetail = () => {
               </div>
 
                {/* SKU Info */}
-               <div className="text-sm text-gray-600">
-                 <span>SKU: {currentSku}</span>
+               <div className="flex items-center space-x-2">
+                 <span className="text-sm text-gray-600">SKU: {currentSku}</span>
+                 <button
+                   onClick={handleCopySku}
+                   className="p-1 hover:bg-gray-100 rounded transition-colors duration-200 group"
+                   title="Copy SKU to clipboard"
+                 >
+                   {skuCopied ? (
+                     <Check className="w-3 h-3 text-green-600" />
+                   ) : (
+                     <Copy className="w-3 h-3 text-gray-500 group-hover:text-gray-700" />
+                   )}
+                 </button>
                </div>
 
                {/* Product Variants */}
@@ -718,21 +839,13 @@ const ProductDetail = () => {
                    </div>
                    <span>30-day return policy</span>
                  </div>
-                 {product.identifiers.barcode && (
-                   <div className="flex items-center space-x-3 text-sm text-gray-600">
-                     <div className="w-5 h-5 rounded-full bg-gray-100 flex items-center justify-center">
-                       <Package className="w-3 h-3 text-gray-600" />
-                     </div>
-                     <span>Barcode: {product.identifiers.barcode}</span>
-                   </div>
-                 )}
                </div>
             </div>
           </div>
 
           {/* Product Details Tabs */}
           <div className="mt-8 lg:mt-12 px-4 sm:px-6 lg:px-8 pb-8">
-            <Tabs defaultValue="description" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-4 bg-gray-50 p-1 rounded-xl">
                 <TabsTrigger value="description" className="rounded-lg">Description</TabsTrigger>
                 <TabsTrigger value="specifications" className="rounded-lg">Specifications</TabsTrigger>
@@ -759,22 +872,12 @@ const ProductDetail = () => {
                            <span className="font-medium text-gray-900">SKU:</span>
                            <span className="text-gray-600">{currentSku}</span>
                          </div>
-                         {product.identifiers.barcode && (
+                         {product.category && (
                            <div className="flex justify-between">
-                             <span className="font-medium text-gray-900">Barcode:</span>
-                             <span className="text-gray-600">{product.identifiers.barcode}</span>
+                             <span className="font-medium text-gray-900">Category:</span>
+                             <span className="text-gray-600">{product.category.name}</span>
                            </div>
                          )}
-                         {product.identifiers.qr_code && (
-                           <div className="flex justify-between">
-                             <span className="font-medium text-gray-900">QR Code:</span>
-                             <span className="text-gray-600">{product.identifiers.qr_code}</span>
-                           </div>
-                         )}
-                         <div className="flex justify-between">
-                           <span className="font-medium text-gray-900">Category:</span>
-                           <span className="text-gray-600">{product.category.name}</span>
-                         </div>
                          <div className="flex justify-between">
                            <span className="font-medium text-gray-900">Store:</span>
                            <span className="text-gray-600">{product.store}</span>
@@ -845,7 +948,7 @@ const ProductDetail = () => {
 
                         {/* Review Form */}
                         {(showReviewForm || editingReview) && (
-                          <div className="mb-6">
+                          <div id="review-form" className="mb-6">
                             <ReviewForm
                               productId={product.id.toString()}
                               existingReview={editingReview}
