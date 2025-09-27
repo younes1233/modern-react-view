@@ -100,45 +100,30 @@ export function ShopByCategory() {
           </div>
         </div>
 
-        {/* Mobile & Tablet: Original Card Design */}
+        {/* Mobile & Tablet: Text Below Image Design */}
         <div className="lg:hidden">
           <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide">
             {categories.map((category) => (
-              <Link
-                key={category.id}
-                to="/store/categories"
-                onClick={() => handleCategoryClick(category.slug)}
-                className="group flex-shrink-0"
-              >
-                <Card className="w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white overflow-hidden rounded-2xl">
-                  <CardContent className="p-0 h-full">
-                    <div className="relative h-full">
+              <div key={category.id} className="group flex-shrink-0 flex flex-col items-center">
+                <Link
+                  to="/store/categories"
+                  onClick={() => handleCategoryClick(category.slug)}
+                  className="block"
+                >
+                  <Card className="w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 border-0 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 bg-white overflow-hidden rounded-2xl">
+                    <CardContent className="p-0 h-full">
                       <img
                         src={category.image}
                         alt={category.name}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
-                      <div className="absolute inset-0 flex flex-col justify-between p-2 sm:p-3">
-                         <div className="flex justify-center">
-                           <div className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/30">
-                             {category.icon && category.icon.startsWith('http') ? (
-                               <img src={category.icon} alt={`${category.name} icon`} className="w-3 h-3 sm:w-4 sm:h-4 object-contain" />
-                             ) : (
-                               <span className="text-xs sm:text-sm md:text-base">{category.icon || '📦'}</span>
-                             )}
-                           </div>
-                         </div>
-                        <div className="text-center text-white">
-                          <h3 className="font-bold text-xs leading-tight">
-                            {category.name}
-                          </h3>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
+                    </CardContent>
+                  </Card>
+                </Link>
+                <h3 className="font-bold text-xs leading-tight text-gray-800 text-center mt-2 px-1">
+                  {category.name}
+                </h3>
+              </div>
             ))}
           </div>
         </div>
