@@ -26,20 +26,20 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     return apiWishlist.details.wishlist.map(item => ({
       id: item.wishlist_item.id,
       name: item.wishlist_item.name || '',
-      price: item.wishlist_item.pricing?.price ? parseFloat(item.wishlist_item.pricing.price) : 0,
-      originalPrice: item.wishlist_item.pricing?.original_price ? parseFloat(item.wishlist_item.pricing.original_price) : undefined,
-      image: item.wishlist_item.media?.cover_image || '',
+      price: item.wishlist_item.pricing?.price || 0,
+      originalPrice: item.wishlist_item.pricing?.original_price || undefined,
+      image: item.wishlist_item.cover_image?.desktop || '',
       slug: item.wishlist_item.slug || '',
       inStock: item.wishlist_item.stock > 0,
-      rating: item.wishlist_item.rating?.average ? parseFloat(item.wishlist_item.rating.average) : 0,
-      reviews: item.wishlist_item.rating?.count ? parseInt(item.wishlist_item.rating.count) : 0,
+      rating: item.wishlist_item.rating?.average || 0,
+      reviews: item.wishlist_item.rating?.count || 0,
       // Add default values for required Product fields with null safety
-      description: item.wishlist_item.description || '',
-      category: item.wishlist_item.category?.name || 'Uncategorized',
+      description: item.wishlist_item.short_description || '',
+      category: item.wishlist_item.category || 'Uncategorized',
       isFeatured: item.wishlist_item.flags?.is_featured || false,
       isNewArrival: item.wishlist_item.flags?.is_new_arrival || false,
       isOnSale: item.wishlist_item.flags?.on_sale || false,
-      sku: item.wishlist_item.sku || '',
+      sku: item.wishlist_item.meta?.seo_title || '',
       thumbnails: [],
       variations: []
     }));

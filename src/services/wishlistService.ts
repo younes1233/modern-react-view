@@ -3,18 +3,15 @@ import BaseApiService from './baseApiService';
 export interface WishlistProduct {
   id: number;
   name: string;
-  description: string | null;
   slug: string;
-  sku: string;
-  status: string;
-  category: {
-    id: string;
-    name: string;
-    level: string;
-    slug: string;
-    path: string;
-  } | null;
+  short_description: string | null;
+  category: string | null;
   store: string;
+  cover_image: {
+    desktop: string;
+    tablet: string;
+    mobile: string;
+  };
   flags: {
     on_sale: boolean;
     is_featured: boolean;
@@ -23,31 +20,27 @@ export interface WishlistProduct {
     is_vat_exempt: boolean;
     seller_product_status: string;
   };
-  media: {
-    cover_image: string;
-    images: string;
-  };
   pricing: {
-    original_price: string;
-    price: string;
-    currency_id: string;
+    original_price: number | null;
+    price: number | null;
+    currency_id: number | null;
     currency: {
       code: string;
       symbol: string;
-    };
-    applied_discounts: string;
-    vat: string;
+    } | null;
+    applied_discounts: any[];
+    vat: any[];
   };
   stock: number;
   rating: {
-    average: string;
-    count: string;
+    average: number;
+    count: number;
   };
-  identifiers: {
-    sku: string;
-    barcode: string;
-    qr_code: string;
-    serial_number: string | null;
+  meta: {
+    seo_title: string;
+    seo_description: string | null;
+    created_at: string;
+    updated_at: string;
   };
 }
 
