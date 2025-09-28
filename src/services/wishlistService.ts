@@ -23,22 +23,25 @@ export interface WishlistProduct {
     is_vat_exempt: boolean;
     seller_product_status: string;
   };
-  image: string;
+  media: {
+    cover_image: string;
+    images: string;
+  };
   pricing: {
-    original_price: string | null;
-    price: string | null;
-    currency_id: string | null;
+    original_price: string;
+    price: string;
+    currency_id: string;
     currency: {
       code: string;
       symbol: string;
-    } | null;
-    applied_discounts: any[];
-    vat: any[];
+    };
+    applied_discounts: string;
+    vat: string;
   };
-  stock: number | null;
+  stock: number;
   rating: {
-    average: number;
-    count: number;
+    average: string;
+    count: string;
   };
   identifiers: {
     sku: string;
