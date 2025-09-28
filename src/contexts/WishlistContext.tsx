@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Product } from '@/data/storeData';
 import { toast } from '@/components/ui/sonner';
-import { wishlistService, Wishlist } from '@/services/wishlistService';
+import { wishlistService, WishlistResponse, WishlistItem } from '@/services/wishlistService';
 import { useAuth } from '@/hooks/useAuth';
 
 interface WishlistContextType {
@@ -22,23 +22,22 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   // Convert API wishlist items to our Product format
-  const convertApiWishlistItems = (apiWishlist: Wishlist): Product[] => {
-    return apiWishlist.items.map(item => ({
+  const convertApiWishlistItems = (wishlistItems: WishlistItem[]): Product[] => {
+    return wishlistItems.map(item => ({
       id: item.product.id,
       name: item.product.name,
-      price: item.product.price,
-      originalPrice: item.product.original_price,
-      image: item.product.image,
+      price: parseFloat(item.product.pricing.price),
+      originalPrice: item.product.pricing.original_price ? parseFloat(item.product.pricing.original_price) : undefined,
+      image: item.product.media.cover_image,
       slug: item.product.slug,
-      inStock: item.product.in_stock,
-      rating: item.product.rating,
-      reviews: item.product.reviews_count,
-      // Add default values for required Product fields
-      description: '',
-      category: '',
-      isFeatured: false,
-      isNewArrival: false,
-      isOnSale: !!item.product.original_price,
+      inStock: item.product.stock > 0,
+      rating: parseFloat(item.product.rating.average) || 0,
+      reviews: parseInt(item.product.rating.count) || 0,
+      description: item.product.description,
+      category: item.product.category.name,
+      isFeatured: item.product.flags.is_featured,
+      isNewArrival: item.product.flags.is_new_arrival,
+      isOnSale: item.product.flags.on_sale,
       thumbnails: [],
       variations: []
     }));
@@ -62,8 +61,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setIsLoading(true);
-      const wishlist = await wishlistService.getWishlist();
-      setItems(convertApiWishlistItems(wishlist));
+      const response = await wishlistService.getWishlist();
+      setItems(convertApiWishlistItems(response.details.wishlist));
     } catch (error: any) {
       console.error('Error loading wishlist:', error);
       if (error?.status === 401) {
@@ -91,11 +90,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
     try {
       setIsLoading(true);
-      const wishlist = await wishlistService.addToWishlist({
+      const response = await wishlistService.addToWishlist({
         product_id: product.id
       });
       
-      setItems(convertApiWishlistItems(wishlist));
+      // Reload the full wishlist after adding
+      await loadWishlist();
       toast.success(`Added ${product.name} to wishlist`);
     } catch (error: any) {
       console.error('Error adding to wishlist:', error);
@@ -119,8 +119,9 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       const product = items.find(item => item.id === productId);
       
-      const wishlist = await wishlistService.removeFromWishlist(productId);
-      setItems(convertApiWishlistItems(wishlist));
+      await wishlistService.removeFromWishlist(productId);
+      // Reload the full wishlist after removal
+      await loadWishlist();
       
       if (product) {
         toast.success(`Removed ${product.name} from wishlist`);
