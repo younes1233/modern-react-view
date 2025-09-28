@@ -30,7 +30,7 @@ export function ShopByCategory() {
     <section className="py-6 sm:py-8 md:py-12 bg-white">
       <div className="container mx-auto px-4">
         {/* Header */}
-        <div className="text-center mb-4 sm:mb-6 md:mb-8">
+        <div className="hidden sm:block text-center mb-4 sm:mb-6 md:mb-8">
           <h2 className="text-xl sm:text-2xl md:text-3xl font-light text-gray-600 tracking-wide">
             SHOP BY CATEGORY
           </h2>
