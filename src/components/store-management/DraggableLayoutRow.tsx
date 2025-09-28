@@ -1,9 +1,8 @@
-
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Trash2, GripVertical, Image, Package } from "lucide-react";
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Eye, EyeOff, Minus, GripVertical, Image, Package } from 'lucide-react'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,25 +13,25 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { Banner } from "@/hooks/useBanners";
-import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
+} from '@/components/ui/alert-dialog'
+import { Banner } from '@/hooks/useBanners'
+import { useResponsiveImage } from '@/contexts/ResponsiveImageContext'
 
 interface DraggableLayoutRowProps {
-  section: any;
-  item: any;
-  onToggleActive: (sectionId: number) => void;
-  onDeleteSection: (sectionId: number) => void;
+  section: any
+  item: any
+  onToggleActive: (sectionId: number) => void
+  onDeleteSection: (sectionId: number) => void
 }
 
-export function DraggableLayoutRow({ 
-  section, 
-  item, 
-  onToggleActive, 
-  onDeleteSection 
+export function DraggableLayoutRow({
+  section,
+  item,
+  onToggleActive,
+  onDeleteSection,
 }: DraggableLayoutRowProps) {
-  const { getImageUrl } = useResponsiveImage();
-  
+  const { getImageUrl } = useResponsiveImage()
+
   const {
     attributes,
     listeners,
@@ -40,13 +39,13 @@ export function DraggableLayoutRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: section.id });
+  } = useSortable({ id: section.id })
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
+  }
 
   const getTypeBadge = (type: string) => {
     return type === 'banner' ? (
@@ -59,15 +58,15 @@ export function DraggableLayoutRow({
         <Package className="w-3 h-3 mr-1" />
         Products
       </Badge>
-    );
-  };
+    )
+  }
 
   const getBannerImage = (banner: Banner) => {
     if (banner.images?.urls?.banner) {
-      return getImageUrl(banner.images.urls.banner);
+      return getImageUrl(banner.images.urls.banner)
     }
-    return '/placeholder.svg';
-  };
+    return '/placeholder.svg'
+  }
 
   return (
     <tr
@@ -79,8 +78,8 @@ export function DraggableLayoutRow({
     >
       <td className="p-4">
         <div className="flex items-center gap-2">
-          <div 
-            {...attributes} 
+          <div
+            {...attributes}
             {...listeners}
             className="cursor-grab active:cursor-grabbing"
           >
@@ -93,10 +92,14 @@ export function DraggableLayoutRow({
         <div className="flex items-center gap-3">
           {item && (
             <>
-              <img 
-                src={section.type === 'banner' ? getBannerImage(item as Banner) : '/placeholder.svg'} 
-                alt={(item as any).title} 
-                className="w-16 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover" 
+              <img
+                src={
+                  section.type === 'banner'
+                    ? getBannerImage(item as Banner)
+                    : '/placeholder.svg'
+                }
+                alt={(item as any).title}
+                className="w-16 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 object-cover"
               />
               <div>
                 <span className="font-medium text-gray-900 dark:text-gray-100">
@@ -114,31 +117,42 @@ export function DraggableLayoutRow({
       </td>
       <td className="p-4">{getTypeBadge(section.type)}</td>
       <td className="p-4">
-        <Badge variant={section.is_active ? "default" : "secondary"}>
-          {section.is_active ? "Active" : "Inactive"}
-        </Badge>
-      </td>
-      <td className="p-4">
         <div className="flex gap-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => onToggleActive(section.id)}
-            title={section.is_active ? "Hide" : "Show"}
+            title={section.is_active ? 'Deactivate' : 'Activate'}
+            className={
+              section.is_active
+                ? 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+            }
           >
-            {section.is_active ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            {section.is_active ? (
+              <Eye className="w-4 h-4" />
+            ) : (
+              <EyeOff className="w-4 h-4" />
+            )}
           </Button>
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700 hover:bg-red-50">
-                <Trash2 className="w-4 h-4" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                title="Remove from layout"
+              >
+                <Minus className="w-4 h-4" />
               </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Remove Section</AlertDialogTitle>
                 <AlertDialogDescription>
-                  Are you sure you want to remove this section from the home page?
+                  Are you sure you want to remove this section from the home
+                  page layout? This will not delete the banner or listing
+                  itself.
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
@@ -152,5 +166,5 @@ export function DraggableLayoutRow({
         </div>
       </td>
     </tr>
-  );
+  )
 }

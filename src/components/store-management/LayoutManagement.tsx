@@ -152,7 +152,6 @@ export function LayoutManagement() {
                       <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Order</th>
                       <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Section</th>
                       <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Type</th>
-                      <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Status</th>
                       <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
                     </tr>
                   </thead>
