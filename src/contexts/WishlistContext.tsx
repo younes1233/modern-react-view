@@ -25,21 +25,21 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const convertApiWishlistItems = (apiWishlist: WishlistResponse): Product[] => {
     return apiWishlist.details.wishlist.map(item => ({
       id: item.product.id,
-      name: item.product.name,
-      price: parseFloat(item.product.pricing.price),
-      originalPrice: item.product.pricing.original_price ? parseFloat(item.product.pricing.original_price) : undefined,
-      image: item.product.media.cover_image,
-      slug: item.product.slug,
+      name: item.product.name || '',
+      price: item.product.pricing?.price ? parseFloat(item.product.pricing.price) : 0,
+      originalPrice: item.product.pricing?.original_price ? parseFloat(item.product.pricing.original_price) : undefined,
+      image: item.product.media?.cover_image || '',
+      slug: item.product.slug || '',
       inStock: item.product.stock > 0,
-      rating: parseFloat(item.product.rating.average) || 0,
-      reviews: parseInt(item.product.rating.count) || 0,
-      // Add default values for required Product fields
-      description: item.product.description,
-      category: item.product.category.name,
-      isFeatured: item.product.flags.is_featured,
-      isNewArrival: item.product.flags.is_new_arrival,
-      isOnSale: item.product.flags.on_sale,
-      sku: item.product.sku,
+      rating: item.product.rating?.average ? parseFloat(item.product.rating.average) : 0,
+      reviews: item.product.rating?.count ? parseInt(item.product.rating.count) : 0,
+      // Add default values for required Product fields with null safety
+      description: item.product.description || '',
+      category: item.product.category?.name || 'Uncategorized',
+      isFeatured: item.product.flags?.is_featured || false,
+      isNewArrival: item.product.flags?.is_new_arrival || false,
+      isOnSale: item.product.flags?.on_sale || false,
+      sku: item.product.sku || '',
       thumbnails: [],
       variations: []
     }));
