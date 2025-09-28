@@ -53,9 +53,7 @@ export interface WishlistProduct {
 
 export interface WishlistItem {
   id: number;
-  user_id: number;
-  product_id: number;
-  product: WishlistProduct;
+  wishlist_item: WishlistProduct;
   added_at: string;
 }
 

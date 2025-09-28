@@ -24,22 +24,22 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   // Convert API wishlist items to our Product format
   const convertApiWishlistItems = (apiWishlist: WishlistResponse): Product[] => {
     return apiWishlist.details.wishlist.map(item => ({
-      id: item.product.id,
-      name: item.product.name || '',
-      price: item.product.pricing?.price ? parseFloat(item.product.pricing.price) : 0,
-      originalPrice: item.product.pricing?.original_price ? parseFloat(item.product.pricing.original_price) : undefined,
-      image: item.product.media?.cover_image || '',
-      slug: item.product.slug || '',
-      inStock: item.product.stock > 0,
-      rating: item.product.rating?.average ? parseFloat(item.product.rating.average) : 0,
-      reviews: item.product.rating?.count ? parseInt(item.product.rating.count) : 0,
+      id: item.wishlist_item.id,
+      name: item.wishlist_item.name || '',
+      price: item.wishlist_item.pricing?.price ? parseFloat(item.wishlist_item.pricing.price) : 0,
+      originalPrice: item.wishlist_item.pricing?.original_price ? parseFloat(item.wishlist_item.pricing.original_price) : undefined,
+      image: item.wishlist_item.media?.cover_image || '',
+      slug: item.wishlist_item.slug || '',
+      inStock: item.wishlist_item.stock > 0,
+      rating: item.wishlist_item.rating?.average ? parseFloat(item.wishlist_item.rating.average) : 0,
+      reviews: item.wishlist_item.rating?.count ? parseInt(item.wishlist_item.rating.count) : 0,
       // Add default values for required Product fields with null safety
-      description: item.product.description || '',
-      category: item.product.category?.name || 'Uncategorized',
-      isFeatured: item.product.flags?.is_featured || false,
-      isNewArrival: item.product.flags?.is_new_arrival || false,
-      isOnSale: item.product.flags?.on_sale || false,
-      sku: item.product.sku || '',
+      description: item.wishlist_item.description || '',
+      category: item.wishlist_item.category?.name || 'Uncategorized',
+      isFeatured: item.wishlist_item.flags?.is_featured || false,
+      isNewArrival: item.wishlist_item.flags?.is_new_arrival || false,
+      isOnSale: item.wishlist_item.flags?.on_sale || false,
+      sku: item.wishlist_item.sku || '',
       thumbnails: [],
       variations: []
     }));
