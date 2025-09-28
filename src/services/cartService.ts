@@ -77,8 +77,8 @@ class CartService extends BaseApiService {
   }
 
   // Clear entire cart
-  async clearCart(): Promise<{ error: boolean; message: string; details: [] }> {
-    return await this.delete<{ error: boolean; message: string; details: [] }>('/cart/clear', true);
+  async clearCart(): Promise<void> {
+    await this.delete<ApiResponse<any>>('/cart/clear', true);
   }
 
   // Move item to wishlist (requires auth)
