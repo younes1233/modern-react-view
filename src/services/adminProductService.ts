@@ -153,7 +153,7 @@ export interface CreateProductData {
   delivery_type?: string;
   delivery_cost?: number;
   available_countries?: number[];
-  product_prices?: Array<{ country_id: number; net_price: number; cost: number; vat_percentage?: number }>;
+  product_prices?: Array<{ net_price: number; cost: number; vat_percentage?: number }>;
   variants?: Array<any>;
   specifications?: Array<{ name: string; value: string }>;
 }

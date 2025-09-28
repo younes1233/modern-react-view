@@ -16,6 +16,7 @@ import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import * as Portal from '@radix-ui/react-portal';
 import { CountryCurrencySelector } from './CountryCurrencySelector';
+import { useStoreCategories } from '@/hooks/useStoreCategories';
 
 interface StoreLayoutProps {
   children: ReactNode;
@@ -32,14 +33,18 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   } = useSearch();
   const { items: wishlistItems } = useWishlist();
   const { getTotalItems } = useCart();
+  const { categories, loading: categoriesLoading } = useStoreCategories();
   const auth = useAuth();
   const user = auth?.user || null;
   const logout = auth?.logout;
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMobileMenuClosing, setIsMobileMenuClosing] = useState(false);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showMobileSearchResults, setShowMobileSearchResults] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
+  const [isCategoriesClosing, setIsCategoriesClosing] = useState(false);
   const [searchInputRef, setSearchInputRef] = useState<HTMLInputElement | null>(null);
   const [mobileSearchInputRef, setMobileSearchInputRef] = useState<HTMLInputElement | null>(null);
   const navigate = useNavigate();
@@ -130,6 +135,32 @@ export function StoreLayout({ children }: StoreLayoutProps) {
     }
   };
 
+  const closeMobileMenu = () => {
+    setIsMobileMenuClosing(true);
+    setTimeout(() => {
+      setIsMobileMenuOpen(false);
+      setIsMobileMenuClosing(false);
+    }, 200); // Fast close animation duration
+  };
+
+  const openMobileMenu = () => {
+    setIsMobileMenuClosing(false); // Ensure no closing state
+    setIsMobileMenuOpen(true);
+  };
+
+  const handleCategoriesToggle = (open: boolean) => {
+    if (open) {
+      setIsCategoriesClosing(false);
+      setIsCategoriesOpen(true);
+    } else {
+      setIsCategoriesClosing(true);
+      setTimeout(() => {
+        setIsCategoriesOpen(false);
+        setIsCategoriesClosing(false);
+      }, 200); // Fast close animation duration
+    }
+  };
+
   const getSearchDropdownPosition = (inputRef: HTMLInputElement | null) => {
     if (!inputRef) return { top: 0, left: 0, width: 0 };
     
@@ -164,7 +195,7 @@ const goAll = () => {
             <div className="flex items-center flex-shrink-0">
               <Link to="/store" className="hover:scale-105 transition-transform duration-300">
                 <img
-                  src="/lovable-uploads/998ce7ed-f62f-4b8a-aaea-f84e808a5b26.png"
+                  src="/meemhome-logo.svg"
                   alt="Meem Home"
                   className="h-16 md:h-20 lg:h-24 w-auto object-contain"
                 />
@@ -256,7 +287,7 @@ const goAll = () => {
                     <div className="space-y-4">
                       <div className="border-b border-gray-100 pb-3">
                         <p className="font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-600">{user.email}</p>
+                        <p className="text-sm text-gray-600">{user.email || user.phone || 'My Account'}</p>
                       </div>
                       <div className="space-y-2">
                         <Link to="/store/wishlist" className="block w-full text-left">
@@ -305,7 +336,7 @@ const goAll = () => {
               </Button>
             </div>
 
-            {/* Mobile: Search Bar and Menu Button */}
+            {/* Mobile: Search Bar, Country/Currency, and Menu Button */}
             <div className="lg:hidden flex items-center flex-1 gap-2">
               <div className="flex-1 relative">
                 <form onSubmit={handleSearch} className="relative w-full flex border-[3px] border-cyan-400 rounded-full overflow-hidden">
@@ -337,13 +368,16 @@ const goAll = () => {
                   )}
                 </form>
               </div>
-              
+
+              {/* Country/Currency Selectors for Mobile */}
+              <CountryCurrencySelector variant="mobile" />
+
               {/* Mobile Menu Button */}
-              <Button 
-                className="rounded-xl p-2 w-10 h-10" 
-                variant="ghost" 
+              <Button
+                className="rounded-xl p-2 w-10 h-10"
+                variant="ghost"
                 size="sm"
-                onClick={() => setIsMobileMenuOpen(true)}
+                onClick={openMobileMenu}
               >
                 <Menu className="w-5 h-5" />
               </Button>
@@ -351,136 +385,371 @@ const goAll = () => {
           </div>
         </div>
 
-        {/* Mobile Country/Currency Selector - Under search bar */}
-        <CountryCurrencySelector variant="mobile" />
       </header>
 
-      {/* Enhanced Mobile Menu Overlay */}
+      {/* Store-Themed Mobile Menu */}
       {isMobileMenuOpen && (
         <div className="fixed inset-0 z-[99999] lg:hidden">
-          {/* Enhanced Backdrop */}
-          <div 
-            className={`absolute inset-0 backdrop-blur-md transition-all duration-500 ease-out ${
-              isMobileMenuOpen ? 'bg-black/40' : 'bg-black/0'
+          {/* Backdrop with store gradient */}
+          <div
+            className={`absolute inset-0 backdrop-blur-md transition-all ease-out ${
+              isMobileMenuClosing
+                ? 'duration-200 bg-black/0'
+                : 'duration-500 bg-gradient-to-br from-cyan-900/60 to-blue-900/60'
             }`}
-            onClick={() => setIsMobileMenuOpen(false)}
+            onClick={closeMobileMenu}
           />
-          
-          {/* Enhanced Sidebar with better animation */}
-          <div 
-            className={`absolute left-0 top-0 h-full w-[85%] max-w-sm bg-white/95 backdrop-blur-xl shadow-2xl transform transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${
-              isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+
+          {/* Store-style sidebar */}
+          <div
+            className={`absolute right-0 top-0 h-full w-[90%] max-w-sm bg-white shadow-2xl transform transition-all ${
+              isMobileMenuClosing
+                ? 'duration-200 ease-in translate-x-full'
+                : isMobileMenuOpen
+                  ? 'duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-0'
+                  : 'duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-full'
             }`}
-            style={{
-              borderTopRightRadius: '24px',
-              borderBottomRightRadius: '24px',
-            }}
           >
-            {/* Header with gradient */}
-            <div className="flex items-center justify-between p-6 border-b border-gray-100/50 bg-gradient-to-r from-cyan-50/80 to-blue-50/80 backdrop-blur-sm rounded-tr-3xl">
-              <h2 className="text-xl font-semibold text-gray-900 animate-fade-in">Menu</h2>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="rounded-full p-2 hover:bg-white/50 transition-all duration-300 hover:scale-110 hover:rotate-90"
-                onClick={() => setIsMobileMenuOpen(false)}
+            {/* Store Header with logo */}
+            <div className={`flex items-center justify-between p-4 border-b-4 border-cyan-400 bg-gradient-to-r from-cyan-50 to-blue-50 ${
+              isMobileMenuClosing
+                ? 'animate-fade-out-fast'
+                : isMobileMenuOpen
+                  ? 'animate-slide-down opacity-0'
+                  : 'opacity-0'
+            }`}
+                 style={{
+                   animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.0s' : '0s',
+                   animationFillMode: 'forwards'
+                 }}>
+              <div className="flex items-center gap-3">
+                <img
+                  src="/meemhome-logo.svg"
+                  alt="Meem Home"
+                  className={`h-16 w-auto object-contain ${
+                    isMobileMenuClosing
+                      ? 'animate-fade-out-fast'
+                      : isMobileMenuOpen
+                        ? 'animate-scale-in opacity-0'
+                        : 'opacity-0'
+                  }`}
+                  style={{
+                    animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.03s' : '0s',
+                    animationFillMode: 'forwards'
+                  }}
+                />
+                <div className={`${
+                  isMobileMenuClosing
+                    ? 'animate-fade-out-fast'
+                    : isMobileMenuOpen
+                      ? 'animate-fade-in opacity-0'
+                      : 'opacity-0'
+                }`} style={{
+                  animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.06s' : '0s',
+                  animationFillMode: 'forwards'
+                }}>
+                  <h2 className="text-lg font-bold text-cyan-600">Meem Home</h2>
+                  <p className="text-xs text-gray-500">Your Shopping Destination</p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`rounded-full p-2 hover:bg-cyan-100 transition-all duration-300 hover:rotate-90 ${
+                  isMobileMenuClosing
+                    ? 'animate-fade-out-fast'
+                    : isMobileMenuOpen
+                      ? 'animate-scale-in opacity-0'
+                      : 'opacity-0'
+                }`}
+                style={{
+                  animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.09s' : '0s',
+                  animationFillMode: 'forwards'
+                }}
+                onClick={closeMobileMenu}
               >
-                <X className="w-6 h-6" />
+                <X className="w-5 h-5 text-gray-600" />
               </Button>
             </div>
-            
-            {/* Content with staggered animations */}
-            <div className="flex-1 overflow-y-auto p-6 space-y-2">
-              {[
-                { to: "/store", icon: Home, label: "Home", delay: "0.1s" },
-                { to: "/store/categories", icon: Grid, label: "Categories", delay: "0.2s" },
-                { to: "/store/wishlist", icon: Heart, label: "Wishlist", delay: "0.3s", badge: wishlistItems.length },
-                { to: "/store/returns", icon: RotateCcw, label: "Returns", delay: "0.4s" }
-              ].map((item, index) => (
-                <Link 
-                  key={item.to}
-                  to={item.to} 
-                  className={`flex items-center gap-4 px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0`}
-                  style={{ 
-                    animationDelay: item.delay,
-                    animationFillMode: 'forwards',
-                    animationDuration: '0.6s'
-                  }}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span className="flex-1">{item.label}</span>
-                  {item.badge && item.badge > 0 && (
-                    <Badge className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full animate-pulse">
-                      {item.badge}
-                    </Badge>
-                  )}
-                </Link>
-              ))}
-              
-              {/* Animated Divider */}
-              <div className="border-t border-gray-200 my-6 animate-fade-in opacity-0" style={{ animationDelay: '0.5s', animationFillMode: 'forwards' }}></div>
-              
-              {/* User Section with enhanced animations */}
-              {!user ? (
-                <>
-                  {[
-                    { onClick: () => { openAuthModal('signin'); setIsMobileMenuOpen(false); }, icon: User, label: "Sign In", delay: "0.6s" },
-                    { onClick: () => { openAuthModal('signup'); setIsMobileMenuOpen(false); }, icon: Plus, label: "Sign Up", delay: "0.7s" }
-                  ].map((item, index) => (
-                    <button 
-                      key={item.label}
-                      className={`flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0`}
-                      style={{ 
-                        animationDelay: item.delay,
-                        animationFillMode: 'forwards',
-                        animationDuration: '0.6s'
+
+            {/* Store Navigation */}
+            <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="space-y-1">
+                {/* Main Navigation */}
+                <div className="mb-6">
+                  <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
+                    isMobileMenuClosing
+                      ? 'animate-fade-out-fast'
+                      : isMobileMenuOpen
+                        ? 'animate-fade-in opacity-0'
+                        : 'opacity-0'
+                  }`}
+                      style={{
+                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.12s' : '0s',
+                        animationFillMode: 'forwards'
+                      }}>Shop</h3>
+                  {/* Home Link */}
+                  <Link
+                    to="/store"
+                    className={`flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
+                      isMobileMenuClosing
+                        ? 'animate-slide-out-right-fast'
+                        : isMobileMenuOpen
+                          ? 'animate-slide-in-right opacity-0'
+                          : 'opacity-0'
+                    }`}
+                    style={{
+                      animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.15s' : '0s',
+                      animationFillMode: 'forwards'
+                    }}
+                    onClick={closeMobileMenu}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center group-hover:bg-cyan-200 transition-colors group-hover:scale-110 duration-300">
+                      <Home className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                    </div>
+                    <span className="flex-1">Home</span>
+                    <div className="absolute left-0 top-0 w-1 h-full bg-cyan-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                  </Link>
+
+                  {/* Categories Dropdown */}
+                  <Collapsible open={isCategoriesOpen} onOpenChange={handleCategoriesToggle}>
+                    <CollapsibleTrigger
+                      className={`flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden w-full text-left ${
+                        isMobileMenuClosing
+                          ? 'animate-slide-out-right-fast'
+                          : isMobileMenuOpen
+                            ? 'animate-slide-in-right opacity-0'
+                            : 'opacity-0'
+                      }`}
+                      style={{
+                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.18s' : '0s',
+                        animationFillMode: 'forwards'
                       }}
-                      onClick={item.onClick}
                     >
-                      <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
+                      <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors group-hover:scale-110 duration-300">
+                        <Grid className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                      </div>
+                      <span className="flex-1">All Categories</span>
+                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                      <div className="absolute left-0 top-0 w-1 h-full bg-blue-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent
+                      className={`space-y-1 mt-2 overflow-hidden ${
+                        isCategoriesClosing
+                          ? 'animate-slide-up-fast'
+                          : isCategoriesOpen
+                            ? 'animate-slide-down-categories opacity-0'
+                            : 'opacity-0'
+                      }`}
+                      style={{
+                        animationDelay: isCategoriesClosing ? '0s' : isCategoriesOpen ? '0.05s' : '0s',
+                        animationFillMode: 'forwards'
+                      }}
+                    >
+                      {!categoriesLoading && categories.map((category, index) => (
+                        <Link
+                          key={category.id}
+                          to={`/store/categories/${category.slug}`}
+                          className={`flex items-center gap-3 px-8 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 text-sm group ${
+                            isCategoriesOpen ? 'opacity-100' : 'opacity-0'
+                          }`}
+                          style={{
+                            transitionDelay: isCategoriesOpen ? `${0.2 + (index * 0.1)}s` : '0s'
+                          }}
+                          onClick={closeMobileMenu}
+                        >
+                          <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                            {category.icon && category.icon.startsWith('http') ? (
+                              <img src={category.icon} alt={`${category.name} icon`} className="w-4 h-4 object-contain" />
+                            ) : (
+                              <span className="text-sm">{category.icon || '📦'}</span>
+                            )}
+                          </div>
+                          <span className="flex-1">{category.name}</span>
+                        </Link>
+                      ))}
+                      {categoriesLoading && (
+                        <div className="px-8 py-2 text-gray-400 text-sm">Loading categories...</div>
+                      )}
+                    </CollapsibleContent>
+                  </Collapsible>
+
+                  {/* Wishlist Link */}
+                  <Link
+                    to="/store/wishlist"
+                    className={`flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
+                      isMobileMenuClosing
+                        ? 'animate-slide-out-right-fast'
+                        : isMobileMenuOpen
+                          ? 'animate-slide-in-right opacity-0'
+                          : 'opacity-0'
+                    }`}
+                    style={{
+                      animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.21s' : '0s',
+                      animationFillMode: 'forwards'
+                    }}
+                    onClick={closeMobileMenu}
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-pink-100 flex items-center justify-center group-hover:bg-pink-200 transition-colors group-hover:scale-110 duration-300">
+                      <Heart className="w-4 h-4 group-hover:scale-110 transition-all duration-300 group-hover:fill-pink-500 group-hover:text-pink-500" />
+                    </div>
+                    <span className="flex-1">My Wishlist</span>
+                    {wishlistItems.length > 0 && (
+                      <div className="bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-bounce">
+                        {wishlistItems.length}
+                      </div>
+                    )}
+                    <div className="absolute left-0 top-0 w-1 h-full bg-pink-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
+                  </Link>
+                </div>
+
+                {/* Store Services */}
+                <div className="mb-6">
+                  <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
+                    isMobileMenuClosing
+                      ? 'animate-fade-out-fast'
+                      : isMobileMenuOpen
+                        ? 'animate-fade-in opacity-0'
+                        : 'opacity-0'
+                  }`}
+                      style={{
+                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.24s' : '0s',
+                        animationFillMode: 'forwards'
+                      }}>Services</h3>
+                  {[
+                    { icon: RotateCcw, label: "Returns & Exchanges", color: "purple", delay: "0.27s" },
+                    { icon: ShoppingBag, label: "Special Deals", color: "orange", delay: "0.3s" },
+                    { icon: Phone, label: "Customer Support", color: "green", delay: "0.33s" }
+                  ].map((item, index) => (
+                    <button
+                      key={item.label}
+                      className={`flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:text-${item.color}-600 hover:bg-${item.color}-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
+                        isMobileMenuClosing
+                          ? 'animate-slide-out-right-fast'
+                          : isMobileMenuOpen
+                            ? 'animate-slide-in-right opacity-0'
+                            : 'opacity-0'
+                      }`}
+                      style={{
+                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? item.delay : '0s',
+                        animationFillMode: 'forwards'
+                      }}
+                    >
+                      <div className={`w-8 h-8 rounded-lg bg-${item.color}-100 flex items-center justify-center group-hover:bg-${item.color}-200 transition-colors group-hover:scale-110 duration-300`}>
+                        <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
+                      </div>
                       <span>{item.label}</span>
+                      <div className={`absolute left-0 top-0 w-1 h-full bg-${item.color}-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300`}></div>
                     </button>
                   ))}
-                </>
-              ) : (
-                <>
-                  <div className="px-4 py-3 bg-gradient-to-r from-gray-50 to-blue-50/50 rounded-2xl animate-fade-in opacity-0 backdrop-blur-sm" style={{ animationDelay: '0.6s', animationFillMode: 'forwards' }}>
-                    <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
-                    <p className="text-xs text-gray-600">{user.email}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      handleLogout();
-                      setIsMobileMenuOpen(false);
-                    }}
-                    className="flex items-center gap-4 w-full px-4 py-4 text-red-600 hover:text-red-700 hover:bg-red-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0"
-                    style={{ animationDelay: '0.7s', animationFillMode: 'forwards', animationDuration: '0.6s' }}
-                  >
-                    <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                    <span>Sign Out</span>
-                  </button>
-                </>
-              )}
-              
-              {/* Additional Menu Items */}
-              {[
-                { icon: ShoppingBag, label: "Deals", delay: "0.8s" },
-                { icon: Phone, label: "About", delay: "0.9s" }
-              ].map((item, index) => (
-                <button 
-                  key={item.label}
-                  className={`flex items-center gap-4 w-full px-4 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50/80 rounded-2xl transition-all duration-500 font-medium group transform hover:scale-[1.02] hover:translate-x-2 animate-fade-in opacity-0`}
-                  style={{ 
-                    animationDelay: item.delay,
-                    animationFillMode: 'forwards',
-                    animationDuration: '0.6s'
-                  }}
-                >
-                  <item.icon className="w-5 h-5 group-hover:scale-110 transition-transform duration-300" />
-                  <span>{item.label}</span>
-                </button>
-              ))}
+                </div>
+
+                {/* Account Section */}
+                <div className="pt-4">
+                  <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
+                    isMobileMenuClosing
+                      ? 'animate-fade-out-fast'
+                      : isMobileMenuOpen
+                        ? 'animate-fade-in opacity-0'
+                        : 'opacity-0'
+                  }`}
+                      style={{
+                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.36s' : '0s',
+                        animationFillMode: 'forwards'
+                      }}>Account</h3>
+                  {!user ? (
+                    <div className="space-y-1">
+                      <button
+                        className={`flex items-center gap-3 w-full px-4 py-3 text-white bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 rounded-xl transition-all duration-300 font-medium shadow-lg hover:shadow-xl hover:scale-[1.02] ${
+                          isMobileMenuClosing
+                            ? 'animate-slide-out-right-fast'
+                            : isMobileMenuOpen
+                              ? 'animate-slide-in-right opacity-0'
+                              : 'opacity-0'
+                        }`}
+                        style={{
+                          animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.39s' : '0s',
+                          animationFillMode: 'forwards'
+                        }}
+                        onClick={() => { openAuthModal('signin'); closeMobileMenu(); }}
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Sign In</span>
+                      </button>
+                      <button
+                        className={`flex items-center gap-3 w-full px-4 py-3 text-cyan-600 border-2 border-cyan-200 hover:bg-cyan-50 rounded-xl transition-all duration-300 font-medium hover:scale-[1.02] ${
+                          isMobileMenuClosing
+                            ? 'animate-slide-out-right-fast'
+                            : isMobileMenuOpen
+                              ? 'animate-slide-in-right opacity-0'
+                              : 'opacity-0'
+                        }`}
+                        style={{
+                          animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.42s' : '0s',
+                          animationFillMode: 'forwards'
+                        }}
+                        onClick={() => { openAuthModal('signup'); closeMobileMenu(); }}
+                      >
+                        <Plus className="w-4 h-4" />
+                        <span>Create Account</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className={`px-4 py-3 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl border border-cyan-200 ${
+                        isMobileMenuClosing
+                          ? 'animate-slide-out-right-fast'
+                          : isMobileMenuOpen
+                            ? 'animate-slide-in-right opacity-0'
+                            : 'opacity-0'
+                      }`}
+                           style={{
+                             animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.39s' : '0s',
+                             animationFillMode: 'forwards'
+                           }}>
+                        <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
+                        <p className="text-xs text-gray-600">{user.email || user.phone || 'My Account'}</p>
+                      </div>
+                      <button
+                        onClick={() => { handleLogout(); closeMobileMenu(); }}
+                        className={`flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium hover:scale-[1.02] ${
+                          isMobileMenuClosing
+                            ? 'animate-slide-out-right-fast'
+                            : isMobileMenuOpen
+                              ? 'animate-slide-in-right opacity-0'
+                              : 'opacity-0'
+                        }`}
+                        style={{
+                          animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.42s' : '0s',
+                          animationFillMode: 'forwards'
+                        }}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Store Footer */}
+            <div className={`p-4 bg-gray-50 ${
+              isMobileMenuClosing
+                ? 'animate-fade-out-fast'
+                : isMobileMenuOpen
+                  ? 'animate-slide-up opacity-0'
+                  : 'opacity-0'
+            }`}
+                 style={{
+                   animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.45s' : '0s',
+                   animationFillMode: 'forwards'
+                 }}>
+              <div className="text-center text-xs text-gray-500 leading-none">
+                <div className="inline-block">
+                  © 2025 Meem Home • Quality & Style
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -736,7 +1005,7 @@ const goAll = () => {
                 <div className="space-y-4">
                   <div className="border-b border-gray-100 pb-3">
                     <p className="font-semibold text-gray-900">{user.name}</p>
-                    <p className="text-sm text-gray-600">{user.email}</p>
+                    <p className="text-sm text-gray-600">{user.email || user.phone || 'My Account'}</p>
                   </div>
                   <div className="space-y-2">
                     <Link to="/store/wishlist" className="block w-full text-left">
@@ -979,7 +1248,7 @@ const goAll = () => {
           .animate-scroll {
             animation: scroll 20s linear infinite;
           }
-          
+
           @keyframes fade-in {
             from {
               opacity: 0;
@@ -990,9 +1259,129 @@ const goAll = () => {
               transform: translateY(0);
             }
           }
-          
+
           .animate-fade-in {
-            animation: fade-in 0.6s ease-out forwards;
+            animation: fade-in 0.3s ease-out forwards;
+          }
+
+          @keyframes slide-in-right {
+            from {
+              opacity: 0;
+              transform: translateX(20px);
+            }
+            to {
+              opacity: 1;
+              transform: translateX(0);
+            }
+          }
+
+          .animate-slide-in-right {
+            animation: slide-in-right 0.25s ease-out forwards;
+          }
+
+          @keyframes slide-down {
+            from {
+              opacity: 0;
+              transform: translateY(-15px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .animate-slide-down {
+            animation: slide-down 0.3s ease-out forwards;
+          }
+
+          @keyframes slide-up {
+            from {
+              opacity: 0;
+              transform: translateY(15px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
+          }
+
+          .animate-slide-up {
+            animation: slide-up 0.3s ease-out forwards;
+          }
+
+          @keyframes scale-in {
+            from {
+              opacity: 0;
+              transform: scale(0.9);
+            }
+            to {
+              opacity: 1;
+              transform: scale(1);
+            }
+          }
+
+          .animate-scale-in {
+            animation: scale-in 0.25s ease-out forwards;
+          }
+
+          @keyframes fade-out-fast {
+            from {
+              opacity: 1;
+              transform: translateY(0);
+            }
+            to {
+              opacity: 0;
+              transform: translateY(-10px);
+            }
+          }
+
+          .animate-fade-out-fast {
+            animation: fade-out-fast 0.15s ease-in forwards;
+          }
+
+          @keyframes slide-out-right-fast {
+            from {
+              opacity: 1;
+              transform: translateX(0);
+            }
+            to {
+              opacity: 0;
+              transform: translateX(20px);
+            }
+          }
+
+          .animate-slide-out-right-fast {
+            animation: slide-out-right-fast 0.1s ease-in forwards;
+          }
+
+          @keyframes slide-down-categories {
+            from {
+              max-height: 0;
+              opacity: 0;
+            }
+            to {
+              max-height: 350px;
+              opacity: 1;
+            }
+          }
+
+          .animate-slide-down-categories {
+            animation: slide-down-categories 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+          }
+
+          @keyframes slide-up-fast {
+            from {
+              max-height: 350px;
+              opacity: 1;
+            }
+            to {
+              max-height: 0;
+              opacity: 0;
+            }
+          }
+
+          .animate-slide-up-fast {
+            animation: slide-up-fast 0.25s cubic-bezier(0.4, 0, 0.6, 1) forwards;
           }
         `}
       </style>

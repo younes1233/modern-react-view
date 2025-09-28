@@ -11,15 +11,17 @@ interface FileUploadProps {
   className?: string;
   placeholder?: string;
   maxFileSize?: number; // in MB
+  showPreview?: boolean; // Whether to show internal preview
 }
 
-export function FileUpload({ 
-  onFileSelect, 
-  maxFiles = 1, 
+export function FileUpload({
+  onFileSelect,
+  maxFiles = 1,
   accept = "image/*",
   className,
   placeholder = "Drop images here or click to upload",
-  maxFileSize = 5 // 5MB default
+  maxFileSize = 5, // 5MB default
+  showPreview = true // Show preview by default for backward compatibility
 }: FileUploadProps) {
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>('');
@@ -144,7 +146,7 @@ export function FileUpload({
         </div>
       )}
 
-      {uploadedFiles.length > 0 && (
+      {showPreview && uploadedFiles.length > 0 && (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {uploadedFiles.map((file, index) => (
             <div key={index} className="relative group">

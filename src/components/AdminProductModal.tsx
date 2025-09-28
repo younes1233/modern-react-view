@@ -76,7 +76,6 @@ function buildFormDataFromPayload(payload: any) {
     ["sku", payload.sku],
     ["status", payload.status],
     ["seller_product_status", payload.seller_product_status], // ✅ add this
-    ["country_id", payload.country_id],
     ["description", payload.description],
     ["seo_title", payload.seo_title],
     ["seo_description", payload.seo_description],
@@ -110,7 +109,9 @@ function buildFormDataFromPayload(payload: any) {
   appendBool(fd, "is_vat_exempt", !!payload.is_vat_exempt);
 
   // ---- Delivery cost ----
-  if (payload.delivery_cost != null && payload.delivery_cost !== "") {
+  if (payload.delivery_type === "company") {
+    fd.append("delivery_cost", ""); // Send empty string for company delivery (Laravel treats as null)
+  } else if (payload.delivery_cost != null && payload.delivery_cost !== "") {
     fd.append("delivery_cost", String(payload.delivery_cost));
   }
 
@@ -121,13 +122,36 @@ function buildFormDataFromPayload(payload: any) {
     fd.append("cover_image_existing", payload.cover_image);
   }
 
-  (payload.images || []).forEach((img: any, i: number) => {
+  // Handle additional images with enhanced management
+  const newImages: File[] = [];
+  const existingImages: string[] = [];
+
+  (payload.images || []).forEach((img: any) => {
     if (typeof window !== 'undefined' && img instanceof File) {
-      fd.append(`images[${i}]`, img);
+      newImages.push(img);
     } else if (typeof img === "string" && img) {
-      fd.append(`images_existing[${i}]`, img);
+      existingImages.push(img);
     }
   });
+
+  // Append new images
+  newImages.forEach((img, i) => {
+    fd.append(`images[${i}]`, img);
+  });
+
+  // Append existing images to preserve
+  existingImages.forEach((url, i) => {
+    fd.append(`images_existing[${i}]`, url);
+  });
+
+  // Append images to delete (if any)
+  if (payload.images_to_delete && payload.images_to_delete.length > 0) {
+    console.log('🗑️ Images to delete:', payload.images_to_delete);
+    payload.images_to_delete.forEach((imageId: number, i: number) => {
+      console.log(`🗑️ Adding images_to_delete[${i}] = ${imageId}`);
+      fd.append(`images_to_delete[${i}]`, String(imageId));
+    });
+  }
 
   // ---- Arrays of objects ----
   appendArrayOfObjects(fd, "product_prices", payload.product_prices || []);
@@ -135,6 +159,18 @@ function buildFormDataFromPayload(payload: any) {
 
   // ---- Variants ----
   (payload.variants || []).forEach((v: any, i: number) => {
+    // Include variant ID for updates (crucial for backend to know this is an existing variant)
+    if (v.id != null) {
+      fd.append(`variants[${i}][id]`, String(v.id));
+    }
+
+    // Handle variant images with enhanced management
+    if (v.delete_image === true) {
+      fd.append(`variants[${i}][delete_image]`, "1");  // Use "1" for boolean true, Laravel expects 1/0
+    } else {
+      fd.append(`variants[${i}][delete_image]`, "0");  // Always send delete_image field, use "0" for false
+    }
+
     if (typeof window !== 'undefined' && v.image instanceof File) {
       fd.append(`variants[${i}][image]`, v.image);
     } else if (typeof v.image === "string" && v.image) {
@@ -150,7 +186,11 @@ function buildFormDataFromPayload(payload: any) {
     if (v.delivery_type != null && v.delivery_type !== "") {
       fd.append(`variants[${i}][delivery_type]`, String(v.delivery_type));
     }
-    if (v.delivery_cost != null && v.delivery_cost !== "") {
+    // Only send delivery_cost for meemhome delivery or when explicitly set
+    const variantDeliveryType = v.delivery_type || payload.delivery_type;
+    if (variantDeliveryType === "company") {
+      fd.append(`variants[${i}][delivery_cost]`, ""); // Send empty string for company delivery
+    } else if (v.delivery_cost != null && v.delivery_cost !== "") {
       fd.append(`variants[${i}][delivery_cost]`, String(v.delivery_cost));
     }
     if (v.stock != null && v.stock !== "") {
@@ -176,7 +216,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
   const { country, store, warehouse, user } = useAuth();
   const { shelves = [] } = useShelves();
 
-  const [formData, setFormData] = useState<CreateProductData & { country_id?: number }>(
+  const [formData, setFormData] = useState<CreateProductData>(
     {
       store_id: 1,
       category_id: undefined,
@@ -201,7 +241,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       cover_image: "",
       images: [],
       stock: '',
-      warehouse_id: undefined,
       shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
@@ -210,13 +249,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       product_prices: [],
       specifications: [],
       variants: [],
-      country_id: country?.id,
     }
   );
 
   const [mainImage, setMainImage] = useState<File | string>("");
   const [mainImagePreview, setMainImagePreview] = useState<string>("");
   const [thumbnails, setThumbnails] = useState<{ id: number; file: File | string; url: string; alt: string }[]>([]);
+  const [imagesToDelete, setImagesToDelete] = useState<number[]>([]); // Track additional image IDs to delete
 
   const [priceEntries, setPriceEntries] = useState<{ net_price: string; cost: string }[]>([]);
   const [specifications, setSpecifications] = useState<{ id: number; name: string; value: string }[]>([]);
@@ -363,16 +402,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           // User will need to enter stock manually
           return "";
         })(),
-        warehouse_id: (() => {
-          if (product.available_countries?.length > 0) {
-            if (!product.variants?.length) {
-              return product.available_countries[0]?.inventory?.[0]?.warehouse?.id || warehouse?.id;
-            }
-            const firstVariant = product.available_countries[0]?.inventory?.[0];
-            return firstVariant?.inventories?.[0]?.warehouse?.id || warehouse?.id;
-          }
-          return warehouse?.id; // Fallback to current warehouse
-        })(),
         shelf_id: (() => {
           if (product.available_countries?.length > 0) {
             if (!product.variants?.length) {
@@ -405,17 +434,14 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           })) || [],
           product_variant_prices: variant.prices?.map(price => ({
             id: price.id,
-            country_id: price.country.id,
             net_price: parseFloat(price.net_price),
             cost: parseFloat(price.cost),
             vat_percentage: price.vat_percentage
           })) || [],
           stock: variant.stock?.[0]?.stock || 0,
-          warehouse_id: variant.stock?.[0]?.warehouse_id || undefined,
           delivery_type: "meemhome", // Default or get from variant if available
           delivery_cost: 0 // Default or get from variant if available
         })) || [],
-        country_id: country?.id,
       });
 
       const coverImageUrl = product.media?.cover_image?.urls?.original || "";
@@ -441,31 +467,75 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
       // Populate variant entries for UI form fields
       console.log('🔍 Original product variants data:', product.variants);
-      const variantEntries = product.variants?.map(variant => ({
-        id: variant.id,
-        image: variant.image || "",
-        variations: variant.variations?.map(variation => {
-          // Use the attribute value ID from the API response
-          // Fallback: if id is missing, log the issue and return 0 temporarily
-          if (!variation.id) {
-            console.warn('⚠️ Missing variation.id for:', variation);
-            return 0; // Temporary fallback
-          }
-          return variation.id;
-        }) || [],
-        variantPrices: variant.prices?.[0] ? {
-          net_price: variant.prices[0].net_price.toString(),
-          cost: variant.prices[0].cost.toString()
-        } : { net_price: "", cost: "" },
-        variantSpecs: [], // May need to map variant specifications if available
-        delivery_type: "inherit", // Default or get from variant data
-        delivery_cost: "", // Default or get from variant data
-        stock: variant.stock?.[0]?.stock || 0,
-        shelf_id: undefined // Variants don't inherit shelf by default
-      })) || [];
+      const variantEntries = product.variants?.map(variant => {
+        console.log('🔍 Processing variant:', {
+          id: variant.id,
+          image: variant.image,
+          stockArray: variant.stock,
+          pricesArray: variant.prices,
+          deliveryData: variant.delivery
+        });
+
+        // Extract stock - variant.stock is an array of inventory records
+        const stockValue = variant.stock && Array.isArray(variant.stock) && variant.stock.length > 0
+          ? variant.stock[0].stock
+          : 0;
+
+        // Extract pricing - variant.prices is an array of price records
+        const variantPrices = variant.prices && Array.isArray(variant.prices) && variant.prices.length > 0
+          ? {
+              net_price: variant.prices[0].net_price.toString(),
+              cost: variant.prices[0].cost.toString()
+            }
+          : { net_price: "", cost: "" };
+
+        // Extract delivery info from delivery object
+        const deliveryType = variant.delivery?.delivery_type || "inherit";
+        const deliveryCost = variant.delivery?.delivery_cost || "";
+
+        console.log('🔍 Extracted data for variant', variant.id, {
+          stock: stockValue,
+          prices: variantPrices,
+          delivery: { type: deliveryType, cost: deliveryCost }
+        });
+
+        // Handle variant image - use mobile version for admin forms (smaller size)
+        const variantImageUrl = typeof variant.image === 'string'
+          ? variant.image
+          : variant.image?.urls?.thumbnails?.mobile || variant.image?.urls?.original || "";
+
+        const variantEntry = {
+          id: variant.id,
+          image: variantImageUrl,
+          delete_image: false, // Initialize deletion flag for existing variants
+          variations: variant.variations?.map(variation => {
+            // Use the attribute value ID from the API response
+            // Fallback: if id is missing, log the issue and return 0 temporarily
+            if (!variation.id) {
+              console.warn('⚠️ Missing variation.id for:', variation);
+              return 0; // Temporary fallback
+            }
+            return variation.id;
+          }) || [],
+          variantPrices,
+          variantSpecs: [], // May need to map variant specifications if available
+          delivery_type: deliveryType,
+          delivery_cost: deliveryCost,
+          stock: stockValue,
+          shelf_id: undefined // Variants don't inherit shelf by default
+        };
+
+        // Set imagePreviewUrl for existing images so they display properly
+        if (variantImageUrl) {
+          (variantEntry as any).imagePreviewUrl = variantImageUrl;
+        }
+
+        return variantEntry;
+      }) || [];
 
       console.log('🔍 Setting variant entries for edit mode:', variantEntries);
       setVariantEntries(variantEntries);
+      setImagesToDelete([]); // Reset image deletion tracking for edit mode
     } else {
       setFormData({
         store_id: store ? parseInt(store as string) || 1 : 1,
@@ -491,7 +561,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         cover_image: "",
         images: [],
         stock: '',
-        warehouse_id: warehouse?.id,
         shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
@@ -500,7 +569,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         product_prices: [],
         specifications: [],
         variants: [],
-        country_id: country?.id,
       });
       setMainImage(null);
       setMainImagePreview("");
@@ -513,6 +581,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         { id: Date.now() + 3, name: "length", value: "66" },
       ]);
       setVariantEntries([]);
+      setImagesToDelete([]); // Reset image deletion tracking
       setSeoTitleEdited(false);
       setSeoDescriptionEdited(false);
       setClickConfirmNeeded(false);
@@ -554,13 +623,14 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       ...prev,
       description,
       // Auto-populate SEO description only if user hasn't manually edited it
-      seo_description: seoDescriptionEdited ? prev.seo_description : description
+      seo_description: seoDescriptionEdited ? prev.seo_description :
+        description.length > 255 ? description.substring(0, 252) + '...' : description
     }));
   };
 
-  const updateField = <K extends keyof (CreateProductData & { country_id?: number })>(
+  const updateField = <K extends keyof CreateProductData>(
     field: K,
-    value: (CreateProductData & { country_id?: number })[K]
+    value: CreateProductData[K]
   ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear validation error for this field when user starts typing
@@ -598,7 +668,33 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
   const removeThumbnail = (id: number) => {
     const thumbnailToRemove = thumbnails.find(t => t.id === id);
     if (thumbnailToRemove) {
+      console.log('🗑️ Removing thumbnail:', { id, thumbnailToRemove });
+
+      // Remove from thumbnails display
       setThumbnails((prev) => prev.filter((t) => t.id !== id));
+
+      // If it's an existing image (string URL), track it for deletion
+      if (typeof thumbnailToRemove.file === 'string' && mode === 'edit') {
+        console.log('🔍 Looking for existing image in additional_images:', product?.media?.additional_images);
+
+        // Find the actual database ID from the product data - ONLY for additional images, not variant images
+        const existingImage = product?.media?.additional_images?.find(
+          img => img.urls?.original === thumbnailToRemove.file
+        );
+
+        console.log('🔍 Found existing image:', existingImage);
+
+        if (existingImage?.id) {
+          console.log('🗑️ Adding to images_to_delete:', existingImage.id);
+          setImagesToDelete(prev => {
+            const newList = [...prev, existingImage.id];
+            console.log('🗑️ Updated images_to_delete list:', newList);
+            return newList;
+          });
+        }
+      }
+
+      // Update the form data images array
       const updatedImages = (formData.images || []).filter((img) => img !== thumbnailToRemove.file);
       updateField("images", updatedImages as any);
     }
@@ -639,6 +735,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       {
         id: Date.now(),
         image: "",
+        delete_image: false, // Initialize deletion flag
         variations: [],
         variantPrices: { net_price: "", cost: "" },
         variantSpecs: [],
@@ -775,8 +872,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     if (!formData.name) errors.name = ["Product name is required"];
     if (!formData.sku) errors.sku = ["SKU is required"];
     if (!formData.slug) errors.slug = ["URL slug is required"];
-    if (!formData.net_price) errors.net_price = ["Net price is required"];
-    if (!formData.cost_price) errors.cost_price = ["Cost price is required"];
+
+    // Price validation depends on variant configuration
+    // For non-variant products, prices are always required
+    if (!formData.has_variants) {
+      if (!formData.net_price) errors.net_price = ["Net price is required"];
+      if (!formData.cost_price) errors.cost_price = ["Cost price is required"];
+    }
 
     // Validate variants when has_variants is true
     if (formData.has_variants && variantEntries.length === 0) {
@@ -841,14 +943,20 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       }
 
       // If some variants lack prices, product price is required as fallback
-      if (variantsWithoutPrice.length > 0 && (!formData.cost_price || !formData.net_price)) {
-        toast({
-          title: "Error",
-          description: `Product prices are required as fallback for variants ${variantsWithoutPrice.map(i => i + 1).join(', ')} that don't have pricing`,
-          variant: "destructive"
-        });
-        return;
+      if (variantsWithoutPrice.length > 0) {
+        if (!formData.cost_price) {
+          errors.cost_price = [`Cost price is required as fallback for variants ${variantsWithoutPrice.map(i => i + 1).join(', ')} that don't have pricing`];
+        }
+        if (!formData.net_price) {
+          errors.net_price = [`Net price is required as fallback for variants ${variantsWithoutPrice.map(i => i + 1).join(', ')} that don't have pricing`];
+        }
       }
+    }
+
+    // Check for validation errors before continuing
+    if (Object.keys(errors).length > 0) {
+      setValidationErrors(errors);
+      return;
     }
 
     // Validate specifications with backend fallback logic
@@ -905,8 +1013,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       if (!isNaN(costPrice) && !isNaN(netPrice)) {
         prices.push({
           net_price: netPrice,
-          cost: costPrice,
-          country_id: (formData as any).country_id
+          cost: costPrice
         });
       }
     }
@@ -993,7 +1100,9 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         const stock = variant.stock || 0;
 
         const variantData: any = {
+          id: variant.id, // Include variant ID for updates
           image: variant.image,
+          delete_image: variant.delete_image, // Include deletion flag
           variations,
           stock,
           product_variant_prices: variantPricesParsed.length > 0 ? (variantPricesParsed as any) : [],
@@ -1017,7 +1126,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       });
     }
 
-    const sanitized: CreateProductData & { country_id?: number; mode?: string } = {
+    const sanitized: CreateProductData & { mode?: string; images_to_delete?: number[] } = {
       ...(formData as CreateProductData),
       has_variants: formData.has_variants === true,
       is_seller_product: formData.is_seller_product === true,
@@ -1026,11 +1135,11 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       is_new_arrival: formData.is_new_arrival === true,
       is_best_seller: formData.is_best_seller === true,
       is_vat_exempt: formData.is_vat_exempt === true,
-      country_id: (formData as any).country_id,
       product_prices: prices as any,
       specifications: specs,
       cover_image: (mainImage || formData.cover_image) as any,
       images: thumbnails.map((t) => t.file) as any,
+      images_to_delete: imagesToDelete.length > 0 ? imagesToDelete : undefined,
       variants: variantsPayload as any,
       mode: mode,
     };
@@ -1060,7 +1169,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           }))
         );
       }
-      if (!(safe as any).country_id) console.warn('⚠ No country_id set');
       if (!(safe as any).sku) console.warn('⚠ No SKU set');
       if (!(safe as any).name) console.warn('⚠ No name set');
       console.groupEnd();
@@ -1342,7 +1450,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                   Delivery Method *
                   {formData.has_variants && <span className="text-xs text-muted-foreground ml-1">(fallback for variants)</span>}
                 </Label>
-                <Select value={formData.delivery_type || ''} onValueChange={(value) => updateField('delivery_type', value)} required>
+                <Select value={formData.delivery_type || ''} onValueChange={(value) => {
+                  updateField('delivery_type', value);
+                  // Clear delivery cost when switching to company delivery
+                  if (value === 'company') {
+                    updateField('delivery_cost', null as any);
+                  }
+                }} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select delivery method" />
                   </SelectTrigger>
@@ -1365,7 +1479,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.delivery_cost || ''}
+                  value={formData.delivery_type === 'company' ? '' : (formData.delivery_cost || '')}
                   onChange={(e) => updateField('delivery_cost', e.target.value ? (parseFloat(e.target.value) as any) : (0 as any))}
                   placeholder="Enter delivery cost"
                   disabled={formData.delivery_type === 'company'}
@@ -1388,23 +1502,35 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Main Product Image *</Label>
-                <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" />
+                <FileUpload onFileSelect={handleMainImageUpload} accept="image/*" showPreview={false} />
                 {mainImagePreview && (
-                  <div className="mt-2">
+                  <div className="mt-2 relative inline-block">
                     <img src={mainImagePreview} alt="Main product" className="h-20 w-20 object-cover rounded" />
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      size="sm"
+                      className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                      onClick={() => {
+                        setMainImage(null);
+                        setMainImagePreview('');
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </div>
                 )}
                 {renderFieldError('cover_image')}
               </div>
               <div>
                 <Label>Additional Images</Label>
-                <FileUpload onFileSelect={handleThumbnailUpload} accept="image/*" maxFiles={10} />
+                <FileUpload onFileSelect={handleThumbnailUpload} accept="image/*" maxFiles={10} showPreview={false} />
                 {thumbnails.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2">
                     {thumbnails.map((thumb) => (
                       <div key={thumb.id} className="relative">
                         <img src={thumb.url} alt={thumb.alt} className="h-16 w-16 object-cover rounded" />
-                        <Button type="button" variant="destructive" size="sm" className="absolute -top-2 -right-2 h-6 w-6 p-0" onClick={() => removeThumbnail(thumb.id)}>
+                        <Button type="button" variant="destructive" size="sm" className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full" onClick={() => removeThumbnail(thumb.id)}>
                           <X className="h-3 w-3" />
                         </Button>
                       </div>
@@ -1502,13 +1628,37 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                         }
                       }}
                       accept="image/*"
+                      showPreview={false}
                     />
                     {(() => {
                       const v = variant as any;
                       const previewUrl = v.imagePreviewUrl || (typeof v.image === 'string' ? v.image : '');
                       return previewUrl ? (
-                        <div className="mt-2">
+                        <div className="mt-2 relative inline-block">
                           <img src={previewUrl} alt="Variant" className="w-32 h-32 object-cover rounded" />
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            className="absolute -top-2 -right-2 h-6 w-6 p-0 rounded-full"
+                            onClick={() => {
+                              // Check if this is an existing image (string) vs new upload (File)
+                              const v = variant as any;
+                              if (typeof v.image === 'string' && v.image && mode === 'edit') {
+                                // For existing images, mark for deletion
+                                updateVariantField(variant.id, 'delete_image', true);
+                                updateVariantField(variant.id, 'image', '');
+                                updateVariantField(variant.id, 'imagePreviewUrl', '');
+                              } else {
+                                // For new uploads, just clear
+                                updateVariantField(variant.id, 'image', '');
+                                updateVariantField(variant.id, 'imagePreviewUrl', '');
+                                updateVariantField(variant.id, 'delete_image', false);
+                              }
+                            }}
+                          >
+                            <X className="h-3 w-3" />
+                          </Button>
                         </div>
                       ) : null;
                     })()}
@@ -1811,7 +1961,11 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                   }}
                   placeholder={formData.description ? `Auto-filled: ${formData.description.substring(0, 60)}...` : "SEO description for search engines"}
                   rows={2}
+                  maxLength={255}
                 />
+                <div className="text-xs text-muted-foreground mt-1 text-right">
+                  {(formData.seo_description || '').length}/255 characters
+                </div>
               </div>
             </div>
           </div>

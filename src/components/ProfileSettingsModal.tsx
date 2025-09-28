@@ -14,6 +14,7 @@ import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Phone, MapPin, Bell, Shield, Palette } from 'lucide-react';
 import { useCountries } from '@/hooks/useCountries';
 import { useWarehouses } from '@/hooks/useWarehouses';
+import { useAdminSettings } from '@/hooks/useAdminSettings';
 import {
   Select,
   SelectContent,
@@ -40,10 +41,8 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   // Access localization from context; destructure setters as well
   const {
     country,
-    store,
     warehouse,
     setCountry,
-    setStore,
     setWarehouse,
   } = useAuth() || {};
 
@@ -59,16 +58,16 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(
     warehouse?.id ? String(warehouse.id) : ''
   );
-  const [selectedStore, setSelectedStoreLocal] = useState(store || '');
+  // Admin settings hook
+  const { adminSettings, isLoading: isLoadingAdminSettings, updateAdminSettings, isUpdating } = useAdminSettings();
 
-  // When the underlying context values change (e.g. after saving), rehydrate
-  // the local selections to match.  This keeps the form in sync when the
-  // modal is reopened after a save.
+  // Initialize form state from admin settings
   useEffect(() => {
-    setSelectedCountryId(country?.id ? String(country.id) : '');
-    setSelectedStoreLocal(store || '');
-    setSelectedWarehouseId(warehouse?.id ? String(warehouse.id) : '');
-  }, [country, store, warehouse]);
+    if (adminSettings) {
+      setSelectedCountryId(adminSettings.selected_country_id ? String(adminSettings.selected_country_id) : '');
+      setSelectedWarehouseId(adminSettings.selected_warehouse_id ? String(adminSettings.selected_warehouse_id) : '');
+    }
+  }, [adminSettings]);
 
   // Whenever the selected country changes, clear the warehouse selection
   useEffect(() => {
@@ -76,12 +75,17 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   }, [selectedCountryId]);
 
   /**
-   * Persist the localization selections back into context.  We look up
-   * the selected objects from the lists to pass the full objects (not
-   * just the IDs) into the context setters.  If no selection has been
-   * made for a field, `null` is passed to clear it.
+   * Save localization selections to the database via API
    */
   const handleSaveLocalization = () => {
+    const settings = {
+      selected_country_id: selectedCountryId ? parseInt(selectedCountryId) : null,
+      selected_warehouse_id: selectedWarehouseId ? parseInt(selectedWarehouseId) : null,
+    };
+
+    updateAdminSettings(settings);
+
+    // Also update context for immediate UI feedback
     const selectedCountryObj = countries.find(
       (c) => String(c.id) === selectedCountryId
     );
@@ -89,12 +93,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       ? warehouses.find((w) => String(w.id) === selectedWarehouseId)
       : null;
     setCountry?.(selectedCountryObj || null);
-    setStore?.(selectedStore || null);
     setWarehouse?.(selectedWarehouseObj || null);
-    toast({
-      title: 'Localization updated',
-      description: 'Your localization preferences have been saved.',
-    });
   };
 
   // State for profile info fields
@@ -175,7 +174,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
               <CardHeader>
                 <CardTitle>Localization</CardTitle>
                 <CardDescription>
-                  Select your default country, store and warehouse.
+                  Select your default country and warehouse for admin operations.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -184,9 +183,10 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   <Select
                     value={selectedCountryId}
                     onValueChange={(value) => setSelectedCountryId(value)}
+                    disabled={isLoadingAdminSettings || countriesLoading}
                   >
                     <SelectTrigger id="country">
-                      <SelectValue placeholder="Select a country" />
+                      <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select a country"} />
                     </SelectTrigger>
                     <SelectContent>
                       {countries.map((c) => (
@@ -198,22 +198,18 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="store">Store</Label>
-                  <Input
-                    id="store"
-                    placeholder="Store name or ID"
-                    value={selectedStore}
-                    onChange={(e) => setSelectedStoreLocal(e.target.value)}
-                  />
-                </div>
-                <div>
                   <Label htmlFor="warehouse">Warehouse</Label>
                   <Select
                     value={selectedWarehouseId}
                     onValueChange={(value) => setSelectedWarehouseId(value)}
+                    disabled={isLoadingAdminSettings || warehousesLoading || !selectedCountryId}
                   >
                     <SelectTrigger id="warehouse">
-                      <SelectValue placeholder="Select a warehouse" />
+                      <SelectValue placeholder={
+                        warehousesLoading ? "Loading warehouses..." :
+                        !selectedCountryId ? "Please select a country first" :
+                        "Select a warehouse"
+                      } />
                     </SelectTrigger>
                     <SelectContent>
                       {warehouses.map((w) => (
@@ -224,7 +220,12 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                     </SelectContent>
                   </Select>
                 </div>
-                <Button onClick={handleSaveLocalization}>Save Localization</Button>
+                <Button
+                  onClick={handleSaveLocalization}
+                  disabled={isUpdating || isLoadingAdminSettings}
+                >
+                  {isUpdating ? 'Saving...' : 'Save Localization'}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>
