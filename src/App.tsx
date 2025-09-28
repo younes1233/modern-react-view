@@ -88,23 +88,23 @@ function App() {
                         {/* Protected Admin Routes */}
                         <Route path="/dashboard" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Index />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/products" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Products />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/categories" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Categories />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
@@ -112,7 +112,7 @@ function App() {
 
                         <Route path="/dashboard/inventory" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Inventory />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
@@ -120,89 +120,87 @@ function App() {
 
                         <Route path="/dashboard/store-management" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <StoreManagement />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/orders" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Orders />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/customers" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Customers />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/returns" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Returns />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/coupons" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Coupons />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/analytics" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <Analytics />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/sales-report" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin', 'manager']}>
+                            <RoleProtectedRoute>
                               <SalesReport />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
 
-                        {/* Super Admin Only Routes */}
                         <Route path="/dashboard/user-management" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin']}>
+                            <RoleProtectedRoute>
                               <UserManagement />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/product-approval" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin']}>
+                            <RoleProtectedRoute>
                               <ProductApproval />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
-                        
+
                         <Route path="/dashboard/localization" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['super_admin']}>
+                            <RoleProtectedRoute>
                               <Localization />
                             </RoleProtectedRoute>
                           </ProtectedRoute>
                         } />
 
-                        {/* Seller Routes */}
                         <Route path="/dashboard/seller-products" element={
                           <ProtectedRoute>
-                            <RoleProtectedRoute allowedRoles={['seller']}>
+                            <RoleProtectedRoute>
                               <SellerProducts />
                             </RoleProtectedRoute>
                           </ProtectedRoute>

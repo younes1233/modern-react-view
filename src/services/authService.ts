@@ -65,6 +65,17 @@ interface RefreshTokenResponse {
   };
 }
 
+interface DashboardAccessResponse {
+  error: boolean;
+  message: string;
+  details: {
+    can_access: boolean;
+    user_roles: string[];
+    user_permissions: string[];
+    reason: string;
+  };
+}
+
 class AuthService extends BaseApiService {
   async login(email: string, password: string): Promise<AuthResponse> {
     const response = await this.post<AuthResponse>('/auth/login', {
@@ -148,6 +159,10 @@ class AuthService extends BaseApiService {
       this.setToken(response.details.token);
     }
     return response;
+  }
+
+  async canAccessDashboard(): Promise<DashboardAccessResponse> {
+    return this.get<DashboardAccessResponse>('/auth/can-access-dashboard');
   }
 }
 
