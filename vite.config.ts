@@ -19,17 +19,4 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  esbuild: {
-    // Temporarily ignore TypeScript errors to allow build completion
-    logOverride: { 'this-is-undefined-in-esm': 'silent' }
-  },
-  build: {
-    rollupOptions: {
-      onwarn(warning, warn) {
-        // Skip certain warnings
-        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
-        warn(warning);
-      }
-    }
-  }
 }));
