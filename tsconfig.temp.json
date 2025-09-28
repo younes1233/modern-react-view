@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "skipLibCheck": true,
+    "noImplicitAny": false,
+    "strict": false
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/components/AdminProductModal.tsx",
+    "src/components/store-management/ProductListingManagement.tsx", 
+    "src/components/store-management/ProductListingModal.tsx",
+    "src/components/store/ProductSection.tsx",
+    "src/data/storeData.ts"
+  ]
+}

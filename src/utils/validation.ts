@@ -27,7 +27,7 @@ export interface VariantEntry {
     cost: string;
   };
   delivery_type?: string;
-  delivery_cost?: string;
+  delivery_cost?: string | number;
   delete_image?: boolean;
   imagePreviewUrl?: string;
   image?: any;
