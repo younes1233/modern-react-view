@@ -3,7 +3,7 @@ import BaseApiService from './baseApiService';
 export interface WishlistProduct {
   id: number;
   name: string;
-  description: string;
+  description: string | null;
   slug: string;
   sku: string;
   status: string;
@@ -13,7 +13,7 @@ export interface WishlistProduct {
     level: string;
     slug: string;
     path: string;
-  };
+  } | null;
   store: string;
   flags: {
     on_sale: boolean;
@@ -23,31 +23,28 @@ export interface WishlistProduct {
     is_vat_exempt: boolean;
     seller_product_status: string;
   };
-  media: {
-    cover_image: string;
-    images: string;
-  };
+  image: string;
   pricing: {
-    original_price: string;
-    price: string;
-    currency_id: string;
+    original_price: string | null;
+    price: string | null;
+    currency_id: string | null;
     currency: {
       code: string;
       symbol: string;
-    };
-    applied_discounts: string;
-    vat: string;
+    } | null;
+    applied_discounts: any[];
+    vat: any[];
   };
-  stock: number;
+  stock: number | null;
   rating: {
-    average: string;
-    count: string;
+    average: number;
+    count: number;
   };
   identifiers: {
     sku: string;
     barcode: string;
     qr_code: string;
-    serial_number: string;
+    serial_number: string | null;
   };
 }
 
