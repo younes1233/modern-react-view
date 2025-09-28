@@ -28,6 +28,11 @@ export interface VariantEntry {
   };
   delivery_type?: string;
   delivery_cost?: string;
+  delete_image?: boolean;
+  imagePreviewUrl?: string;
+  image?: any;
+  shelf_id?: any;
+  variantSpecs?: any[];
   [key: string]: any;
 }
 

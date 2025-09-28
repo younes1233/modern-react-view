@@ -65,6 +65,7 @@ export interface AdminProductAPI {
         zoom: string;
       };
     }>;
+    additional_images?: any[];
   };
   status: 'active' | 'inactive' | 'draft';
   flags: {
@@ -100,11 +101,26 @@ export interface AdminProductAPI {
     }>;
     stock?: Array<{ id: number; warehouse_id: number; warehouse_country_id: number; stock: number }>;
     variations: Array<{ id: number; attribute: string; type: string; value: string; slug: string; hex_color: string | null; image: string | null }>;
+    delivery?: {
+      delivery_type: string;
+      delivery_cost: number;
+    };
     created_at: string;
     updated_at: string;
   }>;
   specifications?: Array<{ id: number; product_id: number; name: string; value: string; created_at: string; updated_at: string }>;
   meta: { seo_title: string; seo_description: string; created_at: string; updated_at: string };
+  available_countries?: Array<{
+    id: number;
+    name: string;
+    inventory?: {
+      stock: number;
+    };
+  }>;
+  delivery?: {
+    delivery_type: string;
+    delivery_cost: number;
+  };
 }
 
 export interface AdminProductsResponse {
@@ -156,6 +172,8 @@ export interface CreateProductData {
   product_prices?: Array<{ net_price: number; cost: number; vat_percentage?: number }>;
   variants?: Array<any>;
   specifications?: Array<{ name: string; value: string }>;
+  net_price?: string;
+  cost_price?: string;
 }
 
 export interface UpdateProductData extends Partial<CreateProductData> {
