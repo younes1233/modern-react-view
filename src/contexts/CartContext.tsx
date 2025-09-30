@@ -14,6 +14,22 @@ export interface CartItem {
   selectedVariations?: string;
 }
 
+interface CartNotificationItem {
+  name: string;
+  image: string;
+  price: number;
+  quantity: number;
+  currency?: {
+    symbol?: string;
+    code?: string;
+  };
+}
+
+interface VariantSelectionRequest {
+  product: Product;
+  quantity: number;
+}
+
 interface CartContextType {
   items: CartItem[];
   addToCart: (product: Product, quantity?: number, productVariantId?: string) => Promise<void>;
@@ -25,6 +41,10 @@ interface CartContextType {
   isInCart: (productId: number) => boolean;
   isLoading: boolean;
   moveToWishlist: (itemId: string) => Promise<void>;
+  notificationItem: CartNotificationItem | null;
+  clearNotification: () => void;
+  variantSelectionRequest: VariantSelectionRequest | null;
+  clearVariantSelection: () => void;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -32,6 +52,8 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [notificationItem, setNotificationItem] = useState<CartNotificationItem | null>(null);
+  const [variantSelectionRequest, setVariantSelectionRequest] = useState<VariantSelectionRequest | null>(null);
   const { user } = useAuth();
 
   // Convert API cart items to our CartItem format
@@ -144,19 +166,49 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const cart = await cartService.addToCart(requestData);
       console.log('API call successful, cart response:', cart);
       setItems(convertApiCartItems(cart));
-      toast.success(`Added ${quantity} ${quantity === 1 ? 'item' : 'items'} of "${product.name}" to cart`, {
-        description: product.price ? `Price: $${product.price.toFixed(2)} each` : 'Added to cart successfully',
-        duration: 3000,
+
+      // Show notification instead of toast
+      setNotificationItem({
+        name: product.name,
+        image: typeof product.image === 'string' ? product.image : '/placeholder.svg',
+        price: product.price || 0,
+        quantity: quantity,
+        currency: (product as any).currency
       });
     } catch (error: any) {
       console.error('Error adding to cart:', error);
-      console.error('Error details:', { status: error?.status, response: error?.response?.data });
+
       if (error?.status === 401) {
-        toast.error("Please login to manage your cart");
-      } else if (error?.response?.data?.details?.product_id) {
-        toast.error("Please select a variant for this product");
+        toast.error("Please login to add items to cart");
+      } else if (error?.status === 422) {
+        // Validation error from Laravel - errors are in error.details
+        const validationErrors = error.details || {};
+        console.log('Validation errors:', validationErrors);
+
+        // Check if product_id field has variant error
+        if (validationErrors?.product_id) {
+          const errorMessage = Array.isArray(validationErrors.product_id)
+            ? validationErrors.product_id[0]
+            : validationErrors.product_id;
+
+          console.log('product_id error:', errorMessage);
+
+          if (errorMessage?.includes('variants') || errorMessage?.includes('product_variant_id')) {
+            // Product has variants but no variant was selected - trigger variant selection modal
+            console.log('Triggering variant selection modal for product:', product.name);
+            setVariantSelectionRequest({ product, quantity });
+            return; // Don't show toast
+          }
+        }
+
+        // Other validation errors - show first error message
+        const firstErrorKey = Object.keys(validationErrors)[0];
+        const firstError = validationErrors[firstErrorKey];
+        const errorMessage = Array.isArray(firstError) ? firstError[0] : String(firstError || "Invalid product selection");
+        toast.error(errorMessage);
       } else {
-        toast.error("Failed to add item to cart");
+        const errorMessage = error?.message || "Failed to add item to cart";
+        toast.error(errorMessage);
       }
     } finally {
       setIsLoading(false);
@@ -254,6 +306,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     return items.some(item => item.product.id === productId);
   };
 
+  const clearNotification = () => {
+    setNotificationItem(null);
+  };
+
+  const clearVariantSelection = () => {
+    setVariantSelectionRequest(null);
+  };
+
   return (
     <CartContext.Provider value={{
       items,
@@ -265,7 +325,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       getTotalPrice,
       isInCart,
       isLoading,
-      moveToWishlist
+      moveToWishlist,
+      notificationItem,
+      clearNotification,
+      variantSelectionRequest,
+      clearVariantSelection
     }}>
       {children}
     </CartContext.Provider>

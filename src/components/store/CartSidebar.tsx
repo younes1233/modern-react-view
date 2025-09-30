@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetClose } from "@/components/ui/sheet";
 import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
@@ -34,24 +34,34 @@ export function CartSidebar() {
           )}
         </Button>
       </SheetTrigger>
-      <SheetContent className="w-full sm:w-[400px] flex flex-col">
+      <SheetContent className="w-full sm:w-[400px] flex flex-col" hideClose>
         <SheetHeader className="sticky top-0 bg-white z-10 pb-4 border-b">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-2">
             <SheetTitle className="flex items-center gap-2">
               <span>Shopping Cart ({getTotalItems()})</span>
             </SheetTitle>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
               {items.length > 0 && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={clearCart}
-                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-2"
                   title="Clear cart"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="w-5 h-5" />
                 </Button>
               )}
+              <SheetClose asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full p-2 hover:bg-gray-100"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </Button>
+              </SheetClose>
             </div>
           </div>
           <SheetDescription className="sr-only">

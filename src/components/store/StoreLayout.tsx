@@ -17,6 +17,8 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import * as Portal from '@radix-ui/react-portal';
 import { CountryCurrencySelector } from './CountryCurrencySelector';
 import { useStoreCategories } from '@/hooks/useStoreCategories';
+import { AddToCartNotification } from './AddToCartNotification';
+import { VariantSelectionModal } from './VariantSelectionModal';
 
 interface StoreLayoutProps {
   children: ReactNode;
@@ -32,7 +34,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
    errorMsg,
   } = useSearch();
   const { items: wishlistItems } = useWishlist();
-  const { getTotalItems } = useCart();
+  const { getTotalItems, notificationItem, clearNotification, variantSelectionRequest, clearVariantSelection, addToCart } = useCart();
   const { categories, loading: categoriesLoading } = useStoreCategories();
   const auth = useAuth();
   const user = auth?.user || null;
@@ -188,7 +190,7 @@ const goAll = () => {
   return (
     <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-blue-100 light overflow-visible">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50">
+      <header className="bg-white shadow-lg border-b border-gray-200 z-50">
         <div className="w-full max-w-7xl mx-auto px-3 md:px-6">
           <div className="flex items-center justify-between h-14 md:h-16 lg:h-18 gap-2 md:gap-4">
             {/* Logo */}
@@ -1385,6 +1387,23 @@ const goAll = () => {
           }
         `}
       </style>
+
+      {/* Add to Cart Notification */}
+      <AddToCartNotification item={notificationItem} onClose={clearNotification} />
+
+      {/* Variant Selection Modal */}
+      {variantSelectionRequest && (
+        <VariantSelectionModal
+          isOpen={true}
+          onClose={clearVariantSelection}
+          product={variantSelectionRequest.product}
+          quantity={variantSelectionRequest.quantity}
+          onConfirm={(variantId) => {
+            addToCart(variantSelectionRequest.product, variantSelectionRequest.quantity, variantId);
+            clearVariantSelection();
+          }}
+        />
+      )}
     </div>
   );
 }
