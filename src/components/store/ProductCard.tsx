@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Heart, ShoppingCart, Star, Package } from 'lucide-react'
+import { Heart, ShoppingCart, Package } from 'lucide-react'
+import { StarRating } from '@/components/ui/star-rating'
 import { Product } from '@/data/storeData'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
@@ -152,12 +153,7 @@ export function ProductCard({ product }: ProductCardProps) {
               <h3 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight flex-1">
                 {product.name}
               </h3>
-              <div className="flex items-center bg-amber-50 border border-amber-200 rounded-full px-2 py-1 flex-shrink-0">
-                <Star className="w-3 h-3 text-amber-500 fill-current mr-1" />
-                <span className="text-xs font-medium text-amber-700">
-                  {product.rating ? product.rating.toFixed(1) : '0.0'}
-                </span>
-              </div>
+              <StarRating rating={product.rating || 0} className="flex-shrink-0" />
             </div>
           </div>
 

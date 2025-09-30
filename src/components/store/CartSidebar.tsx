@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from "@/components/ui/sheet";
 import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useState } from "react";
@@ -20,30 +20,43 @@ export function CartSidebar() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="relative hover:bg-cyan-50 hover:text-cyan-600 p-1.5 rounded-xl transition-all duration-300">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative hover:bg-cyan-50 hover:text-cyan-600 p-1.5 rounded-xl transition-all duration-300"
+          data-cart-trigger
+        >
           <ShoppingCart className="w-5 h-5" />
           {getTotalItems() > 0 && (
-            <Badge className="absolute -top-1 -right-1 bg-cyan-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold shadow-lg">
+            <span className="absolute -top-1 -right-1 bg-cyan-500 text-white text-[10px] rounded-full min-w-[16px] h-4 px-1 flex items-center justify-center font-bold shadow-lg">
               {getTotalItems()}
-            </Badge>
+            </span>
           )}
         </Button>
       </SheetTrigger>
       <SheetContent className="w-full sm:w-[400px] flex flex-col">
-        <SheetHeader>
-          <SheetTitle className="flex items-center justify-between">
-            <span>Shopping Cart ({getTotalItems()})</span>
-            {items.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearCart}
-                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            )}
-          </SheetTitle>
+        <SheetHeader className="sticky top-0 bg-white z-10 pb-4 border-b">
+          <div className="flex items-center justify-between">
+            <SheetTitle className="flex items-center gap-2">
+              <span>Shopping Cart ({getTotalItems()})</span>
+            </SheetTitle>
+            <div className="flex items-center gap-2">
+              {items.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearCart}
+                  className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                  title="Clear cart"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+          <SheetDescription className="sr-only">
+            View and manage items in your shopping cart
+          </SheetDescription>
         </SheetHeader>
         
         <div className="flex-1 overflow-auto py-4">
@@ -59,13 +72,22 @@ export function CartSidebar() {
           ) : (
             <div className="space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center space-x-3 bg-gray-50 p-3 rounded-lg">
+                <div key={item.id} className="flex items-start space-x-3 bg-gray-50 p-3 rounded-lg">
                   <img
-                    src={item.product.image}
+                    src={
+                      typeof item.product.image === 'string'
+                        ? item.product.image
+                        : (() => {
+                            const img = item.product.image as any;
+                            if (img?.urls) {
+                              return img.urls.catalog || img.urls.main || img.urls.original || img.urls.thumbnail_small || '/placeholder.svg';
+                            }
+                            return img?.desktop || img?.tablet || img?.mobile || img?.url || img?.image_url || '/placeholder.svg';
+                          })()
+                    }
                     alt={item.product.name}
-                    className="w-16 h-16 object-cover rounded-md cursor-pointer"
+                    className="w-20 h-20 object-cover rounded-md cursor-pointer flex-shrink-0 border border-gray-200"
                     onError={(e) => {
-                      console.error(`Failed to load image: ${item.product.image}`);
                       e.currentTarget.src = '/placeholder.svg';
                     }}
                     onClick={() => {
@@ -73,54 +95,66 @@ export function CartSidebar() {
                       setIsOpen(false);
                     }}
                   />
-                  <div className="flex-1">
-                    <h4 className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-cyan-600 transition-colors"
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-cyan-600 transition-colors mb-1"
                         onClick={() => {
                           navigate(`/store/product/${item.product.slug}`);
                           setIsOpen(false);
                         }}>
                       {item.product.name}
                     </h4>
-                    <p className="text-sm text-gray-600">${item.product.price.toFixed(2)}</p>
-                    {item.product.sku && (
-                      <p className="text-xs text-gray-500">SKU: {item.product.sku}</p>
+
+                    {/* Show variant information if exists */}
+                    {item.isVariant && item.selectedVariations && Array.isArray(item.selectedVariations) && item.selectedVariations.length > 0 && (
+                      <div className="text-xs text-gray-500 mb-1 flex flex-wrap gap-1">
+                        {item.selectedVariations.map((variation: any, idx: number) => (
+                          <span key={idx} className="inline-flex items-center bg-gray-100 rounded px-1.5 py-0.5">
+                            <span className="font-medium">{variation.attribute_name}:</span>
+                            <span className="ml-0.5">{variation.value}</span>
+                          </span>
+                        ))}
+                      </div>
                     )}
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center space-x-2">
+
+                    <p className="text-sm font-semibold text-gray-900">${(item.price || item.product.price).toFixed(2)}</p>
+                    <div className="flex items-center justify-between mt-3 gap-2">
+                      <div className="flex items-center space-x-1 bg-white rounded-lg border border-gray-200 p-0.5">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-8 h-8 p-0"
+                          className="w-7 h-7 p-0 hover:bg-gray-100"
                           disabled={isLoading}
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
                         <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-8 h-8 p-0"
+                          className="w-7 h-7 p-0 hover:bg-gray-100"
                           disabled={isLoading}
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50 p-1"
-                        disabled={isLoading}
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    <div className="text-right mt-1">
-                      <span className="text-sm font-medium text-gray-900">
-                        ${(item.product.price * item.quantity).toFixed(2)}
-                      </span>
+
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-900">
+                          ${((item.price || item.product.price) * item.quantity).toFixed(2)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFromCart(item.id)}
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50 w-7 h-7 p-0"
+                          disabled={isLoading}
+                          title="Remove item"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>

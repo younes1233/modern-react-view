@@ -8,6 +8,8 @@ class BaseApiService {
   protected baseURL = 'https://meemhome.com/api';
   private static token: string | null = null;
   private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
+  private static isRefreshing = false;
+  private static refreshPromise: Promise<string> | null = null;
 
   constructor() {
     // Get token from localStorage on initialization if not already loaded
@@ -30,6 +32,67 @@ class BaseApiService {
   removeToken() {
     BaseApiService.token = null;
     localStorage.removeItem('auth_token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('roleUser');
+  }
+
+  // Refresh the authentication token
+  private async refreshToken(): Promise<string> {
+    console.log('🔄 Attempting to refresh token...');
+
+    // If already refreshing, return the existing promise
+    if (BaseApiService.isRefreshing && BaseApiService.refreshPromise) {
+      console.log('⏳ Token refresh already in progress, waiting...');
+      return BaseApiService.refreshPromise;
+    }
+
+    BaseApiService.isRefreshing = true;
+    BaseApiService.refreshPromise = (async () => {
+      try {
+        const response = await fetch(`${this.baseURL}/auth/refresh`, {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-API-SECRET': this.apiSecret,
+            'Authorization': `Bearer ${BaseApiService.token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Token refresh failed');
+        }
+
+        const data = await response.json();
+
+        if (data.error || !data.details?.token) {
+          throw new Error('Invalid refresh response');
+        }
+
+        const newToken = data.details.token;
+        this.setToken(newToken);
+        console.log('✅ Token refreshed successfully');
+
+        return newToken;
+      } catch (error) {
+        console.error('❌ Token refresh failed:', error);
+        // Clear everything on refresh failure
+        this.removeToken();
+
+        // Redirect to login if we're not already there
+        if (window.location.pathname !== '/login' && window.location.pathname !== '/role-login') {
+          console.log('🔒 Redirecting to login due to token refresh failure');
+          window.location.href = '/login';
+        }
+
+        throw error;
+      } finally {
+        BaseApiService.isRefreshing = false;
+        BaseApiService.refreshPromise = null;
+      }
+    })();
+
+    return BaseApiService.refreshPromise;
   }
 
   // Generic request method
@@ -86,40 +149,73 @@ class BaseApiService {
 
     try {
       const response = await fetch(url, config);
-      
+
       if (!response.ok) {
+        // Handle 401 Unauthorized - try to refresh token
+        if (response.status === 401 && endpoint !== '/auth/refresh' && endpoint !== '/auth/login') {
+          console.warn('🔒 Received 401, attempting token refresh...');
+
+          try {
+            // Attempt token refresh
+            await this.refreshToken();
+
+            // Retry the original request with new token
+            console.log('🔁 Retrying original request with new token...');
+            const newHeaders = { ...headers };
+            if (BaseApiService.token) {
+              newHeaders['Authorization'] = `Bearer ${BaseApiService.token}`;
+            }
+
+            const retryConfig: RequestInit = {
+              ...config,
+              headers: newHeaders,
+            };
+
+            const retryResponse = await fetch(url, retryConfig);
+
+            if (!retryResponse.ok) {
+              throw new Error('Retry failed after token refresh');
+            }
+
+            return await retryResponse.json();
+          } catch (refreshError) {
+            console.error('❌ Token refresh or retry failed:', refreshError);
+            // Token refresh failed, let it fall through to normal error handling
+          }
+        }
+
         let errorData: any = {};
         let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-        
+
         try {
           errorData = await response.json();
           console.error('API Error Response:', errorData);
-          
+
           // Build detailed error message
           if (errorData.message) {
             errorMessage = errorData.message;
           }
-          
+
           // Add validation details if available
           if (errorData.errors) {
-            const validationErrors = Array.isArray(errorData.errors) 
+            const validationErrors = Array.isArray(errorData.errors)
               ? errorData.errors.join(', ')
               : Object.entries(errorData.errors)
                   .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
                   .join('; ');
             errorMessage += ` - Validation errors: ${validationErrors}`;
           }
-          
+
           // Add details if available
           if (errorData.details && typeof errorData.details === 'object') {
             const detailsStr = JSON.stringify(errorData.details);
             errorMessage += ` - Details: ${detailsStr}`;
           }
-          
+
         } catch (parseError) {
           console.error('Failed to parse error response:', parseError);
         }
-        
+
         const error = new Error(errorMessage) as any;
         error.status = response.status;
         error.details = errorData.errors || errorData.details || {}; // Preserve validation errors

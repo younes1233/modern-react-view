@@ -186,18 +186,18 @@ const goAll = () => {
 };
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-blue-100 light overflow-x-hidden">
+    <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-blue-100 light overflow-visible">
       {/* Header */}
-      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50 w-full overflow-hidden">
+      <header className="bg-white/90 backdrop-blur-md shadow-lg border-b border-white/20 sticky top-0 z-50">
         <div className="w-full max-w-7xl mx-auto px-3 md:px-6">
-          <div className="flex items-center justify-between h-16 md:h-20 lg:h-24 gap-2 md:gap-4">
+          <div className="flex items-center justify-between h-14 md:h-16 lg:h-18 gap-2 md:gap-4">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
               <Link to="/store" className="hover:scale-105 transition-transform duration-300">
                 <img
                   src="/meemhome-logo.svg"
                   alt="Meem Home"
-                  className="h-16 md:h-20 lg:h-24 w-auto object-contain"
+                  className="h-12 md:h-14 lg:h-16 w-auto object-contain"
                 />
               </Link>
             </div>
@@ -949,7 +949,7 @@ const goAll = () => {
 
 
       {/* Main Content */}
-      <main className="w-full overflow-x-hidden pb-6 lg:pb-0">
+      <main className="w-full pb-6 lg:pb-0 overflow-visible">
         {children}
       </main>
 

@@ -37,33 +37,58 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Convert API cart items to our CartItem format
   const convertApiCartItems = (apiCart: Cart): CartItem[] => {
     if (!apiCart?.items) return [];
-    return apiCart.items.map(item => ({
-      id: item.id,
-      product: {
-        id: parseInt(item.product.id),
-        name: item.product.name,
+    return apiCart.items.map(item => {
+      // Handle image - backend returns object with urls property
+      let imageUrl = '/placeholder.svg';
+      const img = item.product.image;
+
+      if (typeof img === 'string') {
+        imageUrl = img;
+      } else if (img && typeof img === 'object') {
+        // Check for urls object (from getApiImageData)
+        if ((img as any).urls) {
+          const urls = (img as any).urls;
+          // Prefer catalog > main > original > thumbnail_small
+          imageUrl = urls.catalog || urls.main || urls.original || urls.thumbnail_small || '/placeholder.svg';
+        }
+        // Check for responsive image object { desktop, tablet, mobile }
+        else if ((img as any).desktop) {
+          imageUrl = (img as any).desktop || (img as any).tablet || (img as any).mobile;
+        }
+        // Check for URL properties
+        else if ((img as any).url || (img as any).image_url) {
+          imageUrl = (img as any).url || (img as any).image_url;
+        }
+      }
+
+      return {
+        id: item.id,
+        product: {
+          id: parseInt(item.product.id),
+          name: item.product.name,
+          price: item.price,
+          image: imageUrl,
+          slug: item.product.slug,
+          // Add default values for required Product fields
+          description: '',
+          originalPrice: undefined,
+          category: '',
+          inStock: true,
+          rating: 0,
+          reviews: 0,
+          isFeatured: false,
+          isNewArrival: false,
+          isOnSale: false,
+          thumbnails: [],
+          variations: []
+        },
+        quantity: item.quantity,
+        productVariantId: item.productVariantId,
+        isVariant: item.isVariant,
         price: item.price,
-        image: item.product.cover_image || item.product.image,
-        slug: item.product.slug,
-        // Add default values for required Product fields
-        description: '',
-        originalPrice: undefined,
-        category: '',
-        inStock: true,
-        rating: 0,
-        reviews: 0,
-        isFeatured: false,
-        isNewArrival: false,
-        isOnSale: false,
-        thumbnails: [],
-        variations: []
-      },
-      quantity: item.quantity,
-      productVariantId: item.productVariantId,
-      isVariant: item.isVariant,
-      price: item.price,
-      selectedVariations: item.selectedVariations
-    }));
+        selectedVariations: item.selectedVariations
+      };
+    });
   };
 
   // Load cart on mount and when user changes

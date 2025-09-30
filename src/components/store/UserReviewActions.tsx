@@ -40,19 +40,15 @@ export const UserReviewActions: React.FC<UserReviewActionsProps> = ({
 
   const handleDelete = async () => {
     setIsDeleting(true);
-    
+
     try {
-      const response = await reviewService.deleteReview(productId);
-      
-      if (!response.error) {
-        toast({
-          title: "Success",
-          description: response.message,
-        });
-        onReviewDeleted();
-      } else {
-        throw new Error(response.message);
-      }
+      await reviewService.deleteReview(productId);
+
+      toast({
+        title: "Success",
+        description: "Review deleted successfully",
+      });
+      onReviewDeleted();
     } catch (error) {
       toast({
         title: "Error",
