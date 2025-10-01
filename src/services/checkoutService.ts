@@ -1,4 +1,4 @@
-import apiService from './apiService';
+import BaseApiService, { ApiResponse } from './baseApiService';
 
 export interface CheckoutStartRequest {
   country_id: number;
@@ -41,11 +41,11 @@ export interface CheckoutStartResponse {
   };
 }
 
-export const checkoutService = {
-  startCheckout: async (data: CheckoutStartRequest): Promise<CheckoutStartResponse> => {
-    const response = await apiService.post('/auth/checkout/start', data);
-    return response.data;
-  },
-};
+class CheckoutService extends BaseApiService {
+  async startCheckout(data: CheckoutStartRequest): Promise<CheckoutStartResponse> {
+    return this.post<CheckoutStartResponse>('/auth/checkout/start', data);
+  }
+}
 
+export const checkoutService = new CheckoutService();
 export default checkoutService;
