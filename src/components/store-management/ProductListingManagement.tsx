@@ -84,8 +84,8 @@ export function ProductListingManagement() {
 
   const getDisplayName = (type: string) => {
     switch(type) {
-      case 'new_arrivals': return 'New Arrivals';
-      case 'on_sales': return 'On Sale';
+      case 'newArrivals': return 'New Arrivals';
+      case 'sale': return 'On Sale';
       case 'featured': return 'Featured';
       case 'category': return 'Category';
       case 'custom': return 'Custom';
@@ -120,8 +120,8 @@ export function ProductListingManagement() {
   const getTypeBadge = (type: string) => {
     const variants = {
       featured: "bg-blue-100 text-blue-800 hover:bg-blue-200",
-      new_arrivals: "bg-green-100 text-green-800 hover:bg-green-200",
-      on_sales: "bg-red-100 text-red-800 hover:bg-red-200",
+      newArrivals: "bg-green-100 text-green-800 hover:bg-green-200",
+      sale: "bg-red-100 text-red-800 hover:bg-red-200",
       category: "bg-purple-100 text-purple-800 hover:bg-purple-200",
       custom: "bg-orange-100 text-orange-800 hover:bg-orange-200"
     };
@@ -129,8 +129,8 @@ export function ProductListingManagement() {
     return (
       <Badge className={variants[type as keyof typeof variants]}>
         {type === 'featured' && <Star className="w-3 h-3 mr-1" />}
-        {type === 'new_arrivals' && <Zap className="w-3 h-3 mr-1" />}
-        {type === 'on_sales' && <Percent className="w-3 h-3 mr-1" />}
+        {type === 'newArrivals' && <Zap className="w-3 h-3 mr-1" />}
+        {type === 'sale' && <Percent className="w-3 h-3 mr-1" />}
         {type === 'category' && <Folder className="w-3 h-3 mr-1" />}
         {type === 'custom' && <Cog className="w-3 h-3 mr-1" />}
         {getDisplayName(type)}
@@ -188,17 +188,17 @@ export function ProductListingManagement() {
                       <div className="flex items-center gap-3">
                         <div className={`p-3 rounded-xl ${
                           listing.type === 'featured' ? 'bg-blue-500/10' :
-                          listing.type === 'new_arrivals' ? 'bg-green-500/10' :
-                          listing.type === 'on_sales' ? 'bg-red-500/10' :
+                          listing.type === 'newArrivals' ? 'bg-green-500/10' :
+                          listing.type === 'sale' ? 'bg-red-500/10' :
                           listing.type === 'category' ? 'bg-purple-500/10' :
                           'bg-orange-500/10'
                         }`}>
                           {listing.type === 'featured' && <Star className="w-6 h-6 text-blue-600" />}
-                          {listing.type === 'new_arrivals' && <Zap className="w-6 h-6 text-green-600" />}
-                          {listing.type === 'on_sales' && <Percent className="w-6 h-6 text-red-600" />}
+                          {listing.type === 'newArrivals' && <Zap className="w-6 h-6 text-green-600" />}
+                          {listing.type === 'sale' && <Percent className="w-6 h-6 text-red-600" />}
                           {listing.type === 'category' && <Folder className="w-6 h-6 text-purple-600" />}
                           {listing.type === 'custom' && <Cog className="w-6 h-6 text-orange-600" />}
-                          {!['featured', 'new_arrivals', 'on_sales', 'category', 'custom'].includes(listing.type) && <Package className="w-6 h-6 text-gray-600" />}
+                          {!['featured', 'newArrivals', 'sale', 'category', 'custom'].includes(listing.type) && <Package className="w-6 h-6 text-gray-600" />}
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">
@@ -219,42 +219,19 @@ export function ProductListingManagement() {
                     <td className="p-4">
                       <div className="bg-gray-50 dark:bg-gray-800 rounded p-2 w-16">
                         <div className="space-y-1">
-                          {listing.layout === 'grid' && (
+                          {(listing.layout === 'grid' || listing.layout === 'slider') && listing.layout === 'grid' && (
                             <div className="grid grid-cols-2 gap-0.5">
                               {Array.from({ length: Math.min(listing.max_products, 4) }).map((_, i) => (
                                 <div key={i} className="aspect-square bg-gray-300 rounded-sm"></div>
                               ))}
                             </div>
                           )}
-                          {listing.layout === 'slider' && (
+                          {(listing.layout === 'grid' || listing.layout === 'slider') && listing.layout === 'slider' && (
                             <div className="flex gap-0.5 overflow-hidden">
                               {Array.from({ length: Math.min(listing.max_products, 3) }).map((_, i) => (
                                 <div key={i} className="w-4 h-4 bg-gray-300 rounded-sm flex-shrink-0"></div>
                               ))}
                               <div className="w-2 h-4 bg-gray-200 rounded-sm opacity-50"></div>
-                            </div>
-                          )}
-                          {listing.layout === 'list' && (
-                            <div className="space-y-0.5">
-                              {Array.from({ length: Math.min(listing.max_products, 3) }).map((_, i) => (
-                                <div key={i} className="flex gap-0.5">
-                                  <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
-                                  <div className="flex-1 h-1 bg-gray-300 rounded my-1"></div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {listing.layout === 'carousel' && (
-                            <div className="relative">
-                              <div className="flex gap-0.5">
-                                <div className="w-5 h-4 bg-gray-300 rounded-sm"></div>
-                                <div className="w-3 h-4 bg-gray-200 rounded-sm opacity-60"></div>
-                              </div>
-                              <div className="flex gap-0.5 mt-0.5 justify-center">
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                              </div>
                             </div>
                           )}
                           <div className="text-xs text-gray-500 text-center truncate">

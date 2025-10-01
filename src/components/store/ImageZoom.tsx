@@ -161,7 +161,7 @@ function ImageZoomComponent({
   )
 
   // Touch gesture utilities
-  const getTouchDistance = useCallback((touches: TouchList) => {
+  const getTouchDistance = useCallback((touches: Touch[]) => {
     if (touches.length < 2) return 0
     const touch1 = touches[0]
     const touch2 = touches[1]
@@ -251,7 +251,7 @@ function ImageZoomComponent({
         }
       } else if (touches.length === 2) {
         // Two finger touch - start pinch zoom
-        const distance = getTouchDistance(touches)
+        const distance = getTouchDistance(Array.from(touches) as Touch[])
         setLastPinchDistance(distance)
         setTouchStart(null)
       }
@@ -263,7 +263,7 @@ function ImageZoomComponent({
     (e: React.TouchEvent) => {
       if (!isMobile) return // Only handle touch on mobile
       e.preventDefault()
-      const touches = e.touches
+      const touches = Array.from(e.touches)
 
       if (touches.length === 1 && isDragging && zoom > 1) {
         // Single finger drag when zoomed
@@ -274,7 +274,7 @@ function ImageZoomComponent({
         })
       } else if (touches.length === 2 && lastPinchDistance) {
         // Two finger pinch zoom
-        const distance = getTouchDistance(touches)
+        const distance = getTouchDistance(Array.from(touches) as Touch[])
         const scale = distance / lastPinchDistance
         setZoom((prev) => Math.max(0.5, Math.min(5, prev * scale)))
         setLastPinchDistance(distance)
