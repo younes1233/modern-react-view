@@ -240,10 +240,10 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       is_vat_exempt: false,
       cover_image: "",
       images: [],
-        stock: 0,
-        shelf_id: undefined,
-          delivery_type: "meemhome",
-          delivery_cost: 0,
+      stock: '',
+      shelf_id: undefined,
+        delivery_type: "meemhome",
+        delivery_cost: 0,
       net_price: '',
       cost_price: '',
       product_prices: [],
@@ -374,8 +374,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         is_new_arrival: !!product.flags?.is_new_arrival,
         is_best_seller: false,
         is_vat_exempt: !!product.flags?.is_vat_exempt,
-        cover_image: (product.media?.cover_image as any)?.urls?.original || "",
-        images: product.media?.additional_images?.map((t: any) => (t as any)?.urls?.original).filter(Boolean) || [],
+        cover_image: product.media?.cover_image?.urls?.original || "",
+        images: product.media?.additional_images?.map((t: any) => t.urls?.original) || [],
         stock: (() => {
           // Debug logging for stock population
           console.log('Product available_countries:', product.available_countries);
@@ -424,9 +424,15 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           qr_code: variant.identifiers?.qr_code || "",
           serial_number: variant.identifiers?.serial_number || "",
           image: variant.image || "",
-          imagePreviewUrl: variant.image || "",
-          variations: variant.variations?.map((variation: any) => variation.id) || [],
-          product_variant_prices: variant.prices?.map((price: any) => ({
+          variations: variant.variations?.map(variation => ({
+            attribute: variation.attribute,
+            value: variation.value,
+            slug: variation.slug,
+            type: variation.type,
+            hex_color: variation.hex_color,
+            image: variation.image
+          })) || [],
+          product_variant_prices: variant.prices?.map(price => ({
             id: price.id,
             net_price: parseFloat(price.net_price),
             cost: parseFloat(price.cost),
@@ -434,7 +440,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           })) || [],
           stock: variant.stock?.[0]?.stock || 0,
           delivery_type: "meemhome", // Default or get from variant if available
-          delivery_cost: "0" // Default or get from variant if available
+          delivery_cost: 0 // Default or get from variant if available
         })) || [],
       });
 
@@ -493,10 +499,10 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           delivery: { type: deliveryType, cost: deliveryCost }
         });
 
-        // Handle variant image - safely access URL
+        // Handle variant image - use mobile version for admin forms (smaller size)
         const variantImageUrl = typeof variant.image === 'string'
           ? variant.image
-          : (variant.image as any)?.urls?.thumbnails?.mobile || (variant.image as any)?.urls?.original || "";
+          : variant.image?.urls?.thumbnails?.mobile || variant.image?.urls?.original || "";
 
         const variantEntry = {
           id: variant.id,
@@ -514,7 +520,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           variantPrices,
           variantSpecs: [], // May need to map variant specifications if available
           delivery_type: deliveryType,
-          delivery_cost: String(deliveryCost),
+          delivery_cost: deliveryCost,
           stock: stockValue,
           shelf_id: undefined // Variants don't inherit shelf by default
         };
@@ -554,7 +560,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         is_vat_exempt: false,
         cover_image: "",
         images: [],
-        stock: 0,
+        stock: '',
         shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
@@ -753,7 +759,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
   const updateVariantField = (
     variantId: number,
-    field: string,
+    field: "image" | "variations" | "delivery_type" | "delivery_cost" | "stock",
     value: any
   ) =>
     setVariantEntries((prev) =>
@@ -1111,8 +1117,8 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           variantData.delivery_cost = delivery_cost;
         }
 
-        // Only add shelf_id if it's explicitly set (override) and in add mode
-        if (mode === 'add' && variant.shelf_id !== undefined) {
+        // Only add shelf_id if it's explicitly set (override) and in create mode
+        if (mode === 'create' && variant.shelf_id !== undefined) {
           variantData.shelf_id = variant.shelf_id;
         }
 
@@ -1789,7 +1795,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                    {/* Variant inventory and delivery overrides */}
                    <div className={cn(
                      "grid gap-4",
-                     mode === 'add' ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-3"
+                     mode === 'create' ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-3"
                    )}>
                      <div>
                        <Label>Stock *</Label>

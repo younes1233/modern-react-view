@@ -12,7 +12,6 @@ export interface VariantEntry {
   id: number;
   image: File | string | null;
   imagePreviewUrl?: string;
-  delete_image?: boolean;
   variations: number[];
   variantPrices: {
     net_price: string;

@@ -127,6 +127,7 @@ export function ImageZoomDesktop({
               <InnerImageZoom
                 src={images[currentIndex]?.url}
                 zoomSrc={images[currentIndex]?.url}
+                alt={images[currentIndex]?.alt || 'Image'}
                 zoomType="hover"
                 zoomScale={1.5}
                 className="max-w-full max-h-[70vh]"

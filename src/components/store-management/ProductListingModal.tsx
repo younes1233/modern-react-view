@@ -94,14 +94,14 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
         is_active: listing.is_active
       };
 
-  // Only include category_id if type is 'category'
+      // Only include category_id if type is 'category'
       if (listing.type === 'category' && listing.category_id) {
-        (baseFormData as any).category_id = listing.category_id;
+        baseFormData.category_id = listing.category_id;
       }
 
       // Only include products if type is 'custom'
       if (listing.type === 'custom' && listing.products) {
-        (baseFormData as any).products = listing.products.map((p: any) => typeof p === 'number' ? p : p.id);
+        baseFormData.products = listing.products.map(p => p.id);
       }
 
       setFormData(baseFormData);
@@ -153,7 +153,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
 
       return {
         ...prev,
-        type: type as CreateProductListingRequest['type'],
+        type,
         title: newTitle,
         // Clear category_id when switching away from category type
         ...(type !== 'category' && { category_id: undefined })
