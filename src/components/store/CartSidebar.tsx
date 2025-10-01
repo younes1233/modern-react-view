@@ -4,17 +4,62 @@ import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription, SheetClose } from "@/components/ui/sheet";
 import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { useCountryCurrency } from "@/contexts/CountryCurrencyContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { checkoutService } from "@/services/checkoutService";
+import { toast } from "@/hooks/use-toast";
 
 export function CartSidebar() {
   const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart, isLoading } = useCart();
+  const { selectedCountry, selectedCurrency } = useCountryCurrency();
   const [isOpen, setIsOpen] = useState(false);
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
   const navigate = useNavigate();
 
-  const handleCheckout = () => {
-    navigate('/store/checkout');
-    setIsOpen(false);
+  const handleCheckout = async () => {
+    if (!selectedCountry) {
+      toast({
+        title: "Country Required",
+        description: "Please select a country before proceeding to checkout.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsCheckingOut(true);
+
+    try {
+      const response = await checkoutService.startCheckout({
+        country_id: selectedCountry.id,
+        currency_id: selectedCurrency?.id,
+      });
+
+      // Store checkout session details
+      sessionStorage.setItem('checkout_session', JSON.stringify(response.details));
+
+      toast({
+        title: "Checkout Started",
+        description: response.message,
+      });
+
+      // Navigate to checkout with session data
+      navigate('/store/checkout', {
+        state: {
+          checkoutSession: response.details,
+        },
+      });
+      setIsOpen(false);
+    } catch (error: any) {
+      console.error('Checkout start error:', error);
+      toast({
+        title: "Checkout Failed",
+        description: error.response?.data?.message || "Failed to start checkout. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
   };
 
   return (
@@ -184,8 +229,9 @@ export function CartSidebar() {
                 onClick={handleCheckout}
                 className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
                 size="lg"
+                disabled={isCheckingOut || isLoading}
               >
-                Proceed to Checkout
+                {isCheckingOut ? "Starting Checkout..." : "Proceed to Checkout"}
               </Button>
               <Button 
                 variant="outline" 

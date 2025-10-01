@@ -1,9 +1,10 @@
-import { Component, ErrorInfo, ReactNode } from 'react'
+import { Component, ErrorInfo, ReactNode, useState, useRef, useCallback, useEffect } from 'react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ImageZoomMobile } from './ImageZoomMobile'
 import { ImageZoomDesktop } from './ImageZoomDesktop'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import { ZoomIn, ZoomOut, RotateCw, X, ChevronLeft, ChevronRight } from 'lucide-react'
 
 interface ErrorBoundaryState {
   hasError: boolean
