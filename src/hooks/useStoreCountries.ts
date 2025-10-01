@@ -1,44 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { storeCountryService, StoreCountry } from '@/services/storeCountryService';
-import { toast } from '@/hooks/use-toast';
 
 export function useStoreCountries() {
-  const [countries, setCountries] = useState<StoreCountry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchCountries = async () => {
-    try {
-      setLoading(true);
-      setError(null);
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['store-countries'],
+    queryFn: async () => {
       const response = await storeCountryService.getCountries();
-      
-      if (response && response.data) {
-        setCountries(response.data);
-      } else {
-        setError('Failed to load countries');
-      }
-    } catch (err) {
-      console.error('Error fetching countries:', err);
-      setError('Failed to load countries');
-      toast({
-        title: "Error",
-        description: "Failed to load countries",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchCountries();
-  }, []);
+      if (response && response.data) {
+        return response.data;
+      }
+      throw new Error('Failed to load countries');
+    },
+    staleTime: 15 * 60 * 1000, // 15 minutes - countries rarely change
+    gcTime: 60 * 60 * 1000, // 1 hour in cache
+  });
 
   return {
-    countries,
-    loading,
-    error,
-    refetch: fetchCountries,
+    countries: data || [],
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
   };
 }

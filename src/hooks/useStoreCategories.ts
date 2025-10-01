@@ -1,41 +1,25 @@
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { categoryService, Category } from '../services/categoryService';
 
 export const useStoreCategories = () => {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchCategories = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
+  const { data, isLoading, error, refetch } = useQuery({
+    queryKey: ['store-categories'],
+    queryFn: async () => {
       const response = await categoryService.getStoreCategories();
-      
-      if (!response.error && response.details?.categories) {
-        setCategories(response.details.categories);
-      } else {
-        setError(response.message || 'Failed to load categories');
-        setCategories([]);
-      }
-    } catch (err) {
-      console.error('Error fetching store categories:', err);
-      setError('Failed to load categories');
-      setCategories([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+      if (!response.error && response.details?.categories) {
+        return response.details.categories;
+      }
+      throw new Error(response.message || 'Failed to load categories');
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes - categories rarely change
+    gcTime: 30 * 60 * 1000, // 30 minutes in cache
+  });
 
   return {
-    categories,
-    loading,
-    error,
-    refetch: fetchCategories
+    categories: data || [],
+    loading: isLoading,
+    error: error?.message || null,
+    refetch,
   };
 };
