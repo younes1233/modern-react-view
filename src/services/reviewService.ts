@@ -202,6 +202,21 @@ class ReviewService extends BaseApiService {
     }>>(`/auth/reviews/${reviewId}/status`, true);
     return response.details;
   }
+
+  /**
+   * Get user's own review for a product (for polling image status)
+   */
+  async getUserReview(productId: string): Promise<Review | null> {
+    try {
+      const response = await this.get<ApiResponse<Review>>(
+        `/auth/products/${productId}/reviews/user`,
+        true
+      );
+      return response.details;
+    } catch (error) {
+      return null;
+    }
+  }
 }
 
 export const reviewService = new ReviewService();

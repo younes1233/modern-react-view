@@ -130,14 +130,13 @@ const ReviewFormComponent: React.FC<ReviewFormProps> = ({
         images: images.length > 0 ? images : undefined,
       };
 
-      const response = existingReview
-        ? await reviewService.updateReview(productId, reviewData)
-        : await reviewService.addReview(productId, reviewData);
+      await reviewService.addReview(productId, reviewData);
 
       toast({
         title: "Success",
         description: existingReview ? "Review updated successfully" : "Review submitted successfully",
       });
+
       setValidationErrors({});
       onReviewSubmitted();
     } catch (error: any) {
@@ -271,12 +270,16 @@ const ReviewFormComponent: React.FC<ReviewFormProps> = ({
           {/* Actions */}
           <div className="flex gap-2 pt-4">
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting 
-                ? (existingReview ? 'Updating...' : 'Submitting...') 
+              {isSubmitting
+                ? (existingReview ? 'Updating...' : 'Submitting...')
                 : (existingReview ? 'Update Review' : 'Submit Review')
               }
             </Button>
-            <Button type="button" variant="outline" onClick={onCancel}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+            >
               Cancel
             </Button>
           </div>
