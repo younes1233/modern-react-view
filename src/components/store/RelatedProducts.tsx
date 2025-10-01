@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Heart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useWishlist } from '@/contexts/WishlistContext';
+import { memo } from 'react';
 
 interface RelatedProduct {
   id: number;
@@ -31,7 +32,7 @@ interface RelatedProductsProps {
   products: RelatedProduct[];
 }
 
-export const RelatedProducts = ({ products }: RelatedProductsProps) => {
+const RelatedProductsComponent = ({ products }: RelatedProductsProps) => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { addToWishlist, isInWishlist } = useWishlist();
@@ -147,3 +148,10 @@ export const RelatedProducts = ({ products }: RelatedProductsProps) => {
     </div>
   );
 };
+
+// Memoize RelatedProducts - only re-render if products array changes
+export const RelatedProducts = memo(RelatedProductsComponent, (prevProps, nextProps) => {
+  // Deep comparison of product IDs to prevent unnecessary re-renders
+  if (prevProps.products.length !== nextProps.products.length) return false;
+  return prevProps.products.every((p, i) => p.id === nextProps.products[i]?.id);
+});

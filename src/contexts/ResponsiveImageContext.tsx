@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
@@ -32,21 +32,30 @@ export const useResponsiveImage = () => {
 };
 
 export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [deviceType, setDeviceType] = useState<DeviceType>('desktop');
+  const [deviceType, setDeviceType] = useState<DeviceType>(() => {
+    // Initialize with correct device type on first render
+    const width = window.innerWidth;
+    if (width < 768) return 'mobile';
+    if (width < 1024) return 'tablet';
+    return 'desktop';
+  });
 
   useEffect(() => {
     const checkDeviceType = () => {
       const width = window.innerWidth;
+      let newDeviceType: DeviceType;
       if (width < 768) {
-        setDeviceType('mobile');
+        newDeviceType = 'mobile';
       } else if (width < 1024) {
-        setDeviceType('tablet');
+        newDeviceType = 'tablet';
       } else {
-        setDeviceType('desktop');
+        newDeviceType = 'desktop';
       }
+
+      // Only update state if device type actually changed
+      setDeviceType(prevType => prevType === newDeviceType ? prevType : newDeviceType);
     };
 
-    checkDeviceType();
     window.addEventListener('resize', checkDeviceType);
 
     return () => {
@@ -54,23 +63,29 @@ export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = 
     };
   }, []);
 
-  const getResponsiveImage = (images: BannerImages): string => {
+  const getResponsiveImage = useCallback((images: BannerImages): string => {
     // Add null checks to prevent errors
     if (!images || !images.urls || !images.urls.banner) {
       return images?.urls?.original || '/placeholder.svg';
     }
     return images.urls.banner[deviceType] || images.urls.original || '/placeholder.svg';
-  };
+  }, [deviceType]);
 
-  const getImageUrl = (banner: { desktop: string; tablet: string; mobile: string }): string => {
+  const getImageUrl = useCallback((banner: { desktop: string; tablet: string; mobile: string }): string => {
     if (!banner) {
       return '/placeholder.svg';
     }
     return banner[deviceType] || banner.desktop || '/placeholder.svg';
-  };
+  }, [deviceType]);
+
+  const contextValue = useMemo(() => ({
+    deviceType,
+    getResponsiveImage,
+    getImageUrl
+  }), [deviceType, getResponsiveImage, getImageUrl]);
 
   return (
-    <ResponsiveImageContext.Provider value={{ deviceType, getResponsiveImage, getImageUrl }}>
+    <ResponsiveImageContext.Provider value={contextValue}>
       {children}
     </ResponsiveImageContext.Provider>
   );

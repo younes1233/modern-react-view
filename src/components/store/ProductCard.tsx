@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -14,7 +14,8 @@ interface ProductCardProps {
   product: Product
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+// Memoize ProductCard to prevent re-renders when product data hasn't changed
+const ProductCardComponent = ({ product }: ProductCardProps) => {
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
   const { addToCart, isInCart, isLoading: cartLoading } = useCart()
   const {
@@ -202,3 +203,12 @@ export function ProductCard({ product }: ProductCardProps) {
     </>
   )
 }
+
+// Export memoized version - only re-renders if product.id changes
+export const ProductCard = memo(ProductCardComponent, (prevProps, nextProps) => {
+  // Custom comparison: only re-render if product ID changed
+  // This prevents re-renders when unrelated products update
+  return prevProps.product.id === nextProps.product.id &&
+         prevProps.product.name === nextProps.product.name &&
+         prevProps.product.price === nextProps.product.price;
+});

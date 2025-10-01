@@ -292,6 +292,12 @@ const goAll = () => {
                         <p className="text-sm text-gray-600">{user.email || user.phone || 'My Account'}</p>
                       </div>
                       <div className="space-y-2">
+                        <Link to="/store/addresses" className="block w-full text-left">
+                          <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300">
+                            <MapPin className="w-4 h-4 mr-3" />
+                            My Addresses
+                          </Button>
+                        </Link>
                         <Link to="/store/wishlist" className="block w-full text-left">
                           <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300">
                             <Heart className="w-4 h-4 mr-3" />
@@ -1010,6 +1016,12 @@ const goAll = () => {
                     <p className="text-sm text-gray-600">{user.email || user.phone || 'My Account'}</p>
                   </div>
                   <div className="space-y-2">
+                    <Link to="/store/addresses" className="block w-full text-left">
+                      <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300">
+                        <MapPin className="w-4 h-4 mr-3" />
+                        My Addresses
+                      </Button>
+                    </Link>
                     <Link to="/store/wishlist" className="block w-full text-left">
                       <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300">
                         <Heart className="w-4 h-4 mr-3" />

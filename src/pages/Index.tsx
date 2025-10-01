@@ -48,10 +48,8 @@ const Index = () => {
     return <Navigate to="/seller-products" replace />;
   }
 
-  // Only super_admin and manager can see the main dashboard
-  if (user.role !== 'super_admin' && user.role !== 'manager') {
-    return <Navigate to="/unauthorized" replace />;
-  }
+  // Authorization is handled by RoleProtectedRoute via can-access-dashboard endpoint
+  // No need for additional role checks here
 
   const renderSuperAdminDashboard = () => (
     <>
@@ -239,18 +237,15 @@ const Index = () => {
             <div className="flex justify-between items-center">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">
-                  {user.role === 'super_admin' ? 'Admin Dashboard' : 'Manager Dashboard'}
+                  Dashboard
                 </h1>
                 <p className="text-gray-600 dark:text-gray-400">
-                  {user.role === 'super_admin' 
-                    ? 'Manage your store operations and oversee all activities' 
-                    : 'Manage products, orders, and customer relationships'
-                  }
+                  Manage your store operations and oversee all activities
                 </p>
               </div>
             </div>
 
-            {user.role === 'super_admin' ? renderSuperAdminDashboard() : renderManagerDashboard()}
+            {renderSuperAdminDashboard()}
           </div>
         </main>
       </div>

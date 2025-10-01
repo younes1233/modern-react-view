@@ -91,7 +91,8 @@ export function RoleBasedSidebar() {
 
   if (!user) return null;
 
-  const menuItems = roleMenuItems[user.role] || {};
+  // If backend authorized access, show all menu items (default to super_admin menu)
+  const menuItems = roleMenuItems[user.role] || roleMenuItems.super_admin;
   console.log('RoleBasedSidebar render - menuItems:', menuItems);
 
   const renderMenuGroup = (items: any[], title: string) => {

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { Product } from '@/data/storeData';
 import { toast } from '@/components/ui/sonner';
 import { cartService, Cart } from '@/services/cartService';
@@ -113,12 +113,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     });
   };
 
-  // Load cart on mount and when user changes
-  useEffect(() => {
-    loadCart();
-  }, [user]); // Reload when user logs in/out to get merged cart
-
-  const loadCart = async () => {
+  // Memoize loadCart so it doesn't change on every render
+  const loadCart = useCallback(async () => {
     try {
       setIsLoading(true);
       const cart = await cartService.getCart();
@@ -130,9 +126,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // No dependencies - uses service and setters which are stable
 
-  const addToCart = async (product: Product, quantity = 1, productVariantId?: string) => {
+  // Load cart on mount and when user changes
+  useEffect(() => {
+    loadCart();
+  }, [user, loadCart]); // Include loadCart in deps (it's memoized so won't cause loops)
+
+  const addToCart = useCallback(async (product: Product, quantity = 1, productVariantId?: string) => {
     console.log('addToCart called with:', { product: product.name, quantity, productVariantId, inStock: product.inStock });
     
     if (!product.inStock) {
@@ -213,9 +214,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // No external dependencies - all stable
 
-  const removeFromCart = async (itemId: string) => {
+  const removeFromCart = useCallback(async (itemId: string) => {
     try {
       setIsLoading(true);
       const item = items.find(item => item.id === itemId);
@@ -232,9 +233,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [items, loadCart]); // Depends on items and loadCart
 
-  const updateQuantity = async (itemId: string, quantity: number) => {
+  const updateQuantity = useCallback(async (itemId: string, quantity: number) => {
     if (quantity <= 0) {
       await removeFromCart(itemId);
       return;
@@ -250,9 +251,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [removeFromCart, loadCart]); // Depends on removeFromCart and loadCart
 
-  const clearCart = async () => {
+  const clearCart = useCallback(async () => {
     try {
       setIsLoading(true);
       await cartService.clearCart();
@@ -264,9 +265,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []); // No dependencies
 
-  const moveToWishlist = async (itemId: string) => {
+  const moveToWishlist = useCallback(async (itemId: string) => {
     if (!user) {
       toast.error("Please login to save to wishlist");
       return;
@@ -292,45 +293,64 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user, items, loadCart]); // Depends on user, items, and loadCart
 
-  const getTotalItems = () => {
+  const getTotalItems = useCallback(() => {
     return items.reduce((total, item) => total + item.quantity, 0);
-  };
+  }, [items]); // Recalculate when items change
 
-  const getTotalPrice = () => {
+  const getTotalPrice = useCallback(() => {
     return items.reduce((total, item) => total + (item.product.price * item.quantity), 0);
-  };
+  }, [items]); // Recalculate when items change
 
-  const isInCart = (productId: number) => {
+  const isInCart = useCallback((productId: number) => {
     return items.some(item => item.product.id === productId);
-  };
+  }, [items]); // Check against current items
 
-  const clearNotification = () => {
+  const clearNotification = useCallback(() => {
     setNotificationItem(null);
-  };
+  }, []); // No dependencies
 
-  const clearVariantSelection = () => {
+  const clearVariantSelection = useCallback(() => {
     setVariantSelectionRequest(null);
-  };
+  }, []); // No dependencies
+
+  // Memoize the context value to prevent unnecessary re-renders
+  // Only creates new object when dependencies actually change
+  const contextValue = useMemo(() => ({
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getTotalItems,
+    getTotalPrice,
+    isInCart,
+    isLoading,
+    moveToWishlist,
+    notificationItem,
+    clearNotification,
+    variantSelectionRequest,
+    clearVariantSelection
+  }), [
+    items,
+    addToCart,
+    removeFromCart,
+    updateQuantity,
+    clearCart,
+    getTotalItems,
+    getTotalPrice,
+    isInCart,
+    isLoading,
+    moveToWishlist,
+    notificationItem,
+    clearNotification,
+    variantSelectionRequest,
+    clearVariantSelection
+  ]);
 
   return (
-    <CartContext.Provider value={{
-      items,
-      addToCart,
-      removeFromCart,
-      updateQuantity,
-      clearCart,
-      getTotalItems,
-      getTotalPrice,
-      isInCart,
-      isLoading,
-      moveToWishlist,
-      notificationItem,
-      clearNotification,
-      variantSelectionRequest,
-      clearVariantSelection
-    }}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

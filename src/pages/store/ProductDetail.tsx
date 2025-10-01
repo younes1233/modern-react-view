@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { StoreLayout } from '@/components/store/StoreLayout'
 import { Button } from '@/components/ui/button'
@@ -151,12 +151,14 @@ const ProductDetail = () => {
     selectedCurrency?.id
   )
 
-  // Fetch reviews separately
+  // Fetch reviews separately with optimized caching
   const { data: reviewsData, refetch: refetchReviews } = useQuery({
     queryKey: ['product-reviews', product?.id, refreshReviews, currentPage],
     queryFn: () =>
       reviewService.getProductReviews(product!.id.toString(), currentPage),
     enabled: !!product?.id,
+    staleTime: 5 * 60 * 1000, // Consider data fresh for 5 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
   })
 
   // Debug log for review data
@@ -302,84 +304,87 @@ const ProductDetail = () => {
     }
   }, [])
 
-  if (isLoading) {
-    return <ProductDetailSkeleton />
-  }
-
-  if (error || !product) {
-    return (
-      <StoreLayout>
-        <div className="min-h-screen bg-white flex items-center justify-center px-4">
-          <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">
-              Product not found
-            </h1>
-            <Button
-              onClick={() => navigate('/store')}
-              className="bg-cyan-600 hover:bg-cyan-700"
-            >
-              Back to Store
-            </Button>
-          </div>
-        </div>
-      </StoreLayout>
-    )
-  }
-
-  // Use selected variant pricing if available, otherwise use product pricing
-  const currentPrice = selectedVariant?.price || product.pricing.price
+  // Use selected variant pricing if available, otherwise use product pricing (with null checks)
+  const currentPrice = selectedVariant?.price || product?.pricing?.price || 0
   const originalPrice =
-    selectedVariant?.original_price || product.pricing.original_price
+    selectedVariant?.original_price || product?.pricing?.original_price || 0
   const inStock = selectedVariant
     ? selectedVariant.stock > 0
-    : product.stock === null || product.stock > 0
-  const currentSku = selectedVariant?.sku || product.identifiers.sku
+    : product?.stock === null || (product?.stock ?? 0) > 0
+  const currentSku = selectedVariant?.sku || product?.identifiers?.sku || ''
 
   // Check if the product has variants and if a complete selection is required
-  const hasVariants = product.variants && product.variants.length > 0
+  const hasVariants = product?.variants && product.variants.length > 0
   const isVariantSelectionComplete = hasVariants
     ? selectedVariant !== null
     : true
   const canAddToCart = inStock && isVariantSelectionComplete
 
-  const allImages = product.media.images.map((img) => {
-    // Add null checks for image URLs
-    const mainUrls = img.urls?.main
-    const thumbnailUrls = img.urls?.thumbnails
+  // Memoize allImages - only recalculate when product ID changes (images don't change for same product)
+  const allImages = useMemo(() => {
+    if (!product?.media?.images) return []
 
-    if (!mainUrls || !thumbnailUrls) {
-      return {
-        url: img.urls?.original || '/placeholder.svg',
-        alt: img.alt_text || product.name,
-        zoomUrl: img.urls?.original || '/placeholder.svg',
-        thumbnailUrl: img.urls?.original || '/placeholder.svg',
+    return product.media.images.map((img) => {
+      // Add null checks for image URLs
+      const mainUrls = img.urls?.main
+      const thumbnailUrls = img.urls?.thumbnails
+
+      if (!mainUrls || !thumbnailUrls) {
+        return {
+          url: img.urls?.original || '/placeholder.svg',
+          alt: img.alt_text || product.name || 'Product image',
+          zoomUrl: img.urls?.original || '/placeholder.svg',
+          thumbnailUrl: img.urls?.original || '/placeholder.svg',
+        }
       }
-    }
 
-    return {
-      url: getImageUrl(mainUrls),
-      alt: img.alt_text || product.name,
-      zoomUrl: img.urls?.zoom?.desktop || getImageUrl(mainUrls),
-      thumbnailUrl: getImageUrl(thumbnailUrls),
-    }
-  })
+      return {
+        url: getImageUrl(mainUrls),
+        alt: img.alt_text || product.name || 'Product image',
+        zoomUrl: img.urls?.zoom?.desktop || getImageUrl(mainUrls),
+        thumbnailUrl: getImageUrl(thumbnailUrls),
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id])
 
-  // Get the current image to display (variant image or main product image)
-  const getCurrentImage = () => {
+  // Memoize current image calculation
+  const currentImage = useMemo(() => {
     if (selectedVariant && selectedVariant.image_url) {
       return {
         url: selectedVariant.image_url,
-        alt: `${product.name} - ${selectedVariant.sku}`,
+        alt: `${product?.name || 'Product'} - ${selectedVariant.sku}`,
         zoomUrl: selectedVariant.image_url,
         thumbnailUrl: selectedVariant.image_url,
       }
     }
     return allImages[selectedImage] || allImages[0]
-  }
+  }, [selectedVariant, selectedImage, allImages, product?.name])
 
-  const currentImage = getCurrentImage()
+  // Preload images for faster transitions
+  useEffect(() => {
+    if (allImages.length > 0) {
+      // Preload next and previous images for smoother transitions
+      const preloadImage = (url: string) => {
+        const img = new Image()
+        img.src = url
+      }
 
-  const handleAddToCart = () => {
+      // Preload current + next 2 images
+      const imagesToPreload = [
+        allImages[selectedImage]?.url,
+        allImages[selectedImage + 1]?.url,
+        allImages[selectedImage + 2]?.url,
+      ].filter(Boolean)
+
+      imagesToPreload.forEach(preloadImage)
+    }
+  }, [allImages, selectedImage])
+
+  // Memoize handleAddToCart to prevent recreation on every render
+  const handleAddToCart = useCallback(() => {
+    if (!product) return
+
     // Convert API product to cart format
     const cartProduct = {
       id: product.id,
@@ -410,9 +415,11 @@ const ProductDetail = () => {
       ? selectedVariant.id.toString()
       : undefined
     addToCart(cartProduct, quantity, productVariantId)
-  }
+  }, [product, currentPrice, originalPrice, allImages, inStock, selectedVariant, quantity, addToCart])
 
   const handleShare = async () => {
+    if (!product) return
+
     const shareData = {
       title: product.name,
       text: `Check out ${product.name} - ${product.description}`,
@@ -477,7 +484,10 @@ const ProductDetail = () => {
     }
   }
 
-  const handleWishlistToggle = () => {
+  // Memoize handleWishlistToggle
+  const handleWishlistToggle = useCallback(() => {
+    if (!product) return
+
     const wishlistProduct = {
       id: product.id,
       name: product.name,
@@ -507,7 +517,7 @@ const ProductDetail = () => {
     } else {
       addToWishlist(wishlistProduct)
     }
-  }
+  }, [product, currentPrice, originalPrice, allImages, inStock, isInWishlist, removeFromWishlist, addToWishlist])
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -522,15 +532,40 @@ const ProductDetail = () => {
     ))
   }
 
-  // Breadcrumb data
-  const breadcrumbs = [
+  // Memoize breadcrumbs - only recalculate when category path or product name changes
+  const breadcrumbs = useMemo(() => [
     { label: 'Home', path: '/store' },
-    ...(product.category?.path?.map((cat) => ({
+    ...(product?.category?.path?.map((cat) => ({
       label: cat.name,
       path: `/store/categories/${cat.slug}`,
     })) || []),
-    { label: product.name, path: '', current: true },
-  ]
+    { label: product?.name || 'Product', path: '', current: true },
+  ], [product?.category?.path, product?.name])
+
+  // Conditional rendering for loading and error states
+  if (isLoading) {
+    return <ProductDetailSkeleton />
+  }
+
+  if (error || !product) {
+    return (
+      <StoreLayout>
+        <div className="min-h-screen bg-white flex items-center justify-center px-4">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">
+              Product not found
+            </h1>
+            <Button
+              onClick={() => navigate('/store')}
+              className="bg-cyan-600 hover:bg-cyan-700"
+            >
+              Back to Store
+            </Button>
+          </div>
+        </div>
+      </StoreLayout>
+    )
+  }
 
   return (
     <StoreLayout>

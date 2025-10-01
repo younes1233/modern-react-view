@@ -1,10 +1,10 @@
-
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { StoreThemeHandler } from "@/components/StoreThemeHandler";
+import { lazy, Suspense } from "react";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { RoleAuthProvider } from "@/contexts/RoleAuthContext";
@@ -15,38 +15,46 @@ import { ResponsiveImageProvider } from "@/contexts/ResponsiveImageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 
-// Admin Pages
-import Index from "@/pages/Index";
-import Products from "@/pages/Products";
-import Categories from "@/pages/Categories";
-import Orders from "@/pages/Orders";
-import Customers from "@/pages/Customers";
-import Analytics from "@/pages/Analytics";
-import SalesReport from "@/pages/SalesReport";
-import Returns from "@/pages/Returns";
-import Coupons from "@/pages/Coupons";
-import UserManagement from "@/pages/UserManagement";
-import ProductApproval from "@/pages/ProductApproval";
-import Localization from "@/pages/Localization";
-import SellerProducts from "@/pages/SellerProducts";
-import Inventory from "@/pages/Inventory";
-import StoreManagement from "@/pages/StoreManagement";
+// Loading fallback component
+const PageLoader = () => (
+  <div className="flex items-center justify-center min-h-screen">
+    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+  </div>
+);
 
-// Auth Pages
-// import Login from "@/pages/Login";
+// Lazy load pages for code splitting
+// Admin Pages
+const Index = lazy(() => import("@/pages/Index"));
+const Products = lazy(() => import("@/pages/Products"));
+const Categories = lazy(() => import("@/pages/Categories"));
+const Orders = lazy(() => import("@/pages/Orders"));
+const Customers = lazy(() => import("@/pages/Customers"));
+const Analytics = lazy(() => import("@/pages/Analytics"));
+const SalesReport = lazy(() => import("@/pages/SalesReport"));
+const Returns = lazy(() => import("@/pages/Returns"));
+const Coupons = lazy(() => import("@/pages/Coupons"));
+const UserManagement = lazy(() => import("@/pages/UserManagement"));
+const ProductApproval = lazy(() => import("@/pages/ProductApproval"));
+const Localization = lazy(() => import("@/pages/Localization"));
+const SellerProducts = lazy(() => import("@/pages/SellerProducts"));
+const Inventory = lazy(() => import("@/pages/Inventory"));
+const StoreManagement = lazy(() => import("@/pages/StoreManagement"));
+
+// Auth Pages - Keep these eager loaded as they're small and frequently accessed
 import RoleLogin from "@/pages/RoleLogin";
 import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/NotFound";
 import Unauthorized from "@/pages/Unauthorized";
 
-// Store Pages
-import Store from "@/pages/store/Store";
+// Store Pages - Lazy load except ComingSoon (landing page)
+const Store = lazy(() => import("@/pages/store/Store"));
 import ComingSoon from "./pages/store/ComingSoon";
-import ProductDetail from "@/pages/store/ProductDetail";
-import StoreCategories from "@/pages/store/StoreCategories";
-import Checkout from "@/pages/store/Checkout";
-import StoreReturns from "@/pages/store/Returns";
-import Wishlist from "@/pages/store/Wishlist";
+const ProductDetail = lazy(() => import("@/pages/store/ProductDetail"));
+const StoreCategories = lazy(() => import("@/pages/store/StoreCategories"));
+const Checkout = lazy(() => import("@/pages/store/Checkout"));
+const StoreReturns = lazy(() => import("@/pages/store/Returns"));
+const Wishlist = lazy(() => import("@/pages/store/Wishlist"));
+const AddressManagement = lazy(() => import("@/pages/store/AddressManagement"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -69,7 +77,8 @@ function App() {
                   <ResponsiveImageProvider>
                     <Router>
                       <StoreThemeHandler />
-                      <Routes>
+                      <Suspense fallback={<PageLoader />}>
+                        <Routes>
                         {/* Public Auth Routes */}
                         {/* <Route path="/login" element={<Login />} /> */}
                         <Route path="/role-login" element={<RoleLogin />} />
@@ -84,6 +93,7 @@ function App() {
                         <Route path="/store/checkout" element={<Checkout />} />
                         <Route path="/store/returns" element={<StoreReturns />} />
                         <Route path="/store/wishlist" element={<Wishlist />} />
+                        <Route path="/store/addresses" element={<AddressManagement />} />
 
                         {/* Protected Admin Routes */}
                         <Route path="/dashboard" element={
@@ -209,6 +219,7 @@ function App() {
                         {/* Catch all route */}
                         <Route path="*" element={<NotFound />} />
                       </Routes>
+                      </Suspense>
                     </Router>
                     <Toaster />
                     <Sonner />

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
@@ -45,7 +45,7 @@ interface ProductVariantsProps {
   onSelectionsChange?: (selections: {[key: string]: string}) => void;
 }
 
-export const ProductVariants = ({
+const ProductVariantsComponent = ({
   variants,
   selectedVariant,
   onVariantChange,
@@ -376,3 +376,11 @@ export const ProductVariants = ({
     </div>
   );
 };
+
+// Memoize ProductVariants - only re-render if variants or selectedVariant changes
+export const ProductVariants = memo(ProductVariantsComponent, (prevProps, nextProps) => {
+  return prevProps.variants === nextProps.variants &&
+         prevProps.selectedVariant?.id === nextProps.selectedVariant?.id &&
+         prevProps.showInfoCard === nextProps.showInfoCard &&
+         prevProps.showSelectionOptions === nextProps.showSelectionOptions;
+});

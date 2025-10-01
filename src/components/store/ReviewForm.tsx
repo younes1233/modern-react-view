@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,7 +19,7 @@ interface ReviewFormProps {
   onCancel: () => void;
 }
 
-export const ReviewForm: React.FC<ReviewFormProps> = ({
+const ReviewFormComponent: React.FC<ReviewFormProps> = ({
   productId,
   existingReview,
   onReviewSubmitted,
@@ -285,3 +285,9 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({
     </Card>
   );
 };
+
+// Memoize ReviewForm - only re-render if productId or existingReview changes
+export const ReviewForm = memo(ReviewFormComponent, (prevProps, nextProps) => {
+  return prevProps.productId === nextProps.productId &&
+         prevProps.existingReview?.id === nextProps.existingReview?.id;
+});

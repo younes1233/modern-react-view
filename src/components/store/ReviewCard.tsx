@@ -10,7 +10,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { type Review } from '@/services/reviewService';
 import { reviewService } from '@/services/reviewService';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { ImageZoom } from '@/components/store/ImageZoom';
 
 interface ReviewCardProps {
@@ -21,7 +21,7 @@ interface ReviewCardProps {
   mode?: 'simple' | 'enhanced';
 }
 
-export const ReviewCard = ({ review, productId, onEdit, onDelete, mode = 'simple' }: ReviewCardProps) => {
+const ReviewCardComponent = ({ review, productId, onEdit, onDelete, mode = 'simple' }: ReviewCardProps) => {
   const { user } = useAuth();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -456,3 +456,12 @@ export const ReviewCard = ({ review, productId, onEdit, onDelete, mode = 'simple
     </Card>
   );
 };
+
+// Memoize ReviewCard - only re-render if review data actually changes
+export const ReviewCard = memo(ReviewCardComponent, (prevProps, nextProps) => {
+  // Only re-render if review ID or helpful count changes
+  return prevProps.review.id === nextProps.review.id &&
+         prevProps.review.helpful_count === nextProps.review.helpful_count &&
+         prevProps.productId === nextProps.productId &&
+         prevProps.mode === nextProps.mode;
+});
