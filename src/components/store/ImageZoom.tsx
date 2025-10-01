@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useRef, useCallback, useEffect } from 'react'
+import React, { Component, ErrorInfo, ReactNode, useState, useRef, useCallback, useEffect } from 'react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ImageZoomMobile } from './ImageZoomMobile'
 import { ImageZoomDesktop } from './ImageZoomDesktop'
