@@ -54,14 +54,12 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    setIsLoading(true);
-    
     try {
       const response = await authService.login(email, password);
-      
+
       if (!response.error && response.details?.user && response.details?.token) {
         const apiUser = response.details.user;
-        
+
         // Transform API user to our User interface
         const transformedUser: User = {
           id: apiUser.id,
@@ -81,18 +79,15 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
           sellerId: apiUser.sellerId,
           sellerStatus: apiUser.sellerStatus,
         };
-        
+
         setUser(transformedUser);
         localStorage.setItem('user', JSON.stringify(transformedUser));
-        setIsLoading(false);
         return true;
       }
-      
-      setIsLoading(false);
+
       return false;
     } catch (error) {
       console.error('Login error:', error);
-      setIsLoading(false);
       return false;
     }
   };

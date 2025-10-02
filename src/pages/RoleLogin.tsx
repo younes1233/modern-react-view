@@ -19,7 +19,7 @@ const RoleLogin = () => {
 
   // Redirect if user is already signed in
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user) {
       // Redirect based on user role
       if (user.role === 'customer') {
         navigate('/store', { replace: true });
@@ -27,7 +27,7 @@ const RoleLogin = () => {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
