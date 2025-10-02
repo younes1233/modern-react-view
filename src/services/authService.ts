@@ -153,7 +153,7 @@ class AuthService extends BaseApiService {
     return this.get<ApiResponse<{ user: any }>>('/auth/me');
   }
 
-  async refreshToken(): Promise<RefreshTokenResponse> {
+  async refreshAuthToken(): Promise<RefreshTokenResponse> {
     const response = await this.post<RefreshTokenResponse>('/auth/refresh');
     if (response.details?.token) {
       this.setToken(response.details.token);

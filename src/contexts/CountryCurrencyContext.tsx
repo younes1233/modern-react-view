@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { userSettingsService } from '@/services/userSettingsService';
 import { useAuth } from '@/contexts/AuthContext';
 

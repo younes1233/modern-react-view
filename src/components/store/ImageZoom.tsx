@@ -1,4 +1,4 @@
-import { Component, ErrorInfo, ReactNode, useState, useRef, useCallback, useEffect } from 'react'
+import React, { Component, ErrorInfo, ReactNode, useState, useRef, useCallback, useEffect } from 'react'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { ImageZoomMobile } from './ImageZoomMobile'
 import { ImageZoomDesktop } from './ImageZoomDesktop'
@@ -161,7 +161,7 @@ function ImageZoomComponent({
   )
 
   // Touch gesture utilities
-  const getTouchDistance = useCallback((touches: TouchList) => {
+  const getTouchDistance = useCallback((touches: Touch[]) => {
     if (touches.length < 2) return 0
     const touch1 = touches[0]
     const touch2 = touches[1]
@@ -251,7 +251,8 @@ function ImageZoomComponent({
         }
       } else if (touches.length === 2) {
         // Two finger touch - start pinch zoom
-        const distance = getTouchDistance(touches)
+        const touchArray = Array.from(touches) as Touch[]
+        const distance = getTouchDistance(touchArray)
         setLastPinchDistance(distance)
         setTouchStart(null)
       }
@@ -274,7 +275,8 @@ function ImageZoomComponent({
         })
       } else if (touches.length === 2 && lastPinchDistance) {
         // Two finger pinch zoom
-        const distance = getTouchDistance(touches)
+        const touchArray = Array.from(touches) as Touch[]
+        const distance = getTouchDistance(touchArray)
         const scale = distance / lastPinchDistance
         setZoom((prev) => Math.max(0.5, Math.min(5, prev * scale)))
         setLastPinchDistance(distance)

@@ -240,7 +240,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       is_vat_exempt: false,
       cover_image: "",
       images: [],
-      stock: '',
+      stock: 0,
       shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
@@ -502,7 +502,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         // Handle variant image - use mobile version for admin forms (smaller size)
         const variantImageUrl = typeof variant.image === 'string'
           ? variant.image
-          : variant.image?.urls?.thumbnails?.mobile || variant.image?.urls?.original || "";
+          : (variant.image as any)?.urls?.thumbnails?.mobile || (variant.image as any)?.urls?.original || "";
 
         const variantEntry = {
           id: variant.id,
@@ -560,7 +560,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         is_vat_exempt: false,
         cover_image: "",
         images: [],
-        stock: '',
+        stock: 0,
         shelf_id: undefined,
         delivery_type: "meemhome",
         delivery_cost: 0,
@@ -1096,13 +1096,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
         // Only set delivery_type if it's not "inherit" and is a valid type
         const delivery_type = variant.delivery_type && variant.delivery_type !== "inherit" ? variant.delivery_type : undefined;
-        const delivery_cost = delivery_type === "meemhome" && variant.delivery_cost ? parseFloat(variant.delivery_cost) : undefined;
+        const delivery_cost = delivery_type === "meemhome" && variant.delivery_cost ? parseFloat(String(variant.delivery_cost)) : undefined;
         const stock = variant.stock || 0;
 
         const variantData: any = {
           id: variant.id, // Include variant ID for updates
           image: variant.image,
-          delete_image: variant.delete_image, // Include deletion flag
+          delete_image: (variant as any).delete_image, // Include deletion flag
           variations,
           stock,
           product_variant_prices: variantPricesParsed.length > 0 ? (variantPricesParsed as any) : [],
@@ -1118,7 +1118,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         }
 
         // Only add shelf_id if it's explicitly set (override) and in create mode
-        if (mode === 'create' && variant.shelf_id !== undefined) {
+        if (mode === 'add' && variant.shelf_id !== undefined) {
           variantData.shelf_id = variant.shelf_id;
         }
 
@@ -1646,14 +1646,14 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                               const v = variant as any;
                               if (typeof v.image === 'string' && v.image && mode === 'edit') {
                                 // For existing images, mark for deletion
-                                updateVariantField(variant.id, 'delete_image', true);
-                                updateVariantField(variant.id, 'image', '');
-                                updateVariantField(variant.id, 'imagePreviewUrl', '');
+                                (updateVariantField as any)(variant.id, 'delete_image', true);
+                                (updateVariantField as any)(variant.id, 'image', '');
+                                (updateVariantField as any)(variant.id, 'imagePreviewUrl', '');
                               } else {
                                 // For new uploads, just clear
-                                updateVariantField(variant.id, 'image', '');
-                                updateVariantField(variant.id, 'imagePreviewUrl', '');
-                                updateVariantField(variant.id, 'delete_image', false);
+                                (updateVariantField as any)(variant.id, 'image', '');
+                                (updateVariantField as any)(variant.id, 'imagePreviewUrl', '');
+                                (updateVariantField as any)(variant.id, 'delete_image', false);
                               }
                             }}
                           >
@@ -1795,7 +1795,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                    {/* Variant inventory and delivery overrides */}
                    <div className={cn(
                      "grid gap-4",
-                     mode === 'create' ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-3"
+                     mode === 'add' ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-2 lg:grid-cols-3"
                    )}>
                      <div>
                        <Label>Stock *</Label>
@@ -1814,7 +1814,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                          <Label>Shelf (override)</Label>
                          <Select
                            value={variant.shelf_id ? String(variant.shelf_id) : "inherit"}
-                           onValueChange={(value) => updateVariantField(variant.id, 'shelf_id', value === "inherit" ? undefined : parseInt(value))}
+                           onValueChange={(value) => (updateVariantField as any)(variant.id, 'shelf_id', value === "inherit" ? undefined : parseInt(value))}
                          >
                            <SelectTrigger>
                              <SelectValue>
