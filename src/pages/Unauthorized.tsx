@@ -3,10 +3,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useRoleAuth } from "@/contexts/RoleAuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Unauthorized = () => {
-  const { user, logout } = useRoleAuth();
+  const { user, logout } = useAuth();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-50 to-red-100 dark:from-gray-900 dark:to-gray-800 p-4">

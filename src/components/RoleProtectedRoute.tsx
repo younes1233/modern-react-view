@@ -1,5 +1,5 @@
 
-import { useRoleAuth } from '@/contexts/RoleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { authService } from '@/services/authService';
 import { useQuery } from '@tanstack/react-query';
@@ -13,7 +13,7 @@ export function RoleProtectedRoute({
   children,
   redirectTo = '/role-login'
 }: RoleProtectedRouteProps) {
-  const { user, isLoading } = useRoleAuth();
+  const { user, isLoading } = useAuth();
 
   // Always check dashboard access from backend
   const { data: dashboardAccess, isLoading: isDashboardLoading, error } = useQuery({

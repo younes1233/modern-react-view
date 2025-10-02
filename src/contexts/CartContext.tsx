@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 import { Product } from '@/data/storeData';
 import { toast } from '@/components/ui/sonner';
 import { cartService, Cart } from '@/services/cartService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 export interface CartItem {
   id: string;

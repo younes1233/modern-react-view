@@ -233,8 +233,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('user');
       apiService.removeToken();
       setIsLoading(false);
-      // Redirect to store home page after logout
-      window.location.href = '/store';
+      // Redirect based on current location
+      const isDashboard = window.location.pathname.startsWith('/dashboard');
+      window.location.href = isDashboard ? '/role-login' : '/store';
     }
   };
 

@@ -30,8 +30,21 @@ export function CartSidebar() {
     setIsCheckingOut(true);
 
     try {
-      // Backend now uses user preferences, so these params are optional
-      const response = await checkoutService.startCheckout();
+      // Use selected country from context (saved in user_settings)
+      if (!selectedCountry) {
+        toast({
+          title: "Country Required",
+          description: "Please select your country from the header before proceeding to checkout.",
+          variant: "destructive",
+        });
+        setIsCheckingOut(false);
+        return;
+      }
+
+      const response = await checkoutService.startCheckout({
+        country_id: selectedCountry.id,
+        currency_id: selectedCurrency?.id,
+      });
 
       // Store checkout session details
       sessionStorage.setItem('checkout_session', JSON.stringify(response.details));

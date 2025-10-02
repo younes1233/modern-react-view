@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRoleAuth } from '@/contexts/RoleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogIn, Shield } from 'lucide-react';
 
@@ -13,7 +13,7 @@ const RoleLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { user, login, isLoading } = useRoleAuth();
+  const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -27,7 +27,8 @@ const RoleLogin = () => {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

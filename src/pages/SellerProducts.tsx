@@ -41,11 +41,11 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { demoProducts, Product } from "@/data/users";
-import { useRoleAuth } from "@/contexts/RoleAuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 
 const SellerProducts = () => {
-  const { user } = useRoleAuth();
+  const { user } = useAuth();
   const [products, setProducts] = useState<Product[]>(demoProducts);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newProduct, setNewProduct] = useState({
