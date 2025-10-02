@@ -17,9 +17,11 @@ export interface ApiResponse<T> {
 }
 
 class DeliveryZoneService extends BaseApiService {
-  async getDeliveryZones(countryId: number): Promise<DeliveryZone[]> {
+  // countryId is now optional - backend uses user preferences
+  async getDeliveryZones(countryId?: number): Promise<DeliveryZone[]> {
+    const queryString = countryId ? `?country_id=${countryId}` : '';
     const response = await this.get<ApiResponse<{ zones: DeliveryZone[] }>>(
-      `/countries/${countryId}/delivery-zones?country_id=${countryId}`
+      `/delivery-zones${queryString}`
     );
     return response.details.zones;
   }

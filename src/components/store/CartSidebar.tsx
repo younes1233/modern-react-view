@@ -30,10 +30,8 @@ export function CartSidebar() {
     setIsCheckingOut(true);
 
     try {
-      const response = await checkoutService.startCheckout({
-        country_id: selectedCountry.id,
-        currency_id: selectedCurrency?.id,
-      });
+      // Backend now uses user preferences, so these params are optional
+      const response = await checkoutService.startCheckout();
 
       // Store checkout session details
       sessionStorage.setItem('checkout_session', JSON.stringify(response.details));

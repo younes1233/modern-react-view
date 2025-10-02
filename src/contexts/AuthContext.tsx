@@ -233,6 +233,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.removeItem('user');
       apiService.removeToken();
       setIsLoading(false);
+      // Redirect to store home page after logout
+      window.location.href = '/store';
     }
   };
 

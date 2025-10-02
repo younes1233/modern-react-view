@@ -1,7 +1,8 @@
 import BaseApiService, { ApiResponse } from './baseApiService';
 
 export interface CheckoutStartRequest {
-  country_id: number;
+  // country_id and currency_id are now optional - backend uses user preferences
+  country_id?: number;
   currency_id?: number;
 }
 
@@ -42,8 +43,9 @@ export interface CheckoutStartResponse {
 }
 
 class CheckoutService extends BaseApiService {
-  async startCheckout(data: CheckoutStartRequest): Promise<CheckoutStartResponse> {
-    return this.post<CheckoutStartResponse>('/auth/checkout/start', data);
+  async startCheckout(data?: CheckoutStartRequest): Promise<CheckoutStartResponse> {
+    // Only send data if provided (for guests without preferences)
+    return this.post<CheckoutStartResponse>('/auth/checkout/start', data || {});
   }
 }
 

@@ -36,17 +36,17 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is logged in on mount
+    // Check if user is logged in on mount - use same 'user' key as AuthContext
     const token = authService.getToken();
-    const savedUser = localStorage.getItem('roleUser');
-    
+    const savedUser = localStorage.getItem('user');
+
     if (token && savedUser) {
       try {
         const userData = JSON.parse(savedUser);
         setUser(userData);
       } catch (error) {
         console.error('Error parsing saved user data:', error);
-        localStorage.removeItem('roleUser');
+        localStorage.removeItem('user');
         authService.removeToken();
       }
     }
@@ -83,7 +83,7 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
         };
         
         setUser(transformedUser);
-        localStorage.setItem('roleUser', JSON.stringify(transformedUser));
+        localStorage.setItem('user', JSON.stringify(transformedUser));
         setIsLoading(false);
         return true;
       }
@@ -104,8 +104,10 @@ export function RoleAuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', error);
     } finally {
       setUser(null);
-      localStorage.removeItem('roleUser');
+      localStorage.removeItem('user');
       authService.removeToken();
+      // Redirect to store home page after logout
+      window.location.href = '/store';
     }
   };
 

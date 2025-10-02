@@ -52,7 +52,7 @@ const RoleLogin = () => {
       // Direct navigation after successful login
       // The user state should be available now since login() returned true
       setTimeout(() => {
-        const currentUser = JSON.parse(localStorage.getItem('roleUser') || '{}');
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
         if (currentUser.role === 'customer') {
           navigate('/store', { replace: true });
         } else {
