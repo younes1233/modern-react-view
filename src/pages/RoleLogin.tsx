@@ -31,7 +31,7 @@ const RoleLogin = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: 'Error',
@@ -42,23 +42,14 @@ const RoleLogin = () => {
     }
 
     const success = await login(email, password);
-    
+
     if (success) {
       toast({
         title: 'Success',
         description: 'Login successful!',
       });
-      
-      // Direct navigation after successful login
-      // The user state should be available now since login() returned true
-      setTimeout(() => {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        if (currentUser.role === 'customer') {
-          navigate('/store', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
-      }, 100); // Small delay to ensure state is updated
+      // Navigation will be handled automatically by the useEffect hook
+      // when the user state updates after login
     } else {
       toast({
         title: 'Error',
