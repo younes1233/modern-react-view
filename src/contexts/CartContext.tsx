@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import React from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { Product } from '@/data/storeData';
 import { toast } from '@/components/ui/sonner';
 import { cartService, Cart } from '@/services/cartService';

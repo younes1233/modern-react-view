@@ -1,6 +1,5 @@
-
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
-
+import React from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 export type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 interface ResponsiveImageContextType {
