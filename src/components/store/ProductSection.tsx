@@ -167,7 +167,7 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
   }
 
   if (isLoading && !disableIndividualLoading) {
-    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout} />;
+    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout as 'grid' | 'slider'} />;
   }
 
   // Better error handling
@@ -196,7 +196,7 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
   // Empty state - show skeleton instead of empty message
   if (products.length === 0) {
     console.log(`ProductSection "${listing.title}" has no products - showing skeleton`);
-    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout} />;
+    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout as 'grid' | 'slider'} />;
   }
 
   return (

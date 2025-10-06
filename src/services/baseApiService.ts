@@ -7,7 +7,7 @@ export interface ApiResponse<T = any> {
 class BaseApiService {
   protected baseURL = 'https://meemhome.com/api';
   private static token: string | null = null;
-  private apiSecret = 'qpBRMrOphIamxNVLNyzsHCCQGTBmLV33';
+  private apiSecret = import.meta.env.VITE_API_SECRET || '';
   private static isRefreshing = false;
   private static refreshPromise: Promise<string> | null = null;
 
@@ -33,7 +33,6 @@ class BaseApiService {
     BaseApiService.token = null;
     localStorage.removeItem('auth_token');
     localStorage.removeItem('user');
-    localStorage.removeItem('roleUser');
   }
 
   // Refresh the authentication token

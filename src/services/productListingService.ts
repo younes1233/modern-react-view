@@ -76,13 +76,21 @@ class ProductListingService extends BaseApiService {
   }
 
   // Get products for a specific listing
+  // Note: country_id and currency_id are now optional - backend uses user preferences
   async getProductListingProducts(
-    productListingId: number, 
-    countryId: number = 1, 
-    currencyId: number = 1
+    productListingId: number,
+    countryId?: number,
+    currencyId?: number
   ): Promise<ApiResponse<ProductListingWithProducts>> {
-    console.log('Fetching products for listing:', productListingId, 'country:', countryId, 'currency:', currencyId);
-    const response = await this.get<ApiResponse<ProductListingWithProducts>>(`/product-listings/${productListingId}/products?country_id=${countryId}&currency_id=${currencyId}`);
+    console.log('Fetching products for listing:', productListingId);
+
+    // Build query params only if provided (fallback for guests without preferences)
+    const params = new URLSearchParams();
+    if (countryId) params.append('country_id', countryId.toString());
+    if (currencyId) params.append('currency_id', currencyId.toString());
+
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+    const response = await this.get<ApiResponse<ProductListingWithProducts>>(`/product-listings/${productListingId}/products${queryString}`);
     console.log('Product listing products response:', response);
     return response;
   }

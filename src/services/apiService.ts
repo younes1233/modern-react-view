@@ -58,7 +58,7 @@ class ApiService {
   }
 
   async refreshToken() {
-    return authService.refreshToken();
+    return authService.refreshAuthToken();
   }
 
   // Banner methods

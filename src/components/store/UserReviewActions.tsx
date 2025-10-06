@@ -4,7 +4,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { reviewService } from '@/services/reviewService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface UserReviewActionsProps {
   productId: string;

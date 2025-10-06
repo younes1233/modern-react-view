@@ -32,7 +32,7 @@ import {
 import { Link, useLocation } from "react-router-dom"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
-import { useRoleAuth } from "@/contexts/RoleAuthContext"
+import { useAuth } from "@/contexts/AuthContext"
 
 // Menu items for different roles
 const roleMenuItems = {
@@ -84,7 +84,7 @@ const roleMenuItems = {
 
 export function RoleBasedSidebar() {
   const location = useLocation();
-  const { user } = useRoleAuth();
+  const { user } = useAuth();
 
   console.log('RoleBasedSidebar render - user:', user);
   console.log('RoleBasedSidebar render - location:', location.pathname);

@@ -715,10 +715,10 @@ let sampleProductListings: ProductListing[] = [
     title: "Featured Products",
     subtitle: "",
     type: "featured",
-    maxProducts: 16,
+    max_products: 16,
     layout: "slider",
-    showTitle: true,
-    isActive: true,
+    show_title: true,
+    is_active: true,
     order: 1
   },
   {
@@ -726,10 +726,10 @@ let sampleProductListings: ProductListing[] = [
     title: "New Arrivals",
     subtitle: "",
     type: "newArrivals",
-    maxProducts: 12,
+    max_products: 12,
     layout: "slider",
-    showTitle: true,
-    isActive: true,
+    show_title: true,
+    is_active: true,
     order: 2
   },
   {
@@ -737,10 +737,10 @@ let sampleProductListings: ProductListing[] = [
     title: "Sale Items",
     subtitle: "",
     type: "sale",
-    maxProducts: 10,
+    max_products: 10,
     layout: "slider",
-    showTitle: true,
-    isActive: true,
+    show_title: true,
+    is_active: true,
     order: 3
   }
 ];
@@ -878,22 +878,23 @@ export const getProductsForListing = (listing: ProductListing): Product[] => {
       products = getProductsOnSale();
       break;
     case 'category':
-      if (listing.categoryFilter && listing.categoryFilter !== 'all') {
-        products = sampleProducts.filter(p => p.category === listing.categoryFilter);
+      if (listing.category_id) {
+        products = sampleProducts.filter(p => p.category === String(listing.category_id));
       } else {
         products = sampleProducts;
       }
       break;
     case 'custom':
-      if (listing.productIds) {
-        products = sampleProducts.filter(p => listing.productIds!.includes(p.id));
+      if (listing.products && listing.products.length > 0) {
+        const productIds = listing.products.map(p => typeof p === 'number' ? p : p.id);
+        products = sampleProducts.filter(p => productIds.includes(p.id));
       }
       break;
     default:
       products = [];
   }
   
-  return products.slice(0, listing.maxProducts);
+  return products.slice(0, listing.max_products);
 };
 
 // Home section functions

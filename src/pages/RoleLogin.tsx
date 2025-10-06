@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useRoleAuth } from '@/contexts/RoleAuthContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogIn, Shield } from 'lucide-react';
 
@@ -13,13 +13,13 @@ const RoleLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const { user, login, isLoading } = useRoleAuth();
+  const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   // Redirect if user is already signed in
   useEffect(() => {
-    if (user && !isLoading) {
+    if (user) {
       // Redirect based on user role
       if (user.role === 'customer') {
         navigate('/store', { replace: true });
@@ -27,11 +27,12 @@ const RoleLogin = () => {
         navigate('/dashboard', { replace: true });
       }
     }
-  }, [user, isLoading, navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email || !password) {
       toast({
         title: 'Error',
@@ -42,23 +43,14 @@ const RoleLogin = () => {
     }
 
     const success = await login(email, password);
-    
+
     if (success) {
       toast({
         title: 'Success',
         description: 'Login successful!',
       });
-      
-      // Direct navigation after successful login
-      // The user state should be available now since login() returned true
-      setTimeout(() => {
-        const currentUser = JSON.parse(localStorage.getItem('roleUser') || '{}');
-        if (currentUser.role === 'customer') {
-          navigate('/store', { replace: true });
-        } else {
-          navigate('/dashboard', { replace: true });
-        }
-      }, 100); // Small delay to ensure state is updated
+      // Navigation will be handled automatically by the useEffect hook
+      // when the user state updates after login
     } else {
       toast({
         title: 'Error',

@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Star, Upload, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { reviewService } from '@/services/reviewService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ReviewFormProps {
   productId: string;

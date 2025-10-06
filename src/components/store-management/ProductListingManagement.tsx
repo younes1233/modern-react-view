@@ -188,17 +188,17 @@ export function ProductListingManagement() {
                       <div className="flex items-center gap-3">
                         <div className={`p-3 rounded-xl ${
                           listing.type === 'featured' ? 'bg-blue-500/10' :
-                          listing.type === 'new_arrivals' ? 'bg-green-500/10' :
-                          listing.type === 'on_sales' ? 'bg-red-500/10' :
+                          listing.type === 'newArrivals' ? 'bg-green-500/10' :
+                          listing.type === 'sale' ? 'bg-red-500/10' :
                           listing.type === 'category' ? 'bg-purple-500/10' :
                           'bg-orange-500/10'
                         }`}>
                           {listing.type === 'featured' && <Star className="w-6 h-6 text-blue-600" />}
-                          {listing.type === 'new_arrivals' && <Zap className="w-6 h-6 text-green-600" />}
-                          {listing.type === 'on_sales' && <Percent className="w-6 h-6 text-red-600" />}
+                          {listing.type === 'newArrivals' && <Zap className="w-6 h-6 text-green-600" />}
+                          {listing.type === 'sale' && <Percent className="w-6 h-6 text-red-600" />}
                           {listing.type === 'category' && <Folder className="w-6 h-6 text-purple-600" />}
                           {listing.type === 'custom' && <Cog className="w-6 h-6 text-orange-600" />}
-                          {!['featured', 'new_arrivals', 'on_sales', 'category', 'custom'].includes(listing.type) && <Package className="w-6 h-6 text-gray-600" />}
+                          {!['featured', 'newArrivals', 'sale', 'category', 'custom'].includes(listing.type) && <Package className="w-6 h-6 text-gray-600" />}
                         </div>
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900 dark:text-gray-100 text-base">
@@ -234,29 +234,7 @@ export function ProductListingManagement() {
                               <div className="w-2 h-4 bg-gray-200 rounded-sm opacity-50"></div>
                             </div>
                           )}
-                          {listing.layout === 'list' && (
-                            <div className="space-y-0.5">
-                              {Array.from({ length: Math.min(listing.max_products, 3) }).map((_, i) => (
-                                <div key={i} className="flex gap-0.5">
-                                  <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
-                                  <div className="flex-1 h-1 bg-gray-300 rounded my-1"></div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                          {listing.layout === 'carousel' && (
-                            <div className="relative">
-                              <div className="flex gap-0.5">
-                                <div className="w-5 h-4 bg-gray-300 rounded-sm"></div>
-                                <div className="w-3 h-4 bg-gray-200 rounded-sm opacity-60"></div>
-                              </div>
-                              <div className="flex gap-0.5 mt-0.5 justify-center">
-                                <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                                <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
-                              </div>
-                            </div>
-                          )}
+                          {/* No list or carousel layout in current types */}
                           <div className="text-xs text-gray-500 text-center truncate">
                             {listing.layout}
                           </div>
