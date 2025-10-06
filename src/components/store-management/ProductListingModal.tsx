@@ -42,7 +42,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   // Use field error renderer
   const renderFieldError = useFieldError(validationErrors);
 
-  const [formData, setFormData] = useState<CreateProductListingRequest & { category_id?: number; products?: number[] }>({
+  const [formData, setFormData] = useState<CreateProductListingRequest>({
     title: '',
     type: 'featured',
     max_products: 8,
@@ -85,7 +85,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
 
   useEffect(() => {
     if (mode === 'edit' && listing) {
-      const baseFormData: any = {
+      const baseFormData = {
         title: listing.title,
         type: listing.type,
         max_products: listing.max_products,
@@ -122,7 +122,7 @@ export function ProductListingModal({ isOpen, onClose, onSave, listing, mode }: 
   const updateField = createFieldUpdater(setFormData, clearFieldError);
 
   // Auto-populate title based on listing type and category
-  const updateTypeAndTitle = (type: CreateProductListingRequest['type']) => {
+  const updateTypeAndTitle = (type: string) => {
     setFormData(prev => {
       let newTitle = '';
 

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAuth } from "@/contexts/RoleAuthContext";
 import { LogOut, User, ExternalLink, Settings, Upload, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import {
@@ -18,7 +18,7 @@ import { MassUploadModal } from "@/components/MassUploadModal";
 import { ProfileSettingsModal } from "@/components/ProfileSettingsModal";
 
 export function DashboardHeader() {
-  const { user, logout } = useAuth();
+  const { user, logout } = useRoleAuth();
   const [isMassUploadOpen, setIsMassUploadOpen] = useState(false);
   const [uploadType, setUploadType] = useState<'products' | 'categories'>('products');
   const [isProfileOpen, setIsProfileOpen] = useState(false);

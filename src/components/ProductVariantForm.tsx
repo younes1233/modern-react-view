@@ -12,7 +12,6 @@ export interface VariantEntry {
   id: number;
   image: File | string | null;
   imagePreviewUrl?: string;
-  delete_image?: boolean;
   variations: number[];
   variantPrices: {
     net_price: string;
@@ -20,7 +19,7 @@ export interface VariantEntry {
   };
   variantSpecs: { id: number; name: string; value: string }[];
   delivery_type: string;
-  delivery_cost: string | number;
+  delivery_cost: string;
   stock: number;
   shelf_id?: number;
 }

@@ -15,7 +15,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { checkoutService } from '@/services/checkoutService';
 
 const Checkout = () => {
   const { items, getTotalPrice, clearCart } = useCart();
@@ -112,7 +111,7 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     if (!validateForm()) {
       toast.error('Please fix the errors and try again');
       return;
@@ -121,45 +120,19 @@ const Checkout = () => {
     setIsProcessing(true);
 
     try {
-      // TODO: Get actual address_id and payment_method_id from form
-      // For now using dummy values - you'll need to add address selection and payment method to the form
-      const checkoutData = {
-        address_id: 1, // Replace with actual selected address ID
-        payment_method_id: formData.paymentMethod === 'card' ? 2 : 1, // 1=COD, 2=Card
-        coupon_code: undefined, // Add if you have coupon functionality
-      };
-
-      const response = await checkoutService.processCheckout(checkoutData);
-
-      if (response.error) {
-        toast.error(response.message);
-        return;
+      // Simulate payment processing
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Random chance of payment failure for demo
+      if (Math.random() > 0.9) {
+        throw new Error('Payment failed');
       }
 
-      toast.success('Order placed successfully! Order #' + response.details.order_number);
+      toast.success('Order placed successfully! You will receive a confirmation email shortly.');
       clearCart();
-      navigate('/store/orders/' + response.details.order_id);
-    } catch (error: any) {
-      console.error('Checkout error:', error);
-
-      // Handle stock unavailable error
-      if (error.status === 409 && error.details?.unavailable_items) {
-        const items = error.details.unavailable_items;
-        const itemsList = items.map((item: any) =>
-          `${item.product_name} (requested: ${item.requested_quantity}, available: ${item.available_quantity})`
-        ).join(', ');
-        toast.error(`Some items are no longer available: ${itemsList}. Please update your cart.`);
-        navigate('/cart');
-        return;
-      }
-
-      // Handle concurrent checkout error
-      if (error.status === 409 && error.details?.checkout_in_progress) {
-        toast.error('A checkout is already in progress. Please wait or refresh the page.');
-        return;
-      }
-
-      toast.error(error.message || 'Checkout failed. Please try again.');
+      navigate('/store');
+    } catch (error) {
+      toast.error('Payment failed. Please try again or use a different payment method.');
     } finally {
       setIsProcessing(false);
     }

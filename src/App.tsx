@@ -7,11 +7,11 @@ import { StoreThemeHandler } from "@/components/StoreThemeHandler";
 import { lazy, Suspense } from "react";
 
 import { AuthProvider } from "@/contexts/AuthContext";
+import { RoleAuthProvider } from "@/contexts/RoleAuthContext";
 import { CartProvider } from "@/contexts/CartContext";
 import { WishlistProvider } from "@/contexts/WishlistContext";
 import { SearchProvider } from "@/contexts/SearchContext";
 import { ResponsiveImageProvider } from "@/contexts/ResponsiveImageContext";
-import { CountryCurrencyProvider } from "@/contexts/CountryCurrencyContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { RoleProtectedRoute } from "@/components/RoleProtectedRoute";
 
@@ -51,7 +51,7 @@ const Store = lazy(() => import("@/pages/store/Store"));
 import ComingSoon from "./pages/store/ComingSoon";
 const ProductDetail = lazy(() => import("@/pages/store/ProductDetail"));
 const StoreCategories = lazy(() => import("@/pages/store/StoreCategories"));
-const Checkout = lazy(() => import("@/pages/store/CheckoutNew"));
+const Checkout = lazy(() => import("@/pages/store/Checkout"));
 const StoreReturns = lazy(() => import("@/pages/store/Returns"));
 const Wishlist = lazy(() => import("@/pages/store/Wishlist"));
 const AddressManagement = lazy(() => import("@/pages/store/AddressManagement"));
@@ -70,14 +70,14 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AuthProvider>
-          <CountryCurrencyProvider>
+          <RoleAuthProvider>
             <CartProvider>
               <WishlistProvider>
                 <SearchProvider>
                   <ResponsiveImageProvider>
                     <Router>
-                    <StoreThemeHandler />
-                    <Suspense fallback={<PageLoader />}>
+                      <StoreThemeHandler />
+                      <Suspense fallback={<PageLoader />}>
                         <Routes>
                         {/* Public Auth Routes */}
                         {/* <Route path="/login" element={<Login />} /> */}
@@ -227,7 +227,7 @@ function App() {
                 </SearchProvider>
               </WishlistProvider>
             </CartProvider>
-          </CountryCurrencyProvider>
+          </RoleAuthProvider>
         </AuthProvider>
       </ThemeProvider>
     </QueryClientProvider>

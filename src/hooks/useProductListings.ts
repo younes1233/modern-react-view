@@ -147,8 +147,7 @@ export const useProductListings = () => {
   };
 };
 
-// countryId and currencyId are now optional - backend uses user preferences
-export const useProductListingProducts = (productListingId: number, countryId?: number, currencyId?: number) => {
+export const useProductListingProducts = (productListingId: number, countryId: number = 1, currencyId: number = 1) => {
   return useQuery({
     queryKey: ['productListingProducts', productListingId, countryId, currencyId],
     queryFn: async () => {

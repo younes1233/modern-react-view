@@ -1,6 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
-import { userSettingsService } from '@/services/userSettingsService';
-import { useAuth } from '@/contexts/AuthContext';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
 interface SelectedCountry {
   id: number;
@@ -19,9 +17,8 @@ interface SelectedCurrency {
 interface CountryCurrencyContextType {
   selectedCountry: SelectedCountry | null;
   selectedCurrency: SelectedCurrency | null;
-  setSelectedCountry: (country: SelectedCountry | null) => Promise<void>;
-  setSelectedCurrency: (currency: SelectedCurrency | null) => Promise<void>;
-  isLoading: boolean;
+  setSelectedCountry: (country: SelectedCountry | null) => void;
+  setSelectedCurrency: (currency: SelectedCurrency | null) => void;
 }
 
 const CountryCurrencyContext = createContext<CountryCurrencyContextType | undefined>(undefined);
@@ -39,115 +36,58 @@ interface CountryCurrencyProviderProps {
 }
 
 export function CountryCurrencyProvider({ children }: CountryCurrencyProviderProps) {
-  const [selectedCountry, setSelectedCountryState] = useState<SelectedCountry | null>(null);
-  const [selectedCurrency, setSelectedCurrencyState] = useState<SelectedCurrency | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const { user } = useAuth();
+  const [selectedCountry, setSelectedCountry] = useState<SelectedCountry | null>(null);
+  const [selectedCurrency, setSelectedCurrency] = useState<SelectedCurrency | null>(null);
 
-  // Load preferences from user object or localStorage
-  const loadPreferences = useCallback(() => {
-    // If user is logged in and has preferences in their profile, use those
-    if (user?.preferences) {
-      if (user.preferences.country) {
-        setSelectedCountryState(user.preferences.country);
-        localStorage.setItem('selectedCountry', JSON.stringify(user.preferences.country));
-      }
-      if (user.preferences.currency) {
-        setSelectedCurrencyState(user.preferences.currency);
-        localStorage.setItem('selectedCurrency', JSON.stringify(user.preferences.currency));
-      }
-    } else {
-      // Otherwise, load from localStorage (for guests or if DB has no data)
-      const savedCountry = localStorage.getItem('selectedCountry');
-      const savedCurrency = localStorage.getItem('selectedCurrency');
-
-      if (savedCountry) {
-        try {
-          setSelectedCountryState(JSON.parse(savedCountry));
-        } catch (e) {
-          console.error('Error parsing saved country:', e);
-        }
-      }
-
-      if (savedCurrency) {
-        try {
-          setSelectedCurrencyState(JSON.parse(savedCurrency));
-        } catch (e) {
-          console.error('Error parsing saved currency:', e);
-        }
+  // Load from localStorage on mount
+  useEffect(() => {
+    const savedCountry = localStorage.getItem('selectedCountry');
+    const savedCurrency = localStorage.getItem('selectedCurrency');
+    
+    if (savedCountry) {
+      try {
+        setSelectedCountry(JSON.parse(savedCountry));
+      } catch (e) {
+        console.error('Error parsing saved country:', e);
       }
     }
-  }, [user]);
+    
+    if (savedCurrency) {
+      try {
+        setSelectedCurrency(JSON.parse(savedCurrency));
+      } catch (e) {
+        console.error('Error parsing saved currency:', e);
+      }
+    }
+  }, []);
 
-  // Load preferences when user changes
-  useEffect(() => {
-    loadPreferences();
-  }, [loadPreferences]);
-
-  const setSelectedCountry = useCallback(async (country: SelectedCountry | null) => {
-    setSelectedCountryState(country);
-
-    // Update localStorage
+  const handleSetSelectedCountry = (country: SelectedCountry | null) => {
+    setSelectedCountry(country);
     if (country) {
       localStorage.setItem('selectedCountry', JSON.stringify(country));
     } else {
       localStorage.removeItem('selectedCountry');
     }
+  };
 
-    // Sync to database if authenticated
-    if (user) {
-      try {
-        setIsLoading(true);
-        if (country) {
-          await userSettingsService.setUserSetting('preferred_country', country);
-        } else {
-          await userSettingsService.deleteUserSetting('preferred_country').catch(() => {});
-        }
-      } catch (error) {
-        console.error('Error syncing country to database:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [user]);
-
-  const setSelectedCurrency = useCallback(async (currency: SelectedCurrency | null) => {
-    setSelectedCurrencyState(currency);
-
-    // Update localStorage
+  const handleSetSelectedCurrency = (currency: SelectedCurrency | null) => {
+    setSelectedCurrency(currency);
     if (currency) {
       localStorage.setItem('selectedCurrency', JSON.stringify(currency));
     } else {
       localStorage.removeItem('selectedCurrency');
     }
-
-    // Sync to database if authenticated
-    if (user) {
-      try {
-        setIsLoading(true);
-        if (currency) {
-          await userSettingsService.setUserSetting('preferred_currency', currency);
-        } else {
-          await userSettingsService.deleteUserSetting('preferred_currency').catch(() => {});
-        }
-      } catch (error) {
-        console.error('Error syncing currency to database:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [user]);
-
-  const contextValue = useMemo(() => ({
-    selectedCountry,
-    selectedCurrency,
-    setSelectedCountry,
-    setSelectedCurrency,
-    isLoading,
-  }), [selectedCountry, selectedCurrency, setSelectedCountry, setSelectedCurrency, isLoading]);
+  };
 
   return (
-    <CountryCurrencyContext.Provider value={contextValue}>
+    <CountryCurrencyContext.Provider
+      value={{
+        selectedCountry,
+        selectedCurrency,
+        setSelectedCountry: handleSetSelectedCountry,
+        setSelectedCurrency: handleSetSelectedCurrency,
+      }}
+    >
       {children}
     </CountryCurrencyContext.Provider>
   );

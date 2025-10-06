@@ -1,5 +1,5 @@
 
-import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAuth } from "@/contexts/RoleAuthContext";
 import { Navigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { RoleBasedSidebar } from "@/components/dashboard/RoleBasedSidebar";
@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading } = useRoleAuth();
 
   if (isLoading) {
     return (

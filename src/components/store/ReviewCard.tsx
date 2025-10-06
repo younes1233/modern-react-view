@@ -6,7 +6,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { ThumbsUp, Flag } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { type Review } from '@/services/reviewService';
 import { reviewService } from '@/services/reviewService';
 import { toast } from 'sonner';
@@ -105,7 +105,7 @@ const ReviewCardComponent = ({ review, productId, onEdit, onDelete, mode = 'simp
       return;
     }
 
-    if (String(user.id) === String(review.user?.id)) {
+    if (user.id == review.user?.id) {
       toast.error("You cannot mark your own review as helpful");
       return;
     }
@@ -233,7 +233,7 @@ const ReviewCardComponent = ({ review, productId, onEdit, onDelete, mode = 'simp
           </div>
 
           {/* User Actions - Original style */}
-          {user && String(user.id) === String(review.user?.id) && (
+          {user && user.id == review.user?.id && (
             <div className="flex space-x-1">
               <Button
                 size="sm"
@@ -301,7 +301,7 @@ const ReviewCardComponent = ({ review, productId, onEdit, onDelete, mode = 'simp
           <div className="flex items-center space-x-4">
             <button
               onClick={handleHelpfulToggle}
-              disabled={isToggling || !user || String(user.id) === String(review.user?.id)}
+              disabled={isToggling || !user || user.id == review.user?.id}
               className={`text-xs transition-colors ${
                 isHelpful
                   ? 'text-green-600 hover:text-green-700'
@@ -316,7 +316,7 @@ const ReviewCardComponent = ({ review, productId, onEdit, onDelete, mode = 'simp
             </button>
             <button
               onClick={() => setShowReportDialog(true)}
-              disabled={!user || String(user.id) === String(review.user?.id) || review.interactions?.is_reported}
+              disabled={!user || user.id == review.user?.id || review.interactions?.is_reported}
               className="text-xs text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {review.interactions?.is_reported
