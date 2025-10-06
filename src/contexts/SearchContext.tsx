@@ -1,5 +1,6 @@
 // src/context/SearchContext.tsx
-import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import React from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import productService from '@/services/productService';
 import { useCountryCurrency } from './CountryCurrencyContext';
 
