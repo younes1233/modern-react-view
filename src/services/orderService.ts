@@ -1,8 +1,4 @@
-import BaseApiService from "./baseApiService";
-
-/* =========================
-   Domain Types (User-side)
-   ========================= */
+import BaseApiService from './baseApiService';
 
 export interface OrderItem {
   id: number;
@@ -82,121 +78,68 @@ export interface OrdersResponse {
 
 export interface OrderFilters {
   status?: string;
-  date_from?: string; // ISO date
-  date_to?: string;   // ISO date
-  min_amount?: number; // include 0
-  max_amount?: number; // include 0
+  date_from?: string;
+  date_to?: string;
+  min_amount?: number;
+  max_amount?: number;
   search?: string;
-  page?: number;       // include 0/1
-  per_page?: number;   // include 0
+  page?: number;
+  per_page?: number;
 }
-
-/* =========================
-   Admin View Types (exact to API)
-   ========================= */
-
-export interface AdminOrderItemView {
-  id: number;
-  purchasable_type: string;
-  purchasable_id: number;
-  is_variant: boolean;
-  is_package: boolean;
-  product_name: string;
-  variant_values: string;
-  quantity: number;
-  selling_price: string;
-  discount_amount: string;
-  subtotal: string;
-  final_total: string;
-  product_id: string;
-  product_variant_id: string;
-}
-
-export interface AdminOrderView {
-  id: string;
-  user: string;
-  user_address: string;
-  total_price: string;
-  order_status: string;
-  payment_method: string;
-  created_at: string;
-  items: AdminOrderItemView[];
-}
-
-export interface AdminOrderViewResponse {
-  message: string;
-  order: AdminOrderView;
-}
-
-/* ================
-   Service
-   ================ */
 
 class OrderService extends BaseApiService {
-  /** Build a query string from filters (keeps 0 values, skips null/undefined/empty strings). */
-  private buildQuery(filters?: OrderFilters): string {
-    if (!filters) return "";
+  // User orders (authenticated user's own orders)
+  async getOrders(filters?: OrderFilters): Promise<OrdersResponse> {
     const params = new URLSearchParams();
 
-    const append = (key: string, val: unknown) => {
-      if (val === null || val === undefined) return;
-      // allow 0 and false; skip only empty strings
-      if (typeof val === "string" && val.trim() === "") return;
-      params.append(key, String(val));
-    };
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.date_from) params.append('date_from', filters.date_from);
+      if (filters.date_to) params.append('date_to', filters.date_to);
+      if (filters.min_amount) params.append('min_amount', filters.min_amount.toString());
+      if (filters.max_amount) params.append('max_amount', filters.max_amount.toString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.per_page) params.append('per_page', filters.per_page.toString());
+    }
 
-    append("status", filters.status);
-    append("date_from", filters.date_from);
-    append("date_to", filters.date_to);
-    append("min_amount", filters.min_amount);
-    append("max_amount", filters.max_amount);
-    append("search", filters.search);
-    append("page", filters.page);
-    append("per_page", filters.per_page);
+    const queryString = params.toString();
+    const url = queryString ? `/auth/orders?${queryString}` : '/auth/orders';
 
-    return params.toString();
-  }
-
-  /* -------- User endpoints -------- */
-
-  /** Authenticated user's orders */
-  async getOrders(filters?: OrderFilters): Promise<OrdersResponse> {
-    const qs = this.buildQuery(filters);
-    const url = qs ? `/auth/orders?${qs}` : "/auth/orders";
     return this.get<OrdersResponse>(url);
   }
 
-  /** Single order (user scope) */
-  async getOrder(
-    id: number
-  ): Promise<{ error: boolean; message: string; details: { order: Order } }> {
-    return this.get<{ error: boolean; message: string; details: { order: Order } }>(
-      `/auth/orders/${id}`
-    );
+  // Admin orders (all orders - for dashboard)
+  async getAdminOrders(filters?: OrderFilters): Promise<OrdersResponse> {
+    const params = new URLSearchParams();
+
+    if (filters) {
+      if (filters.status) params.append('status', filters.status);
+      if (filters.date_from) params.append('date_from', filters.date_from);
+      if (filters.date_to) params.append('date_to', filters.date_to);
+      if (filters.min_amount) params.append('min_amount', filters.min_amount.toString());
+      if (filters.max_amount) params.append('max_amount', filters.max_amount.toString());
+      if (filters.search) params.append('search', filters.search);
+      if (filters.page) params.append('page', filters.page.toString());
+      if (filters.per_page) params.append('per_page', filters.per_page.toString());
+    }
+
+    const queryString = params.toString();
+    const url = queryString ? `/admin/orders?${queryString}` : '/admin/orders';
+
+    return this.get<OrdersResponse>(url);
   }
 
-  /** Cancel order (user scope) */
+  async getOrder(id: number): Promise<{ error: boolean; message: string; details: { order: Order } }> {
+    return this.get<{ error: boolean; message: string; details: { order: Order } }>(`/auth/orders/${id}`);
+  }
+
   async cancelOrder(id: number, reason?: string): Promise<Order> {
     return this.post<Order>(`/auth/orders/${id}/cancel`, { reason });
   }
 
-  /** Submit review (user scope) */
   async submitReview(id: number, rating: number, comment?: string): Promise<Order> {
     return this.post<Order>(`/auth/orders/${id}/review`, { rating, comment });
-  }
-
-  /* -------- Admin endpoints -------- */
-
-  /** All orders (admin list) */
-  async getAdminOrders(filters?: OrderFilters): Promise<OrdersResponse> {
-    const qs = this.buildQuery(filters);
-    const url = qs ? `/admin/orders?${qs}` : "/admin/orders";
-    return this.get<OrdersResponse>(url);
-  }
-
-  /** Admin view order (matches /admin/orders/{order} response) */
-  async getAdminOrderView(orderId: number | string): Promise<AdminOrderViewResponse> {
-    return this.get<AdminOrderViewResponse>(`/admin/orders/${orderId}`);
   }
 }
 
