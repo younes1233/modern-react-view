@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,129 +6,183 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CreditCard, Truck, Shield, ArrowLeft, Lock } from 'lucide-react';
+import { CreditCard, Truck, Shield, ArrowLeft, Lock, MapPin, Plus, Tag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { checkoutService } from '@/services/checkoutService';
+import { checkoutService, PricingBreakdown } from '@/services/checkoutService';
+import { useAddresses } from '@/hooks/useAddresses';
+import { usePaymentMethods } from '@/hooks/usePaymentMethods';
+import { AreebaCheckout } from '@/components/payment/AreebaCheckout';
 
-const Checkout = () => {
+const CheckoutNew = () => {
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    email: user?.email || '',
-    firstName: '',
-    lastName: '',
-    company: '',
-    address1: '',
-    address2: '',
-    city: '',
-    state: '',
-    zipCode: '',
-    country: 'United States',
-    phone: '',
-    shippingMethod: 'standard',
-    paymentMethod: 'card',
-    cardNumber: '',
-    expiryDate: '',
-    cvv: '',
-    nameOnCard: '',
-    saveInfo: false,
-    newsletter: false,
-    agreeToTerms: false
-  });
+  const [isLoadingPricing, setIsLoadingPricing] = useState(false);
 
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  // Selection states
+  const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+  const [selectedPaymentMethodId, setSelectedPaymentMethodId] = useState<number | null>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState<string | null>(null);
 
-  const shippingCost = formData.shippingMethod === 'express' ? 15 : formData.shippingMethod === 'overnight' ? 25 : 5;
-  const tax = getTotalPrice() * 0.08; // 8% tax
-  const finalTotal = getTotalPrice() + shippingCost + tax;
+  // Pricing state
+  const [pricing, setPricing] = useState<PricingBreakdown | null>(null);
 
-  const handleInputChange = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+  // Payment session states (for Areeba/online payments)
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState<string | null>(null);
+  const [merchantId, setMerchantId] = useState<string | null>(null);
+  const [checkoutScriptUrl, setCheckoutScriptUrl] = useState<string | null>(null);
+  const [pendingOrderId, setPendingOrderId] = useState<number | null>(null);
+
+  // Use custom hooks with automatic caching and cache invalidation
+  const { addresses, isLoading: isLoadingAddresses } = useAddresses(user?.id);
+  const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods(!!user);
+
+  // Auto-select default address when addresses load
+  useEffect(() => {
+    if (addresses.length > 0 && !selectedAddressId) {
+      const defaultAddr = addresses.find(a => a.is_default);
+      setSelectedAddressId(defaultAddr?.id || addresses[0].id);
+    }
+  }, [addresses, selectedAddressId]);
+
+  // Auto-select first payment method when payment methods load
+  useEffect(() => {
+    if (paymentMethods.length > 0 && !selectedPaymentMethodId) {
+      setSelectedPaymentMethodId(paymentMethods[0].id);
+    }
+  }, [paymentMethods, selectedPaymentMethodId]);
+
+  // Calculate pricing when address or coupon changes
+  useEffect(() => {
+    if (selectedAddressId) {
+      calculatePricing();
+    }
+  }, [selectedAddressId, appliedCoupon]);
+
+  const calculatePricing = async () => {
+    if (!selectedAddressId) return;
+
+    setIsLoadingPricing(true);
+    try {
+      // Get selected address to get country_id from delivery zone
+      const selectedAddress = addresses.find(a => a.id === selectedAddressId);
+      if (!selectedAddress || !selectedAddress.delivery_zone) {
+        toast.error('Selected address does not have a delivery zone assigned');
+        setIsLoadingPricing(false);
+        return;
+      }
+
+      const response = await checkoutService.calculatePricing({
+        country_id: selectedAddress.delivery_zone.country.id,
+        address_id: selectedAddressId,
+        coupon_code: appliedCoupon || undefined,
+      });
+
+      if (!response.error && response.details) {
+        console.log("Response details from calculatePricing:", response.details);
+        setPricing(response.details);
+      }
+    } catch (error: any) {
+      console.error('Failed to calculate pricing:', error);
+      // Don't show error toast if it's expected validation
+      if (!error.message?.includes('same country')) {
+        toast.error('Failed to calculate pricing');
+      }
+    } finally {
+      setIsLoadingPricing(false);
     }
   };
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
-
-    // Required fields
-    if (!formData.email) newErrors.email = 'Email is required';
-    if (!formData.firstName) newErrors.firstName = 'First name is required';
-    if (!formData.lastName) newErrors.lastName = 'Last name is required';
-    if (!formData.address1) newErrors.address1 = 'Address is required';
-    if (!formData.city) newErrors.city = 'City is required';
-    if (!formData.state) newErrors.state = 'State is required';
-    if (!formData.zipCode) newErrors.zipCode = 'ZIP code is required';
-
-    // Email validation
-    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      newErrors.email = 'Please enter a valid email address';
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error('Please enter a coupon code');
+      return;
     }
 
-    // Payment validation
-    if (formData.paymentMethod === 'card') {
-      if (!formData.cardNumber) newErrors.cardNumber = 'Card number is required';
-      if (!formData.expiryDate) newErrors.expiryDate = 'Expiry date is required';
-      if (!formData.cvv) newErrors.cvv = 'CVV is required';
-      if (!formData.nameOnCard) newErrors.nameOnCard = 'Name on card is required';
+    setAppliedCoupon(couponCode.trim());
+    toast.success('Coupon applied! Recalculating prices...');
+  };
 
-      // Card number validation (basic)
-      if (formData.cardNumber && formData.cardNumber.replace(/\s/g, '').length < 13) {
-        newErrors.cardNumber = 'Please enter a valid card number';
-      }
-
-      // CVV validation
-      if (formData.cvv && (formData.cvv.length < 3 || formData.cvv.length > 4)) {
-        newErrors.cvv = 'CVV must be 3 or 4 digits';
-      }
-
-      // Expiry date validation (MM/YY format)
-      if (formData.expiryDate && !/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(formData.expiryDate)) {
-        newErrors.expiryDate = 'Please enter a valid expiry date (MM/YY)';
-      }
-    }
-
-    // Terms agreement
-    if (!formData.agreeToTerms) {
-      newErrors.agreeToTerms = 'Please agree to the terms and conditions';
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null);
+    setCouponCode('');
+    toast.info('Coupon removed');
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!validateForm()) {
-      toast.error('Please fix the errors and try again');
+    // Validation
+    if (!selectedAddressId) {
+      toast.error('Please select a delivery address');
       return;
     }
 
+    if (!selectedPaymentMethodId) {
+      toast.error('Please select a payment method');
+      return;
+    }
+
+    // Check if selected payment method requires online processing
+    const selectedMethod = paymentMethods.find(pm => pm.id === selectedPaymentMethodId);
+
+    if (selectedMethod?.requires_online_processing) {
+      // Create payment session for online payments (Areeba, Whish, etc.)
+      await createPaymentSession();
+    } else {
+      // Process COD directly
+      await processCheckoutDirectly();
+    }
+  };
+
+  const createPaymentSession = async () => {
     setIsProcessing(true);
 
     try {
-      // TODO: Get actual address_id and payment_method_id from form
-      // For now using dummy values - you'll need to add address selection and payment method to the form
-      const checkoutData = {
-        address_id: 1, // Replace with actual selected address ID
-        payment_method_id: formData.paymentMethod === 'card' ? 2 : 1, // 1=COD, 2=Card
-        coupon_code: undefined, // Add if you have coupon functionality
-      };
+      const response = await checkoutService.createPaymentSession({
+        address_id: selectedAddressId!,
+        payment_method_id: selectedPaymentMethodId!,
+        coupon_code: appliedCoupon || undefined,
+      });
 
-      const response = await checkoutService.processCheckout(checkoutData);
+      if (response.error) {
+        toast.error(response.message);
+        return;
+      }
+
+      // Store session details and show payment form
+      setPaymentSessionId(response.details.session_id);
+      setMerchantId(response.details.merchant_id);
+      setCheckoutScriptUrl(response.details.checkout_script_url);
+      setPendingOrderId(response.details.order_id); // Store the pending order ID
+      setShowPaymentForm(true);
+      toast.info('Please complete your payment');
+    } catch (error: any) {
+      console.error('Payment session error:', error);
+      toast.error(error.message || 'Failed to initialize payment. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const processCheckoutDirectly = async () => {
+    setIsProcessing(true);
+
+    try {
+      const response = await checkoutService.processCheckout({
+        address_id: selectedAddressId!,
+        payment_method_id: selectedPaymentMethodId!,
+        coupon_code: appliedCoupon || undefined,
+      });
 
       if (response.error) {
         toast.error(response.message);
@@ -148,7 +201,9 @@ const Checkout = () => {
         const itemsList = items.map((item: any) =>
           `${item.product_name} (requested: ${item.requested_quantity}, available: ${item.available_quantity})`
         ).join(', ');
-        toast.error(`Some items are no longer available: ${itemsList}. Please update your cart.`);
+        toast.error(`Some items are no longer available: ${itemsList}`, {
+          duration: 7000,
+        });
         navigate('/cart');
         return;
       }
@@ -165,18 +220,46 @@ const Checkout = () => {
     }
   };
 
-  // Format card number input
-  const handleCardNumberChange = (value: string) => {
-    const formatted = value.replace(/\D/g, '').replace(/(\d{4})(?=\d)/g, '$1 ');
-    handleInputChange('cardNumber', formatted);
+  // Handler for when Areeba payment completes successfully
+  const handlePaymentComplete = async () => {
+    toast.success('Payment completed! Verifying...');
+
+    // Confirm payment with backend (verify with Areeba and deduct inventory)
+    try {
+      if (!pendingOrderId) {
+        toast.error('Order ID not found. Please contact support.');
+        return;
+      }
+
+      const response = await checkoutService.confirmAreebaPayment(pendingOrderId);
+
+      if (response.error) {
+        toast.error(response.message);
+        return;
+      }
+
+      toast.success('Order confirmed! Order #' + response.details.order_number);
+      clearCart();
+      navigate('/store/orders/' + response.details.order_id);
+    } catch (error: any) {
+      console.error('Payment confirmation error:', error);
+      toast.error('Payment verification failed. Please contact support with your payment details.');
+    }
   };
 
-  // Format expiry date input
-  const handleExpiryDateChange = (value: string) => {
-    const formatted = value.replace(/\D/g, '').replace(/(\d{2})(\d)/, '$1/$2');
-    handleInputChange('expiryDate', formatted);
+  const handlePaymentFailed = (error: string) => {
+    toast.error(error);
+    setShowPaymentForm(false);
+    setPaymentSessionId(null);
   };
 
+  const handlePaymentCancel = () => {
+    setShowPaymentForm(false);
+    setPaymentSessionId(null);
+    toast.info('Payment cancelled');
+  };
+
+  // Guard: User must be logged in
   if (!user) {
     return (
       <StoreLayout>
@@ -188,7 +271,7 @@ const Checkout = () => {
               Please sign in to proceed with checkout and complete your order.
             </p>
             <div className="flex gap-4 justify-center">
-              <Button 
+              <Button
                 onClick={() => setAuthModalOpen(true)}
                 className="bg-cyan-600 hover:bg-cyan-700"
               >
@@ -199,9 +282,9 @@ const Checkout = () => {
               </Button>
             </div>
           </div>
-          <AuthModal 
-            open={authModalOpen} 
-            onOpenChange={setAuthModalOpen} 
+          <AuthModal
+            open={authModalOpen}
+            onOpenChange={setAuthModalOpen}
             defaultMode="signin"
           />
         </div>
@@ -209,6 +292,7 @@ const Checkout = () => {
     );
   }
 
+  // Guard: Cart must not be empty
   if (items.length === 0) {
     return (
       <StoreLayout>
@@ -236,349 +320,170 @@ const Checkout = () => {
 
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Contact Information */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Delivery Address */}
             <Card>
               <CardHeader>
-                <CardTitle>Contact Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email Address *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="your@email.com"
-                    className={errors.email ? 'border-red-500' : ''}
-                    required
-                  />
-                  {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="newsletter"
-                    checked={formData.newsletter}
-                    onCheckedChange={(checked) => handleInputChange('newsletter', checked)}
-                  />
-                  <Label htmlFor="newsletter" className="text-sm">
-                    Email me with news and offers
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Shipping Address */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Shipping Address</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="firstName">First Name *</Label>
-                    <Input
-                      id="firstName"
-                      value={formData.firstName}
-                      onChange={(e) => handleInputChange('firstName', e.target.value)}
-                      className={errors.firstName ? 'border-red-500' : ''}
-                      required
-                    />
-                    {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="lastName">Last Name *</Label>
-                    <Input
-                      id="lastName"
-                      value={formData.lastName}
-                      onChange={(e) => handleInputChange('lastName', e.target.value)}
-                      className={errors.lastName ? 'border-red-500' : ''}
-                      required
-                    />
-                    {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="company">Company (optional)</Label>
-                  <Input
-                    id="company"
-                    value={formData.company}
-                    onChange={(e) => handleInputChange('company', e.target.value)}
-                  />
-                </div>
-                
-                <div>
-                  <Label htmlFor="address1">Address *</Label>
-                  <Input
-                    id="address1"
-                    value={formData.address1}
-                    onChange={(e) => handleInputChange('address1', e.target.value)}
-                    placeholder="Street address"
-                    className={errors.address1 ? 'border-red-500' : ''}
-                    required
-                  />
-                  {errors.address1 && <p className="text-red-500 text-sm mt-1">{errors.address1}</p>}
-                </div>
-                
-                <div>
-                  <Label htmlFor="address2">Apartment, suite, etc. (optional)</Label>
-                  <Input
-                    id="address2"
-                    value={formData.address2}
-                    onChange={(e) => handleInputChange('address2', e.target.value)}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label htmlFor="city">City *</Label>
-                    <Input
-                      id="city"
-                      value={formData.city}
-                      onChange={(e) => handleInputChange('city', e.target.value)}
-                      className={errors.city ? 'border-red-500' : ''}
-                      required
-                    />
-                    {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="state">State *</Label>
-                    <Select value={formData.state} onValueChange={(value) => handleInputChange('state', value)}>
-                      <SelectTrigger className={errors.state ? 'border-red-500' : ''}>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="AL">Alabama</SelectItem>
-                        <SelectItem value="AK">Alaska</SelectItem>
-                        <SelectItem value="AZ">Arizona</SelectItem>
-                        <SelectItem value="AR">Arkansas</SelectItem>
-                        <SelectItem value="CA">California</SelectItem>
-                        <SelectItem value="CO">Colorado</SelectItem>
-                        <SelectItem value="CT">Connecticut</SelectItem>
-                        <SelectItem value="DE">Delaware</SelectItem>
-                        <SelectItem value="FL">Florida</SelectItem>
-                        <SelectItem value="GA">Georgia</SelectItem>
-                        <SelectItem value="HI">Hawaii</SelectItem>
-                        <SelectItem value="ID">Idaho</SelectItem>
-                        <SelectItem value="IL">Illinois</SelectItem>
-                        <SelectItem value="IN">Indiana</SelectItem>
-                        <SelectItem value="IA">Iowa</SelectItem>
-                        <SelectItem value="KS">Kansas</SelectItem>
-                        <SelectItem value="KY">Kentucky</SelectItem>
-                        <SelectItem value="LA">Louisiana</SelectItem>
-                        <SelectItem value="ME">Maine</SelectItem>
-                        <SelectItem value="MD">Maryland</SelectItem>
-                        <SelectItem value="MA">Massachusetts</SelectItem>
-                        <SelectItem value="MI">Michigan</SelectItem>
-                        <SelectItem value="MN">Minnesota</SelectItem>
-                        <SelectItem value="MS">Mississippi</SelectItem>
-                        <SelectItem value="MO">Missouri</SelectItem>
-                        <SelectItem value="MT">Montana</SelectItem>
-                        <SelectItem value="NE">Nebraska</SelectItem>
-                        <SelectItem value="NV">Nevada</SelectItem>
-                        <SelectItem value="NH">New Hampshire</SelectItem>
-                        <SelectItem value="NJ">New Jersey</SelectItem>
-                        <SelectItem value="NM">New Mexico</SelectItem>
-                        <SelectItem value="NY">New York</SelectItem>
-                        <SelectItem value="NC">North Carolina</SelectItem>
-                        <SelectItem value="ND">North Dakota</SelectItem>
-                        <SelectItem value="OH">Ohio</SelectItem>
-                        <SelectItem value="OK">Oklahoma</SelectItem>
-                        <SelectItem value="OR">Oregon</SelectItem>
-                        <SelectItem value="PA">Pennsylvania</SelectItem>
-                        <SelectItem value="RI">Rhode Island</SelectItem>
-                        <SelectItem value="SC">South Carolina</SelectItem>
-                        <SelectItem value="SD">South Dakota</SelectItem>
-                        <SelectItem value="TN">Tennessee</SelectItem>
-                        <SelectItem value="TX">Texas</SelectItem>
-                        <SelectItem value="UT">Utah</SelectItem>
-                        <SelectItem value="VT">Vermont</SelectItem>
-                        <SelectItem value="VA">Virginia</SelectItem>
-                        <SelectItem value="WA">Washington</SelectItem>
-                        <SelectItem value="WV">West Virginia</SelectItem>
-                        <SelectItem value="WI">Wisconsin</SelectItem>
-                        <SelectItem value="WY">Wyoming</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {errors.state && <p className="text-red-500 text-sm mt-1">{errors.state}</p>}
-                  </div>
-                  <div>
-                    <Label htmlFor="zipCode">ZIP Code *</Label>
-                    <Input
-                      id="zipCode"
-                      value={formData.zipCode}
-                      onChange={(e) => handleInputChange('zipCode', e.target.value)}
-                      className={errors.zipCode ? 'border-red-500' : ''}
-                      required
-                    />
-                    {errors.zipCode && <p className="text-red-500 text-sm mt-1">{errors.zipCode}</p>}
-                  </div>
-                </div>
-                
-                <div>
-                  <Label htmlFor="phone">Phone (optional)</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleInputChange('phone', e.target.value)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Shipping Method */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Truck className="w-5 h-5 mr-2" />
-                  Shipping Method
+                <CardTitle className="flex items-center justify-between">
+                  <span className="flex items-center">
+                    <MapPin className="w-5 h-5 mr-2" />
+                    Delivery Address
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate('/profile/addresses')}
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add New
+                  </Button>
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <RadioGroup
-                  value={formData.shippingMethod}
-                  onValueChange={(value) => handleInputChange('shippingMethod', value)}
-                >
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="standard" id="standard" />
-                      <Label htmlFor="standard">Standard Shipping (5-7 business days)</Label>
-                    </div>
-                    <span className="font-medium">$5.00</span>
+                {addresses.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 mb-4">No addresses found</p>
+                    <Button
+                      type="button"
+                      onClick={() => navigate('/profile/addresses')}
+                      variant="outline"
+                    >
+                      Add Address
+                    </Button>
                   </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="express" id="express" />
-                      <Label htmlFor="express">Express Shipping (2-3 business days)</Label>
+                ) : (
+                  <RadioGroup
+                    value={selectedAddressId?.toString()}
+                    onValueChange={(value) => setSelectedAddressId(parseInt(value))}
+                  >
+                    <div className="space-y-3">
+                      {addresses.map((address) => (
+                        <div
+                          key={address.id}
+                          className={`flex items-start p-4 border rounded-lg cursor-pointer transition-colors ${
+                            selectedAddressId === address.id
+                              ? 'border-cyan-600 bg-cyan-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedAddressId(address.id)}
+                        >
+                          <RadioGroupItem value={address.id.toString()} id={`address-${address.id}`} className="mt-1" />
+                          <Label htmlFor={`address-${address.id}`} className="ml-3 flex-1 cursor-pointer">
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="font-medium capitalize">{address.type}</span>
+                              {address.is_default && (
+                                <span className="text-xs bg-cyan-600 text-white px-2 py-0.5 rounded">Default</span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-600">{address.address}</p>
+                            {address.additional_address_details && (
+                              <p className="text-sm text-gray-500">{address.additional_address_details}</p>
+                            )}
+                            {address.delivery_zone && (
+                              <p className="text-sm text-gray-500">{address.delivery_zone.name}</p>
+                            )}
+                            {address.phone && (
+                              <p className="text-sm text-gray-500 mt-1">Phone: {address.phone}</p>
+                            )}
+                          </Label>
+                        </div>
+                      ))}
                     </div>
-                    <span className="font-medium">$15.00</span>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="overnight" id="overnight" />
-                      <Label htmlFor="overnight">Overnight Shipping (1 business day)</Label>
-                    </div>
-                    <span className="font-medium">$25.00</span>
-                  </div>
-                </RadioGroup>
+                  </RadioGroup>
+                )}
               </CardContent>
             </Card>
 
-            {/* Payment Information */}
+            {/* Payment Method */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Payment Information
+                  Payment Method
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <RadioGroup
-                  value={formData.paymentMethod}
-                  onValueChange={(value) => handleInputChange('paymentMethod', value)}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="card" id="card" />
-                    <Label htmlFor="card">Credit Card</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="paypal" id="paypal" />
-                    <Label htmlFor="paypal">PayPal</Label>
-                  </div>
-                </RadioGroup>
+              <CardContent>
+                {paymentMethods.length === 0 ? (
+                  <p className="text-gray-600">No payment methods available</p>
+                ) : (
+                  <RadioGroup
+                    value={selectedPaymentMethodId?.toString()}
+                    onValueChange={(value) => setSelectedPaymentMethodId(parseInt(value))}
+                  >
+                    <div className="space-y-3">
+                      {paymentMethods.map((method) => (
+                        <div
+                          key={method.id}
+                          className={`flex items-center p-4 border rounded-lg cursor-pointer transition-colors ${
+                            selectedPaymentMethodId === method.id
+                              ? 'border-cyan-600 bg-cyan-50'
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                          onClick={() => setSelectedPaymentMethodId(method.id)}
+                        >
+                          <RadioGroupItem value={method.id.toString()} id={`payment-${method.id}`} />
+                          <Label htmlFor={`payment-${method.id}`} className="ml-3 flex-1 cursor-pointer">
+                            <div className="font-medium">{method.name}</div>
+                            {method.description && (
+                              <p className="text-sm text-gray-500 mt-1">{method.description}</p>
+                            )}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                )}
+              </CardContent>
+            </Card>
 
-                {formData.paymentMethod === 'card' && (
-                  <div className="space-y-4 pt-4">
+            {/* Coupon Code */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Tag className="w-5 h-5 mr-2" />
+                  Coupon Code
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-4 bg-green-50 border border-green-200 rounded-lg">
                     <div>
-                      <Label htmlFor="cardNumber">Card Number *</Label>
-                      <Input
-                        id="cardNumber"
-                        value={formData.cardNumber}
-                        onChange={(e) => handleCardNumberChange(e.target.value)}
-                        placeholder="1234 5678 9012 3456"
-                        maxLength={19}
-                        className={errors.cardNumber ? 'border-red-500' : ''}
-                        required
-                      />
-                      {errors.cardNumber && <p className="text-red-500 text-sm mt-1">{errors.cardNumber}</p>}
+                      <p className="font-medium text-green-800">Coupon Applied: {appliedCoupon}</p>
+                      {pricing?.coupon_discount && (
+                        <p className="text-sm text-green-600">
+                          You saved {pricing.currency.symbol}{pricing.coupon_discount.toFixed(2)}
+                        </p>
+                      )}
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label htmlFor="expiryDate">Expiry Date *</Label>
-                        <Input
-                          id="expiryDate"
-                          value={formData.expiryDate}
-                          onChange={(e) => handleExpiryDateChange(e.target.value)}
-                          placeholder="MM/YY"
-                          maxLength={5}
-                          className={errors.expiryDate ? 'border-red-500' : ''}
-                          required
-                        />
-                        {errors.expiryDate && <p className="text-red-500 text-sm mt-1">{errors.expiryDate}</p>}
-                      </div>
-                      <div>
-                        <Label htmlFor="cvv">CVV *</Label>
-                        <Input
-                          id="cvv"
-                          value={formData.cvv}
-                          onChange={(e) => handleInputChange('cvv', e.target.value.replace(/\D/g, ''))}
-                          placeholder="123"
-                          maxLength={4}
-                          className={errors.cvv ? 'border-red-500' : ''}
-                          required
-                        />
-                        {errors.cvv && <p className="text-red-500 text-sm mt-1">{errors.cvv}</p>}
-                      </div>
-                    </div>
-                    <div>
-                      <Label htmlFor="nameOnCard">Name on Card *</Label>
-                      <Input
-                        id="nameOnCard"
-                        value={formData.nameOnCard}
-                        onChange={(e) => handleInputChange('nameOnCard', e.target.value)}
-                        className={errors.nameOnCard ? 'border-red-500' : ''}
-                        required
-                      />
-                      {errors.nameOnCard && <p className="text-red-500 text-sm mt-1">{errors.nameOnCard}</p>}
-                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleRemoveCoupon}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                      disabled={isLoadingPricing}
+                    />
+                    <Button
+                      type="button"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCode.trim() || isLoadingPricing}
+                      variant="outline"
+                    >
+                      Apply
+                    </Button>
                   </div>
                 )}
-
-                <div className="space-y-3 pt-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="saveInfo"
-                      checked={formData.saveInfo}
-                      onCheckedChange={(checked) => handleInputChange('saveInfo', checked)}
-                    />
-                    <Label htmlFor="saveInfo" className="text-sm">
-                      Save this information for next time
-                    </Label>
-                  </div>
-                  
-                  <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="agreeToTerms"
-                      checked={formData.agreeToTerms}
-                      onCheckedChange={(checked) => handleInputChange('agreeToTerms', checked)}
-                      className={errors.agreeToTerms ? 'border-red-500' : ''}
-                    />
-                    <Label htmlFor="agreeToTerms" className="text-sm leading-relaxed">
-                      I agree to the{' '}
-                      <button type="button" className="text-cyan-600 hover:underline">
-                        Terms of Service
-                      </button>
-                      {' '}and{' '}
-                      <button type="button" className="text-cyan-600 hover:underline">
-                        Privacy Policy
-                      </button>
-                    </Label>
-                  </div>
-                  {errors.agreeToTerms && <p className="text-red-500 text-sm mt-1">{errors.agreeToTerms}</p>}
-                </div>
               </CardContent>
             </Card>
           </div>
@@ -593,72 +498,119 @@ const Checkout = () => {
                 {/* Cart Items */}
                 <div className="space-y-4 max-h-60 overflow-y-auto">
                   {items.map((item) => (
-                   <div key={item.product.id} className="flex items-center space-x-3">
-  <div className="relative">
-    <img
-      src={item.product.image}
-      alt={item.product.name}
-      className="w-16 h-16 object-cover rounded-md"
-    />
-    {/* Quantity badge — inset so it won't be clipped by the scroll container */}
-    <span
-      className="
-        absolute top-1 right-1 z-10
-        bg-cyan-600 text-white
-        text-[11px] leading-none
-        rounded-full
-        min-w-[1.25rem] h-5 px-1
-        flex items-center justify-center
-        shadow ring-2 ring-white
-      "
-      aria-label={`Quantity ${item.quantity}`}
-    >
-      {item.quantity}
-    </span>
-  </div>
-
-  <div className="flex-1">
-    <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
-    <p className="text-sm text-gray-600">${item.product.price.toFixed(2)}</p>
-  </div>
-
-  <span className="font-medium">
-    ${(item.product.price * item.quantity).toFixed(2)}
-  </span>
-</div>
-
-
+                    <div key={item.id} className="flex items-center space-x-3">
+                      <img
+                        src={item.product.image || '/placeholder.svg'}
+                        alt={item.product.name}
+                        className="w-16 h-16 object-cover rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
+                        {item.selectedVariations && item.selectedVariations.length > 0 && (
+                          <p className="text-xs text-gray-500">
+                            {item.selectedVariations.map(v => `${v.attribute_name}: ${v.value}`).join(', ')}
+                          </p>
+                        )}
+                        <p className="text-sm text-gray-600">${item.product.price.toFixed(2)} × {item.quantity}</p>
+                      </div>
+                      <span className="font-medium">
+                        ${(item.product.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
                   ))}
                 </div>
 
                 <Separator />
 
                 {/* Pricing Breakdown */}
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
-                    <span>${getTotalPrice().toFixed(2)}</span>
+                {isLoadingPricing ? (
+                  <div className="text-center py-4">
+                    <p className="text-sm text-gray-500">Calculating prices...</p>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>${shippingCost.toFixed(2)}</span>
+                ) : pricing ? (
+                  <div className="space-y-2">
+                    {console.log("Pricing object in Checkout.tsx:", pricing)}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Subtotal</span>
+                      <span className="font-semibold">
+                        {pricing.currency?.symbol || '$'}
+                        {console.log("pricing.subtotal:", pricing.subtotal)}
+                        {pricing.subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    {((pricing.promotion_discount ?? 0) > 0) ? (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Promotion Discount</span>
+                        <span>
+                          {pricing.currency?.symbol || '$'}
+                          {console.log("pricing.promotion_discount:", pricing.promotion_discount)}
+                          {pricing.promotion_discount.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {((pricing.coupon_discount ?? 0) > 0) ? (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Coupon Discount</span>
+                        <span>
+                          {pricing.currency?.symbol || '$'}
+                          {console.log("pricing.coupon_discount:", pricing.coupon_discount)}
+                          {pricing.coupon_discount.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {((pricing.delivery_cost ?? 0) !== 0 && pricing.delivery_cost !== null && pricing.delivery_cost !== undefined) ? (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600">Delivery Fee</span>
+                        <span className="font-semibold">
+                          {pricing.currency?.symbol || '$'}
+                          {console.log("pricing.delivery_cost:", pricing.delivery_cost)}
+                          {(pricing.delivery_cost ?? 0).toFixed(2)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {((pricing.vat_amount ?? 0) > 0) ? (
+                      <div className="flex justify-between text-sm text-gray-600">
+                        <span>VAT ({pricing.vat_rate}%)</span>
+                        <span>
+                          {pricing.currency?.symbol || '$'}
+                          {console.log("pricing.vat_amount:", pricing.vat_amount)}
+                          {pricing.vat_amount.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : null}
+                    <Separator />
+                    <div className="flex justify-between text-lg font-bold">
+                      <span>Total</span>
+                      <span>
+                        {pricing.currency?.symbol || '$'}
+                        {console.log("pricing.final_total:", pricing.final_total)}
+                        {((pricing as any).grand_total ?? pricing.final_total ?? getTotalPrice()).toFixed(2)}
+                      </span>
+                    </div>
+                    {!pricing.delivery_calculated && pricing.delivery_message && (
+                      <p className="text-xs text-amber-600 text-center mt-2">{pricing.delivery_message}</p>
+                    )}
                   </div>
-                  <div className="flex justify-between">
-                    <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                ) : (
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span>Subtotal</span>
+                      <span>${getTotalPrice().toFixed(2)}</span>
+                    </div>
+                    <p className="text-xs text-gray-500 text-center">
+                      Select an address to see delivery costs
+                    </p>
                   </div>
-                  <Separator />
-                  <div className="flex justify-between text-lg font-bold">
-                    <span>Total</span>
-                    <span>${finalTotal.toFixed(2)}</span>
-                  </div>
-                </div>
+                )}
 
-                <Button 
-                  type="submit" 
-                  className="w-full bg-cyan-600 hover:bg-cyan-700" 
+                <Button
+                  type="submit"
+                  className="w-full bg-cyan-600 hover:bg-cyan-700"
                   size="lg"
-                  disabled={isProcessing}
+                  disabled={isProcessing || isLoadingPricing || !selectedAddressId || !selectedPaymentMethodId}
                 >
                   {isProcessing ? 'Processing...' : 'Complete Order'}
                 </Button>
@@ -672,9 +624,25 @@ const Checkout = () => {
             </Card>
           </div>
         </form>
+
+        {/* Areeba Payment Modal */}
+        {showPaymentForm && paymentSessionId && merchantId && checkoutScriptUrl && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+            <div className="max-w-2xl w-full">
+              <AreebaCheckout
+                sessionId={paymentSessionId}
+                merchantId={merchantId}
+                checkoutScriptUrl={checkoutScriptUrl}
+                onPaymentComplete={handlePaymentComplete}
+                onPaymentFailed={handlePaymentFailed}
+                onCancel={handlePaymentCancel}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </StoreLayout>
   );
 };
 
-export default Checkout;
+export default CheckoutNew;

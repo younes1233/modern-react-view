@@ -43,7 +43,11 @@ class AddressService extends BaseApiService {
   // Get all user addresses
   async getAddresses(): Promise<Address[]> {
     const response = await this.get<ApiResponse<Address[]>>('/auth/addresses');
-    return response.details;
+    // Handle both formats: {details: [...]} and {details: {addresses: [...]}}
+    if (Array.isArray(response.details)) {
+      return response.details;
+    }
+    return (response.details as any).addresses || [];
   }
 
   // Get single address

@@ -13,7 +13,9 @@ export function RoleProtectedRoute({
   children,
   redirectTo = '/role-login'
 }: RoleProtectedRouteProps) {
-  const { user, isLoading } = useAuth();
+  const authContext = useAuth();
+  const user = authContext?.user;
+  const isLoading = authContext?.isLoading ?? true;
 
   // Always check dashboard access from backend
   const { data: dashboardAccess, isLoading: isDashboardLoading, error } = useQuery({
@@ -21,6 +23,8 @@ export function RoleProtectedRoute({
     queryFn: () => authService.canAccessDashboard(),
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: false, // Don't retry auth checks to avoid rate limiting
+    refetchOnWindowFocus: false, // Don't refetch on window focus
   });
 
   // Debug logging

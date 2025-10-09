@@ -12,9 +12,7 @@ import { FileUpload } from '@/components/ui/file-upload';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { User, Mail, Phone, MapPin, Bell, Shield, Palette } from 'lucide-react';
-import { useCountries } from '@/hooks/useCountries';
-import { useWarehouses } from '@/hooks/useWarehouses';
-import { useAdminSettings } from '@/hooks/useAdminSettings';
+import { useDashboardBootstrap } from '@/hooks/useDashboardBootstrap';
 import {
   Select,
   SelectContent,
@@ -46,28 +44,31 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     setWarehouse,
   } = useAuth() || {};
 
-  // Fetch countries and warehouses.  Passing the selectedCountryId string
-  // directly is safe because useWarehouses converts it to a number internally.
-  const { countries = [], loading: countriesLoading } = useCountries();
+  // Use bootstrap hook to get all data in one request
+  const {
+    countries = [],
+    warehouses = [],
+    selectedCountryId: bootstrapCountryId,
+    isLoading: isLoadingBootstrap,
+    invalidate
+  } = useDashboardBootstrap();
+
   const [selectedCountryId, setSelectedCountryId] = useState(
-    country?.id ? String(country.id) : ''
-  );
-  const { warehouses = [], loading: warehousesLoading } = useWarehouses(
-    selectedCountryId || undefined
+    country?.id ? String(country.id) : (bootstrapCountryId ? String(bootstrapCountryId) : '')
   );
   const [selectedWarehouseId, setSelectedWarehouseId] = useState(
     warehouse?.id ? String(warehouse.id) : ''
   );
-  // Admin settings hook
-  const { adminSettings, isLoading: isLoadingAdminSettings, updateAdminSettings, isUpdating } = useAdminSettings();
 
-  // Initialize form state from admin settings
+  const countriesLoading = isLoadingBootstrap;
+  const warehousesLoading = isLoadingBootstrap;
+
+  // Initialize form state from bootstrap data
   useEffect(() => {
-    if (adminSettings) {
-      setSelectedCountryId(adminSettings.selected_country_id ? String(adminSettings.selected_country_id) : '');
-      setSelectedWarehouseId(adminSettings.selected_warehouse_id ? String(adminSettings.selected_warehouse_id) : '');
+    if (bootstrapCountryId) {
+      setSelectedCountryId(String(bootstrapCountryId));
     }
-  }, [adminSettings]);
+  }, [bootstrapCountryId]);
 
   // Whenever the selected country changes, clear the warehouse selection
   useEffect(() => {
@@ -77,23 +78,42 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   /**
    * Save localization selections to the database via API
    */
-  const handleSaveLocalization = () => {
+  const handleSaveLocalization = async () => {
     const settings = {
       selected_country_id: selectedCountryId ? parseInt(selectedCountryId) : null,
       selected_warehouse_id: selectedWarehouseId ? parseInt(selectedWarehouseId) : null,
     };
 
-    updateAdminSettings(settings);
+    try {
+      setIsLoading(true);
 
-    // Also update context for immediate UI feedback
-    const selectedCountryObj = countries.find(
-      (c) => String(c.id) === selectedCountryId
-    );
-    const selectedWarehouseObj = selectedWarehouseId
-      ? warehouses.find((w) => String(w.id) === selectedWarehouseId)
-      : null;
-    setCountry?.(selectedCountryObj || null);
-    setWarehouse?.(selectedWarehouseObj || null);
+      // Update context for immediate UI feedback
+      const selectedCountryObj = countries.find(
+        (c) => String(c.id) === selectedCountryId
+      );
+      const selectedWarehouseObj = selectedWarehouseId
+        ? warehouses.find((w) => String(w.id) === selectedWarehouseId)
+        : null;
+
+      setCountry?.(selectedCountryObj || null);
+      setWarehouse?.(selectedWarehouseObj || null);
+
+      // Invalidate bootstrap cache to refresh data
+      await invalidate();
+
+      toast({
+        title: 'Success',
+        description: 'Localization settings saved',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to save settings',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // State for profile info fields
@@ -183,7 +203,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   <Select
                     value={selectedCountryId}
                     onValueChange={(value) => setSelectedCountryId(value)}
-                    disabled={isLoadingAdminSettings || countriesLoading}
+                    disabled={countriesLoading}
                   >
                     <SelectTrigger id="country">
                       <SelectValue placeholder={countriesLoading ? "Loading countries..." : "Select a country"} />
@@ -202,7 +222,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   <Select
                     value={selectedWarehouseId}
                     onValueChange={(value) => setSelectedWarehouseId(value)}
-                    disabled={isLoadingAdminSettings || warehousesLoading || !selectedCountryId}
+                    disabled={warehousesLoading || !selectedCountryId}
                   >
                     <SelectTrigger id="warehouse">
                       <SelectValue placeholder={
@@ -222,9 +242,9 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                 </div>
                 <Button
                   onClick={handleSaveLocalization}
-                  disabled={isUpdating || isLoadingAdminSettings}
+                  disabled={isLoading}
                 >
-                  {isUpdating ? 'Saving...' : 'Save Localization'}
+                  {isLoading ? 'Saving...' : 'Save Localization'}
                 </Button>
               </CardContent>
             </Card>

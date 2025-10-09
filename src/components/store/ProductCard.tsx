@@ -4,20 +4,79 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Heart, ShoppingCart, Package } from 'lucide-react'
 import { StarRating } from '@/components/ui/star-rating'
-import { Product } from '@/data/storeData'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useNavigate } from 'react-router-dom'
 import { useCountryCurrency } from '@/contexts/CountryCurrencyContext'
 
-interface ProductCardProps {
-  product: Product
+// Backend product interface based on actual API response
+interface BackendProduct {
+  id: number
+  name: string
+  slug: string
+  short_description?: string | null
+  category?: any | null
+  store?: string
+  cover_image?:
+    | {
+        desktop: string
+        tablet: string
+        mobile: string
+      }
+    | string
+  pricing?: {
+    original_price: number | null
+    price: number
+    currency_id: number | null
+    currency: {
+      code: string
+      symbol: string
+    } | null
+    applied_discounts: Array<{
+      id?: number
+      label: string
+      type: string
+      value: string | number
+      amount_value: number
+      max_discount: number | null
+      scope?: string
+    }>
+    vat: {
+      rate: number
+      amount: number
+    }
+  }
+  flags?: {
+    on_sale: boolean
+    is_featured: boolean
+    is_new_arrival: boolean
+    is_best_seller: boolean
+    is_vat_exempt?: boolean
+    seller_product_status?: string
+  }
+  stock?: number
+  rating?: {
+    average: number
+    count: number
+  }
+  variants_count?: number
+  has_variants?: boolean
+  variations?: any[]
+  meta?: {
+    seo_title: string
+    seo_description: string | null
+    created_at: string
+    updated_at: string
+  }
 }
 
-// Memoize ProductCard to prevent re-renders when product data hasn't changed
+interface ProductCardProps {
+  product: BackendProduct
+}
+
 const ProductCardComponent = ({ product }: ProductCardProps) => {
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
-  const { addToCart, isInCart, isLoading: cartLoading } = useCart()
+  const { addToCart, isLoading: cartLoading } = useCart()
   const {
     addToWishlist,
     removeFromWishlist,
@@ -27,9 +86,21 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
   const { selectedCurrency } = useCountryCurrency()
   const navigate = useNavigate()
 
-  // Get currency symbol from product data or fallback to selected currency
+  // Discount calculations
+  const hasBackendDiscount = product.pricing?.applied_discounts?.length > 0
+  const backendOriginalPrice = product.pricing?.original_price
+  const backendDiscountedPrice = product.pricing?.price
+  const backendDiscountPercentage =
+    hasBackendDiscount && backendOriginalPrice
+      ? Math.round(
+          ((backendOriginalPrice - backendDiscountedPrice) /
+            backendOriginalPrice) *
+            100
+        )
+      : 0
+
   const currencySymbol =
-    (product as any).currency?.symbol || selectedCurrency?.symbol || '$'
+    product.pricing?.currency?.symbol || selectedCurrency?.symbol || '$'
 
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -45,170 +116,153 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
     }
   }
 
-
   const handleProductClick = () => {
     navigate(`/store/product/${product.slug}`)
   }
 
+  // Cover image handling
   const currentImage =
-    hoveredThumbnail !== null
-      ? product.thumbnails[hoveredThumbnail]?.url || product.image
-      : product.image
+    typeof product.cover_image === 'object' && product.cover_image
+      ? product.cover_image.mobile ||
+        product.cover_image.desktop ||
+        '/placeholder-product.png'
+      : product.cover_image || '/placeholder-product.png'
 
-  const allImages = [
-    { url: product.image, alt: product.name },
-    ...product.thumbnails.map((thumb) => ({ url: thumb.url, alt: thumb.alt })),
-  ]
+  const hasDiscount = hasBackendDiscount || product.flags?.on_sale
+  const discountPercentage = hasBackendDiscount ? backendDiscountPercentage : 0
 
-  const discountPercentage = product.originalPrice
-    ? Math.round(
-        ((product.originalPrice - product.price) / product.originalPrice) * 100
-      )
-    : 0
-
-  const originalPrice = product.originalPrice
+  const originalPrice = backendOriginalPrice || 0
+  const currentPrice = backendDiscountedPrice || 0
+  const savings =
+    originalPrice > currentPrice ? originalPrice - currentPrice : 0
 
   return (
-    <>
-      <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
-        <div
-          className="relative overflow-hidden bg-white"
-          onClick={handleProductClick}
-        >
-          {/* Product Image - Taller with better containment */}
-          <div className="aspect-[1/1] md:aspect-[1/1] bg-white overflow-hidden">
-            <img
-              src={currentImage}
-              alt={product.name}
-              className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-            />
-          </div>
+    <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
+      <div
+        className="relative overflow-hidden bg-white"
+        onClick={handleProductClick}
+      >
+        {/* Product Image */}
+        <div className="aspect-[1/1] bg-white overflow-hidden">
+          <img
+            src={currentImage}
+            alt={product.name}
+            className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+          />
+        </div>
 
-          {/* Thumbnail Navigation - Show on hover if thumbnails exist */}
-          {product.thumbnails && product.thumbnails.length > 0 && (
-            <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="flex space-x-1">
-                <button
-                  className={`w-2 h-2 rounded-full transition-colors ${
-                    hoveredThumbnail === null ? 'bg-white' : 'bg-white/50'
-                  }`}
-                  onMouseEnter={() => setHoveredThumbnail(null)}
-                />
-                {product.thumbnails.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-colors ${
-                      hoveredThumbnail === index ? 'bg-white' : 'bg-white/50'
-                    }`}
-                    onMouseEnter={() => setHoveredThumbnail(index)}
-                  />
-                ))}
-              </div>
+        {/* Top Left Badges */}
+        <div className="absolute top-1 left-1 flex flex-col gap-1">
+          {hasDiscount && discountPercentage > 0 && (
+            <div className="bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
+              -{discountPercentage}%
             </div>
           )}
+          {product.flags?.is_new_arrival && (
+            <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+              NEW
+            </Badge>
+          )}
+        </div>
 
-          {/* Badges - Top Left */}
-          <div className="absolute top-0.5 left-0.5 md:top-1 md:left-1 flex flex-col gap-1">
-            {product.isOnSale && discountPercentage > 0 && (
-              <Badge className="bg-red-500 text-white text-xs px-1 py-0.5 rounded">
-                -{discountPercentage}%
-              </Badge>
-            )}
-            {product.isNewArrival && (
-              <Badge className="bg-green-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                NEW
-              </Badge>
-            )}
-          </div>
-
-          {/* Wishlist button - Top Right */}
-          <div className="absolute top-0.5 right-0.5 md:top-1 md:right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={handleWishlistToggle}
-              disabled={wishlistLoading}
-              className={`w-9 h-9 md:w-7 md:h-7 p-0 shadow-md ${
-                isInWishlist(product.id)
-                  ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'bg-white/90 hover:bg-white'
+        {/* Wishlist Button */}
+        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleWishlistToggle}
+            disabled={wishlistLoading}
+            className={`w-8 h-8 p-0 shadow-md ${
+              isInWishlist(product.id)
+                ? 'bg-red-500 text-white hover:bg-red-600'
+                : 'bg-white/90 hover:bg-white'
+            }`}
+          >
+            <Heart
+              className={`w-3 h-3 ${
+                isInWishlist(product.id) ? 'fill-current' : ''
               }`}
-            >
-              <Heart
-                className={`w-2.5 h-2.5 md:w-3 md:h-3 ${
-                  isInWishlist(product.id) ? 'fill-current' : ''
-                }`}
-              />
-            </Button>
+            />
+          </Button>
+        </div>
+      </div>
+
+      <CardContent
+        className="p-3 flex flex-col flex-1"
+        onClick={handleProductClick}
+      >
+        {/* Product Title & Rating */}
+        <div className="flex-1">
+          <div className="flex items-start justify-between gap-2 h-10">
+            <h3 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight flex-1">
+              {product.name}
+            </h3>
+            <StarRating
+              rating={product.rating?.average || 0}
+              className="flex-shrink-0"
+            />
           </div>
         </div>
 
-        <CardContent
-          className="p-3 flex flex-col flex-1"
-          onClick={handleProductClick}
-        >
-          {/* Top Content - Fixed height for consistent cards */}
-          <div className="flex-1">
-            {/* Product Name with Rating Badge - Fixed height for 2 lines */}
-            <div className="flex items-start justify-between gap-2 h-10">
-              <h3 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight flex-1">
-                {product.name}
-              </h3>
-              <StarRating rating={product.rating || 0} className="flex-shrink-0" />
-            </div>
-          </div>
-
-          {/* Bottom Section - Always at bottom with tighter spacing */}
-          <div className="space-y-2 mt-auto pt-2">
-            {/* Price Section - Clean and modern */}
-            <div className="flex items-center gap-2">
+        {/* Price & Express */}
+        <div className="space-y-2 mt-auto pt-2">
+          {/* Price Section */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-baseline gap-2">
               <span className="text-base md:text-lg font-semibold text-gray-900">
-                {currencySymbol}{product.price}
+                {currencySymbol}
+                {currentPrice.toFixed(2)}
               </span>
-              {product.isOnSale && originalPrice && (
-                <>
-                  <span className="text-xs text-gray-400 line-through">
-                    {currencySymbol}{originalPrice}
+              {hasDiscount &&
+                originalPrice &&
+                originalPrice !== currentPrice && (
+                  <span className="text-sm text-gray-400 line-through font-medium">
+                    {currencySymbol}
+                    {originalPrice.toFixed(2)}
                   </span>
-                  <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded font-medium">
-                    -{discountPercentage}%
-                  </span>
-                </>
-              )}
+                )}
             </div>
 
-            {/* Express and Cart Section - Aligned and balanced */}
-            <div className="flex items-center justify-between">
-              {/* Simplified Express Badge */}
-              <div className="flex items-center bg-red-500 text-white text-xs font-medium px-2.5 py-1 rounded-full">
-                <Package size={10} className="text-white mr-1" />
-                <span>EXPRESS</span>
-              </div>
-
-              {/* Add to Cart Button - Same shape as wishlist */}
-              <Button
-                size="sm"
-                onClick={handleAddToCart}
-                disabled={cartLoading}
-                className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-lg w-9 h-9 p-0 flex items-center justify-center shadow-sm hover:shadow transition-all duration-200"
-                variant="outline"
-              >
-                <ShoppingCart className="w-4 h-4 text-gray-600" />
-              </Button>
-            </div>
+            {hasDiscount && savings > 0 && (
+              <span className="bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">
+                Save {currencySymbol}
+                {savings.toFixed(2)}
+              </span>
+            )}
           </div>
-        </CardContent>
-      </Card>
 
-    </>
+          {/* Express + Cart */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center bg-red-500 text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
+              <Package size={10} className="text-white mr-1" />
+              <span>EXPRESS</span>
+            </div>
+
+            <Button
+              size="sm"
+              onClick={handleAddToCart}
+              disabled={cartLoading}
+              className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-lg w-9 h-9 p-0 flex items-center justify-center shadow-sm hover:shadow transition-all duration-200"
+              variant="outline"
+            >
+              <ShoppingCart className="w-4 h-4 text-gray-600" />
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
-// Export memoized version - only re-renders if product.id changes
-export const ProductCard = memo(ProductCardComponent, (prevProps, nextProps) => {
-  // Custom comparison: only re-render if product ID changed
-  // This prevents re-renders when unrelated products update
-  return prevProps.product.id === nextProps.product.id &&
-         prevProps.product.name === nextProps.product.name &&
-         prevProps.product.price === nextProps.product.price;
-});
+export const ProductCard = memo(
+  ProductCardComponent,
+  (prevProps, nextProps) => {
+    return (
+      prevProps.product.id === nextProps.product.id &&
+      prevProps.product.name === nextProps.product.name &&
+      prevProps.product.pricing?.price === nextProps.product.pricing?.price &&
+      (prevProps.product.pricing?.applied_discounts?.length || 0) ===
+        (nextProps.product.pricing?.applied_discounts?.length || 0)
+    )
+  }
+)

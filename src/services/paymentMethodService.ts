@@ -21,7 +21,20 @@ class PaymentMethodService extends BaseApiService {
    */
   async getPaymentMethods(): Promise<PaymentMethod[]> {
     const response = await this.get<ApiResponse<PaymentMethod[]>>('/payment-methods');
-    return response.details;
+
+    // Handle both old format {payment_methods: [...]} and new format with details
+    if (response.details) {
+      // New format with Resource
+      if (Array.isArray(response.details)) {
+        return response.details;
+      }
+      // Old cached format {payment_methods: [...]}
+      if ((response.details as any).payment_methods) {
+        return (response.details as any).payment_methods;
+      }
+    }
+
+    return [];
   }
 }
 

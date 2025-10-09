@@ -1410,8 +1410,9 @@ const goAll = () => {
           onClose={clearVariantSelection}
           product={variantSelectionRequest.product}
           quantity={variantSelectionRequest.quantity}
-          onConfirm={(variantId) => {
-            addToCart(variantSelectionRequest.product, variantSelectionRequest.quantity, variantId);
+          onConfirm={(variantId, fullProduct) => {
+            const productToUpdate = fullProduct || variantSelectionRequest.product;
+            addToCart(productToUpdate, variantSelectionRequest.quantity, variantId);
             clearVariantSelection();
           }}
         />

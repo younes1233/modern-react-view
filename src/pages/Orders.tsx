@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -11,87 +12,62 @@ import { Package, Truck, Clock, XCircle, DollarSign, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToExcel } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
-
-// TODO: Replace with API call to fetch orders
-const mockOrders = [
-  { id: "#ORD-001", customer: "John Doe", email: "john@example.com", total: 299.98, status: "pending", date: "2024-01-15", items: 3 },
-  { id: "#ORD-002", customer: "Jane Smith", email: "jane@example.com", total: 89.99, status: "shipped", date: "2024-01-14", items: 1 },
-  { id: "#ORD-003", customer: "Mike Johnson", email: "mike@example.com", total: 159.97, status: "delivered", date: "2024-01-13", items: 2 },
-  { id: "#ORD-004", customer: "Sarah Wilson", email: "sarah@example.com", total: 199.99, status: "processing", date: "2024-01-12", items: 1 },
-  { id: "#ORD-005", customer: "Tom Brown", email: "tom@example.com", total: 324.95, status: "cancelled", date: "2024-01-11", items: 4 },
-];
-
-const statusOptions = [
-  { value: "pending", label: "Pending" },
-  { value: "processing", label: "Processing" },
-  { value: "shipped", label: "Shipped" },
-  { value: "delivered", label: "Delivered" },
-  { value: "cancelled", label: "Cancelled" },
-];
+import { orderService, Order, OrderFilters, OrderStatus } from "@/services/orderService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Orders = () => {
-  const [orders, setOrders] = useState(mockOrders);
-  const [filteredOrders, setFilteredOrders] = useState(mockOrders);
   const { toast } = useToast();
+  const [filters, setFilters] = useState<OrderFilters>({});
+
+  const { data: ordersData, isLoading, isError, refetch } = useQuery({
+    queryKey: ['admin-orders', filters],
+    queryFn: () => orderService.getAdminOrders(filters),
+    staleTime: 30 * 1000, // 30 seconds
+  });
+
+  const orders = ordersData?.details?.orders || [];
+  const statusOptions = ordersData?.details?.statuses || [];
+  const [filteredOrders, setFilteredOrders] = useState<Order[]>(orders);
+
+  useEffect(() => {
+    setFilteredOrders(orders);
+  }, [orders]);
 
   const handleSearch = (term: string) => {
-    const filtered = orders.filter(order =>
-      order.id.toLowerCase().includes(term.toLowerCase()) ||
-      order.customer.toLowerCase().includes(term.toLowerCase()) ||
-      order.email.toLowerCase().includes(term.toLowerCase())
-    );
-    setFilteredOrders(filtered);
+    setFilters(prev => ({ ...prev, search: term || undefined }));
   };
 
   const handleStatusFilter = (status: string) => {
-    if (!status) {
-      setFilteredOrders(orders);
-      return;
-    }
-    const filtered = orders.filter(order => order.status === status);
-    setFilteredOrders(filtered);
+    setFilters(prev => ({ ...prev, status: status || undefined }));
   };
 
   const handleDateRangeFilter = (startDate: Date | undefined, endDate: Date | undefined) => {
-    if (!startDate && !endDate) {
-      setFilteredOrders(orders);
-      return;
-    }
-    
-    const filtered = orders.filter(order => {
-      const orderDate = new Date(order.date);
-      if (startDate && orderDate < startDate) return false;
-      if (endDate && orderDate > endDate) return false;
-      return true;
-    });
-    setFilteredOrders(filtered);
+    setFilters(prev => ({
+      ...prev,
+      date_from: startDate ? startDate.toISOString().split('T')[0] : undefined,
+      date_to: endDate ? endDate.toISOString().split('T')[0] : undefined,
+    }));
   };
 
   const handleAmountRangeFilter = (min: number | undefined, max: number | undefined) => {
-    if (min === undefined && max === undefined) {
-      setFilteredOrders(orders);
-      return;
-    }
-    
-    const filtered = orders.filter(order => {
-      if (min !== undefined && order.total < min) return false;
-      if (max !== undefined && order.total > max) return false;
-      return true;
-    });
-    setFilteredOrders(filtered);
+    setFilters(prev => ({
+      ...prev,
+      min_amount: min,
+      max_amount: max,
+    }));
   };
 
   const handleExportExcel = () => {
     const exportData = filteredOrders.map(order => ({
-      'Order ID': order.id,
-      'Customer': order.customer,
-      'Email': order.email,
-      'Date': order.date,
-      'Items': order.items,
-      'Total': `$${order.total}`,
+      'Order ID': `#${order.id}`,
+      'Customer': order.user ? `${order.user.first_name || ''} ${order.user.last_name || ''}`.trim() || 'N/A' : 'N/A',
+      'Email': order.user?.email || 'N/A',
+      'Date': new Date(order.created_at).toLocaleDateString(),
+      'Items': order.items?.length || 0,
+      'Total': `$${order.total_price}`,
       'Status': order.status.replace('_', ' ').toUpperCase()
     }));
-    
+
     exportToExcel(exportData, 'orders-export', 'Orders');
     toast({
       title: "Export Successful",
@@ -99,13 +75,13 @@ const Orders = () => {
     });
   };
 
-  const handleStatusChange = (orderId: string, newStatus: string) => {
-    setOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
-    setFilteredOrders(prev => prev.map(order => 
-      order.id === orderId ? { ...order, status: newStatus } : order
-    ));
+  const handleStatusChange = async (orderId: string, newStatus: string) => {
+    // TODO: Implement status update API call
+    toast({
+      title: "Status Update",
+      description: `Order #${orderId} status will be updated to ${newStatus}`,
+    });
+    refetch();
   };
 
   const handleViewOrder = (orderId: string) => {
@@ -124,12 +100,11 @@ const Orders = () => {
     console.log(`Editing order: ${orderId}`);
   };
 
-  const handleDeleteOrder = (orderId: string) => {
-    setOrders(prev => prev.filter(order => order.id !== orderId));
-    setFilteredOrders(prev => prev.filter(order => order.id !== orderId));
+  const handleDeleteOrder = async (orderId: string) => {
+    // TODO: Implement delete API call
     toast({
-      title: "Order Deleted",
-      description: `Order ${orderId} has been permanently deleted`,
+      title: "Order Deletion",
+      description: `Order #${orderId} deletion is not yet implemented`,
       variant: "destructive",
     });
   };
@@ -170,23 +145,29 @@ const Orders = () => {
     switch (status) {
       case "pending":
         return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">Pending</Badge>;
+      case "pending_payment":
+        return <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">Pending Payment</Badge>;
+      case "confirmed":
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Confirmed</Badge>;
       case "processing":
         return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Processing</Badge>;
-      case "shipped":
-        return <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-200">Shipped</Badge>;
       case "delivered":
         return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">Delivered</Badge>;
-      case "cancelled":
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Cancelled</Badge>;
+      case "completed":
+        return <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200">Completed</Badge>;
+      case "canceled":
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Canceled</Badge>;
+      case "payment_failed":
+        return <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-200">Payment Failed</Badge>;
       default:
-        return <Badge variant="secondary">Unknown</Badge>;
+        return <Badge variant="secondary">{status}</Badge>;
     }
   };
 
   const totalOrders = orders.length;
-  const pendingOrders = orders.filter(o => o.status === "pending").length;
-  const shippedOrders = orders.filter(o => o.status === "shipped").length;
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
+  const pendingOrders = orders.filter(o => o.status === "pending" || o.status === "pending_payment").length;
+  const deliveredOrders = orders.filter(o => o.status === "delivered").length;
+  const totalRevenue = orders.reduce((sum, order) => sum + (Number(order.total_price) || 0), 0);
 
   return (
     <SidebarProvider>
@@ -248,8 +229,8 @@ const Orders = () => {
                 <CardContent className="p-4 lg:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-medium text-purple-600">Shipped</p>
-                      <p className="text-2xl lg:text-3xl font-bold text-purple-900">{shippedOrders}</p>
+                      <p className="text-sm font-medium text-purple-600">Delivered</p>
+                      <p className="text-2xl lg:text-3xl font-bold text-purple-900">{deliveredOrders}</p>
                     </div>
                     <Truck className="w-8 h-8 text-purple-600" />
                   </div>
@@ -282,55 +263,80 @@ const Orders = () => {
               </CardHeader>
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-50 border-b">
-                      <tr className="text-left">
-                        <th className="p-4 font-semibold text-gray-700">Order ID</th>
-                        <th className="p-4 font-semibold text-gray-700">Customer</th>
-                        <th className="p-4 font-semibold text-gray-700 hidden sm:table-cell">Date</th>
-                        <th className="p-4 font-semibold text-gray-700 hidden lg:table-cell">Items</th>
-                        <th className="p-4 font-semibold text-gray-700">Total</th>
-                        <th className="p-4 font-semibold text-gray-700">Status</th>
-                        <th className="p-4 font-semibold text-gray-700">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredOrders.map((order) => (
-                        <tr key={order.id} className="border-b hover:bg-gray-50 transition-colors">
-                          <td className="p-4 font-medium text-blue-600">{order.id}</td>
-                          <td className="p-4">
-                            <div>
-                              <div className="font-medium text-gray-900">{order.customer}</div>
-                              <div className="text-sm text-gray-500">{order.email}</div>
-                            </div>
-                          </td>
-                          <td className="p-4 text-gray-600 hidden sm:table-cell">{order.date}</td>
-                          <td className="p-4 text-gray-600 hidden lg:table-cell">{order.items}</td>
-                          <td className="p-4 font-semibold text-gray-900">${order.total}</td>
-                          <td className="p-4">
-                            <OrderStatusEditor
-                              orderId={order.id}
-                              currentStatus={order.status}
-                              onStatusChange={handleStatusChange}
-                            />
-                          </td>
-                          <td className="p-4">
-                            <OrderActions
-                              orderId={order.id}
-                              orderStatus={order.status}
-                              onView={handleViewOrder}
-                              onEdit={handleEditOrder}
-                              onDelete={handleDeleteOrder}
-                              onDownload={handleDownloadOrder}
-                              onEmail={handleEmailOrder}
-                              onTrack={handleTrackOrder}
-                              onRefund={handleRefundOrder}
-                            />
-                          </td>
-                        </tr>
+                  {isLoading ? (
+                    <div className="p-6 space-y-4">
+                      {[...Array(5)].map((_, i) => (
+                        <div key={i} className="flex items-center space-x-4">
+                          <Skeleton className="h-12 w-full" />
+                        </div>
                       ))}
-                    </tbody>
-                  </table>
+                    </div>
+                  ) : isError ? (
+                    <div className="p-6 text-center text-red-600">
+                      <p>Failed to load orders. Please try again.</p>
+                    </div>
+                  ) : filteredOrders.length === 0 ? (
+                    <div className="p-6 text-center text-gray-500">
+                      <p>No orders found.</p>
+                    </div>
+                  ) : (
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b">
+                        <tr className="text-left">
+                          <th className="p-4 font-semibold text-gray-700">Order ID</th>
+                          <th className="p-4 font-semibold text-gray-700">Customer</th>
+                          <th className="p-4 font-semibold text-gray-700 hidden sm:table-cell">Date</th>
+                          <th className="p-4 font-semibold text-gray-700 hidden lg:table-cell">Items</th>
+                          <th className="p-4 font-semibold text-gray-700">Total</th>
+                          <th className="p-4 font-semibold text-gray-700">Status</th>
+                          <th className="p-4 font-semibold text-gray-700">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredOrders.map((order) => (
+                          <tr key={order.id} className="border-b hover:bg-gray-50 transition-colors">
+                            <td className="p-4 font-medium text-blue-600">#{order.id}</td>
+                            <td className="p-4">
+                              <div>
+                                <div className="font-medium text-gray-900">
+                                  {order.user ? `${order.user.first_name || ''} ${order.user.last_name || ''}`.trim() || 'N/A' : 'N/A'}
+                                </div>
+                                <div className="text-sm text-gray-500">{order.user?.email || 'N/A'}</div>
+                              </div>
+                            </td>
+                            <td className="p-4 text-gray-600 hidden sm:table-cell">
+                              {new Date(order.created_at).toLocaleDateString()}
+                            </td>
+                            <td className="p-4 text-gray-600 hidden lg:table-cell">
+                              {order.items?.length || 0}
+                            </td>
+                            <td className="p-4 font-semibold text-gray-900">${order.total_price}</td>
+                            <td className="p-4">
+                              <OrderStatusEditor
+                                orderId={order.id.toString()}
+                                currentStatus={order.status}
+                                statuses={statusOptions}
+                                onStatusChange={handleStatusChange}
+                              />
+                            </td>
+                            <td className="p-4">
+                              <OrderActions
+                                orderId={order.id.toString()}
+                                orderStatus={order.status}
+                                onView={handleViewOrder}
+                                onEdit={handleEditOrder}
+                                onDelete={handleDeleteOrder}
+                                onDownload={handleDownloadOrder}
+                                onEmail={handleEmailOrder}
+                                onTrack={handleTrackOrder}
+                                onRefund={handleRefundOrder}
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -99,7 +99,7 @@ const Store = () => {
       currency: apiProduct.pricing?.currency,
       category: 'general',
       image: apiProduct.cover_image?.desktop || apiProduct.cover_image?.mobile || '/placeholder.svg',
-      inStock: apiProduct.stock > 0,
+      inStock: apiProduct.has_variants ? true : (apiProduct.stock > 0), // Products with variants are always considered in stock; stock is checked at variant level
       rating: apiProduct.rating?.average || 0,
       reviews: apiProduct.rating?.count || 0,
       isFeatured: apiProduct.flags?.is_featured || false,
@@ -107,7 +107,9 @@ const Store = () => {
       isOnSale: apiProduct.flags?.on_sale || false,
       sku: apiProduct.sku || '',
       thumbnails: [],
-      variations: []
+      has_variants: apiProduct.has_variants || false,
+      variants_count: apiProduct.variants_count || 0,
+      variations: apiProduct.variations || []
     };
   };
 

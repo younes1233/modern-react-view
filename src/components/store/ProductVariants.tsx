@@ -170,25 +170,25 @@ const ProductVariantsComponent = ({
   const handleVariationSelect = async (attribute: string, variation: any) => {
     const availability = getVariationAvailability(attribute, variation.value);
 
+    // If clicking an already selected variation, do nothing.
+    if (selectedVariations[attribute] === variation.value) {
+      return;
+    }
+
     // Don't allow selection of unavailable variations
     if (!availability.isAvailable) return;
 
     setIsTransitioning(true);
 
-    let newSelections = { ...selectedVariations };
+    // Select new variation
+    const newSelections = {
+      ...selectedVariations,
+      [attribute]: variation.value,
+    };
 
-    // Check if clicking the same variation to unselect
-    if (selectedVariations[attribute] === variation.value) {
-      // Unselect - remove this attribute
-      delete newSelections[attribute];
-    } else {
-      // Select new variation
-      newSelections[attribute] = variation.value;
-
-      // Handle image change if variation has an image
-      if (variation.image_index !== undefined && onImageChange) {
-        onImageChange(variation.image_index);
-      }
+    // Handle image change if variation has an image
+    if (variation.image_index !== undefined && onImageChange) {
+      onImageChange(variation.image_index);
     }
 
     setSelectedVariations(newSelections);

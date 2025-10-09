@@ -13,9 +13,12 @@ export interface Product {
   isFeatured: boolean;
   isNewArrival: boolean;
   isOnSale: boolean;
+  isPackage?: boolean;
   sku?: string;
   thumbnails: ProductThumbnail[];
   variations: ProductVariation[];
+  has_variants: boolean;
+  variants_count: number;
 }
 
 export interface ProductThumbnail {

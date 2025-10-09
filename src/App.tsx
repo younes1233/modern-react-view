@@ -52,16 +52,23 @@ const Store = lazy(() => import("@/pages/store/Store"));
 import ComingSoon from "./pages/store/ComingSoon";
 const ProductDetail = lazy(() => import("@/pages/store/ProductDetail"));
 const StoreCategories = lazy(() => import("@/pages/store/StoreCategories"));
-const Checkout = lazy(() => import("@/pages/store/CheckoutNew"));
+const Checkout = lazy(() => import("@/pages/store/Checkout"));
 const StoreReturns = lazy(() => import("@/pages/store/Returns"));
 const Wishlist = lazy(() => import("@/pages/store/Wishlist"));
 const AddressManagement = lazy(() => import("@/pages/store/AddressManagement"));
+const OrderDetail = lazy(() => import("@/pages/store/OrderDetail"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
+      retry: 2, // Retry failed requests up to 2 times
+      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff: 1s, 2s, 4s, max 30s
+    },
+    mutations: {
+      retry: 1, // Retry mutations once
+      retryDelay: 1000, // Wait 1s before retry
     },
   },
 });
@@ -72,10 +79,10 @@ function App() {
       <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
         <AuthProvider>
           <CountryCurrencyProvider>
-            <CartProvider>
-              <WishlistProvider>
-                <SearchProvider>
-                  <ResponsiveImageProvider>
+              <CartProvider>
+                <WishlistProvider>
+                  <SearchProvider>
+                    <ResponsiveImageProvider>
                     <Router>
                     <StoreThemeHandler />
                     <Suspense fallback={<PageLoader />}>
@@ -92,129 +99,100 @@ function App() {
                         <Route path="/store/product/:slug" element={<ProductDetail />} />
                         <Route path="/store/categories" element={<StoreCategories />} />
                         <Route path="/store/checkout" element={<Checkout />} />
+                        <Route path="/store/orders/:id" element={<OrderDetail />} />
                         <Route path="/store/returns" element={<StoreReturns />} />
                         <Route path="/store/wishlist" element={<Wishlist />} />
                         <Route path="/store/addresses" element={<AddressManagement />} />
 
                         {/* Protected Admin Routes */}
                         <Route path="/dashboard" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Index />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Index />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/products" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Products />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Products />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/categories" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Categories />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Categories />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/inventory" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Inventory />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Inventory />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/store-management" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <StoreManagement />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <StoreManagement />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/orders" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Orders />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Orders />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/customers" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Customers />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Customers />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/returns" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Returns />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Returns />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/coupons" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Coupons />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Coupons />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/analytics" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Analytics />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Analytics />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/sales-report" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <SalesReport />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <SalesReport />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/user-management" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <UserManagement />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <UserManagement />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/product-approval" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <ProductApproval />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <ProductApproval />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/localization" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <Localization />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <Localization />
+                          </RoleProtectedRoute>
                         } />
 
                         <Route path="/dashboard/seller-products" element={
-                          <ProtectedRoute>
-                            <RoleProtectedRoute>
-                              <SellerProducts />
-                            </RoleProtectedRoute>
-                          </ProtectedRoute>
+                          <RoleProtectedRoute>
+                            <SellerProducts />
+                          </RoleProtectedRoute>
                         } />
 
                         {/* Catch all route */}

@@ -50,6 +50,31 @@ export interface CheckoutStartResponse {
   };
 }
 
+export interface CreatePaymentSessionRequest {
+  address_id: number;
+  payment_method_id: number;
+  coupon_code?: string;
+}
+
+export interface PaymentSessionResponse {
+  error: boolean;
+  message: string;
+  details: {
+    session_id: string;
+    merchant_id: string;
+    checkout_script_url?: string;
+    payment_url?: string;
+    expires_at: string;
+    amount: number;
+    order_id?: number;
+    currency: {
+      id: number;
+      code: string;
+      symbol: string;
+    };
+  };
+}
+
 export interface OrderResponse {
   error: boolean;
   message: string;
@@ -94,6 +119,21 @@ class CheckoutService extends BaseApiService {
    */
   async calculatePricing(data: CalculatePricingRequest): Promise<ApiResponse<PricingBreakdown>> {
     return this.post<ApiResponse<PricingBreakdown>>('/auth/checkout/calculate-pricing', data);
+  }
+
+  /**
+   * Create payment session for online payment methods (Areeba, Whish, etc.)
+   */
+  async createPaymentSession(data: CreatePaymentSessionRequest): Promise<PaymentSessionResponse> {
+    return this.post<PaymentSessionResponse>('/auth/checkout/create-payment-session', data);
+  }
+
+  /**
+   * Confirm Areeba payment after user completes payment
+   * Verifies payment with Areeba and deducts inventory
+   */
+  async confirmAreebaPayment(orderId: number): Promise<OrderResponse> {
+    return this.post<OrderResponse>('/auth/checkout/confirm-areeba-payment', { order_id: orderId });
   }
 
   /**

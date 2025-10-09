@@ -31,7 +31,7 @@ export interface UpdateProductListingRequest {
 
 export interface ProductListingWithProducts {
   product_listing: ProductListingAPI;
-  products: any[];
+  products: Product[];
 }
 
 class ProductListingService extends BaseApiService {

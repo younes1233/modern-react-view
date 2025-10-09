@@ -69,6 +69,9 @@ interface NewProductAPI {
     average: number;
     count: number;
   };
+  variants_count: number;
+  has_variants: boolean;
+  variations?: any[];
   meta: {
     seo_title: string;
     seo_description: string;
@@ -115,20 +118,21 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
       description: apiProduct.short_description,
       stock: apiProduct.stock,
       isAvailable: apiProduct.stock > 0,
-      inStock: apiProduct.stock > 0,
-      variations: []
+      inStock: apiProduct.has_variants ? true : apiProduct.stock > 0, // Products with variants are always considered in stock; stock is checked at variant level
+      has_variants: apiProduct.has_variants,
+      variants_count: apiProduct.variants_count,
+      variations: apiProduct.variations || []
     };
   }, [getImageUrl]);
 
-  // Memoized products processing
+  // Memoized products processing - pass raw API data directly to ProductCard
   const products = useMemo(() => {
     // Ensure apiProducts is always an array, even if API call fails
     const apiProducts = Array.isArray(listingData?.products) ? listingData.products : [];
 
     // Respect max_products limit from listing configuration
-    const limitedApiProducts = apiProducts.slice(0, listing.max_products);
-    return limitedApiProducts.map(convertNewAPIProductToLegacy);
-  }, [listingData?.products, listing.max_products, convertNewAPIProductToLegacy]);
+    return apiProducts.slice(0, listing.max_products);
+  }, [listingData?.products, listing.max_products]);
 
   // Memoized slider configuration - always called
   const sliderConfig = useMemo(() => {

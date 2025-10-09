@@ -18,7 +18,7 @@ interface VariantSelectionModalProps {
   onClose: () => void;
   product: Product;
   quantity: number;
-  onConfirm: (variantId: string) => void;
+  onConfirm: (variantId: string, fullProduct?: Product) => void;
 }
 
 export function VariantSelectionModal({
@@ -55,7 +55,7 @@ export function VariantSelectionModal({
 
   const handleConfirm = () => {
     if (selectedVariant) {
-      onConfirm(selectedVariant.id.toString());
+      onConfirm(selectedVariant.id.toString(), fullProduct);
       onClose();
     }
   };
