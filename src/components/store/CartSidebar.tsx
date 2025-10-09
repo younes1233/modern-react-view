@@ -7,14 +7,19 @@ import { useCart } from "@/contexts/CartContext";
 import { useCountryCurrency } from "@/contexts/CountryCurrencyContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { checkoutService } from "@/services/checkoutService";
+import { checkoutService, isStockUnavailableError, UnavailableItem } from "@/services/checkoutService";
 import { toast } from "@/hooks/use-toast";
+import { StockUnavailableModal } from "@/components/modals/StockUnavailableModal";
 
 export function CartSidebar() {
   const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart, isLoading } = useCart();
   const { selectedCountry, selectedCurrency } = useCountryCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [stockUnavailableModal, setStockUnavailableModal] = useState<{
+    isOpen: boolean;
+    items: UnavailableItem[];
+  }>({ isOpen: false, items: [] });
   const navigate = useNavigate();
 
   const handleCheckout = async () => {
@@ -63,6 +68,16 @@ export function CartSidebar() {
       setIsOpen(false);
     } catch (error: any) {
       console.error('Checkout start error:', error);
+      
+      // Handle stock unavailable errors
+      if (isStockUnavailableError(error)) {
+        setStockUnavailableModal({
+          isOpen: true,
+          items: error.details.unavailable_items
+        });
+        return;
+      }
+      
       toast({
         title: "Checkout Failed",
         description: error.response?.data?.message || "Failed to start checkout. Please try again.",
@@ -182,7 +197,9 @@ export function CartSidebar() {
                       </div>
                     )}
 
-                    <p className="text-sm font-semibold text-gray-900">${(item.price || item.product.price).toFixed(2)}</p>
+                    <p className="text-sm font-semibold text-gray-900">
+                      ${Number(item.price || item.product?.price || 0).toFixed(2)}
+                    </p>
                     <div className="flex items-center justify-between mt-3 gap-2">
                       <div className="flex items-center space-x-1 bg-white rounded-lg border border-gray-200 p-0.5">
                         <Button
@@ -208,7 +225,7 @@ export function CartSidebar() {
 
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-semibold text-gray-900">
-                          ${((item.price || item.product.price) * item.quantity).toFixed(2)}
+                          ${(Number(item.price || item.product?.price || 0) * item.quantity).toFixed(2)}
                         </span>
                         <Button
                           variant="ghost"
@@ -256,6 +273,13 @@ export function CartSidebar() {
           </div>
         )}
       </SheetContent>
+      
+      {/* Stock Unavailable Modal */}
+      <StockUnavailableModal
+        isOpen={stockUnavailableModal.isOpen}
+        onClose={() => setStockUnavailableModal({ isOpen: false, items: [] })}
+        unavailableItems={stockUnavailableModal.items}
+      />
     </Sheet>
   );
 }

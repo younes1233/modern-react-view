@@ -207,50 +207,22 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         const cart = await cartService.addToCart(requestData)
         setItems(convertApiCartItems(cart))
+        
+        console.log('🔍 DEBUG: Cart response after adding:', cart)
 
-        // Use the price and image of the selected variant if available
-        let variantName = product.name
-        let variantImage = '/placeholder.svg'
-        let variantPrice = product.pricing?.price || 0
+        // Get the newly added item from cart response
+        const addedItem = cart.items[cart.items.length - 1] // Get last item (newly added)
+        console.log('🔍 DEBUG: Added item:', addedItem)
 
-        // Handle cover image from new API format
-        if (typeof product.cover_image === 'object' && product.cover_image) {
-          variantImage =
-            product.cover_image.mobile ||
-            product.cover_image.desktop ||
-            '/placeholder.svg'
-        } else if (typeof product.cover_image === 'string') {
-          variantImage = product.cover_image
-        }
+        // Use data from the cart item which has the correct variant info
+        let variantName = addedItem.product?.name || product.name
+        let variantImage = addedItem.product?.image || '/placeholder.svg'
+        let variantPrice = addedItem.price || product.pricing?.price || 0
 
-        if (productVariantId) {
-          const selectedVariant = product.variations?.find(
-            (v: any) => v.id.toString() === productVariantId
-          )
-
-          if (selectedVariant) {
-            variantPrice = selectedVariant.price || variantPrice
-
-            // Handle variant image
-            if (selectedVariant.image) {
-              if (typeof selectedVariant.image === 'string') {
-                variantImage = selectedVariant.image
-              } else if (
-                selectedVariant.image &&
-                typeof selectedVariant.image === 'object'
-              ) {
-                variantImage =
-                  (selectedVariant.image as any).desktop ||
-                  (selectedVariant.image as any).tablet ||
-                  (selectedVariant.image as any).mobile ||
-                  variantImage
-              }
-            }
-
-            variantName = `${product.name} - ${
-              selectedVariant.slug || 'Variant'
-            }`
-          }
+        // If it's a variant, enhance the name with variant details
+        if (addedItem.isVariant && addedItem.selectedVariations && Array.isArray(addedItem.selectedVariations)) {
+          const variantLabels = addedItem.selectedVariations.map((v: any) => v.value).join(', ')
+          variantName = `${variantName} - ${variantLabels}`
         }
 
         setNotificationItem({
@@ -258,7 +230,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           image: variantImage,
           price: variantPrice || 0,
           quantity: quantity,
-          currency: product.pricing?.currency,
+          currency: {
+            symbol: cart.currency === 'USD' ? '$' : cart.currency, // Use cart currency from user settings
+            code: cart.currency || 'USD'
+          },
         })
       } catch (error: any) {
         console.error('Error adding to cart:', error)

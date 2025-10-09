@@ -170,8 +170,25 @@ const ProductVariantsComponent = ({
   const handleVariationSelect = async (attribute: string, variation: any) => {
     const availability = getVariationAvailability(attribute, variation.value);
 
-    // If clicking an already selected variation, do nothing.
+    // If clicking an already selected variation, deselect it
     if (selectedVariations[attribute] === variation.value) {
+      setIsTransitioning(true);
+      
+      const newSelections = { ...selectedVariations };
+      delete newSelections[attribute];
+      
+      setSelectedVariations(newSelections);
+      
+      // Notify parent component of selection changes
+      if (onSelectionsChange) {
+        onSelectionsChange(newSelections);
+      }
+      
+      // Clear variant selection since we removed an attribute
+      onVariantChange(null);
+      
+      // Add slight delay for transition effect
+      setTimeout(() => setIsTransitioning(false), 300);
       return;
     }
 
@@ -257,9 +274,9 @@ const ProductVariantsComponent = ({
                         disabled={!isAvailable}
                         className={`relative w-12 h-12 rounded-full border-2 transition-all duration-300 ${
                           isSelected
-                            ? 'border-cyan-500 scale-110 shadow-lg'
+                            ? 'border-cyan-500 scale-110 shadow-lg cursor-pointer hover:border-cyan-600'
                             : isAvailable
-                              ? 'border-gray-300 hover:border-gray-400 hover:scale-105'
+                              ? 'border-gray-300 hover:border-gray-400 hover:scale-105 cursor-pointer'
                               : 'border-gray-200 opacity-40 cursor-not-allowed grayscale'
                         } ${isTransitioning ? 'animate-pulse' : ''}`}
                         style={{ backgroundColor: isAvailable ? variation.hex_color : '#e5e7eb' }}
@@ -292,9 +309,9 @@ const ProductVariantsComponent = ({
                     disabled={!isAvailable}
                     className={`relative transition-all duration-300 ${
                       isSelected
-                        ? "bg-cyan-600 hover:bg-cyan-700 shadow-lg scale-105"
+                        ? "bg-cyan-600 hover:bg-cyan-700 shadow-lg scale-105 cursor-pointer"
                         : isAvailable
-                          ? "hover:scale-105 hover:shadow-md"
+                          ? "hover:scale-105 hover:shadow-md cursor-pointer"
                           : "opacity-40 cursor-not-allowed border-gray-300 text-gray-400 bg-gray-50"
                     } ${isTransitioning ? 'animate-pulse' : ''}`}
                     title={isAvailable ? variation.value : `${variation.value} - ${availability.unavailableReasons.join(', ')}`}

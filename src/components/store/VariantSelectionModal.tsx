@@ -29,6 +29,7 @@ export function VariantSelectionModal({
   onConfirm,
 }: VariantSelectionModalProps) {
   const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [currentImage, setCurrentImage] = useState<string>('');
   const { selectedCountry, selectedCurrency } = useCountryCurrency();
 
   // Fetch full product details with variants
@@ -46,18 +47,87 @@ export function VariantSelectionModal({
     staleTime: 5 * 60 * 1000, // Cache for 5 minutes
   });
 
-  // Reset selected variant when modal opens
+  // Reset selected variant and image when modal opens
   useEffect(() => {
     if (isOpen) {
       setSelectedVariant(null);
+      // Set initial image to product's actual image
+      let initialImage = '/placeholder.svg';
+      
+      if (typeof product.image === 'string') {
+        initialImage = product.image;
+      } else if (product.cover_image) {
+        // Handle product cover_image from API
+        if (typeof product.cover_image === 'string') {
+          initialImage = product.cover_image;
+        } else if (product.cover_image && typeof product.cover_image === 'object') {
+          initialImage = product.cover_image.mobile || product.cover_image.desktop || '/placeholder.svg';
+        }
+      }
+      
+      setCurrentImage(initialImage);
     }
-  }, [isOpen]);
+  }, [isOpen, product.image, product.cover_image]);
+
+  // Update image when variant changes
+  useEffect(() => {
+    if (selectedVariant && selectedVariant.image) {
+      // Handle image object structure from getApiImageData()
+      let variantImageUrl = '/placeholder.svg';
+      
+      if (typeof selectedVariant.image === 'string') {
+        variantImageUrl = selectedVariant.image;
+      } else if (selectedVariant.image && typeof selectedVariant.image === 'object') {
+        const imageObj = selectedVariant.image;
+        
+        if (imageObj.urls) {
+          // Handle nested URL structure: urls.catalog.mobile, urls.main.mobile, etc.
+          variantImageUrl = imageObj.urls.catalog?.mobile || 
+                           imageObj.urls.catalog?.desktop || 
+                           imageObj.urls.main?.mobile || 
+                           imageObj.urls.main?.desktop || 
+                           imageObj.urls.original || 
+                           imageObj.urls.thumbnails?.mobile || 
+                           '/placeholder.svg';
+        } else {
+          variantImageUrl = imageObj.desktop || imageObj.tablet || imageObj.mobile || imageObj.url || '/placeholder.svg';
+        }
+      }
+      
+      setCurrentImage(variantImageUrl);
+    } else if (!selectedVariant) {
+      // Reset to product image when no variant is selected
+      let productImage = '/placeholder.svg';
+      
+      if (typeof product.image === 'string') {
+        productImage = product.image;
+      } else if (product.cover_image) {
+        if (typeof product.cover_image === 'string') {
+          productImage = product.cover_image;
+        } else if (product.cover_image && typeof product.cover_image === 'object') {
+          productImage = product.cover_image.mobile || product.cover_image.desktop || '/placeholder.svg';
+        }
+      }
+      
+      setCurrentImage(productImage);
+    }
+  }, [selectedVariant, product.image]);
 
   const handleConfirm = () => {
     if (selectedVariant) {
       onConfirm(selectedVariant.id.toString(), fullProduct);
       onClose();
     }
+  };
+
+  const handleImageChange = (imageIndex: number) => {
+    // This could be used if we have multiple images for variants
+    // For now, we'll handle image changes through variant selection
+  };
+
+  const handleVariantChange = (variant: any) => {
+    setSelectedVariant(variant);
+    // Image update is handled by the useEffect above
   };
 
   const variants = fullProduct?.variants || [];
@@ -74,19 +144,31 @@ export function VariantSelectionModal({
         <div className="space-y-4">
           {/* Product Preview */}
           <div className="flex gap-3 items-center pb-4 border-b">
-            <img
-              src={typeof product.image === 'string' ? product.image : '/placeholder.svg'}
-              alt={product.name}
-              className="w-20 h-20 object-cover rounded-lg border"
-              onError={(e) => {
-                e.currentTarget.src = '/placeholder.svg';
-              }}
-            />
+            <div className="relative">
+              <img
+                src={currentImage || (typeof product.image === 'string' ? product.image : '/placeholder.svg')}
+                alt={product.name}
+                className="w-20 h-20 object-cover rounded-lg border transition-all duration-300"
+                onError={(e) => {
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+              {selectedVariant && (
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-cyan-500 rounded-full flex items-center justify-center">
+                  <span className="text-[8px] text-white font-bold">✓</span>
+                </div>
+              )}
+            </div>
             <div className="flex-1">
               <h3 className="font-medium text-gray-900">{product.name}</h3>
               <p className="text-sm text-gray-500">
                 Quantity: {quantity}
               </p>
+              {selectedVariant && (
+                <p className="text-sm text-cyan-600 font-medium">
+                  {selectedVariant.variations?.map((v: any) => v.value).join(' · ')}
+                </p>
+              )}
             </div>
           </div>
 
@@ -111,7 +193,8 @@ export function VariantSelectionModal({
             <ProductVariants
               variants={variants}
               selectedVariant={selectedVariant}
-              onVariantChange={setSelectedVariant}
+              onVariantChange={handleVariantChange}
+              onImageChange={handleImageChange}
               showInfoCard={true}
               showSelectionOptions={true}
             />

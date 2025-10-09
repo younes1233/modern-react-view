@@ -12,10 +12,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 import { AuthModal } from '@/components/auth/AuthModal';
-import { checkoutService, PricingBreakdown } from '@/services/checkoutService';
+import { checkoutService, PricingBreakdown, isStockUnavailableError, UnavailableItem } from '@/services/checkoutService';
 import { useAddresses } from '@/hooks/useAddresses';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { AreebaCheckout } from '@/components/payment/AreebaCheckout';
+import { StockUnavailableModal } from '@/components/modals/StockUnavailableModal';
 
 const CheckoutNew = () => {
   const { items, getTotalPrice, clearCart } = useCart();
@@ -25,6 +26,10 @@ const CheckoutNew = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingPricing, setIsLoadingPricing] = useState(false);
+  const [stockUnavailableModal, setStockUnavailableModal] = useState<{
+    isOpen: boolean;
+    items: UnavailableItem[];
+  }>({ isOpen: false, items: [] });
 
   // Selection states
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
@@ -93,6 +98,16 @@ const CheckoutNew = () => {
       }
     } catch (error: any) {
       console.error('Failed to calculate pricing:', error);
+      
+      // Handle stock unavailable errors
+      if (isStockUnavailableError(error)) {
+        setStockUnavailableModal({
+          isOpen: true,
+          items: error.details.unavailable_items
+        });
+        return;
+      }
+      
       // Don't show error toast if it's expected validation
       if (!error.message?.includes('same country')) {
         toast.error('Failed to calculate pricing');
@@ -195,13 +210,28 @@ const CheckoutNew = () => {
     } catch (error: any) {
       console.error('Checkout error:', error);
 
-      // Handle stock unavailable error
+      // Handle stock unavailable errors
+      if (isStockUnavailableError(error)) {
+        setStockUnavailableModal({
+          isOpen: true,
+          items: error.details.unavailable_items
+        });
+        return;
+      }
+
+      // Handle legacy stock unavailable error format
       if (error.status === 409 && error.details?.unavailable_items) {
-        const items = error.details.unavailable_items;
-        const itemsList = items.map((item: any) =>
-          `${item.product_name} (requested: ${item.requested_quantity}, available: ${item.available_quantity})`
-        ).join(', ');
-        toast.error(`Some items are no longer available: ${itemsList}`, {
+        setStockUnavailableModal({
+          isOpen: true,
+          items: error.details.unavailable_items
+        });
+        return;
+      }
+
+      // Handle checkout lock errors
+      if (error.details?.checkout_in_progress) {
+        const secondsRemaining = error.details.seconds_remaining || 0;
+        toast.error(`Another checkout is in progress. Please wait ${Math.ceil(secondsRemaining)} seconds.`, {
           duration: 7000,
         });
         navigate('/cart');
@@ -514,10 +544,10 @@ const CheckoutNew = () => {
                             {item.selectedVariations.map(v => `${v.attribute_name}: ${v.value}`).join(', ')}
                           </p>
                         )}
-                        <p className="text-sm text-gray-600">${item.product.price.toFixed(2)} × {item.quantity}</p>
+                        <p className="text-sm text-gray-600">${item.price.toFixed(2)} × {item.quantity}</p>
                       </div>
                       <span className="font-medium">
-                        ${(item.product.price * item.quantity).toFixed(2)}
+                        ${(item.price * item.quantity).toFixed(2)}
                       </span>
                     </div>
                   ))}
@@ -532,61 +562,65 @@ const CheckoutNew = () => {
                   </div>
                 ) : pricing ? (
                   <div className="space-y-2">
-                    {console.log("Pricing object in Checkout.tsx:", pricing)}
+                    {/* Debug: Show what discounts are available */}
+                    {process.env.NODE_ENV === 'development' && (
+                      <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
+                        <div>Debug - Pricing discounts:</div>
+                        <div>promotion_discount: {pricing.promotion_discount}</div>
+                        <div>coupon_discount: {pricing.coupon_discount}</div>
+                        <div>total_savings: {pricing.total_savings}</div>
+                      </div>
+                    )}
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-semibold">
-                        {pricing.currency?.symbol || '$'}
-                        {console.log("pricing.subtotal:", pricing.subtotal)}
-                        {pricing.subtotal.toFixed(2)}
+                        {pricing.currency?.symbol || '$'}{pricing.subtotal.toFixed(2)}
                       </span>
                     </div>
-                    {((pricing.promotion_discount ?? 0) > 0) ? (
+                    {pricing.promotion_discount > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Promotion Discount</span>
                         <span>
-                          {pricing.currency?.symbol || '$'}
-                          {console.log("pricing.promotion_discount:", pricing.promotion_discount)}
-                          {pricing.promotion_discount.toFixed(2)}
+                          -{pricing.currency?.symbol || '$'}{pricing.promotion_discount.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    {((pricing.coupon_discount ?? 0) > 0) ? (
+                    {pricing.coupon_discount > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Coupon Discount</span>
                         <span>
-                          {pricing.currency?.symbol || '$'}
-                          {console.log("pricing.coupon_discount:", pricing.coupon_discount)}
-                          {pricing.coupon_discount.toFixed(2)}
+                          -{pricing.currency?.symbol || '$'}{pricing.coupon_discount.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    {((pricing.delivery_cost ?? 0) !== 0 && pricing.delivery_cost !== null && pricing.delivery_cost !== undefined) ? (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Delivery Fee</span>
-                        <span className="font-semibold">
-                          {pricing.currency?.symbol || '$'}
-                          {console.log("pricing.delivery_cost:", pricing.delivery_cost)}
-                          {(pricing.delivery_cost ?? 0).toFixed(2)}
+                    {(pricing.promotion_discount > 0 || pricing.coupon_discount > 0) ? (
+                      <div className="flex justify-between text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                        <span>Total Savings</span>
+                        <span>
+                          -{pricing.currency?.symbol || '$'}
+                          {((pricing.promotion_discount || 0) + (pricing.coupon_discount || 0)).toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    {((pricing.vat_amount ?? 0) > 0) ? (
+                    {pricing.vat_amount > 0 ? (
                       <div className="flex justify-between text-sm text-gray-600">
                         <span>VAT ({pricing.vat_rate}%)</span>
                         <span>
-                          {pricing.currency?.symbol || '$'}
-                          {console.log("pricing.vat_amount:", pricing.vat_amount)}
-                          {pricing.vat_amount.toFixed(2)}
+                          {pricing.currency?.symbol || '$'}{pricing.vat_amount.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Delivery Fee</span>
+                      <span className="font-semibold">
+                        {pricing.currency?.symbol || '$'}{(pricing.delivery_cost || 0).toFixed(2)}
+                      </span>
+                    </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span>
                         {pricing.currency?.symbol || '$'}
-                        {console.log("pricing.final_total:", pricing.final_total)}
                         {((pricing as any).grand_total ?? pricing.final_total ?? getTotalPrice()).toFixed(2)}
                       </span>
                     </div>
@@ -641,6 +675,19 @@ const CheckoutNew = () => {
           </div>
         )}
       </div>
+
+      {/* Stock Unavailable Modal */}
+      <StockUnavailableModal
+        isOpen={stockUnavailableModal.isOpen}
+        onClose={() => setStockUnavailableModal({ isOpen: false, items: [] })}
+        unavailableItems={stockUnavailableModal.items}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+      />
     </StoreLayout>
   );
 };

@@ -92,18 +92,26 @@ export interface OrderResponse {
   };
 }
 
+export interface UnavailableItem {
+  product_name: string;
+  requested_quantity: number;
+  available_quantity: number;
+}
+
 export interface StockUnavailableError {
   error: boolean;
   message: string;
   details: {
-    unavailable_items: Array<{
-      product_name: string;
-      requested_quantity: number;
-      available_quantity: number;
-    }>;
+    unavailable_items: UnavailableItem[];
     action_required: string;
   };
 }
+
+// Helper function to check if error is stock unavailable
+export const isStockUnavailableError = (error: any): error is StockUnavailableError => {
+  return error?.details?.action_required === 'update_cart' && 
+         Array.isArray(error?.details?.unavailable_items);
+};
 
 class CheckoutService extends BaseApiService {
   /**
@@ -142,6 +150,13 @@ class CheckoutService extends BaseApiService {
    */
   async processCheckout(data: ProcessCheckoutRequest): Promise<OrderResponse> {
     return this.post<OrderResponse>('/auth/checkout/process', data);
+  }
+
+  /**
+   * Clear checkout lock (for debugging)
+   */
+  async clearCheckoutLock(): Promise<{ error: boolean; message: string }> {
+    return this.post<{ error: boolean; message: string }>('/auth/checkout/clear-lock', {});
   }
 }
 
