@@ -102,6 +102,11 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
   const currencySymbol =
     product.pricing?.currency?.symbol || selectedCurrency?.symbol || '$'
 
+  const savings =
+    backendOriginalPrice && backendOriginalPrice > backendDiscountedPrice
+      ? backendOriginalPrice - backendDiscountedPrice
+      : 0
+
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation()
     await addToCart(product)
@@ -129,12 +134,6 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
       : product.cover_image || '/placeholder-product.png'
 
   const hasDiscount = hasBackendDiscount || product.flags?.on_sale
-  const discountPercentage = hasBackendDiscount ? backendDiscountPercentage : 0
-
-  const originalPrice = backendOriginalPrice || 0
-  const currentPrice = backendDiscountedPrice || 0
-  const savings =
-    originalPrice > currentPrice ? originalPrice - currentPrice : 0
 
   return (
     <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">
@@ -153,10 +152,11 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
 
         {/* Top Left Badges */}
         <div className="absolute top-1 left-1 flex flex-col gap-1">
-          {hasDiscount && discountPercentage > 0 && (
-            <div className="bg-red-600 text-white text-xs font-semibold px-2 py-0.5 rounded-full shadow-sm">
-              -{discountPercentage}%
-            </div>
+          {hasDiscount && savings > 0 && (
+            <span className="bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+              Save {currencySymbol}
+              {savings.toFixed(2)}
+            </span>
           )}
           {product.flags?.is_new_arrival && (
             <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
@@ -211,24 +211,17 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
             <div className="flex items-baseline gap-2">
               <span className="text-base md:text-lg font-semibold text-gray-900">
                 {currencySymbol}
-                {currentPrice.toFixed(2)}
+                {backendDiscountedPrice.toFixed(2)}
               </span>
               {hasDiscount &&
-                originalPrice &&
-                originalPrice !== currentPrice && (
+                backendOriginalPrice &&
+                backendOriginalPrice !== backendDiscountedPrice && (
                   <span className="text-sm text-gray-400 line-through font-medium">
                     {currencySymbol}
-                    {originalPrice.toFixed(2)}
+                    {backendOriginalPrice.toFixed(2)}
                   </span>
                 )}
             </div>
-
-            {hasDiscount && savings > 0 && (
-              <span className="bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                Save {currencySymbol}
-                {savings.toFixed(2)}
-              </span>
-            )}
           </div>
 
           {/* Express + Cart */}
