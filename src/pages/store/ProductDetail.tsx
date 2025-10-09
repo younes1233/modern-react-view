@@ -130,6 +130,7 @@ const ProductDetail = () => {
   const [variantSelections, setVariantSelections] = useState<{
     [key: string]: string
   }>({})
+  const [userNavigatedGallery, setUserNavigatedGallery] = useState(false)
 
   // Auth modal state
   const [authModalOpen, setAuthModalOpen] = useState(false)
@@ -257,10 +258,12 @@ const ProductDetail = () => {
 
       if (deltaX > 0 && selectedImage > 0) {
         // Swipe right - previous image
-        handleImageChange(selectedImage - 1)
+        setSelectedImage(selectedImage - 1)
+        setUserNavigatedGallery(true)
       } else if (deltaX < 0 && selectedImage < allImages.length - 1) {
         // Swipe left - next image
-        handleImageChange(selectedImage + 1)
+        setSelectedImage(selectedImage + 1)
+        setUserNavigatedGallery(true)
       }
     }
 
@@ -288,6 +291,7 @@ const ProductDetail = () => {
 
   const handleImageChange = (index: number) => {
     setSelectedImage(index)
+    setUserNavigatedGallery(true) // Mark that user has manually navigated
     // Show thumbnails when navigating away from first image
     if (index > 0 && window.innerWidth < 768) {
       handleImageInteraction()
@@ -350,16 +354,80 @@ const ProductDetail = () => {
 
   // Memoize current image calculation
   const currentImage = useMemo(() => {
-    if (selectedVariant && selectedVariant.image_url) {
+    // If user has manually navigated the gallery, always show gallery images
+    if (userNavigatedGallery || !selectedVariant || !selectedVariant.image) {
+      return allImages[selectedImage] || allImages[0]
+    }
+    
+    // Otherwise, show variant image when variant is selected
+    if (selectedVariant && selectedVariant.image) {
+      // Parse variant image using responsive image logic
+      let variantImageUrl = '/placeholder.svg'
+      let zoomImageUrl = '/placeholder.svg'
+      let thumbnailImageUrl = '/placeholder.svg'
+      
+      if (typeof selectedVariant.image === 'string') {
+        variantImageUrl = selectedVariant.image
+        zoomImageUrl = selectedVariant.image
+        thumbnailImageUrl = selectedVariant.image
+      } else if (selectedVariant.image && typeof selectedVariant.image === 'object') {
+        const imageObj = selectedVariant.image
+        
+        if (imageObj.urls) {
+          // Use responsive image logic for main image
+          const mainUrls = imageObj.urls.main
+          if (mainUrls) {
+            variantImageUrl = getImageUrl(mainUrls)
+          } else {
+            // Fallback to catalog if main doesn't exist
+            const catalogUrls = imageObj.urls.catalog
+            if (catalogUrls) {
+              variantImageUrl = getImageUrl(catalogUrls)
+            } else {
+              variantImageUrl = imageObj.urls.original || '/placeholder.svg'
+            }
+          }
+          
+          // Use zoom image (prefer desktop zoom, then main desktop, then original)
+          zoomImageUrl = imageObj.urls.zoom?.desktop || 
+                        imageObj.urls.main?.desktop || 
+                        imageObj.urls.catalog?.desktop ||
+                        imageObj.urls.original || 
+                        variantImageUrl
+          
+          // Use thumbnail URLs
+          const thumbnailUrls = imageObj.urls.thumbnails
+          if (thumbnailUrls) {
+            thumbnailImageUrl = getImageUrl(thumbnailUrls)
+          } else {
+            thumbnailImageUrl = variantImageUrl
+          }
+        } else {
+          variantImageUrl = imageObj.desktop || imageObj.tablet || imageObj.mobile || imageObj.url || '/placeholder.svg'
+          zoomImageUrl = variantImageUrl
+          thumbnailImageUrl = variantImageUrl
+        }
+      }
+      
       return {
-        url: selectedVariant.image_url,
+        url: variantImageUrl,
         alt: `${product?.name || 'Product'} - ${selectedVariant.sku}`,
-        zoomUrl: selectedVariant.image_url,
-        thumbnailUrl: selectedVariant.image_url,
+        zoomUrl: zoomImageUrl,
+        thumbnailUrl: thumbnailImageUrl,
       }
     }
+    
     return allImages[selectedImage] || allImages[0]
-  }, [selectedVariant, selectedImage, allImages, product?.name])
+  }, [selectedVariant, selectedImage, allImages, product?.name, getImageUrl, userNavigatedGallery])
+
+  // Handle variant selection - reset image index when variant changes
+  useEffect(() => {
+    if (selectedVariant && selectedVariant.image) {
+      // When a variant with an image is selected, reset to show the variant image
+      setSelectedImage(0)
+      setUserNavigatedGallery(false) // Reset gallery navigation flag
+    }
+  }, [selectedVariant])
 
   // Preload images for faster transitions
   useEffect(() => {
@@ -706,7 +774,10 @@ const ProductDetail = () => {
                             {allImages.map((image, index) => (
                               <SwiperSlide key={index}>
                                 <button
-                                  onClick={() => setSelectedImage(index)}
+                                  onClick={() => {
+                                    setSelectedImage(index)
+                                    setUserNavigatedGallery(true)
+                                  }}
                                   className={`w-full h-20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
                                     index === selectedImage
                                       ? 'ring-2 ring-cyan-500 shadow-lg scale-105'
@@ -841,7 +912,8 @@ const ProductDetail = () => {
                               key={index}
                               onClick={(e) => {
                                 e.stopPropagation()
-                                handleImageChange(index)
+                                setSelectedImage(index)
+                                setUserNavigatedGallery(true)
                               }}
                               className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                                 index === selectedImage
@@ -936,7 +1008,8 @@ const ProductDetail = () => {
                             key={index}
                             onClick={(e) => {
                               e.stopPropagation()
-                              handleImageChange(index)
+                              setSelectedImage(index)
+                              setUserNavigatedGallery(true)
                             }}
                             className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
                               index === selectedImage
@@ -968,7 +1041,8 @@ const ProductDetail = () => {
                           <button
                             key={index}
                             onClick={() => {
-                              handleImageChange(index)
+                              setSelectedImage(index)
+                              setUserNavigatedGallery(true)
                               setShowThumbnails(false)
                             }}
                             className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
@@ -1166,7 +1240,6 @@ const ProductDetail = () => {
                         variants={product.variants}
                         selectedVariant={selectedVariant}
                         onVariantChange={setSelectedVariant}
-                        onImageChange={setSelectedImage}
                         showInfoCard={false}
                         onSelectionsChange={setVariantSelections}
                       />
@@ -1221,7 +1294,6 @@ const ProductDetail = () => {
                         variants={product.variants}
                         selectedVariant={selectedVariant}
                         onVariantChange={setSelectedVariant}
-                        onImageChange={setSelectedImage}
                         showInfoCard={true}
                         showSelectionOptions={false}
                         externalSelections={variantSelections}
@@ -1740,17 +1812,17 @@ const ProductDetail = () => {
 
         <ImageZoom
           images={
-            selectedVariant && selectedVariant.image_url
+            selectedVariant && selectedVariant.image
               ? [{ url: currentImage.zoomUrl, alt: currentImage.alt }]
               : allImages.map((img) => ({ url: img.zoomUrl, alt: img.alt }))
           }
           selectedIndex={
-            selectedVariant && selectedVariant.image_url ? 0 : selectedImage
+            selectedVariant && selectedVariant.image ? 0 : selectedImage
           }
           open={showImageZoom}
           onOpenChange={setShowImageZoom}
           onImageChange={
-            selectedVariant && selectedVariant.image_url
+            selectedVariant && selectedVariant.image
               ? () => {}
               : setSelectedImage
           }

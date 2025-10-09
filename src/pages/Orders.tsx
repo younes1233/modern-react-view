@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { OrderStatusEditor } from "@/components/OrderStatusEditor";
 import { OrderActions } from "@/components/OrderActions";
-import { Package, Truck, Clock, DollarSign, Plus, XCircle } from "lucide-react";
+import { Package, Truck, Clock, DollarSign, Plus, XCircle, Tag, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToExcel } from "@/utils/exportUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -449,7 +449,7 @@ const Orders = () => {
             open={!!viewOrderId}
             onOpenChange={(open) => !open && setViewOrderId(null)}
           >
-            <DialogContent className="max-w-3xl p-0 overflow-hidden">
+            <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
               <DialogHeader className="px-6 pt-6 pb-2">
                 <div className="flex items-center justify-between">
                   <div>
@@ -463,7 +463,8 @@ const Orders = () => {
 
               <Separator />
 
-              <div className="p-6">
+              <ScrollArea className="max-h-[calc(90vh-120px)]">
+                <div className="p-6">
                 {isViewing ? (
                   <div className="space-y-3">
                     <Skeleton className="h-6 w-40" />
@@ -477,86 +478,197 @@ const Orders = () => {
                     <p>Failed to fetch order. Please try again.</p>
                   </div>
                 ) : adminOrderView ? (
-                  <>
-                    {/* Summary */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-gray-500">Customer</p>
-                        <p className="font-medium">{adminOrderView.order.user}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Address</p>
-                        <p className="font-medium">
-                          {adminOrderView.order.user_address}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Total</p>
-                        <p className="font-semibold">
-                          ${adminOrderView.order.total_price}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Status</p>
-                        <p className="font-medium">
-                          {adminOrderView.order.order_status}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Payment</p>
-                        <p className="font-medium">
-                          {adminOrderView.order.payment_method}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-gray-500">Created</p>
-                        <p className="font-medium">
-                          {new Date(
-                            adminOrderView.order.created_at
-                          ).toLocaleString()}
-                        </p>
-                      </div>
+                  <div className="space-y-6">
+                    {/* Header Info Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Package className="w-8 h-8 text-blue-600" />
+                            <div>
+                              <p className="text-xs text-blue-600 font-medium">CUSTOMER</p>
+                              <p className="font-semibold text-blue-900">{adminOrderView.order.user}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <DollarSign className="w-8 h-8 text-green-600" />
+                            <div>
+                              <p className="text-xs text-green-600 font-medium">TOTAL</p>
+                              <p className="font-bold text-xl text-green-900">${adminOrderView.order.total_price}</p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+                        <CardContent className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Clock className="w-8 h-8 text-purple-600" />
+                            <div>
+                              <p className="text-xs text-purple-600 font-medium">STATUS</p>
+                              <p className="font-semibold text-purple-900 capitalize">
+                                {adminOrderView.order.order_status?.replace('_', ' ')}
+                              </p>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
 
-                    <Separator className="my-4" />
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {/* Delivery Information */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <Truck className="w-4 h-4" />
+                            Delivery Information
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Address</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {adminOrderView.order.user_address}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Order Date</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {new Date(adminOrderView.order.created_at).toLocaleString()}
+                            </p>
+                          </div>
+                        </CardContent>
+                      </Card>
 
-                    {/* Items */}
-                    <p className="font-semibold mb-2">Items</p>
-                    <ScrollArea className="max-h-72">
-                      <table className="w-full text-sm">
-                        <thead className="bg-gray-50">
-                          <tr className="text-left">
-                            <th className="p-2 font-medium text-gray-700">Product</th>
-                            <th className="p-2 font-medium text-gray-700">Variant</th>
-                            <th className="p-2 font-medium text-gray-700">Qty</th>
-                            <th className="p-2 font-medium text-gray-700">Price</th>
-                            <th className="p-2 font-medium text-gray-700">Discount</th>
-                            <th className="p-2 font-medium text-gray-700">Subtotal</th>
-                            <th className="p-2 font-medium text-gray-700">Final</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {adminOrderView.order.items.map((it) => (
-                            <tr key={it.id} className="border-b">
-                              <td className="p-2">{it.product_name}</td>
-                              <td className="p-2 text-gray-600">
-                                {it.variant_values || "-"}
-                              </td>
-                              <td className="p-2">{it.quantity}</td>
-                              <td className="p-2">${it.selling_price}</td>
-                              <td className="p-2">${it.discount_amount}</td>
-                              <td className="p-2">${it.subtotal}</td>
-                              <td className="p-2 font-medium">${it.final_total}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </ScrollArea>
-                  </>
+                      {/* Payment Information */}
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                            <CreditCard className="w-4 h-4" />
+                            Payment Information
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-3">
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Method</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {adminOrderView.order.payment_method || 'Not specified'}
+                            </p>
+                          </div>
+                          {adminOrderView.order.payment_method_details?.description && (
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wide">Details</p>
+                              <p className="text-sm text-gray-700">
+                                {adminOrderView.order.payment_method_details.description}
+                              </p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </div>
+
+                    {/* Order Items */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                          <Package className="w-5 h-5" />
+                          Order Items ({adminOrderView.order.items.length})
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <ScrollArea className="max-h-80">
+                          <div className="space-y-4">
+                            {adminOrderView.order.items.map((item: any) => {
+                              const hasDiscount = item.pricing_details?.has_discount || 
+                                (item.pricing_details?.original_price && 
+                                 Number(item.pricing_details.original_price) > Number(item.selling_price));
+                              
+                              const originalPrice = item.pricing_details?.original_price || item.selling_price;
+                              const discountAmount = hasDiscount ? 
+                                (Number(originalPrice) - Number(item.selling_price)) : 0;
+                              const discountPercentage = hasDiscount && originalPrice > 0 ? 
+                                Math.round((discountAmount / originalPrice) * 100) : 0;
+
+                              return (
+                                <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                  {/* Product Image */}
+                                  <div className="flex-shrink-0">
+                                    {item.product_image ? (
+                                      <img 
+                                        src={item.product_image} 
+                                        alt={item.product_name}
+                                        className="w-16 h-16 object-cover rounded-md border"
+                                        onError={(e) => {
+                                          e.currentTarget.src = '/placeholder-product.png';
+                                        }}
+                                      />
+                                    ) : (
+                                      <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center">
+                                        <Package className="w-6 h-6 text-gray-400" />
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  {/* Product Info */}
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-medium text-gray-900 truncate">{item.product_name}</h4>
+                                    {item.variant_values && (
+                                      <p className="text-sm text-gray-500 mt-1">{item.variant_values}</p>
+                                    )}
+                                    
+                                    {/* Pricing Info */}
+                                    <div className="flex items-center gap-3 mt-2">
+                                      <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
+                                      {hasDiscount ? (
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm line-through text-gray-400">
+                                            ${Number(originalPrice).toFixed(2)}
+                                          </span>
+                                          <span className="text-sm font-medium text-green-600">
+                                            ${Number(item.selling_price).toFixed(2)}
+                                          </span>
+                                          <Badge className="bg-green-100 text-green-800 text-xs">
+                                            {discountPercentage}% OFF
+                                          </Badge>
+                                        </div>
+                                      ) : (
+                                        <span className="text-sm font-medium text-gray-900">
+                                          ${Number(item.selling_price).toFixed(2)}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Total */}
+                                  <div className="text-right">
+                                    <div className="font-semibold text-gray-900">
+                                      ${Number(item.final_total || item.subtotal || (item.selling_price * item.quantity)).toFixed(2)}
+                                    </div>
+                                    {hasDiscount && (
+                                      <div className="text-xs text-green-600 mt-1">
+                                        Save ${(discountAmount * item.quantity).toFixed(2)}
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </ScrollArea>
+                      </CardContent>
+                    </Card>
+                  </div>
                 ) : (
                   <p className="text-gray-500">No data.</p>
                 )}
-              </div>
+                </div>
+              </ScrollArea>
             </DialogContent>
           </Dialog>
         </main>

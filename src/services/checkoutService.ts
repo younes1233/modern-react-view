@@ -21,21 +21,61 @@ export interface ProcessCheckoutRequest {
   payment_confirmation?: boolean;
 }
 
+export interface DiscountedItem {
+  product_id: number;
+  variant_id?: number;
+  quantity: number;
+  price: number;
+  original_price: number;
+  has_discount: boolean;
+  discount_amount: number;
+  discount_percentage: number;
+  discounted_price: number;
+  total_savings: number;
+}
+
+export interface ItemsBreakdown {
+  original_total: number;
+  current_total: number;
+  total_discount: number;
+  discounted_items: DiscountedItem[];
+  item_discounts_total?: number;
+  bulk_discount_total?: number;
+}
+
 export interface PricingBreakdown {
   subtotal: number;
+  original_subtotal?: number;
   delivery_cost: number;
   delivery_calculated: boolean;
   delivery_message?: string;
   coupon_discount?: number;
   promotion_discount?: number;
+  item_discounts_total?: number;
+  bulk_discount_total?: number;
+  promotion_discount_total?: number;
   vat_amount?: number;
   vat_rate?: number;
+  tax_total?: number;
+  tax_rate?: number;
   final_total: number;
+  grand_total?: number;
+  total_savings?: number;
+  items_total_before_discounts?: number;
+  items_total_after_discounts?: number;
+  exchange_rate?: number;
   currency: {
     id: number;
     code: string;
     symbol: string;
   };
+  items_breakdown?: ItemsBreakdown;
+  applied_coupons?: Array<{
+    code: string;
+    discount_amount: number;
+  }>;
+  applied_discounts?: any;
+  pricing_breakdown?: any;
 }
 
 export interface CheckoutStartResponse {

@@ -197,10 +197,10 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
     );
   }
 
-  // Empty state - show skeleton instead of empty message
+  // Empty state - hide section completely when no products
   if (products.length === 0) {
-    console.log(`ProductSection "${listing.title}" has no products - showing skeleton`);
-    return <ProductSectionSkeleton showTitle={listing.show_title} isMobile={isMobile} layout={listing.layout as 'grid' | 'slider'} />;
+    console.log(`ProductSection "${listing.title}" has no products - hiding section`);
+    return null;
   }
 
   return (

@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import { ArrowLeft, Package, MapPin, CreditCard, Calendar, CheckCircle, Truck, Clock, Box, ShoppingBag, Check } from "lucide-react";
+import { ArrowLeft, Package, MapPin, CreditCard, Calendar, CheckCircle, Truck, Clock, Box, ShoppingBag, Check, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,6 +23,22 @@ const OrderDetail = () => {
   });
 
   const order = data?.details?.order;
+  const orderItems = data?.details?.order_items || [];
+
+  // Debug logging
+  useEffect(() => {
+    if (order) {
+      console.log('=== ORDER DEBUG ===');
+      console.log('Full API response:', data);
+      console.log('Order data:', order);
+      console.log('Order items:', orderItems);
+      if (orderItems && orderItems.length > 0) {
+        console.log('First item details:', orderItems[0]);
+        console.log('First item pricing_details:', orderItems[0].pricing_details);
+      }
+      console.log('===================');
+    }
+  }, [order, orderItems, data]);
 
   // Show success toast when order is confirmed
   useEffect(() => {
@@ -281,60 +297,257 @@ const OrderDetail = () => {
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-base">
                       <Package className="w-5 h-5" />
-                      Order Items ({order.items?.length || 0})
+                      Order Items ({orderItems?.length || 0})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-6 pb-6 pt-0">
                     {/* Items List - Receipt Style */}
+                    {(order.total_savings > 0 || order.discount_total > 0 || order.coupon_discount > 0) && (
+                      <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex items-center gap-2 text-sm text-green-800">
+                          <Tag className="w-4 h-4" />
+                          <span className="font-medium">
+                            {order.coupon_code_used ? 'Discounted Order with Coupon' : 'Discounted Order'}
+                          </span>
+                          {order.coupon_code_used && (
+                            <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                              {order.coupon_code_used}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs text-green-700 mt-1">
+                          Item prices shown include discounts. 
+                          {order.total_savings && Number(order.total_savings) > 0 ? (
+                            <span> Total savings: ${Number(order.total_savings).toFixed(2)}</span>
+                          ) : order.discount_total > 0 ? (
+                            <span> Total savings: ${Number(order.discount_total).toFixed(2)}</span>
+                          ) : null}
+                          {order.coupon_discount > 0 && (
+                            <span className="ml-1">+ ${Number(order.coupon_discount).toFixed(2)} coupon discount</span>
+                          )}
+                        </p>
+                      </div>
+                    )}
                     <div className="space-y-2">
-                      {order.items?.map((item: any) => (
-                        <div key={item.id} className="py-3 border-b border-gray-100 last:border-0">
-                          <div className="flex justify-between items-start gap-4">
-                            <div className="flex-1 min-w-0">
-                              <h4 className="font-medium text-gray-900 text-sm">{item.product_name}</h4>
-                              {item.variant_values && (
-                                <p className="text-xs text-gray-500 mt-0.5">{item.variant_values}</p>
-                              )}
-                              <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-600">
-                                <span>Qty: {item.quantity}</span>
-                                <span>×</span>
-                                <span>${Number(item.selling_price).toFixed(2)}</span>
+                      {orderItems?.map((item: any) => {
+                        // Debug logging for each item
+                        console.log(`=== ITEM ${item.id} DEBUG ===`);
+                        console.log('Raw item data:', item);
+                        console.log('pricing_details:', item.pricing_details);
+                        console.log('item.original_price:', item.original_price);
+                        console.log('item.selling_price:', item.selling_price);
+                        console.log('item.discount_amount:', item.discount_amount);
+                        console.log('item.item_discount_amount:', item.item_discount_amount);
+                        console.log('item.item_discount_percentage:', item.item_discount_percentage);
+                        
+                        // Use comprehensive pricing breakdown if available, fallback to legacy logic
+                        const pricingDetails = item.pricing_details;
+                        
+                        // Get basic values with proper fallbacks
+                        const originalPrice = Number(pricingDetails?.original_price || item.original_price || item.selling_price || 0);
+                        const sellingPrice = Number(item.selling_price || 0);
+                        
+                        // Calculate discount info
+                        const hasActualDiscount = originalPrice > sellingPrice && originalPrice > 0;
+                        const calculatedDiscountAmount = hasActualDiscount ? originalPrice - sellingPrice : 0;
+                        
+                        const hasDiscount = pricingDetails?.has_discount || hasActualDiscount;
+                        const discountAmount = Number(pricingDetails?.item_discount_amount || calculatedDiscountAmount || 0);
+                        const discountPercentage = Number(pricingDetails?.item_discount_percentage || 
+                          (hasDiscount && originalPrice > 0 ? Math.round((discountAmount / originalPrice) * 100) : 0));
+                        const totalSavings = Number(pricingDetails?.total_savings || (discountAmount * item.quantity) || 0);
+                        
+                        const discountType = pricingDetails?.discount_type || item.discount_type;
+                        const couponCode = pricingDetails?.coupon_code || item.coupon_code;
+                        const taxAmount = Number(pricingDetails?.tax_amount || item.tax_amount || 0);
+                        
+                        console.log('Calculated values:');
+                        console.log('hasDiscount:', hasDiscount);
+                        console.log('originalPrice:', originalPrice);
+                        console.log('discountAmount:', discountAmount);
+                        console.log('discountPercentage:', discountPercentage);
+                        console.log('totalSavings:', totalSavings);
+                        console.log('========================');
+
+                        return (
+                          <div key={item.id} className="py-3 border-b border-gray-100 last:border-0">
+                            <div className="flex justify-between items-start gap-4">
+                              <div className="flex-1 min-w-0">
+                                <h4 className="font-medium text-gray-900 text-sm">{item.product_name}</h4>
+                                {item.variant_values && (
+                                  <p className="text-xs text-gray-500 mt-0.5">{item.variant_values}</p>
+                                )}
+                                
+                                {/* Show comprehensive pricing info */}
+                                {hasDiscount ? (
+                                  <div className="mt-1.5 space-y-1">
+                                    <div className="flex items-center gap-2 text-xs">
+                                      <span className="text-gray-600">Qty: {item.quantity}</span>
+                                      <span className="text-gray-400">×</span>
+                                      <span className="line-through text-gray-400">
+                                        ${originalPrice.toFixed(2)}
+                                      </span>
+                                      <span className="font-medium text-green-600">
+                                        ${sellingPrice.toFixed(2)}
+                                      </span>
+                                      <span className="bg-green-100 text-green-800 px-1.5 py-0.5 rounded text-xs">
+                                        {discountPercentage}% OFF
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-xs">
+                                      <span className="text-green-600">Save ${totalSavings.toFixed(2)}</span>
+                                      {discountType && (
+                                        <span className="text-gray-500">({discountType})</span>
+                                      )}
+                                      {couponCode && (
+                                        <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
+                                          {couponCode}
+                                        </span>
+                                      )}
+                                    </div>
+                                    {taxAmount > 0 && (
+                                      <p className="text-xs text-gray-500">
+                                        Tax: ${Number(taxAmount).toFixed(2)} ({Number(item.tax_rate || 0).toFixed(1)}%)
+                                      </p>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="mt-1.5 space-y-1">
+                                    <div className="flex items-center gap-3 text-xs text-gray-600">
+                                      <span>Qty: {item.quantity}</span>
+                                      <span>×</span>
+                                      <span>${sellingPrice.toFixed(2)}</span>
+                                    </div>
+                                    {taxAmount > 0 && (
+                                      <p className="text-xs text-gray-500">
+                                        Tax: ${Number(taxAmount).toFixed(2)} ({Number(item.tax_rate || 0).toFixed(1)}%)
+                                      </p>
+                                    )}
+                                    {couponCode && (
+                                      <span className="bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
+                                        {couponCode}
+                                      </span>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <div className="font-semibold text-gray-900 text-sm">
+                                  ${Number(item.subtotal).toFixed(2)}
+                                </div>
+                                {hasDiscount && (
+                                  <div className="text-xs text-green-600 mt-0.5">
+                                    -${totalSavings.toFixed(2)}
+                                  </div>
+                                )}
                               </div>
                             </div>
-                            <div className="font-semibold text-gray-900 text-sm">
-                              ${Number(item.subtotal).toFixed(2)}
-                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
 
-                    {/* Order Summary - Receipt Style */}
+                    {/* Order Summary - Comprehensive Receipt Style */}
                     <div className="mt-6 pt-4 border-t-2 border-gray-200 space-y-2">
+                      {/* Show original subtotal if different from final subtotal */}
+                      {order.original_subtotal && Number(order.original_subtotal) !== Number(order.subtotal) && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500 line-through">Original Subtotal</span>
+                          <span className="text-gray-500 line-through">${Number(order.original_subtotal).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Subtotal</span>
-                        <span className="font-medium text-gray-900">${Number(order.subtotal).toFixed(2)}</span>
+                        <span className="font-medium text-gray-900">${Number(order.pricing_breakdown?.subtotal || order.subtotal || 0).toFixed(2)}</span>
                       </div>
-                      {order.discount_total > 0 && (
+                      
+                      {/* Item-level discounts */}
+                      {order.item_discounts_total && Number(order.item_discounts_total) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-700">Item Discounts</span>
+                          <span className="font-medium text-green-700">-${Number(order.item_discounts_total).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Bulk discounts */}
+                      {order.bulk_discount_total && Number(order.bulk_discount_total) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-700">Bulk Discount</span>
+                          <span className="font-medium text-green-700">-${Number(order.bulk_discount_total).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Promotion discounts */}
+                      {order.promotion_discount_total && Number(order.promotion_discount_total) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-green-700">Promotion Discount</span>
+                          <span className="font-medium text-green-700">-${Number(order.promotion_discount_total).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
+                      {/* Legacy discount total (for backward compatibility) */}
+                      {order.discount_total && Number(order.discount_total) > 0 && 
+                       (!order.item_discounts_total && !order.bulk_discount_total && !order.promotion_discount_total) && (
                         <div className="flex justify-between text-sm">
                           <span className="text-green-700">Promotion Discount</span>
                           <span className="font-medium text-green-700">-${Number(order.discount_total).toFixed(2)}</span>
                         </div>
                       )}
-                      {order.coupon_discount > 0 && (
+                      
+                      {/* Coupon discounts with code display */}
+                      {order.coupon_discount && Number(order.coupon_discount) > 0 && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-green-700">Coupon Discount</span>
+                          <span className="text-green-700">
+                            Coupon Discount
+                            {order.coupon_code_used && (
+                              <span className="ml-1 text-xs bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded">
+                                {order.coupon_code_used}
+                              </span>
+                            )}
+                          </span>
                           <span className="font-medium text-green-700">-${Number(order.coupon_discount).toFixed(2)}</span>
                         </div>
                       )}
+                      
+                      {/* Tax information */}
+                      {order.tax_total && Number(order.tax_total) > 0 && (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            Tax
+                            {order.tax_rate && ` (${Number(order.tax_rate).toFixed(1)}%)`}
+                          </span>
+                          <span className="font-medium text-gray-900">${Number(order.tax_total).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Delivery Fee</span>
-                        <span className="font-medium text-gray-900">${Number(order.delivery_fee).toFixed(2)}</span>
+                        <span className="font-medium text-gray-900">${Number(order.pricing_breakdown?.delivery_fee || order.delivery_fee || 0).toFixed(2)}</span>
                       </div>
+                      
+                      {/* Total savings summary */}
+                      {order.total_savings && Number(order.total_savings) > 0 && (
+                        <div className="flex justify-between text-sm bg-green-50 px-3 py-2 rounded border border-green-200">
+                          <span className="text-green-700 font-medium">Total Savings</span>
+                          <span className="font-semibold text-green-700">${Number(order.total_savings).toFixed(2)}</span>
+                        </div>
+                      )}
+                      
                       <div className="flex justify-between text-lg font-bold pt-3 border-t border-gray-200">
                         <span className="text-gray-900">Total</span>
                         <span className="text-cyan-600">${Number(order.total_price).toFixed(2)}</span>
                       </div>
+                      
+                      {/* Currency information */}
+                      {order.currency_code && order.currency_code !== 'USD' && (
+                        <div className="text-xs text-gray-500 text-center pt-2">
+                          Currency: {order.currency_code}
+                          {order.exchange_rate && order.exchange_rate !== 1 && (
+                            <span className="ml-1">(Rate: {Number(order.exchange_rate).toFixed(4)})</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

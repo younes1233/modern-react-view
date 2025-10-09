@@ -527,30 +527,77 @@ const CheckoutNew = () => {
               <CardContent className="space-y-4">
                 {/* Cart Items */}
                 <div className="space-y-4 max-h-60 overflow-y-auto">
-                  {items.map((item) => (
-                    <div key={item.id} className="flex items-center space-x-3">
-                      <img
-                        src={item.product.image || '/placeholder.svg'}
-                        alt={item.product.name}
-                        className="w-16 h-16 object-cover rounded-md"
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
-                      <div className="flex-1">
-                        <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
-                        {item.selectedVariations && item.selectedVariations.length > 0 && (
-                          <p className="text-xs text-gray-500">
-                            {item.selectedVariations.map(v => `${v.attribute_name}: ${v.value}`).join(', ')}
-                          </p>
-                        )}
-                        <p className="text-sm text-gray-600">${item.price.toFixed(2)} × {item.quantity}</p>
+                  {items.map((item) => {
+                    // Find discount info for this item
+                    const discountInfo = pricing?.items_breakdown?.discounted_items?.find((discountedItem: any) => {
+                      // Match by product ID and variant ID (if applicable)
+                      const productMatch = discountedItem.product_id === item.product.id;
+                      
+                      // If discount is for a variant, match variant IDs using correct field names
+                      if (discountedItem.variant_id) {
+                        return productMatch && (
+                          discountedItem.variant_id === item.purchasableId || 
+                          discountedItem.variant_id === item.productVariantId
+                        );
+                      }
+                      
+                      // If discount is for a product (no variant), just match product
+                      return productMatch && item.purchasableType !== 'App\\Models\\ProductVariant';
+                    });
+
+                    return (
+                      <div key={item.id} className="flex items-center space-x-3">
+                        <img
+                          src={item.product.image || '/placeholder.svg'}
+                          alt={item.product.name}
+                          className="w-16 h-16 object-cover rounded-md"
+                          onError={(e) => {
+                            e.currentTarget.src = '/placeholder.svg';
+                          }}
+                        />
+                        <div className="flex-1">
+                          <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
+                          {item.selectedVariations && item.selectedVariations.length > 0 && (
+                            <p className="text-xs text-gray-500">
+                              {item.selectedVariations.map(v => `${v.attribute_name}: ${v.value}`).join(', ')}
+                            </p>
+                          )}
+                          
+                          {/* Show discount info if item has discount */}
+                          {discountInfo ? (
+                            <div className="space-y-1">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-xs line-through text-gray-400">
+                                  ${discountInfo.original_price.toFixed(2)}
+                                </span>
+                                <span className="text-sm font-medium text-green-600">
+                                  ${discountInfo.discounted_price.toFixed(2)}
+                                </span>
+                                <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
+                                  {discountInfo.discount_percentage}% OFF
+                                </span>
+                              </div>
+                              <p className="text-xs text-green-600">
+                                Save ${discountInfo.total_savings.toFixed(2)} × {item.quantity}
+                              </p>
+                            </div>
+                          ) : (
+                            <p className="text-sm text-gray-600">${item.price.toFixed(2)} × {item.quantity}</p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-medium">
+                            ${(item.price * item.quantity).toFixed(2)}
+                          </span>
+                          {discountInfo && (
+                            <div className="text-xs text-green-600">
+                              -${discountInfo.total_savings.toFixed(2)}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <span className="font-medium">
-                        ${(item.price * item.quantity).toFixed(2)}
-                      </span>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <Separator />
@@ -562,21 +609,51 @@ const CheckoutNew = () => {
                   </div>
                 ) : pricing ? (
                   <div className="space-y-2">
-                    {/* Debug: Show what discounts are available */}
-                    {process.env.NODE_ENV === 'development' && (
-                      <div className="text-xs text-gray-400 p-2 bg-gray-50 rounded">
-                        <div>Debug - Pricing discounts:</div>
-                        <div>promotion_discount: {pricing.promotion_discount}</div>
-                        <div>coupon_discount: {pricing.coupon_discount}</div>
-                        <div>total_savings: {pricing.total_savings}</div>
+                    {/* Show original subtotal if there are discounts */}
+                    {(() => {
+                      // Calculate original subtotal from current subtotal + discounts
+                      const totalDiscounts = (pricing.promotion_discount || 0) + 
+                                            (pricing.coupon_discount || 0) + 
+                                            (pricing.item_discounts_total || 0) + 
+                                            (pricing.bulk_discount_total || 0);
+                      
+                      // Use provided original subtotal, or calculate it, or use items breakdown
+                      const originalSubtotal = pricing.original_subtotal || 
+                                              pricing.items_total_before_discounts || 
+                                              (totalDiscounts > 0 ? pricing.subtotal + totalDiscounts : null);
+                      
+                      // Only show if we have an original subtotal and it's different from current subtotal
+                      return originalSubtotal && originalSubtotal !== pricing.subtotal ? (
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-500">Original Subtotal</span>
+                          <span className="text-gray-500 line-through">
+                            {pricing.currency?.symbol || '$'}{originalSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      ) : null;
+                    })()}
+                    
+                    {/* Item-level discounts */}
+                    {pricing.item_discounts_total && pricing.item_discounts_total > 0 ? (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Item Discounts</span>
+                        <span>
+                          -{pricing.currency?.symbol || '$'}{pricing.item_discounts_total.toFixed(2)}
+                        </span>
                       </div>
-                    )}
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Subtotal</span>
-                      <span className="font-semibold">
-                        {pricing.currency?.symbol || '$'}{pricing.subtotal.toFixed(2)}
-                      </span>
-                    </div>
+                    ) : null}
+                    
+                    {/* Bulk discounts */}
+                    {pricing.bulk_discount_total && pricing.bulk_discount_total > 0 ? (
+                      <div className="flex justify-between text-sm text-green-600">
+                        <span>Bulk Discount</span>
+                        <span>
+                          -{pricing.currency?.symbol || '$'}{pricing.bulk_discount_total.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : null}
+                    
+                    {/* Promotion discounts */}
                     {pricing.promotion_discount > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Promotion Discount</span>
@@ -585,6 +662,8 @@ const CheckoutNew = () => {
                         </span>
                       </div>
                     ) : null}
+                    
+                    {/* Coupon discounts */}
                     {pricing.coupon_discount > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Coupon Discount</span>
@@ -593,11 +672,28 @@ const CheckoutNew = () => {
                         </span>
                       </div>
                     ) : null}
-                    {(pricing.promotion_discount > 0 || pricing.coupon_discount > 0) ? (
+                    
+                    {/* Subtotal after discounts */}
+                    <div className="flex justify-between text-sm font-medium border-t pt-2">
+                      <span className="text-gray-900">Subtotal</span>
+                      <span className="text-gray-900">
+                        {pricing.currency?.symbol || '$'}{pricing.subtotal.toFixed(2)}
+                      </span>
+                    </div>
+                    
+                    {/* Total savings summary (only if there are discounts) */}
+                    {pricing.total_savings && pricing.total_savings > 0 ? (
                       <div className="flex justify-between text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
-                        <span>Total Savings</span>
+                        <span>You Saved</span>
                         <span>
-                          -{pricing.currency?.symbol || '$'}
+                          {pricing.currency?.symbol || '$'}{pricing.total_savings.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : (pricing.promotion_discount > 0 || pricing.coupon_discount > 0) ? (
+                      <div className="flex justify-between text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
+                        <span>You Saved</span>
+                        <span>
+                          {pricing.currency?.symbol || '$'}
                           {((pricing.promotion_discount || 0) + (pricing.coupon_discount || 0)).toFixed(2)}
                         </span>
                       </div>

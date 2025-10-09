@@ -1,10 +1,6 @@
-import { useNavigate } from 'react-router-dom';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { ShoppingCart, Heart } from 'lucide-react';
-import { useCart } from '@/contexts/CartContext';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { memo } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
+import { ProductCard } from './ProductCard';
+import { useResponsiveImage } from '@/contexts/ResponsiveImageContext';
 
 interface RelatedProduct {
   id: number;
@@ -12,137 +8,132 @@ interface RelatedProduct {
   slug: string;
   pricing: {
     price: number;
+    original_price?: number;
     currency: {
       code: string;
       symbol: string;
     };
   };
-  media?: {
-    images: Array<{
-      urls?: {
-        original?: string;
-        medium?: any;
-      };
-      alt_text?: string;
-    }>;
+  cover_image?: {
+    desktop: string;
+    tablet: string;
+    mobile: string;
+  } | null;
+  flags?: {
+    on_sale?: boolean;
+    is_featured?: boolean;
+    is_new_arrival?: boolean;
   };
+  stock?: number;
 }
 
 interface RelatedProductsProps {
   products: RelatedProduct[];
 }
 
+// Lazy loaded product card component
+const LazyProductCard = memo(({ product, isVisible }: { product: RelatedProduct; isVisible: boolean }) => {
+  const { getImageUrl } = useResponsiveImage();
+  
+  // Transform RelatedProduct to BackendProduct format for ProductCard
+  const transformedProduct = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    pricing: {
+      original_price: product.pricing.original_price || null,
+      price: product.pricing.price,
+      currency_id: null,
+      currency: product.pricing.currency,
+      applied_discounts: [],
+      vat: {
+        rate: 0,
+        amount: 0,
+      },
+    },
+    flags: {
+      on_sale: product.flags?.on_sale || false,
+      is_featured: product.flags?.is_featured || false,
+      is_new_arrival: product.flags?.is_new_arrival || false,
+      is_best_seller: false,
+    },
+    cover_image: product.cover_image || '/placeholder.svg',
+    stock: product.stock,
+    rating: {
+      average: 0,
+      count: 0,
+    },
+  };
+
+  // Only render the ProductCard when it's visible
+  if (!isVisible) {
+    return (
+      <div className="aspect-[4/5] bg-gray-100 animate-pulse rounded-lg">
+        <div className="h-full flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-cyan-600 rounded-full animate-spin"></div>
+        </div>
+      </div>
+    );
+  }
+
+  return <ProductCard product={transformedProduct} />;
+});
+
 const RelatedProductsComponent = ({ products }: RelatedProductsProps) => {
-  const navigate = useNavigate();
-  const { addToCart } = useCart();
-  const { addToWishlist, isInWishlist } = useWishlist();
+  const [visibleProducts, setVisibleProducts] = useState<Set<number>>(new Set());
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Create intersection observer for lazy loading
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const productId = parseInt(entry.target.getAttribute('data-product-id') || '0');
+            setVisibleProducts((prev) => new Set([...prev, productId]));
+            // Stop observing once the product is visible
+            observerRef.current?.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        rootMargin: '100px', // Start loading 100px before the element is visible
+        threshold: 0.1,
+      }
+    );
+
+    // Observe all product containers
+    const productElements = containerRef.current?.querySelectorAll('[data-product-id]');
+    productElements?.forEach((el) => {
+      observerRef.current?.observe(el);
+    });
+
+    return () => {
+      observerRef.current?.disconnect();
+    };
+  }, [products]);
 
   if (!products || products.length === 0) return null;
-
-  const handleProductClick = (slug: string) => {
-    navigate(`/store/products/${slug}`);
-  };
-
-  const handleAddToCart = (product: RelatedProduct, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const cartProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.pricing.price,
-      image: product.media?.images[0]?.urls?.original || '/placeholder.svg',
-      category: '',
-      inStock: true,
-      rating: 0,
-      reviews: 0,
-      isFeatured: false,
-      isNewArrival: false,
-      isOnSale: false,
-      sku: '',
-      description: '',
-      thumbnails: [],
-      variations: []
-    };
-    
-    addToCart(cartProduct, 1);
-  };
-
-  const handleAddToWishlist = (product: RelatedProduct, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const wishlistProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: product.pricing.price,
-      image: product.media?.images[0]?.urls?.original || '/placeholder.svg',
-      category: '',
-      inStock: true,
-      rating: 0,
-      reviews: 0,
-      isFeatured: false,
-      isNewArrival: false,
-      isOnSale: false,
-      sku: '',
-      description: '',
-      thumbnails: [],
-      variations: []
-    };
-    
-    addToWishlist(wishlistProduct);
-  };
 
   return (
     <div className="space-y-4">
       <h3 className="text-lg font-semibold text-gray-900">Related Products</h3>
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div 
+        ref={containerRef}
+        className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
+      >
         {products.map((product) => (
-          <Card
-            key={product.id}
-            className="cursor-pointer hover:shadow-lg transition-shadow duration-200 group"
-            onClick={() => handleProductClick(product.slug)}
+          <div 
+            key={product.id} 
+            data-product-id={product.id}
+            className="h-full"
           >
-            <CardContent className="p-0">
-              <div className="aspect-square relative overflow-hidden rounded-t-lg">
-                <img
-                  src={product.media?.images[0]?.urls?.original || '/placeholder.svg'}
-                  alt={product.media?.images[0]?.alt_text || product.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleAddToWishlist(product, e)}
-                    className={`p-2 bg-white/90 hover:bg-white shadow-lg rounded-full w-8 h-8 ${
-                      isInWishlist(product.id) ? 'text-red-500' : 'text-gray-700'
-                    }`}
-                  >
-                    <Heart className={`w-3 h-3 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
-                  </Button>
-                </div>
-              </div>
-              <div className="p-3 space-y-2">
-                <h4 className="font-medium text-sm text-gray-900 line-clamp-2 group-hover:text-cyan-600 transition-colors">
-                  {product.name}
-                </h4>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-900">
-                    {product.pricing.currency?.symbol || '$'}{product.pricing.price?.toFixed(2) || '0.00'}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => handleAddToCart(product, e)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full w-7 h-7"
-                  >
-                    <ShoppingCart className="w-3 h-3" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+            <LazyProductCard 
+              product={product} 
+              isVisible={visibleProducts.has(product.id)} 
+            />
+          </div>
         ))}
       </div>
     </div>

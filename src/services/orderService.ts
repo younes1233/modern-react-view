@@ -4,6 +4,28 @@ import BaseApiService from "./baseApiService";
    Domain Types (User-side)
    ========================= */
 
+export interface OrderItemPricingDetails {
+  original_price: number;
+  selling_price: number;
+  cost: number;
+  profit: number;
+  discount_amount: number;
+  item_discount_amount: number;
+  item_discount_percentage: number;
+  discount_type?: string;
+  discount_details?: any;
+  has_discount: boolean;
+  coupon_code?: string;
+  coupon_discount_amount: number;
+  tax_amount: number;
+  tax_rate: number;
+  line_total_before_tax: number;
+  line_total_after_tax: number;
+  currency_code: string;
+  exchange_rate: number;
+  total_savings: number;
+}
+
 export interface OrderItem {
   id: number;
   product_id: number;
@@ -12,13 +34,51 @@ export interface OrderItem {
   variant_values?: string;
   quantity: number;
   selling_price: number;
+  original_price?: number;
   cost: number;
   discount_amount: number;
+  item_discount_amount?: number;
+  item_discount_percentage?: number;
+  discount_type?: string;
+  discount_details?: any;
+  coupon_code?: string;
+  coupon_discount_amount?: number;
+  tax_amount?: number;
+  tax_rate?: number;
+  line_total_before_tax?: number;
+  line_total_after_tax?: number;
+  currency_code?: string;
+  exchange_rate?: number;
   subtotal: number;
   profit: number;
   refunded_quantity: number;
   refunded_amount: number;
   refund_reason?: string;
+  pricing_details?: OrderItemPricingDetails;
+}
+
+export interface OrderPricingBreakdown {
+  subtotal: number;
+  original_subtotal: number;
+  discount_total: number;
+  item_discounts_total: number;
+  bulk_discount_total: number;
+  promotion_discount_total: number;
+  coupon_discount: number;
+  coupon_code_used?: string;
+  all_coupons_used?: string[];
+  coupon_breakdown?: any;
+  tax_total: number;
+  tax_rate: number;
+  tax_breakdown?: any;
+  delivery_fee: number;
+  currency_code: string;
+  exchange_rate: number;
+  items_total_before_discounts: number;
+  items_total_after_discounts: number;
+  total_savings: number;
+  applied_discounts?: any;
+  pricing_breakdown_full?: any;
 }
 
 export interface Order {
@@ -28,8 +88,25 @@ export interface Order {
   address_id?: number;
   payment_method_id?: number;
   subtotal: number;
+  original_subtotal?: number;
   discount_total: number;
+  item_discounts_total?: number;
+  bulk_discount_total?: number;
+  promotion_discount_total?: number;
   coupon_discount: number;
+  coupon_code_used?: string;
+  all_coupons_used?: string[];
+  coupon_breakdown?: any;
+  tax_total?: number;
+  tax_rate?: number;
+  tax_breakdown?: any;
+  pricing_breakdown?: any;
+  applied_discounts?: any;
+  currency_code?: string;
+  exchange_rate?: number;
+  items_total_before_discounts?: number;
+  items_total_after_discounts?: number;
+  total_savings?: number;
   delivery_fee: number;
   total_price: number;
   status: string;
@@ -56,6 +133,7 @@ export interface Order {
   store?: any;
   address?: any;
   payment_method?: any;
+  pricing_breakdown_summary?: OrderPricingBreakdown;
 }
 
 export interface OrderStatus {
