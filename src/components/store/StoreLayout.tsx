@@ -1,191 +1,238 @@
-import { ReactNode, useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { ShoppingCart, User, Search, Menu, Heart, MapPin, Phone, X, LogOut, RotateCcw, Home, Grid, ShoppingBag, Plus, ChevronDown } from 'lucide-react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { CartSidebar } from './CartSidebar';
-import { AuthModal } from '../auth/AuthModal';
-import { useSearch } from '@/contexts/SearchContext';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { useCart } from '@/contexts/CartContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Separator } from '@/components/ui/separator';
-import { Drawer, DrawerContent, DrawerTrigger, DrawerClose } from '@/components/ui/drawer';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import * as Portal from '@radix-ui/react-portal';
-import { CountryCurrencySelector } from './CountryCurrencySelector';
-import { useStoreCategories } from '@/hooks/useStoreCategories';
-import { AddToCartNotification } from './AddToCartNotification';
-import { VariantSelectionModal } from './VariantSelectionModal';
+import { ReactNode, useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import {
+  ShoppingCart,
+  User,
+  Search,
+  Menu,
+  Heart,
+  MapPin,
+  Phone,
+  X,
+  LogOut,
+  RotateCcw,
+  Home,
+  Grid,
+  ShoppingBag,
+  Plus,
+  ChevronDown,
+} from 'lucide-react'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { CartSidebar } from './CartSidebar'
+import { AuthModal } from '../auth/AuthModal'
+import { useSearch } from '@/contexts/SearchContext'
+import { useWishlist } from '@/contexts/WishlistContext'
+import { useCart } from '@/contexts/CartContext'
+import { useAuth } from '@/contexts/AuthContext'
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover'
+import { Separator } from '@/components/ui/separator'
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+  DrawerClose,
+} from '@/components/ui/drawer'
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible'
+import * as Portal from '@radix-ui/react-portal'
+import { CountryCurrencySelector } from './CountryCurrencySelector'
+import { useStoreCategories } from '@/hooks/useStoreCategories'
+import { AddToCartNotification } from './AddToCartNotification'
+import { VariantSelectionModal } from './VariantSelectionModal'
 
 interface StoreLayoutProps {
-  children: ReactNode;
+  children: ReactNode
 }
 
 export function StoreLayout({ children }: StoreLayoutProps) {
- const {
-   searchQuery,
-   setSearchQuery,
-   clearSearch,
-   filteredResults,   // newest-first from backend, after client-side filters/sorts
-   isSearching,
-   errorMsg,
-  } = useSearch();
-  const { items: wishlistItems } = useWishlist();
-  const { getTotalItems, notificationItem, clearNotification, variantSelectionRequest, clearVariantSelection, addToCart } = useCart();
-  const { categories, loading: categoriesLoading } = useStoreCategories();
-  const auth = useAuth();
-  const user = auth?.user || null;
-  const logout = auth?.logout;
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isMobileMenuClosing, setIsMobileMenuClosing] = useState(false);
-  const [showSearchResults, setShowSearchResults] = useState(false);
-  const [showMobileSearchResults, setShowMobileSearchResults] = useState(false);
-  const [authModalOpen, setAuthModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin');
-  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false);
-  const [isCategoriesClosing, setIsCategoriesClosing] = useState(false);
-  const [searchInputRef, setSearchInputRef] = useState<HTMLInputElement | null>(null);
-  const [mobileSearchInputRef, setMobileSearchInputRef] = useState<HTMLInputElement | null>(null);
-  const navigate = useNavigate();
-  const location = useLocation();
+  const {
+    searchQuery,
+    setSearchQuery,
+    clearSearch,
+    filteredResults, // newest-first from backend, after client-side filters/sorts
+    isSearching,
+    errorMsg,
+  } = useSearch()
+  const { items: wishlistItems } = useWishlist()
+  const {
+    getTotalItems,
+    notificationItem,
+    clearNotification,
+    variantSelectionRequest,
+    clearVariantSelection,
+    addToCart,
+  } = useCart()
+  const { categories, loading: categoriesLoading } = useStoreCategories()
+  const auth = useAuth()
+  const user = auth?.user || null
+  const logout = auth?.logout
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isMobileMenuClosing, setIsMobileMenuClosing] = useState(false)
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [showMobileSearchResults, setShowMobileSearchResults] = useState(false)
+  const [authModalOpen, setAuthModalOpen] = useState(false)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [isCategoriesOpen, setIsCategoriesOpen] = useState(false)
+  const [isCategoriesClosing, setIsCategoriesClosing] = useState(false)
+  const [searchInputRef, setSearchInputRef] = useState<HTMLInputElement | null>(
+    null
+  )
+  const [mobileSearchInputRef, setMobileSearchInputRef] =
+    useState<HTMLInputElement | null>(null)
+  const navigate = useNavigate()
+  const location = useLocation()
 
   // Force light mode for store layout
   useEffect(() => {
-    const root = document.documentElement;
-    root.classList.remove('dark');
-    root.classList.add('light');
-  }, []);
+    const root = document.documentElement
+    root.classList.remove('dark')
+    root.classList.add('light')
+  }, [])
 
   // Prevent body scroll when mobile menu is open and fix iOS viewport issues
   useEffect(() => {
     if (isMobileMenuOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.position = 'fixed';
-      document.body.style.width = '100%';
-      document.body.style.height = '100%';
+      document.body.style.overflow = 'hidden'
+      document.body.style.position = 'fixed'
+      document.body.style.width = '100%'
+      document.body.style.height = '100%'
       // Prevent iOS Safari address bar resize issues
-      const viewport = document.querySelector('meta[name=viewport]');
+      const viewport = document.querySelector('meta[name=viewport]')
       if (viewport) {
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover');
+        viewport.setAttribute(
+          'content',
+          'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover'
+        )
       }
     } else {
-      document.body.style.overflow = 'unset';
-      document.body.style.position = 'unset';
-      document.body.style.width = 'unset';
-      document.body.style.height = 'unset';
+      document.body.style.overflow = 'unset'
+      document.body.style.position = 'unset'
+      document.body.style.width = 'unset'
+      document.body.style.height = 'unset'
       // Restore normal viewport
-      const viewport = document.querySelector('meta[name=viewport]');
+      const viewport = document.querySelector('meta[name=viewport]')
       if (viewport) {
-        viewport.setAttribute('content', 'width=device-width, initial-scale=1.0, viewport-fit=cover');
+        viewport.setAttribute(
+          'content',
+          'width=device-width, initial-scale=1.0, viewport-fit=cover'
+        )
       }
     }
-    
+
     return () => {
-      document.body.style.overflow = 'unset';
-      document.body.style.position = 'unset';
-      document.body.style.width = 'unset';
-      document.body.style.height = 'unset';
-    };
-  }, [isMobileMenuOpen]);
+      document.body.style.overflow = 'unset'
+      document.body.style.position = 'unset'
+      document.body.style.width = 'unset'
+      document.body.style.height = 'unset'
+    }
+  }, [isMobileMenuOpen])
 
   const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
     if (searchQuery.trim()) {
-      navigate('/store/categories');
-      setShowSearchResults(false);
-      setShowMobileSearchResults(false);
+      navigate('/store/categories')
+      setShowSearchResults(false)
+      setShowMobileSearchResults(false)
     }
-  };
+  }
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    setShowSearchResults(value.length > 0);
-  };
+    const value = e.target.value
+    setSearchQuery(value)
+    setShowSearchResults(value.length > 0)
+  }
 
-  const handleMobileSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    setShowMobileSearchResults(value.length > 0);
-  };
+  const handleMobileSearchInputChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const value = e.target.value
+    setSearchQuery(value)
+    setShowMobileSearchResults(value.length > 0)
+  }
 
   const handleSearchResultClick = (productSlug: string) => {
-    navigate(`/store/product/${productSlug}`);
-    setShowSearchResults(false);
-    setShowMobileSearchResults(false);
-    setSearchQuery('');
-  };
+    navigate(`/store/product/${productSlug}`)
+    setShowSearchResults(false)
+    setShowMobileSearchResults(false)
+    setSearchQuery('')
+  }
 
   const handleClearSearch = () => {
-    clearSearch();
-    setShowSearchResults(false);
-    setShowMobileSearchResults(false);
-  };
+    clearSearch()
+    setShowSearchResults(false)
+    setShowMobileSearchResults(false)
+  }
 
   const openAuthModal = (mode: 'signin' | 'signup') => {
-    setAuthMode(mode);
-    setAuthModalOpen(true);
-  };
+    setAuthMode(mode)
+    setAuthModalOpen(true)
+  }
 
   const handleLogout = () => {
     if (logout) {
-      logout();
-      navigate('/store');
+      logout()
+      navigate('/store')
     }
-  };
+  }
 
   const closeMobileMenu = () => {
-    setIsMobileMenuClosing(true);
+    setIsMobileMenuClosing(true)
     setTimeout(() => {
-      setIsMobileMenuOpen(false);
-      setIsMobileMenuClosing(false);
-    }, 200); // Fast close animation duration
-  };
+      setIsMobileMenuOpen(false)
+      setIsMobileMenuClosing(false)
+    }, 200) // Fast close animation duration
+  }
 
   const openMobileMenu = () => {
-    setIsMobileMenuClosing(false); // Ensure no closing state
-    setIsMobileMenuOpen(true);
-  };
+    setIsMobileMenuClosing(false) // Ensure no closing state
+    setIsMobileMenuOpen(true)
+  }
 
   const handleCategoriesToggle = (open: boolean) => {
     if (open) {
-      setIsCategoriesClosing(false);
-      setIsCategoriesOpen(true);
+      setIsCategoriesClosing(false)
+      setIsCategoriesOpen(true)
     } else {
-      setIsCategoriesClosing(true);
+      setIsCategoriesClosing(true)
       setTimeout(() => {
-        setIsCategoriesOpen(false);
-        setIsCategoriesClosing(false);
-      }, 200); // Fast close animation duration
+        setIsCategoriesOpen(false)
+        setIsCategoriesClosing(false)
+      }, 200) // Fast close animation duration
     }
-  };
+  }
 
   const getSearchDropdownPosition = (inputRef: HTMLInputElement | null) => {
-    if (!inputRef) return { top: 0, left: 0, width: 0 };
-    
-    const rect = inputRef.getBoundingClientRect();
+    if (!inputRef) return { top: 0, left: 0, width: 0 }
+
+    const rect = inputRef.getBoundingClientRect()
     return {
       top: rect.bottom + 8,
       left: rect.left,
-      width: Math.min(rect.width + 50, 400)
-    };
-  };
+      width: Math.min(rect.width + 50, 400),
+    }
+  }
 
   const goProduct = (slug: string) => {
-  navigate(`/store/product/${slug}`);
-  clearSearch();
-  setShowSearchResults(false);
-  setShowMobileSearchResults(false);
-};
+    navigate(`/store/product/${slug}`)
+    clearSearch()
+    setShowSearchResults(false)
+    setShowMobileSearchResults(false)
+  }
 
-const goAll = () => {
-  navigate('/store/categories'); // you already do this elsewhere
-  setShowSearchResults(false);
-  setShowMobileSearchResults(false);
-};
+  const goAll = () => {
+    navigate('/store/categories') // you already do this elsewhere
+    setShowSearchResults(false)
+    setShowMobileSearchResults(false)
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-cyan-100 to-blue-100 light overflow-visible">
@@ -195,7 +242,10 @@ const goAll = () => {
           <div className="flex items-center justify-between h-14 md:h-16 lg:h-18 gap-2 md:gap-4">
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
-              <Link to="/store" className="hover:scale-105 transition-transform duration-300">
+              <Link
+                to="/store"
+                className="hover:scale-105 transition-transform duration-300"
+              >
                 <img
                   src="/meemhome-logo.svg"
                   alt="Meem Home"
@@ -226,7 +276,10 @@ const goAll = () => {
 
             {/* Search Bar - Desktop */}
             <div className="hidden lg:flex flex-1 max-w-lg xl:max-w-xl mx-4 xl:mx-8 relative">
-              <form onSubmit={handleSearch} className="relative w-full flex border-[4px] border-cyan-400">
+              <form
+                onSubmit={handleSearch}
+                className="relative w-full flex border-[4px] border-cyan-400"
+              >
                 <Input
                   ref={setSearchInputRef}
                   type="text"
@@ -234,7 +287,9 @@ const goAll = () => {
                   value={searchQuery}
                   onChange={handleSearchInputChange}
                   onFocus={() => setShowSearchResults(searchQuery.length > 0)}
-                  onBlur={() => setTimeout(() => setShowSearchResults(false), 200)}
+                  onBlur={() =>
+                    setTimeout(() => setShowSearchResults(false), 200)
+                  }
                   className="flex-1 h-7 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-500 text-base"
                   style={{ fontSize: '16px' }}
                 />
@@ -257,55 +312,84 @@ const goAll = () => {
             </div>
 
             {/* Desktop Actions */}
-         <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
+            <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
               {/* Country and Currency Selectors */}
-              <CountryCurrencySelector />
-  <Link to="/store/wishlist">
-    <Button
-      variant="ghost"
-      size="sm"
-      className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 p-2 relative"
-    >
-      <div className="relative">
-        <Heart className="w-4 h-4 md:w-5 md:h-5" />
-        {wishlistItems.length > 0 && (
-          <span className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-4 flex items-center justify-center font-bold shadow-lg">
-            {wishlistItems.length}
-          </span>
-        )}
-      </div>
-    </Button>
-  </Link>
-              
+              {/* <CountryCurrencySelector /> */}
+              <Link to="/store/wishlist">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="hover:bg-blue-50 hover:text-blue-600 transition-all duration-300 p-2 relative"
+                >
+                  <div className="relative">
+                    <Heart className="w-4 h-4 md:w-5 md:h-5" />
+                    {wishlistItems.length > 0 && (
+                      <span className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-red-500 text-white text-xs rounded-full w-5 h-4 flex items-center justify-center font-bold shadow-lg">
+                        {wishlistItems.length}
+                      </span>
+                    )}
+                  </div>
+                </Button>
+              </Link>
+
               {/* User Menu */}
               {user ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className="hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all duration-300 p-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all duration-300 p-2"
+                    >
                       <User className="w-4 h-4 md:w-5 md:h-5" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-56 bg-white/95 backdrop-blur-md border-gray-200 rounded-2xl shadow-2xl" align="end">
+                  <PopoverContent
+                    className="w-56 bg-white/95 backdrop-blur-md border-gray-200 rounded-2xl shadow-2xl"
+                    align="end"
+                  >
                     <div className="space-y-4">
                       <div className="border-b border-gray-100 pb-3">
-                        <p className="font-semibold text-gray-900">{user.name}</p>
-                        <p className="text-sm text-gray-600">{user.email || user.phone || 'My Account'}</p>
+                        <p className="font-semibold text-gray-900">
+                          {user.name}
+                        </p>
+                        <p className="text-sm text-gray-600">
+                          {user.email || user.phone || 'My Account'}
+                        </p>
                       </div>
                       <div className="space-y-2">
-                        <Link to="/store/addresses" className="block w-full text-left">
-                          <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300">
+                        <Link
+                          to="/store/addresses"
+                          className="block w-full text-left"
+                        >
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300"
+                          >
                             <MapPin className="w-4 h-4 mr-3" />
                             My Addresses
                           </Button>
                         </Link>
-                        <Link to="/store/wishlist" className="block w-full text-left">
-                          <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300">
+                        <Link
+                          to="/store/wishlist"
+                          className="block w-full text-left"
+                        >
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
+                          >
                             <Heart className="w-4 h-4 mr-3" />
                             My Wishlist
                           </Button>
                         </Link>
-                        <Link to="/store/returns" className="block w-full text-left">
-                          <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300">
+                        <Link
+                          to="/store/returns"
+                          className="block w-full text-left"
+                        >
+                          <Button
+                            variant="ghost"
+                            className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300"
+                          >
                             <RotateCcw className="w-4 h-4 mr-3" />
                             Returns
                           </Button>
@@ -323,20 +407,20 @@ const goAll = () => {
                   </PopoverContent>
                 </Popover>
               ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
+                <Button
+                  variant="ghost"
+                  size="sm"
                   className="hover:bg-blue-50 hover:text-blue-600 rounded-xl transition-all duration-300 p-2"
                   onClick={() => openAuthModal('signin')}
                 >
                   <User className="w-4 h-4 md:w-5 md:h-5" />
                 </Button>
               )}
-              
+
               <CartSidebar />
-              <Button 
-                className="lg:hidden rounded-xl p-2" 
-                variant="ghost" 
+              <Button
+                className="lg:hidden rounded-xl p-2"
+                variant="ghost"
                 size="sm"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               >
@@ -347,15 +431,22 @@ const goAll = () => {
             {/* Mobile: Search Bar, Country/Currency, and Menu Button */}
             <div className="lg:hidden flex items-center flex-1 gap-2">
               <div className="flex-1 relative">
-                <form onSubmit={handleSearch} className="relative w-full flex border-[3px] border-cyan-400 rounded-full overflow-hidden">
+                <form
+                  onSubmit={handleSearch}
+                  className="relative w-full flex border-[3px] border-cyan-400 rounded-full overflow-hidden"
+                >
                   <Input
                     ref={setMobileSearchInputRef}
                     type="text"
                     placeholder="Search..."
                     value={searchQuery}
                     onChange={handleMobileSearchInputChange}
-                    onFocus={() => setShowMobileSearchResults(searchQuery.length > 0)}
-                    onBlur={() => setTimeout(() => setShowMobileSearchResults(false), 200)}
+                    onFocus={() =>
+                      setShowMobileSearchResults(searchQuery.length > 0)
+                    }
+                    onBlur={() =>
+                      setTimeout(() => setShowMobileSearchResults(false), 200)
+                    }
                     className="flex-1 h-8 px-4 py-2 border-0 bg-white shadow-none focus:ring-0 focus:outline-none focus:border-transparent focus:shadow-none ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 text-gray-700 placeholder:text-gray-400 rounded-full"
                     style={{ fontSize: '16px' }}
                   />
@@ -378,7 +469,7 @@ const goAll = () => {
               </div>
 
               {/* Country/Currency Selectors for Mobile */}
-              <CountryCurrencySelector variant="mobile" />
+              {/* <CountryCurrencySelector variant="mobile" /> */}
 
               {/* Mobile Menu Button */}
               <Button
@@ -392,7 +483,6 @@ const goAll = () => {
             </div>
           </div>
         </div>
-
       </header>
 
       {/* Store-Themed Mobile Menu */}
@@ -414,22 +504,28 @@ const goAll = () => {
               isMobileMenuClosing
                 ? 'duration-200 ease-in translate-x-full'
                 : isMobileMenuOpen
-                  ? 'duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-0'
-                  : 'duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-full'
+                ? 'duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-0'
+                : 'duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] translate-x-full'
             }`}
           >
             {/* Store Header with logo */}
-            <div className={`flex items-center justify-between p-4 border-b-4 border-cyan-400 bg-gradient-to-r from-cyan-50 to-blue-50 ${
-              isMobileMenuClosing
-                ? 'animate-fade-out-fast'
-                : isMobileMenuOpen
+            <div
+              className={`flex items-center justify-between p-4 border-b-4 border-cyan-400 bg-gradient-to-r from-cyan-50 to-blue-50 ${
+                isMobileMenuClosing
+                  ? 'animate-fade-out-fast'
+                  : isMobileMenuOpen
                   ? 'animate-slide-down opacity-0'
                   : 'opacity-0'
-            }`}
-                 style={{
-                   animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.0s' : '0s',
-                   animationFillMode: 'forwards'
-                 }}>
+              }`}
+              style={{
+                animationDelay: isMobileMenuClosing
+                  ? '0s'
+                  : isMobileMenuOpen
+                  ? '0.0s'
+                  : '0s',
+                animationFillMode: 'forwards',
+              }}
+            >
               <div className="flex items-center gap-3">
                 <img
                   src="/meemhome-logo.svg"
@@ -438,26 +534,39 @@ const goAll = () => {
                     isMobileMenuClosing
                       ? 'animate-fade-out-fast'
                       : isMobileMenuOpen
-                        ? 'animate-scale-in opacity-0'
-                        : 'opacity-0'
+                      ? 'animate-scale-in opacity-0'
+                      : 'opacity-0'
                   }`}
                   style={{
-                    animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.03s' : '0s',
-                    animationFillMode: 'forwards'
+                    animationDelay: isMobileMenuClosing
+                      ? '0s'
+                      : isMobileMenuOpen
+                      ? '0.03s'
+                      : '0s',
+                    animationFillMode: 'forwards',
                   }}
                 />
-                <div className={`${
-                  isMobileMenuClosing
-                    ? 'animate-fade-out-fast'
-                    : isMobileMenuOpen
+                <div
+                  className={`${
+                    isMobileMenuClosing
+                      ? 'animate-fade-out-fast'
+                      : isMobileMenuOpen
                       ? 'animate-fade-in opacity-0'
                       : 'opacity-0'
-                }`} style={{
-                  animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.06s' : '0s',
-                  animationFillMode: 'forwards'
-                }}>
+                  }`}
+                  style={{
+                    animationDelay: isMobileMenuClosing
+                      ? '0s'
+                      : isMobileMenuOpen
+                      ? '0.06s'
+                      : '0s',
+                    animationFillMode: 'forwards',
+                  }}
+                >
                   <h2 className="text-lg font-bold text-cyan-600">Meem Home</h2>
-                  <p className="text-xs text-gray-500">Your Shopping Destination</p>
+                  <p className="text-xs text-gray-500">
+                    Your Shopping Destination
+                  </p>
                 </div>
               </div>
               <Button
@@ -467,12 +576,16 @@ const goAll = () => {
                   isMobileMenuClosing
                     ? 'animate-fade-out-fast'
                     : isMobileMenuOpen
-                      ? 'animate-scale-in opacity-0'
-                      : 'opacity-0'
+                    ? 'animate-scale-in opacity-0'
+                    : 'opacity-0'
                 }`}
                 style={{
-                  animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.09s' : '0s',
-                  animationFillMode: 'forwards'
+                  animationDelay: isMobileMenuClosing
+                    ? '0s'
+                    : isMobileMenuOpen
+                    ? '0.09s'
+                    : '0s',
+                  animationFillMode: 'forwards',
                 }}
                 onClick={closeMobileMenu}
               >
@@ -481,21 +594,32 @@ const goAll = () => {
             </div>
 
             {/* Store Navigation */}
-            <div className="flex-1 overflow-y-auto p-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div
+              className="flex-1 overflow-y-auto p-4"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
               <div className="space-y-1">
                 {/* Main Navigation */}
                 <div className="mb-6">
-                  <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
-                    isMobileMenuClosing
-                      ? 'animate-fade-out-fast'
-                      : isMobileMenuOpen
+                  <h3
+                    className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
+                      isMobileMenuClosing
+                        ? 'animate-fade-out-fast'
+                        : isMobileMenuOpen
                         ? 'animate-fade-in opacity-0'
                         : 'opacity-0'
-                  }`}
-                      style={{
-                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.12s' : '0s',
-                        animationFillMode: 'forwards'
-                      }}>Shop</h3>
+                    }`}
+                    style={{
+                      animationDelay: isMobileMenuClosing
+                        ? '0s'
+                        : isMobileMenuOpen
+                        ? '0.12s'
+                        : '0s',
+                      animationFillMode: 'forwards',
+                    }}
+                  >
+                    Shop
+                  </h3>
                   {/* Home Link */}
                   <Link
                     to="/store"
@@ -503,12 +627,16 @@ const goAll = () => {
                       isMobileMenuClosing
                         ? 'animate-slide-out-right-fast'
                         : isMobileMenuOpen
-                          ? 'animate-slide-in-right opacity-0'
-                          : 'opacity-0'
+                        ? 'animate-slide-in-right opacity-0'
+                        : 'opacity-0'
                     }`}
                     style={{
-                      animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.15s' : '0s',
-                      animationFillMode: 'forwards'
+                      animationDelay: isMobileMenuClosing
+                        ? '0s'
+                        : isMobileMenuOpen
+                        ? '0.15s'
+                        : '0s',
+                      animationFillMode: 'forwards',
                     }}
                     onClick={closeMobileMenu}
                   >
@@ -520,25 +648,36 @@ const goAll = () => {
                   </Link>
 
                   {/* Categories Dropdown */}
-                  <Collapsible open={isCategoriesOpen} onOpenChange={handleCategoriesToggle}>
+                  <Collapsible
+                    open={isCategoriesOpen}
+                    onOpenChange={handleCategoriesToggle}
+                  >
                     <CollapsibleTrigger
                       className={`flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden w-full text-left ${
                         isMobileMenuClosing
                           ? 'animate-slide-out-right-fast'
                           : isMobileMenuOpen
-                            ? 'animate-slide-in-right opacity-0'
-                            : 'opacity-0'
+                          ? 'animate-slide-in-right opacity-0'
+                          : 'opacity-0'
                       }`}
                       style={{
-                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.18s' : '0s',
-                        animationFillMode: 'forwards'
+                        animationDelay: isMobileMenuClosing
+                          ? '0s'
+                          : isMobileMenuOpen
+                          ? '0.18s'
+                          : '0s',
+                        animationFillMode: 'forwards',
                       }}
                     >
                       <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors group-hover:scale-110 duration-300">
                         <Grid className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                       </div>
                       <span className="flex-1">All Categories</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isCategoriesOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown
+                        className={`w-4 h-4 transition-transform duration-300 ${
+                          isCategoriesOpen ? 'rotate-180' : ''
+                        }`}
+                      />
                       <div className="absolute left-0 top-0 w-1 h-full bg-blue-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300"></div>
                     </CollapsibleTrigger>
                     <CollapsibleContent
@@ -546,38 +685,54 @@ const goAll = () => {
                         isCategoriesClosing
                           ? 'animate-slide-up-fast'
                           : isCategoriesOpen
-                            ? 'animate-slide-down-categories opacity-0'
-                            : 'opacity-0'
+                          ? 'animate-slide-down-categories opacity-0'
+                          : 'opacity-0'
                       }`}
                       style={{
-                        animationDelay: isCategoriesClosing ? '0s' : isCategoriesOpen ? '0.05s' : '0s',
-                        animationFillMode: 'forwards'
+                        animationDelay: isCategoriesClosing
+                          ? '0s'
+                          : isCategoriesOpen
+                          ? '0.05s'
+                          : '0s',
+                        animationFillMode: 'forwards',
                       }}
                     >
-                      {!categoriesLoading && categories.map((category, index) => (
-                        <Link
-                          key={category.id}
-                          to={`/store/categories/${category.slug}`}
-                          className={`flex items-center gap-3 px-8 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 text-sm group ${
-                            isCategoriesOpen ? 'opacity-100' : 'opacity-0'
-                          }`}
-                          style={{
-                            transitionDelay: isCategoriesOpen ? `${0.2 + (index * 0.1)}s` : '0s'
-                          }}
-                          onClick={closeMobileMenu}
-                        >
-                          <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
-                            {category.icon && category.icon.startsWith('http') ? (
-                              <img src={category.icon} alt={`${category.name} icon`} className="w-4 h-4 object-contain" />
-                            ) : (
-                              <span className="text-sm">{category.icon || '📦'}</span>
-                            )}
-                          </div>
-                          <span className="flex-1">{category.name}</span>
-                        </Link>
-                      ))}
+                      {!categoriesLoading &&
+                        categories.map((category, index) => (
+                          <Link
+                            key={category.id}
+                            to={`/store/categories/${category.slug}`}
+                            className={`flex items-center gap-3 px-8 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 text-sm group ${
+                              isCategoriesOpen ? 'opacity-100' : 'opacity-0'
+                            }`}
+                            style={{
+                              transitionDelay: isCategoriesOpen
+                                ? `${0.2 + index * 0.1}s`
+                                : '0s',
+                            }}
+                            onClick={closeMobileMenu}
+                          >
+                            <div className="w-6 h-6 rounded-md bg-gray-100 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                              {category.icon &&
+                              category.icon.startsWith('http') ? (
+                                <img
+                                  src={category.icon}
+                                  alt={`${category.name} icon`}
+                                  className="w-4 h-4 object-contain"
+                                />
+                              ) : (
+                                <span className="text-sm">
+                                  {category.icon || '📦'}
+                                </span>
+                              )}
+                            </div>
+                            <span className="flex-1">{category.name}</span>
+                          </Link>
+                        ))}
                       {categoriesLoading && (
-                        <div className="px-8 py-2 text-gray-400 text-sm">Loading categories...</div>
+                        <div className="px-8 py-2 text-gray-400 text-sm">
+                          Loading categories...
+                        </div>
                       )}
                     </CollapsibleContent>
                   </Collapsible>
@@ -589,12 +744,16 @@ const goAll = () => {
                       isMobileMenuClosing
                         ? 'animate-slide-out-right-fast'
                         : isMobileMenuOpen
-                          ? 'animate-slide-in-right opacity-0'
-                          : 'opacity-0'
+                        ? 'animate-slide-in-right opacity-0'
+                        : 'opacity-0'
                     }`}
                     style={{
-                      animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.21s' : '0s',
-                      animationFillMode: 'forwards'
+                      animationDelay: isMobileMenuClosing
+                        ? '0s'
+                        : isMobileMenuOpen
+                        ? '0.21s'
+                        : '0s',
+                      animationFillMode: 'forwards',
                     }}
                     onClick={closeMobileMenu}
                   >
@@ -613,58 +772,101 @@ const goAll = () => {
 
                 {/* Store Services */}
                 <div className="mb-6">
-                  <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
-                    isMobileMenuClosing
-                      ? 'animate-fade-out-fast'
-                      : isMobileMenuOpen
+                  <h3
+                    className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
+                      isMobileMenuClosing
+                        ? 'animate-fade-out-fast'
+                        : isMobileMenuOpen
                         ? 'animate-fade-in opacity-0'
                         : 'opacity-0'
-                  }`}
-                      style={{
-                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.24s' : '0s',
-                        animationFillMode: 'forwards'
-                      }}>Services</h3>
+                    }`}
+                    style={{
+                      animationDelay: isMobileMenuClosing
+                        ? '0s'
+                        : isMobileMenuOpen
+                        ? '0.24s'
+                        : '0s',
+                      animationFillMode: 'forwards',
+                    }}
+                  >
+                    Services
+                  </h3>
                   {[
-                    { icon: RotateCcw, label: "Returns & Exchanges", color: "purple", delay: "0.27s" },
-                    { icon: ShoppingBag, label: "Special Deals", color: "orange", delay: "0.3s" },
-                    { icon: Phone, label: "Customer Support", color: "green", delay: "0.33s" }
+                    {
+                      icon: RotateCcw,
+                      label: 'Returns & Exchanges',
+                      color: 'purple',
+                      delay: '0.27s',
+                    },
+                    {
+                      icon: ShoppingBag,
+                      label: 'Special Deals',
+                      color: 'orange',
+                      delay: '0.3s',
+                    },
+                    {
+                      icon: Phone,
+                      label: 'Customer Support',
+                      color: 'green',
+                      delay: '0.33s',
+                    },
                   ].map((item, index) => (
                     <button
                       key={item.label}
-                      className={`flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:text-${item.color}-600 hover:bg-${item.color}-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
+                      className={`flex items-center gap-3 w-full px-4 py-3 text-gray-700 hover:text-${
+                        item.color
+                      }-600 hover:bg-${
+                        item.color
+                      }-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
                         isMobileMenuClosing
                           ? 'animate-slide-out-right-fast'
                           : isMobileMenuOpen
-                            ? 'animate-slide-in-right opacity-0'
-                            : 'opacity-0'
+                          ? 'animate-slide-in-right opacity-0'
+                          : 'opacity-0'
                       }`}
                       style={{
-                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? item.delay : '0s',
-                        animationFillMode: 'forwards'
+                        animationDelay: isMobileMenuClosing
+                          ? '0s'
+                          : isMobileMenuOpen
+                          ? item.delay
+                          : '0s',
+                        animationFillMode: 'forwards',
                       }}
                     >
-                      <div className={`w-8 h-8 rounded-lg bg-${item.color}-100 flex items-center justify-center group-hover:bg-${item.color}-200 transition-colors group-hover:scale-110 duration-300`}>
+                      <div
+                        className={`w-8 h-8 rounded-lg bg-${item.color}-100 flex items-center justify-center group-hover:bg-${item.color}-200 transition-colors group-hover:scale-110 duration-300`}
+                      >
                         <item.icon className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
                       </div>
                       <span>{item.label}</span>
-                      <div className={`absolute left-0 top-0 w-1 h-full bg-${item.color}-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300`}></div>
+                      <div
+                        className={`absolute left-0 top-0 w-1 h-full bg-${item.color}-500 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300`}
+                      ></div>
                     </button>
                   ))}
                 </div>
 
                 {/* Account Section */}
                 <div className="pt-4">
-                  <h3 className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
-                    isMobileMenuClosing
-                      ? 'animate-fade-out-fast'
-                      : isMobileMenuOpen
+                  <h3
+                    className={`text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-3 ${
+                      isMobileMenuClosing
+                        ? 'animate-fade-out-fast'
+                        : isMobileMenuOpen
                         ? 'animate-fade-in opacity-0'
                         : 'opacity-0'
-                  }`}
-                      style={{
-                        animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.36s' : '0s',
-                        animationFillMode: 'forwards'
-                      }}>Account</h3>
+                    }`}
+                    style={{
+                      animationDelay: isMobileMenuClosing
+                        ? '0s'
+                        : isMobileMenuOpen
+                        ? '0.36s'
+                        : '0s',
+                      animationFillMode: 'forwards',
+                    }}
+                  >
+                    Account
+                  </h3>
                   {!user ? (
                     <div className="space-y-1">
                       <button
@@ -672,14 +874,21 @@ const goAll = () => {
                           isMobileMenuClosing
                             ? 'animate-slide-out-right-fast'
                             : isMobileMenuOpen
-                              ? 'animate-slide-in-right opacity-0'
-                              : 'opacity-0'
+                            ? 'animate-slide-in-right opacity-0'
+                            : 'opacity-0'
                         }`}
                         style={{
-                          animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.39s' : '0s',
-                          animationFillMode: 'forwards'
+                          animationDelay: isMobileMenuClosing
+                            ? '0s'
+                            : isMobileMenuOpen
+                            ? '0.39s'
+                            : '0s',
+                          animationFillMode: 'forwards',
                         }}
-                        onClick={() => { openAuthModal('signin'); closeMobileMenu(); }}
+                        onClick={() => {
+                          openAuthModal('signin')
+                          closeMobileMenu()
+                        }}
                       >
                         <User className="w-4 h-4" />
                         <span>Sign In</span>
@@ -689,14 +898,21 @@ const goAll = () => {
                           isMobileMenuClosing
                             ? 'animate-slide-out-right-fast'
                             : isMobileMenuOpen
-                              ? 'animate-slide-in-right opacity-0'
-                              : 'opacity-0'
+                            ? 'animate-slide-in-right opacity-0'
+                            : 'opacity-0'
                         }`}
                         style={{
-                          animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.42s' : '0s',
-                          animationFillMode: 'forwards'
+                          animationDelay: isMobileMenuClosing
+                            ? '0s'
+                            : isMobileMenuOpen
+                            ? '0.42s'
+                            : '0s',
+                          animationFillMode: 'forwards',
                         }}
-                        onClick={() => { openAuthModal('signup'); closeMobileMenu(); }}
+                        onClick={() => {
+                          openAuthModal('signup')
+                          closeMobileMenu()
+                        }}
                       >
                         <Plus className="w-4 h-4" />
                         <span>Create Account</span>
@@ -704,32 +920,49 @@ const goAll = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <div className={`px-4 py-3 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl border border-cyan-200 ${
-                        isMobileMenuClosing
-                          ? 'animate-slide-out-right-fast'
-                          : isMobileMenuOpen
+                      <div
+                        className={`px-4 py-3 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl border border-cyan-200 ${
+                          isMobileMenuClosing
+                            ? 'animate-slide-out-right-fast'
+                            : isMobileMenuOpen
                             ? 'animate-slide-in-right opacity-0'
                             : 'opacity-0'
-                      }`}
-                           style={{
-                             animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.39s' : '0s',
-                             animationFillMode: 'forwards'
-                           }}>
-                        <p className="font-semibold text-gray-900 text-sm">{user.name}</p>
-                        <p className="text-xs text-gray-600">{user.email || user.phone || 'My Account'}</p>
+                        }`}
+                        style={{
+                          animationDelay: isMobileMenuClosing
+                            ? '0s'
+                            : isMobileMenuOpen
+                            ? '0.39s'
+                            : '0s',
+                          animationFillMode: 'forwards',
+                        }}
+                      >
+                        <p className="font-semibold text-gray-900 text-sm">
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-gray-600">
+                          {user.email || user.phone || 'My Account'}
+                        </p>
                       </div>
                       <button
-                        onClick={() => { handleLogout(); closeMobileMenu(); }}
+                        onClick={() => {
+                          handleLogout()
+                          closeMobileMenu()
+                        }}
                         className={`flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-300 font-medium hover:scale-[1.02] ${
                           isMobileMenuClosing
                             ? 'animate-slide-out-right-fast'
                             : isMobileMenuOpen
-                              ? 'animate-slide-in-right opacity-0'
-                              : 'opacity-0'
+                            ? 'animate-slide-in-right opacity-0'
+                            : 'opacity-0'
                         }`}
                         style={{
-                          animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.42s' : '0s',
-                          animationFillMode: 'forwards'
+                          animationDelay: isMobileMenuClosing
+                            ? '0s'
+                            : isMobileMenuOpen
+                            ? '0.42s'
+                            : '0s',
+                          animationFillMode: 'forwards',
                         }}
                       >
                         <LogOut className="w-4 h-4" />
@@ -742,17 +975,23 @@ const goAll = () => {
             </div>
 
             {/* Store Footer */}
-            <div className={`p-4 bg-gray-50 ${
-              isMobileMenuClosing
-                ? 'animate-fade-out-fast'
-                : isMobileMenuOpen
+            <div
+              className={`p-4 bg-gray-50 ${
+                isMobileMenuClosing
+                  ? 'animate-fade-out-fast'
+                  : isMobileMenuOpen
                   ? 'animate-slide-up opacity-0'
                   : 'opacity-0'
-            }`}
-                 style={{
-                   animationDelay: isMobileMenuClosing ? '0s' : isMobileMenuOpen ? '0.45s' : '0s',
-                   animationFillMode: 'forwards'
-                 }}>
+              }`}
+              style={{
+                animationDelay: isMobileMenuClosing
+                  ? '0s'
+                  : isMobileMenuOpen
+                  ? '0.45s'
+                  : '0s',
+                animationFillMode: 'forwards',
+              }}
+            >
               <div className="text-center text-xs text-gray-500 leading-none">
                 <div className="inline-block">
                   © 2025 Meem Home • Quality & Style
@@ -769,15 +1008,33 @@ const goAll = () => {
           <div className="flex justify-center items-center">
             <div className="flex items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
               <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-scroll">
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">TIKTOK</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">INSTAGRAM</span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">FACEBOOK</span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  TIKTOK
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  INSTAGRAM
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  FACEBOOK
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  TIKTOK
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  INSTAGRAM
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  FACEBOOK
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  TIKTOK
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  INSTAGRAM
+                </span>
+                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                  FACEBOOK
+                </span>
               </div>
             </div>
           </div>
@@ -785,208 +1042,266 @@ const goAll = () => {
       </div>
 
       {/* Desktop Search Results Dropdown - Rendered as Portal */}
-  {showSearchResults && searchQuery.length > 0 && searchInputRef && (
-  <Portal.Root>
-    <div
-      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
-      style={{
-        top: getSearchDropdownPosition(searchInputRef).top,
-        left: getSearchDropdownPosition(searchInputRef).left,
-        width: getSearchDropdownPosition(searchInputRef).width,
-      }}
-      // prevent outer overlays from swallowing clicks
-      onMouseDownCapture={(e) => e.stopPropagation()}
-      onClickCapture={(e) => e.stopPropagation()}
-    >
-      {isSearching ? (
-        // loading → removes the "no results" flicker
-        <div className="p-6 text-center text-gray-500">
-          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm">Searching…</p>
-        </div>
-      ) : filteredResults.length > 0 ? (
-        <div className="p-2">
-          <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
-            {filteredResults.length} results found
-          </div>
-
-          {filteredResults.slice(0, 6).map((product) => (
-            <button
-              key={product.slug}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                goProduct(product.slug);
-              }}
-              className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
-            >
-              {product.cover_image ? (
-                <img
-                  src={product.cover_image}
-                  alt={product.name}
-                  className="w-8 h-8 object-cover rounded-lg shadow-md"
-                />
-              ) : (
-                <div className="w-8 h-8 rounded-lg bg-gray-100" />
-              )}
-
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate text-xs">
-                  {product.name}
-                </h4>
-                <p className="text-xs font-semibold text-blue-600">
-                  {(product.currency?.symbol ?? '')}
-                  {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
-                   {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
-                </p>
+      {showSearchResults && searchQuery.length > 0 && searchInputRef && (
+        <Portal.Root>
+          <div
+            className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
+            style={{
+              top: getSearchDropdownPosition(searchInputRef).top,
+              left: getSearchDropdownPosition(searchInputRef).left,
+              width: getSearchDropdownPosition(searchInputRef).width,
+            }}
+            // prevent outer overlays from swallowing clicks
+            onMouseDownCapture={(e) => e.stopPropagation()}
+            onClickCapture={(e) => e.stopPropagation()}
+          >
+            {isSearching ? (
+              // loading → removes the "no results" flicker
+              <div className="p-6 text-center text-gray-500">
+                <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">Searching…</p>
               </div>
-            </button>
-          ))}
+            ) : filteredResults.length > 0 ? (
+              <div className="p-2">
+                <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
+                  {filteredResults.length} results found
+                </div>
 
-          {filteredResults.length > 6 && (
-            <button
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                goAll();
-              }}
-              className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
-            >
-              View all {filteredResults.length} results
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="p-6 text-center text-gray-500">
-          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm">No products found for “{searchQuery}”.</p>
-          {errorMsg && <p className="text-xs text-red-600 mt-1">{errorMsg}</p>}
-        </div>
+                {filteredResults.slice(0, 6).map((product) => (
+                  <button
+                    key={product.slug}
+                    type="button"
+                    onPointerDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      goProduct(product.slug)
+                    }}
+                    className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                  >
+                    {product.cover_image ? (
+                      <img
+                        src={product.cover_image}
+                        alt={product.name}
+                        className="w-8 h-8 object-cover rounded-lg shadow-md"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-lg bg-gray-100" />
+                    )}
+
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-gray-900 truncate text-xs">
+                        {product.name}
+                      </h4>
+                      <p className="text-xs font-semibold text-blue-600">
+                        {product.currency?.symbol ?? ''}
+                        {Number.isFinite(product.price)
+                          ? product.price.toFixed(2)
+                          : product.price}
+                        {!product.currency?.symbol && product.currency?.code
+                          ? ` ${product.currency.code}`
+                          : ''}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+
+                {filteredResults.length > 6 && (
+                  <button
+                    type="button"
+                    onPointerDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      goAll()
+                    }}
+                    className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
+                  >
+                    View all {filteredResults.length} results
+                  </button>
+                )}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500">
+                <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">
+                  No products found for “{searchQuery}”.
+                </p>
+                {errorMsg && (
+                  <p className="text-xs text-red-600 mt-1">{errorMsg}</p>
+                )}
+              </div>
+            )}
+          </div>
+        </Portal.Root>
       )}
-    </div>
-  </Portal.Root>
-)}
-
-
 
       {/* Mobile Search Results Dropdown - Rendered as Portal */}
 
-{showMobileSearchResults && searchQuery.length > 0 && mobileSearchInputRef && (
-  <Portal.Root>
-    <div
-      className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
-      style={{
-        top: getSearchDropdownPosition(mobileSearchInputRef).top,
-        left: getSearchDropdownPosition(mobileSearchInputRef).left,
-        width: Math.min(getSearchDropdownPosition(mobileSearchInputRef).width, 350),
-      }}
-      onMouseDownCapture={(e) => e.stopPropagation()}
-      onClickCapture={(e) => e.stopPropagation()}
-    >
-      {isSearching ? (
-        <div className="p-6 text-center text-gray-500">
-          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm">Searching…</p>
-        </div>
-      ) : filteredResults.length > 0 ? (
-        <div className="p-2">
-          <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
-            {filteredResults.length} results found
-          </div>
-
-          {filteredResults.slice(0, 6).map((product) => (
-            <button
-              key={product.slug}
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                goProduct(product.slug);
+      {showMobileSearchResults &&
+        searchQuery.length > 0 &&
+        mobileSearchInputRef && (
+          <Portal.Root>
+            <div
+              className="fixed bg-white border border-gray-200 rounded-2xl shadow-2xl max-h-96 overflow-y-auto z-[9999]"
+              style={{
+                top: getSearchDropdownPosition(mobileSearchInputRef).top,
+                left: getSearchDropdownPosition(mobileSearchInputRef).left,
+                width: Math.min(
+                  getSearchDropdownPosition(mobileSearchInputRef).width,
+                  350
+                ),
               }}
-              className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+              onMouseDownCapture={(e) => e.stopPropagation()}
+              onClickCapture={(e) => e.stopPropagation()}
             >
-              {product.cover_image ? (
-                <img
-                  src={product.cover_image}
-                  alt={product.name}
-                  className="w-8 h-8 object-cover rounded-lg shadow-md"
-                />
+              {isSearching ? (
+                <div className="p-6 text-center text-gray-500">
+                  <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">Searching…</p>
+                </div>
+              ) : filteredResults.length > 0 ? (
+                <div className="p-2">
+                  <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
+                    {filteredResults.length} results found
+                  </div>
+
+                  {filteredResults.slice(0, 6).map((product) => (
+                    <button
+                      key={product.slug}
+                      type="button"
+                      onPointerDown={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        goProduct(product.slug)
+                      }}
+                      className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
+                    >
+                      {product.cover_image ? (
+                        <img
+                          src={product.cover_image}
+                          alt={product.name}
+                          className="w-8 h-8 object-cover rounded-lg shadow-md"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-gray-100" />
+                      )}
+
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 truncate text-xs">
+                          {product.name}
+                        </h4>
+                        <p className="text-xs font-semibold text-blue-600">
+                          {product.currency?.symbol ?? ''}
+                          {Number.isFinite(product.price)
+                            ? product.price.toFixed(2)
+                            : product.price}
+                          {!product.currency?.symbol && product.currency?.code
+                            ? ` ${product.currency.code}`
+                            : ''}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+
+                  {filteredResults.length > 6 && (
+                    <button
+                      type="button"
+                      onPointerDown={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        goAll()
+                      }}
+                      className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
+                    >
+                      View all {filteredResults.length} results
+                    </button>
+                  )}
+                </div>
               ) : (
-                <div className="w-8 h-8 rounded-lg bg-gray-100" />
+                <div className="p-6 text-center text-gray-500">
+                  <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
+                  <p className="text-sm">
+                    No products found for “{searchQuery}”.
+                  </p>
+                  {errorMsg && (
+                    <p className="text-xs text-red-600 mt-1">{errorMsg}</p>
+                  )}
+                </div>
               )}
-
-              <div className="flex-1 min-w-0">
-                <h4 className="font-medium text-gray-900 truncate text-xs">
-                  {product.name}
-                </h4>
-                <p className="text-xs font-semibold text-blue-600">
-                  {(product.currency?.symbol ?? '')}
-                  {Number.isFinite(product.price) ? product.price.toFixed(2) : product.price}
-                   {!product.currency?.symbol && product.currency?.code ? ` ${product.currency.code}` : ''}
-                </p>
-              </div>
-            </button>
-          ))}
-
-          {filteredResults.length > 6 && (
-            <button
-              type="button"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                goAll();
-              }}
-              className="w-full p-3 text-center text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 font-medium text-sm"
-            >
-              View all {filteredResults.length} results
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="p-6 text-center text-gray-500">
-          <Search className="w-6 h-6 mx-auto mb-2 text-gray-300" />
-          <p className="text-sm">No products found for “{searchQuery}”.</p>
-          {errorMsg && <p className="text-xs text-red-600 mt-1">{errorMsg}</p>}
-        </div>
-      )}
-    </div>
-  </Portal.Root>
-)}
-
+            </div>
+          </Portal.Root>
+        )}
 
       {/* Main Content */}
-      <main className="w-full pb-6 lg:pb-0 overflow-visible">
-        {children}
-      </main>
+      <main className="w-full pb-6 lg:pb-0 overflow-visible">{children}</main>
 
       {/* Mobile Bottom Navigation - Reduced height */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 animate-bottom-nav">
         <div className="flex items-center justify-around py-1 px-4">
           <Link to="/store" className="flex flex-col items-center group">
-            <div className={`p-1 rounded-xl transition-all duration-300 ${location.pathname === '/store' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+            <div
+              className={`p-1 rounded-xl transition-all duration-300 ${
+                location.pathname === '/store'
+                  ? 'bg-cyan-400 text-white transform scale-110'
+                  : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'
+              }`}
+            >
               <Home className="w-5 h-5" />
             </div>
-            <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
+            <span
+              className={`text-xs mt-0.5 transition-colors duration-300 ${
+                location.pathname === '/store'
+                  ? 'text-cyan-600 font-medium'
+                  : 'text-gray-500'
+              }`}
+            >
               Home
             </span>
           </Link>
 
-          <Link to="/store/categories" className="flex flex-col items-center group">
-            <div className={`p-1 rounded-xl transition-all duration-300 ${location.pathname === '/store/categories' ? 'bg-cyan-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'}`}>
+          <Link
+            to="/store/categories"
+            className="flex flex-col items-center group"
+          >
+            <div
+              className={`p-1 rounded-xl transition-all duration-300 ${
+                location.pathname === '/store/categories'
+                  ? 'bg-cyan-400 text-white transform scale-110'
+                  : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'
+              }`}
+            >
               <Grid className="w-5 h-5" />
             </div>
-            <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store/categories' ? 'text-cyan-600 font-medium' : 'text-gray-500'}`}>
+            <span
+              className={`text-xs mt-0.5 transition-colors duration-300 ${
+                location.pathname === '/store/categories'
+                  ? 'text-cyan-600 font-medium'
+                  : 'text-gray-500'
+              }`}
+            >
               Categories
             </span>
           </Link>
 
-          <Link to="/store/wishlist" className="flex flex-col items-center group relative">
-            <div className={`p-1 rounded-xl transition-all duration-300 ${location.pathname === '/store/wishlist' ? 'bg-pink-400 text-white transform scale-110' : 'text-gray-600 group-hover:bg-pink-50 group-hover:text-pink-600'}`}>
+          <Link
+            to="/store/wishlist"
+            className="flex flex-col items-center group relative"
+          >
+            <div
+              className={`p-1 rounded-xl transition-all duration-300 ${
+                location.pathname === '/store/wishlist'
+                  ? 'bg-pink-400 text-white transform scale-110'
+                  : 'text-gray-600 group-hover:bg-pink-50 group-hover:text-pink-600'
+              }`}
+            >
               <Heart className="w-5 h-5" />
             </div>
-            <span className={`text-xs mt-0.5 transition-colors duration-300 ${location.pathname === '/store/wishlist' ? 'text-pink-600 font-medium' : 'text-gray-500'}`}>
+            <span
+              className={`text-xs mt-0.5 transition-colors duration-300 ${
+                location.pathname === '/store/wishlist'
+                  ? 'text-pink-600 font-medium'
+                  : 'text-gray-500'
+              }`}
+            >
               Wishlist
             </span>
             {wishlistItems.length > 0 && (
@@ -1009,27 +1324,50 @@ const goAll = () => {
                   </span>
                 </button>
               </PopoverTrigger>
-              <PopoverContent className="w-56 bg-white/95 backdrop-blur-md border-gray-200 rounded-2xl shadow-2xl mb-4" align="end">
+              <PopoverContent
+                className="w-56 bg-white/95 backdrop-blur-md border-gray-200 rounded-2xl shadow-2xl mb-4"
+                align="end"
+              >
                 <div className="space-y-4">
                   <div className="border-b border-gray-100 pb-3">
                     <p className="font-semibold text-gray-900">{user.name}</p>
-                    <p className="text-sm text-gray-600">{user.email || user.phone || 'My Account'}</p>
+                    <p className="text-sm text-gray-600">
+                      {user.email || user.phone || 'My Account'}
+                    </p>
                   </div>
                   <div className="space-y-2">
-                    <Link to="/store/addresses" className="block w-full text-left">
-                      <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300">
+                    <Link
+                      to="/store/addresses"
+                      className="block w-full text-left"
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300"
+                      >
                         <MapPin className="w-4 h-4 mr-3" />
                         My Addresses
                       </Button>
                     </Link>
-                    <Link to="/store/wishlist" className="block w-full text-left">
-                      <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300">
+                    <Link
+                      to="/store/wishlist"
+                      className="block w-full text-left"
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
+                      >
                         <Heart className="w-4 h-4 mr-3" />
                         My Wishlist
                       </Button>
                     </Link>
-                    <Link to="/store/returns" className="block w-full text-left">
-                      <Button variant="ghost" className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300">
+                    <Link
+                      to="/store/returns"
+                      className="block w-full text-left"
+                    >
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300"
+                      >
                         <RotateCcw className="w-4 h-4 mr-3" />
                         Returns
                       </Button>
@@ -1047,7 +1385,7 @@ const goAll = () => {
               </PopoverContent>
             </Popover>
           ) : (
-            <button 
+            <button
               className="flex flex-col items-center group"
               onClick={() => openAuthModal('signin')}
             >
@@ -1071,17 +1409,33 @@ const goAll = () => {
       </div>
 
       {/* Footer - Mobile Responsive with Dropdowns */}
-<footer className="bg-white text-gray-700 py-12 lg:py-8 mt-[2px] lg:mt-10 w-full overflow-hidden relative">
+      <footer className="bg-white text-gray-700 py-12 lg:py-8 mt-[2px] lg:mt-10 w-full overflow-hidden relative">
         {/* Decorative Background Pattern */}
         <div className="absolute inset-0 opacity-70">
-          <div className="absolute top-16 left-16 text-6xl text-cyan-400 transform rotate-12">+</div>
-          <div className="absolute top-32 right-24 text-4xl text-cyan-400 transform -rotate-12">×</div>
-          <div className="absolute bottom-16 left-24 text-5xl text-cyan-400 transform rotate-45">+</div>
-          <div className="absolute bottom-32 right-16 text-3xl text-cyan-400 transform -rotate-45">×</div>
-          <div className="absolute top-1/2 left-1/4 text-4xl text-cyan-400 transform rotate-12">+</div>
-          <div className="absolute top-1/3 right-1/3 text-3xl text-cyan-400 transform -rotate-12">×</div>
-          <div className="absolute top-20 right-1/4 text-5xl text-cyan-400 transform rotate-12">+</div>
-          <div className="absolute bottom-20 left-1/3 text-4xl text-cyan-400 transform -rotate-12">×</div>
+          <div className="absolute top-16 left-16 text-6xl text-cyan-400 transform rotate-12">
+            +
+          </div>
+          <div className="absolute top-32 right-24 text-4xl text-cyan-400 transform -rotate-12">
+            ×
+          </div>
+          <div className="absolute bottom-16 left-24 text-5xl text-cyan-400 transform rotate-45">
+            +
+          </div>
+          <div className="absolute bottom-32 right-16 text-3xl text-cyan-400 transform -rotate-45">
+            ×
+          </div>
+          <div className="absolute top-1/2 left-1/4 text-4xl text-cyan-400 transform rotate-12">
+            +
+          </div>
+          <div className="absolute top-1/3 right-1/3 text-3xl text-cyan-400 transform -rotate-12">
+            ×
+          </div>
+          <div className="absolute top-20 right-1/4 text-5xl text-cyan-400 transform rotate-12">
+            +
+          </div>
+          <div className="absolute bottom-20 left-1/3 text-4xl text-cyan-400 transform -rotate-12">
+            ×
+          </div>
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-8">
@@ -1112,7 +1466,9 @@ const goAll = () => {
             {/* Meem Home Brand Section */}
             <div className="md:col-span-1">
               <h3 className="text-4xl lg:text-5xl font-light mb-8 text-cyan-400">
-                Meem<br />Home
+                Meem
+                <br />
+                Home
               </h3>
               <div className="flex space-x-3 mb-8">
                 <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
@@ -1132,19 +1488,46 @@ const goAll = () => {
 
             {/* Quick Links */}
             <div>
-              <h4 className="font-semibold mb-6 text-lg text-cyan-400">Quick Links</h4>
+              <h4 className="font-semibold mb-6 text-lg text-cyan-400">
+                Quick Links
+              </h4>
               <ul className="space-y-3 text-gray-600">
-                <li><Link to="/store" className="hover:text-cyan-400 transition-colors">Home</Link></li>
-                <li><button className="hover:text-cyan-400 transition-colors">About</button></li>
-                <li><button className="hover:text-cyan-400 transition-colors">Contact</button></li>
-                <li><button className="hover:text-cyan-400 transition-colors">Terms & Conditions</button></li>
-                <li><button className="hover:text-cyan-400 transition-colors">Privacy Policy</button></li>
+                <li>
+                  <Link
+                    to="/store"
+                    className="hover:text-cyan-400 transition-colors"
+                  >
+                    Home
+                  </Link>
+                </li>
+                <li>
+                  <button className="hover:text-cyan-400 transition-colors">
+                    About
+                  </button>
+                </li>
+                <li>
+                  <button className="hover:text-cyan-400 transition-colors">
+                    Contact
+                  </button>
+                </li>
+                <li>
+                  <button className="hover:text-cyan-400 transition-colors">
+                    Terms & Conditions
+                  </button>
+                </li>
+                <li>
+                  <button className="hover:text-cyan-400 transition-colors">
+                    Privacy Policy
+                  </button>
+                </li>
               </ul>
             </div>
 
             {/* Contact Info */}
             <div>
-              <h4 className="font-semibold mb-6 text-lg text-cyan-400">Have a Questions?</h4>
+              <h4 className="font-semibold mb-6 text-lg text-cyan-400">
+                Have a Questions?
+              </h4>
               <div className="space-y-3 text-gray-600">
                 <p>mejdiaya-tripoli-lebanon</p>
                 <p className="font-semibold text-gray-800">+961 76 591 765</p>
@@ -1179,25 +1562,55 @@ const goAll = () => {
             {/* Quick Links Dropdown */}
             <Collapsible>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 group">
-                <h4 className="font-medium text-sm text-cyan-400 group-hover:text-cyan-500 transition-colors duration-300">Quick Links</h4>
+                <h4 className="font-medium text-sm text-cyan-400 group-hover:text-cyan-500 transition-colors duration-300">
+                  Quick Links
+                </h4>
                 <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 group-hover:text-cyan-500 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-3 py-2 animate-accordion-down">
                 <ul className="space-y-2 text-gray-600">
-                  <li className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                    <Link to="/store" className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Home</Link>
+                  <li
+                    className="animate-fade-in"
+                    style={{ animationDelay: '0.1s' }}
+                  >
+                    <Link
+                      to="/store"
+                      className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform"
+                    >
+                      Home
+                    </Link>
                   </li>
-                  <li className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">About</button>
+                  <li
+                    className="animate-fade-in"
+                    style={{ animationDelay: '0.2s' }}
+                  >
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">
+                      About
+                    </button>
                   </li>
-                  <li className="animate-fade-in" style={{ animationDelay: '0.3s' }}>
-                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Contact</button>
+                  <li
+                    className="animate-fade-in"
+                    style={{ animationDelay: '0.3s' }}
+                  >
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">
+                      Contact
+                    </button>
                   </li>
-                  <li className="animate-fade-in" style={{ animationDelay: '0.4s' }}>
-                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Terms & Conditions</button>
+                  <li
+                    className="animate-fade-in"
+                    style={{ animationDelay: '0.4s' }}
+                  >
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">
+                      Terms & Conditions
+                    </button>
                   </li>
-                  <li className="animate-fade-in" style={{ animationDelay: '0.5s' }}>
-                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">Privacy Policy</button>
+                  <li
+                    className="animate-fade-in"
+                    style={{ animationDelay: '0.5s' }}
+                  >
+                    <button className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform">
+                      Privacy Policy
+                    </button>
                   </li>
                 </ul>
               </CollapsibleContent>
@@ -1206,14 +1619,31 @@ const goAll = () => {
             {/* Contact Info Dropdown */}
             <Collapsible>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-all duration-300 group">
-                <h4 className="font-medium text-sm text-cyan-400 group-hover:text-cyan-500 transition-colors duration-300">Have a Questions?</h4>
+                <h4 className="font-medium text-sm text-cyan-400 group-hover:text-cyan-500 transition-colors duration-300">
+                  Have a Questions?
+                </h4>
                 <ChevronDown className="w-4 h-4 text-cyan-400 transition-transform duration-300 group-hover:text-cyan-500 data-[state=open]:rotate-180" />
               </CollapsibleTrigger>
               <CollapsibleContent className="px-3 py-2 animate-accordion-down">
                 <div className="space-y-2 text-gray-600">
-                  <p className="py-1 text-sm animate-fade-in hover:text-cyan-400 transition-colors duration-300" style={{ animationDelay: '0.1s' }}>mejdiaya-tripoli-lebanon</p>
-                  <p className="py-1 text-sm font-semibold text-gray-800 animate-fade-in hover:text-cyan-600 transition-colors duration-300" style={{ animationDelay: '0.2s' }}>+961 76 591 765</p>
-                  <p className="py-1 text-sm animate-fade-in hover:text-cyan-400 transition-colors duration-300" style={{ animationDelay: '0.3s' }}>info@email</p>
+                  <p
+                    className="py-1 text-sm animate-fade-in hover:text-cyan-400 transition-colors duration-300"
+                    style={{ animationDelay: '0.1s' }}
+                  >
+                    mejdiaya-tripoli-lebanon
+                  </p>
+                  <p
+                    className="py-1 text-sm font-semibold text-gray-800 animate-fade-in hover:text-cyan-600 transition-colors duration-300"
+                    style={{ animationDelay: '0.2s' }}
+                  >
+                    +961 76 591 765
+                  </p>
+                  <p
+                    className="py-1 text-sm animate-fade-in hover:text-cyan-400 transition-colors duration-300"
+                    style={{ animationDelay: '0.3s' }}
+                  >
+                    info@email
+                  </p>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -1222,10 +1652,12 @@ const goAll = () => {
           {/* Bottom decorative bars */}
           <div className="flex justify-center space-x-12 my-12">
             {Array.from({ length: 9 }).map((_, i) => (
-              <div 
-                key={i} 
+              <div
+                key={i}
                 className="h-2 bg-cyan-400"
-                style={{ width: `${[30, 50, 40, 60, 45, 70, 40, 50, 35][i]}px` }}
+                style={{
+                  width: `${[30, 50, 40, 60, 45, 70, 40, 50, 35][i]}px`,
+                }}
               ></div>
             ))}
           </div>
@@ -1233,19 +1665,18 @@ const goAll = () => {
           {/* Bottom Section */}
           <div className="text-center space-y-4">
             <p className="text-sm text-cyan-400">
-              This site is protected by recaptcha and the Google Privacy Policy and Terms Service apply.
+              This site is protected by recaptcha and the Google Privacy Policy
+              and Terms Service apply.
             </p>
-            <p className="text-sm text-gray-500">
-              Meemhome 2025 Copyright
-            </p>
+            <p className="text-sm text-gray-500">Meemhome 2025 Copyright</p>
           </div>
         </div>
       </footer>
 
       {/* Auth Modal */}
-      <AuthModal 
-        open={authModalOpen} 
-        onOpenChange={setAuthModalOpen} 
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
         defaultMode={authMode}
       />
 
@@ -1401,7 +1832,10 @@ const goAll = () => {
       </style>
 
       {/* Add to Cart Notification */}
-      <AddToCartNotification item={notificationItem} onClose={clearNotification} />
+      <AddToCartNotification
+        item={notificationItem}
+        onClose={clearNotification}
+      />
 
       {/* Variant Selection Modal */}
       {variantSelectionRequest && (
@@ -1411,12 +1845,17 @@ const goAll = () => {
           product={variantSelectionRequest.product}
           quantity={variantSelectionRequest.quantity}
           onConfirm={(variantId, fullProduct) => {
-            const productToUpdate = fullProduct || variantSelectionRequest.product;
-            addToCart(productToUpdate, variantSelectionRequest.quantity, variantId);
-            clearVariantSelection();
+            const productToUpdate =
+              fullProduct || variantSelectionRequest.product
+            addToCart(
+              productToUpdate,
+              variantSelectionRequest.quantity,
+              variantId
+            )
+            clearVariantSelection()
           }}
         />
       )}
     </div>
-  );
+  )
 }
