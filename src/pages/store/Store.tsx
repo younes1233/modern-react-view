@@ -195,103 +195,95 @@ const Store = () => {
   return (
     <div className="min-h-screen bg-white light overflow-x-hidden" data-store-page>
       <StoreLayout>
-        {/* Hero Section with Loading - Reduced height on mobile */}
-        {heroesLoading ? (
-          <HeroSkeleton />
-        ) : (
-          currentSlide && (
-            <section className="relative w-full overflow-hidden z-10" style={{
-              height: deviceType === 'mobile' ? '300px' : '360px', // Much smaller: 768x300 mobile, 1920x360 desktop
-              minHeight: deviceType === 'mobile' ? '300px' : '360px',
-              maxHeight: deviceType === 'mobile' ? '300px' : '360px'
-            }}>
-              <div className="absolute inset-0">
-                <img
-                  src={currentSlide.image_url || "/placeholder.svg"}
-                  alt="Hero Background"
-                  className="w-full h-full object-cover transition-opacity duration-500"
-                  style={{
-                    objectPosition: 'center center',
-                    transform: 'scale(1.02)',
-                  }}
-                  onError={(e) => {
-                    e.currentTarget.src = "/placeholder.svg";
-                  }}
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
-              </div>
+  {/* Hero Section (auto height, image contained) */}
+{heroesLoading ? (
+  <HeroSkeleton />
+) : (
+  currentSlide && (
+    <section
+      className="relative w-full overflow-hidden z-10 flex justify-center items-center bg-black"
+      style={{
+        // no fixed height — section will match image height
+        maxHeight: deviceType === 'mobile' ? 'auto' : 'none',
+      }}
+    >
+      {/* SINGLE IMAGE — contained, centered */}
+      <img
+        src={currentSlide.image_url || "/placeholder.svg"}
+        alt="Hero Background"
+        className="max-w-full h-auto object-contain transition-opacity duration-500"
+        style={{ objectPosition: "center center" }}
+        onError={(e) => {
+          e.currentTarget.src = "/placeholder.svg";
+        }}
+      />
 
-              {/* Navigation arrows for multiple slides */}
-              {slides.length > 1 && (
-                <>
-                  <button
-                    onClick={prevSlide}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all duration-200"
-                  >
-                    <ArrowRight className="h-6 w-6 text-white rotate-180" />
-                  </button>
-                  <button
-                    onClick={nextSlide}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all duration-200"
-                  >
-                    <ArrowRight className="h-6 w-6 text-white" />
-                  </button>
-                </>
-              )}
+      {/* Overlay gradient for text legibility */}
+      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent pointer-events-none" />
 
-              <div className="relative z-20 h-full flex items-center rounded-md mx-0">
-                <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center">
-                  {/* Left side: title + subtitle */}
-                  <div className="max-w-2xl text-white">
-                    {/* <div className="inline-block bg-cyan-500/20 backdrop-blur-sm text-cyan-200 px-2 sm:px-3 md:px-4 py-1 sm:py-1.5 md:py-2 rounded-full text-xs sm:text-sm font-medium mb-2 sm:mb-3 md:mb-4">
-                      ✨ Premium Quality
-                    </div> */}
-                    <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-2 sm:mb-3 md:mb-4">
-                      {currentSlide.title}
-                    </h1>
-                    <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-3 sm:mb-4 md:mb-6 max-w-xl">
-                      {currentSlide.subtitle}
-                    </p>
-                  </div>
+      {/* Content overlay */}
+      <div className="absolute inset-0 flex items-center justify-center z-20 px-3 sm:px-6">
+        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center text-white">
+          {/* Text */}
+          <div className="max-w-2xl">
+            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-3">
+              {currentSlide.title}
+            </h1>
+            <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-6 max-w-xl">
+              {currentSlide.subtitle}
+            </p>
+          </div>
 
-                  {/* Bottom right: button + contact info with small left margin */}
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 md:gap-4 mt-2 sm:mt-3 md:mt-0 ml-0 md:ml-6 self-end">
-                    {currentSlide.cta_text && currentSlide.cta_link && (
-                      <Button
-                        size="lg"
-                        className="bg-cyan-500 hover:bg-cyan-600 text-white px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
-                        onClick={() => window.open(currentSlide.cta_link, '_blank')}
-                      >
-                        {currentSlide.cta_text}
-                      </Button>
-                    )}
-                    {/* <div className="text-left">
-                      <div className="text-sm sm:text-base md:text-lg font-bold text-white">961 76591765</div>
-                      <div className="text-xs sm:text-sm text-gray-300">WWW.MEEMHOME.COM</div>
-                    </div> */}
-                  </div>
-                </div>
-              </div>
+          {/* CTA Button */}
+          {currentSlide.cta_text && currentSlide.cta_link && (
+            <Button
+              size="lg"
+              className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
+              onClick={() => window.open(currentSlide.cta_link, "_blank")}
+            >
+              {currentSlide.cta_text}
+            </Button>
+          )}
+        </div>
+      </div>
 
-              {/* Slide indicators */}
-              {slides.length > 1 && (
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-30 flex space-x-2">
-                  {slides.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => goToSlide(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                        index === currentSlideIndex
-                          ? 'bg-white'
-                          : 'bg-white/50 hover:bg-white/70'
-                      }`}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-          )
-        )}
+      {/* Navigation arrows (if multiple slides) */}
+      {slides.length > 1 && (
+        <>
+          <button
+            onClick={prevSlide}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all"
+          >
+            <ArrowRight className="h-6 w-6 text-white rotate-180" />
+          </button>
+          <button
+            onClick={nextSlide}
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all"
+          >
+            <ArrowRight className="h-6 w-6 text-white" />
+          </button>
+
+          {/* Slide indicators */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
+            {slides.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => goToSlide(index)}
+                className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                  index === currentSlideIndex
+                    ? "bg-white"
+                    : "bg-white/50 hover:bg-white/70"
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </section>
+  )
+)}
+
+
 
         {/* Stories Ring */}
         <StoriesRing />
