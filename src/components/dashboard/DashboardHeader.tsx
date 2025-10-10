@@ -40,7 +40,7 @@ export function DashboardHeader() {
         <div className="flex-1" />
         <div className="flex items-center gap-3">
           <Button asChild variant="outline" size="sm" className="gap-2 text-sm">
-            <Link to="/store" target="_blank">
+            <Link to="/" target="_blank">
               <ExternalLink className="h-4 w-4" />
               View Store
             </Link>

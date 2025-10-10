@@ -44,7 +44,7 @@ export function ShopByCategory() {
               {visibleCategories.map((category) => (
                 <Link
                   key={category.id}
-                  to="/store/categories"
+                  to="/categories"
                   onClick={() => handleCategoryClick(category.slug)}
                   className="group flex-shrink-0"
                 >
@@ -106,7 +106,7 @@ export function ShopByCategory() {
             {categories.map((category) => (
               <div key={category.id} className="group flex-shrink-0 flex flex-col items-center">
                 <Link
-                  to="/store/categories"
+                  to="/categories"
                   onClick={() => handleCategoryClick(category.slug)}
                   className="block"
                 >

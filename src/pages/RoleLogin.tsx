@@ -22,7 +22,7 @@ const RoleLogin = () => {
     if (user) {
       // Redirect based on user role
       if (user.role === 'customer') {
-        navigate('/store', { replace: true });
+        navigate('/', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
       }

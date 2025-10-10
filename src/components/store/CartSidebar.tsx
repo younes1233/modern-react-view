@@ -60,7 +60,7 @@ export function CartSidebar() {
       });
 
       // Navigate to checkout with session data
-      navigate('/store/checkout', {
+      navigate('/checkout', {
         state: {
           checkoutSession: response.details,
         },
@@ -172,14 +172,14 @@ export function CartSidebar() {
                       e.currentTarget.src = '/placeholder.svg';
                     }}
                     onClick={() => {
-                      navigate(`/store/product/${item.product.slug}`);
+                      navigate(`/product/${item.product.slug}`);
                       setIsOpen(false);
                     }}
                   />
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-cyan-600 transition-colors mb-1"
                         onClick={() => {
-                          navigate(`/store/product/${item.product.slug}`);
+                          navigate(`/product/${item.product.slug}`);
                           setIsOpen(false);
                         }}>
                       {item.product.name}

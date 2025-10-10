@@ -236,7 +236,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       // Redirect based on current location
       const isDashboard = window.location.pathname.startsWith('/dashboard');
-      window.location.href = isDashboard ? '/role-login' : '/store';
+      window.location.href = isDashboard ? '/role-login' : '/';
     }
   };
 

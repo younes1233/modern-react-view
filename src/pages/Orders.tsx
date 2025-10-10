@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/dashboard/AppSidebar";
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader";
@@ -36,6 +36,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Orders = () => {
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   /* -------- Filters & Lists -------- */
   const [filters, setFilters] = useState<OrderFilters>({});
@@ -103,12 +104,27 @@ const Orders = () => {
 
   /* -------- Row actions (stubbed except view) -------- */
   const handleStatusChange = async (orderId: string, newStatus: string) => {
-    // TODO: Implement status update API call
-    toast({
-      title: "Status Update",
-      description: `Order #${orderId} status will be updated to ${newStatus}`,
-    });
-    refetch();
+    try {
+      console.log('Attempting to update order status:', { orderId, newStatus });
+      const response = await orderService.updateOrderStatus(orderId, newStatus);
+      console.log('Status update response:', response);
+      
+      toast({
+        title: "Status Updated",
+        description: `Order #${orderId} status has been updated to ${newStatus}`,
+      });
+      
+      // Invalidate and refetch the orders cache
+      await queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      await refetch();
+    } catch (error) {
+      console.error('Failed to update order status:', error);
+      toast({
+        title: "Update Failed",
+        description: `Failed to update order #${orderId} status. Please try again.`,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleEditOrder = (orderId: string) => {
@@ -179,58 +195,39 @@ const Orders = () => {
 
   /* -------- Status badge -------- */
   const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "pending":
-        return (
-          <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200">
-            Pending
-          </Badge>
-        );
-      case "pending_payment":
-        return (
-          <Badge className="bg-orange-100 text-orange-800 hover:bg-orange-200">
-            Pending Payment
-          </Badge>
-        );
-      case "confirmed":
-        return (
-          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
-            Confirmed
-          </Badge>
-        );
-      case "processing":
-        return (
-          <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">
-            Processing
-          </Badge>
-        );
-      case "delivered":
-        return (
-          <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200">
-            Delivered
-          </Badge>
-        );
-      case "completed":
-        return (
-          <Badge className="bg-teal-100 text-teal-800 hover:bg-teal-200">
-            Completed
-          </Badge>
-        );
-      case "canceled":
-        return (
-          <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
-            Canceled
-          </Badge>
-        );
-      case "payment_failed":
-        return (
-          <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-200">
-            Payment Failed
-          </Badge>
-        );
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
+    // Find the status in the full list from backend
+    const statusInfo = statusOptions.find(s => s.value === status);
+    
+    if (statusInfo) {
+      // Use backend-defined colors and labels
+      const colorClasses = {
+        'amber': 'bg-amber-100 text-amber-800 hover:bg-amber-200',
+        'orange': 'bg-orange-100 text-orange-800 hover:bg-orange-200', 
+        'green': 'bg-green-100 text-green-800 hover:bg-green-200',
+        'blue': 'bg-blue-100 text-blue-800 hover:bg-blue-200',
+        'emerald': 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200',
+        'teal': 'bg-teal-100 text-teal-800 hover:bg-teal-200',
+        'red': 'bg-red-100 text-red-800 hover:bg-red-200',
+        'rose': 'bg-rose-100 text-rose-800 hover:bg-rose-200',
+        'purple': 'bg-purple-100 text-purple-800 hover:bg-purple-200',
+        'gray': 'bg-gray-100 text-gray-800 hover:bg-gray-200',
+      };
+      
+      const colorClass = colorClasses[statusInfo.color as keyof typeof colorClasses] || 'bg-gray-100 text-gray-800';
+      
+      return (
+        <Badge className={colorClass}>
+          {statusInfo.label}
+        </Badge>
+      );
     }
+    
+    // Fallback for any unknown statuses
+    return (
+      <Badge variant="secondary" className="bg-gray-100 text-gray-800">
+        {status || 'Unknown'}
+      </Badge>
+    );
   };
 
   /* -------- Stats -------- */
@@ -485,9 +482,10 @@ const Orders = () => {
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
                             <Package className="w-8 h-8 text-blue-600" />
-                            <div>
+                            <div className="flex-1">
                               <p className="text-xs text-blue-600 font-medium">CUSTOMER</p>
                               <p className="font-semibold text-blue-900">{adminOrderView.order.user}</p>
+                              <p className="text-xs text-blue-700 mt-1">Order #{adminOrderView.order.id}</p>
                             </div>
                           </div>
                         </CardContent>
@@ -537,6 +535,38 @@ const Orders = () => {
                               {adminOrderView.order.user_address}
                             </p>
                           </div>
+                          <div>
+                            <p className="text-xs text-gray-500 uppercase tracking-wide">Delivery Cost</p>
+                            <div className="flex items-center gap-2">
+                              <p className="text-sm font-semibold text-green-600">
+                                ${Number(adminOrderView.order.delivery_fee || 0).toFixed(2)}
+                              </p>
+                              {adminOrderView.order.is_custom_delivery_cost && (
+                                <Badge variant="outline" className="text-xs">Custom</Badge>
+                              )}
+                            </div>
+                            {adminOrderView.order.delivery_method_type && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                Method: {adminOrderView.order.delivery_method_type}
+                              </p>
+                            )}
+                          </div>
+                          {adminOrderView.order.delivery_tracking_number && (
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wide">Tracking Number</p>
+                              <p className="text-sm font-medium text-gray-900 font-mono">
+                                {adminOrderView.order.delivery_tracking_number}
+                              </p>
+                            </div>
+                          )}
+                          {adminOrderView.order.estimated_delivery_date && (
+                            <div>
+                              <p className="text-xs text-gray-500 uppercase tracking-wide">Estimated Delivery</p>
+                              <p className="text-sm font-medium text-gray-900">
+                                {new Date(adminOrderView.order.estimated_delivery_date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          )}
                           <div>
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Order Date</p>
                             <p className="text-sm font-medium text-gray-900">
@@ -618,9 +648,46 @@ const Orders = () => {
                                   {/* Product Info */}
                                   <div className="flex-1 min-w-0">
                                     <h4 className="font-medium text-gray-900 truncate">{item.product_name}</h4>
-                                    {item.variant_values && (
-                                      <p className="text-sm text-gray-500 mt-1">{item.variant_values}</p>
+                                    
+                                    {/* Product Variations */}
+                                    {(() => {
+                                      console.log('=== VARIANT DEBUG ===');
+                                      console.log('Product:', item.product_name);
+                                      console.log('is_variant:', item.is_variant);
+                                      console.log('variant_values:', item.variant_values);
+                                      console.log('variant_values type:', typeof item.variant_values);
+                                      console.log('variant_values isArray:', Array.isArray(item.variant_values));
+                                      if (item.debug_variant_info) {
+                                        console.log('Backend debug info:', item.debug_variant_info);
+                                      }
+                                      console.log('===================');
+                                      return null;
+                                    })()}
+                                    
+                                    {item.variant_values && Array.isArray(item.variant_values) && item.variant_values.length > 0 && (
+                                      <div className="flex flex-wrap gap-1 mt-1">
+                                        {item.variant_values.map((variant: any, index: number) => (
+                                          <span key={index} className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-700">
+                                            {variant.attribute}: {variant.value}
+                                          </span>
+                                        ))}
+                                      </div>
                                     )}
+                                    
+                                    {/* Fallback for old orders without variant_values - show indicator */}
+                                    {item.is_variant && (!item.variant_values || (Array.isArray(item.variant_values) && item.variant_values.length === 0)) && (
+                                      <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-700 mt-1">
+                                        Product Variant (Legacy Order)
+                                      </span>
+                                    )}
+                                    
+                                    
+                                    {/* Product Type Indicator */}
+                                    <div className="flex items-center gap-2 mt-1">
+                                      {item.is_package && (
+                                        <Badge variant="secondary" className="text-xs bg-purple-100 text-purple-700">Package</Badge>
+                                      )}
+                                    </div>
                                     
                                     {/* Pricing Info */}
                                     <div className="flex items-center gap-3 mt-2">
@@ -661,6 +728,93 @@ const Orders = () => {
                             })}
                           </div>
                         </ScrollArea>
+                      </CardContent>
+                    </Card>
+
+                    {/* Order Summary */}
+                    <Card>
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                          <DollarSign className="w-5 h-5" />
+                          Order Summary
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          {/* Items Total */}
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-sm text-gray-600">Items ({adminOrderView.order.items.length})</span>
+                            <span className="text-sm font-medium">${Number(adminOrderView.order.subtotal || 0).toFixed(2)}</span>
+                          </div>
+                          
+                          {/* Discounts if any */}
+                          {adminOrderView.order.items.some((item: any) => 
+                            item.pricing_details?.has_discount || 
+                            (item.pricing_details?.original_price && Number(item.pricing_details.original_price) > Number(item.selling_price))
+                          ) && (
+                            <div className="bg-green-50 p-2 rounded border border-green-200">
+                              <div className="flex items-center gap-2 mb-1">
+                                <Tag className="w-4 h-4 text-green-600" />
+                                <span className="text-sm font-medium text-green-800">Discounts Applied</span>
+                              </div>
+                              {adminOrderView.order.items.map((item: any) => {
+                                const hasDiscount = item.pricing_details?.has_discount || 
+                                  (item.pricing_details?.original_price && 
+                                   Number(item.pricing_details.original_price) > Number(item.selling_price));
+                                
+                                if (!hasDiscount) return null;
+                                
+                                const originalPrice = Number(item.pricing_details?.original_price || item.selling_price);
+                                const sellingPrice = Number(item.selling_price);
+                                const discountAmount = originalPrice - sellingPrice;
+                                const discountPercentage = originalPrice > 0 ? Math.round((discountAmount / originalPrice) * 100) : 0;
+                                const totalSavings = discountAmount * item.quantity;
+                                
+                                const discountName = item.pricing_details?.discount_details?.name || 
+                                                   item.discount_details?.name || 
+                                                   item.pricing_details?.discount_type || 
+                                                   item.discount_type || 
+                                                   'Discount';
+                                
+                                return (
+                                  <div key={item.id} className="text-xs text-green-700 ml-6 flex justify-between items-center">
+                                    <span>{item.product_name}: -{discountPercentage}% (Save ${totalSavings.toFixed(2)})</span>
+                                    <span className="bg-green-200 text-green-800 px-2 py-1 rounded text-xs font-medium">
+                                      {discountName}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                          
+                          {/* Tax if any */}
+                          {adminOrderView.order.items.some((item: any) => Number(item.pricing_details?.tax_amount || 0) > 0) && (
+                            <div className="flex justify-between items-center py-1">
+                              <span className="text-sm text-gray-600">Tax</span>
+                              <span className="text-sm font-medium">
+                                ${adminOrderView.order.items.reduce((total: number, item: any) => 
+                                  total + (Number(item.pricing_details?.tax_amount || 0) * item.quantity), 0
+                                ).toFixed(2)}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {/* Delivery Fee */}
+                          <div className="flex justify-between items-center py-1">
+                            <span className="text-sm text-gray-600">Delivery Fee</span>
+                            <span className="text-sm font-medium text-green-600">${Number(adminOrderView.order.delivery_fee || 0).toFixed(2)}</span>
+                          </div>
+                          
+                          {/* Total */}
+                          <div className="border-t pt-2">
+                            <div className="flex justify-between items-center">
+                              <span className="font-semibold text-gray-900">Total</span>
+                              <span className="font-bold text-lg text-gray-900">${Number(adminOrderView.order.total_price).toFixed(2)}</span>
+                            </div>
+                          </div>
+                          
+                        </div>
                       </CardContent>
                     </Card>
                   </div>

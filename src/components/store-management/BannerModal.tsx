@@ -194,7 +194,7 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
               id="ctaLink"
               value={formData.ctaLink}
               onChange={(e) => setFormData(prev => ({ ...prev, ctaLink: e.target.value }))}
-              placeholder="e.g., /store/categories"
+              placeholder="e.g., /categories"
             />
           </div>
 

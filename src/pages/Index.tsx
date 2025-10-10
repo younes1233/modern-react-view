@@ -40,7 +40,7 @@ const Index = () => {
 
   // Redirect customers to the store
   if (user.role === 'customer') {
-    return <Navigate to="/store" replace />;
+    return <Navigate to="/" replace />;
   }
 
   // Sellers are redirected to their products page

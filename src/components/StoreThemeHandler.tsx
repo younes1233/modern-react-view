@@ -7,7 +7,7 @@ export function StoreThemeHandler() {
 
   useEffect(() => {
     const root = window.document.documentElement;
-    const isStorePage = location.pathname.startsWith('/store');
+    const isStorePage = !location.pathname.startsWith('/dashboard') && !location.pathname.startsWith('/role-login');
 
     // Force light mode for store pages and prevent dark mode
     if (isStorePage) {
@@ -18,7 +18,7 @@ export function StoreThemeHandler() {
       const observer = new MutationObserver((mutations) => {
         mutations.forEach((mutation) => {
           if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            if (root.classList.contains('dark') && location.pathname.startsWith('/store')) {
+            if (root.classList.contains('dark') && (!location.pathname.startsWith('/dashboard') && !location.pathname.startsWith('/role-login'))) {
               root.classList.remove("dark");
               root.classList.add("light");
             }

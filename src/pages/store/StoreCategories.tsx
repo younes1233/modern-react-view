@@ -12,7 +12,7 @@ const StoreCategories = () => {
 
   const handleCategoryClick = (category: Category) => {
     // Navigate to products filtered by this category
-    navigate(`/store?category=${category.slug}`);
+    navigate(`/?category=${category.slug}`);
   };
 
   if (error) {

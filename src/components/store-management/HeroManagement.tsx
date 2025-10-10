@@ -77,7 +77,7 @@ export function HeroManagement() {
     subtitle: '',
     backgroundImage: '',
     ctaText: 'Shop Now',
-    ctaLink: '/store/categories',
+    ctaLink: '/categories',
     isActive: true,
     isSlider: false,
     slides: []
@@ -139,7 +139,7 @@ export function HeroManagement() {
       subtitle: '',
       backgroundImage: '',
       ctaText: 'Shop Now',
-      ctaLink: '/store/categories',
+      ctaLink: '/categories',
       isActive: true,
       isSlider: false,
       slides: []
@@ -154,7 +154,7 @@ export function HeroManagement() {
       subtitle: currentData.subtitle || '',
       backgroundImage: currentData.backgroundImage || '',
       ctaText: currentData.ctaText || 'Shop Now',
-      ctaLink: currentData.ctaLink || '/store/categories',
+      ctaLink: currentData.ctaLink || '/categories',
       order: 1
     };
     
@@ -177,7 +177,7 @@ export function HeroManagement() {
       subtitle: '',
       backgroundImage: '',
       ctaText: 'Shop Now',
-      ctaLink: '/store/categories',
+      ctaLink: '/categories',
       order: (formData.slides?.length || 0) + 1
     };
     
@@ -288,7 +288,7 @@ export function HeroManagement() {
         subtitle: '',
         backgroundImage: '',
         ctaText: 'Shop Now',
-        ctaLink: '/store/categories',
+        ctaLink: '/categories',
         isActive: true,
         isSlider: false,
         slides: []

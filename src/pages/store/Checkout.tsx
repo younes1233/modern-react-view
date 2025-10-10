@@ -206,7 +206,7 @@ const CheckoutNew = () => {
 
       toast.success('Order placed successfully! Order #' + response.details.order_number);
       clearCart();
-      navigate('/store/orders/' + response.details.order_id);
+      navigate('/orders/' + response.details.order_id);
     } catch (error: any) {
       console.error('Checkout error:', error);
 
@@ -270,7 +270,7 @@ const CheckoutNew = () => {
 
       toast.success('Order confirmed! Order #' + response.details.order_number);
       clearCart();
-      navigate('/store/orders/' + response.details.order_id);
+      navigate('/orders/' + response.details.order_id);
     } catch (error: any) {
       console.error('Payment confirmation error:', error);
       toast.error('Payment verification failed. Please contact support with your payment details.');
@@ -307,7 +307,7 @@ const CheckoutNew = () => {
               >
                 Sign In
               </Button>
-              <Button variant="outline" onClick={() => navigate('/store')}>
+              <Button variant="outline" onClick={() => navigate('/')}>
                 Continue Shopping
               </Button>
             </div>
@@ -330,7 +330,7 @@ const CheckoutNew = () => {
           <div className="text-center py-16">
             <h1 className="text-2xl font-bold text-gray-900 mb-4">Your cart is empty</h1>
             <p className="text-gray-600 mb-8">Add some items to your cart before proceeding to checkout.</p>
-            <Button onClick={() => navigate('/store')} className="bg-cyan-600 hover:bg-cyan-700">
+            <Button onClick={() => navigate('/')} className="bg-cyan-600 hover:bg-cyan-700">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Continue Shopping
             </Button>

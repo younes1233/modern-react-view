@@ -139,7 +139,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate('/store/categories')
+      navigate('/categories')
       setShowSearchResults(false)
       setShowMobileSearchResults(false)
     }
@@ -160,7 +160,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   }
 
   const handleSearchResultClick = (productSlug: string) => {
-    navigate(`/store/product/${productSlug}`)
+    navigate(`/product/${productSlug}`)
     setShowSearchResults(false)
     setShowMobileSearchResults(false)
     setSearchQuery('')
@@ -180,7 +180,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const handleLogout = () => {
     if (logout) {
       logout()
-      navigate('/store')
+      navigate('/')
     }
   }
 
@@ -222,14 +222,14 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   }
 
   const goProduct = (slug: string) => {
-    navigate(`/store/product/${slug}`)
+    navigate(`/product/${slug}`)
     clearSearch()
     setShowSearchResults(false)
     setShowMobileSearchResults(false)
   }
 
   const goAll = () => {
-    navigate('/store/categories') // you already do this elsewhere
+    navigate('/categories') // you already do this elsewhere
     setShowSearchResults(false)
     setShowMobileSearchResults(false)
   }
@@ -243,7 +243,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             {/* Logo */}
             <div className="flex items-center flex-shrink-0">
               <Link
-                to="/store"
+                to="/"
                 className="hover:scale-105 transition-transform duration-300"
               >
                 <img
@@ -256,11 +256,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Navigation - Desktop only */}
             <nav className="hidden lg:flex space-x-6 xl:space-x-8 flex-shrink-0">
-              {/* <Link to="/store/categories" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group text-sm xl:text-base">
+              {/* <Link to="/categories" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group text-sm xl:text-base">
                 Categories
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </Link> */}
-              {/* <Link to="/store/returns" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group text-sm xl:text-base">
+              {/* <Link to="/returns" className="text-gray-700 hover:text-blue-600 transition-all duration-300 font-medium relative group text-sm xl:text-base">
                 Returns
                 <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-blue-600 transition-all duration-300 group-hover:w-full"></span>
               </Link>
@@ -315,7 +315,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             <div className="hidden lg:flex items-center space-x-2 md:space-x-3 lg:space-x-4 flex-shrink-0">
               {/* Country and Currency Selectors */}
               {/* <CountryCurrencySelector /> */}
-              <Link to="/store/wishlist">
+              <Link to="/wishlist">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -359,7 +359,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       </div>
                       <div className="space-y-2">
                         <Link
-                          to="/store/addresses"
+                          to="/addresses"
                           className="block w-full text-left"
                         >
                           <Button
@@ -371,7 +371,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                           </Button>
                         </Link>
                         <Link
-                          to="/store/wishlist"
+                          to="/wishlist"
                           className="block w-full text-left"
                         >
                           <Button
@@ -383,7 +383,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                           </Button>
                         </Link>
                         <Link
-                          to="/store/returns"
+                          to="/returns"
                           className="block w-full text-left"
                         >
                           <Button
@@ -622,7 +622,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   </h3>
                   {/* Home Link */}
                   <Link
-                    to="/store"
+                    to="/"
                     className={`flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-cyan-600 hover:bg-cyan-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
                       isMobileMenuClosing
                         ? 'animate-slide-out-right-fast'
@@ -701,7 +701,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                         categories.map((category, index) => (
                           <Link
                             key={category.id}
-                            to={`/store/categories/${category.slug}`}
+                            to={`/categories/${category.slug}`}
                             className={`flex items-center gap-3 px-8 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 text-sm group ${
                               isCategoriesOpen ? 'opacity-100' : 'opacity-0'
                             }`}
@@ -739,7 +739,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
                   {/* Wishlist Link */}
                   <Link
-                    to="/store/wishlist"
+                    to="/wishlist"
                     className={`flex items-center gap-3 px-4 py-3 text-gray-700 hover:text-pink-600 hover:bg-pink-50 rounded-xl transition-all duration-300 font-medium group relative overflow-hidden ${
                       isMobileMenuClosing
                         ? 'animate-slide-out-right-fast'
@@ -1237,10 +1237,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       {/* Mobile Bottom Navigation - Reduced height */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-md border-t border-gray-200 z-40 animate-bottom-nav">
         <div className="flex items-center justify-around py-1 px-4">
-          <Link to="/store" className="flex flex-col items-center group">
+          <Link to="/" className="flex flex-col items-center group">
             <div
               className={`p-1 rounded-xl transition-all duration-300 ${
-                location.pathname === '/store'
+                location.pathname === '/'
                   ? 'bg-cyan-400 text-white transform scale-110'
                   : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'
               }`}
@@ -1249,7 +1249,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </div>
             <span
               className={`text-xs mt-0.5 transition-colors duration-300 ${
-                location.pathname === '/store'
+                location.pathname === '/'
                   ? 'text-cyan-600 font-medium'
                   : 'text-gray-500'
               }`}
@@ -1259,12 +1259,12 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </Link>
 
           <Link
-            to="/store/categories"
+            to="/categories"
             className="flex flex-col items-center group"
           >
             <div
               className={`p-1 rounded-xl transition-all duration-300 ${
-                location.pathname === '/store/categories'
+                location.pathname === '/categories'
                   ? 'bg-cyan-400 text-white transform scale-110'
                   : 'text-gray-600 group-hover:bg-cyan-50 group-hover:text-cyan-600'
               }`}
@@ -1273,7 +1273,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </div>
             <span
               className={`text-xs mt-0.5 transition-colors duration-300 ${
-                location.pathname === '/store/categories'
+                location.pathname === '/categories'
                   ? 'text-cyan-600 font-medium'
                   : 'text-gray-500'
               }`}
@@ -1283,12 +1283,12 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           </Link>
 
           <Link
-            to="/store/wishlist"
+            to="/wishlist"
             className="flex flex-col items-center group relative"
           >
             <div
               className={`p-1 rounded-xl transition-all duration-300 ${
-                location.pathname === '/store/wishlist'
+                location.pathname === '/wishlist'
                   ? 'bg-pink-400 text-white transform scale-110'
                   : 'text-gray-600 group-hover:bg-pink-50 group-hover:text-pink-600'
               }`}
@@ -1297,7 +1297,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </div>
             <span
               className={`text-xs mt-0.5 transition-colors duration-300 ${
-                location.pathname === '/store/wishlist'
+                location.pathname === '/wishlist'
                   ? 'text-pink-600 font-medium'
                   : 'text-gray-500'
               }`}
@@ -1337,7 +1337,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   </div>
                   <div className="space-y-2">
                     <Link
-                      to="/store/addresses"
+                      to="/addresses"
                       className="block w-full text-left"
                     >
                       <Button
@@ -1349,7 +1349,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       </Button>
                     </Link>
                     <Link
-                      to="/store/wishlist"
+                      to="/wishlist"
                       className="block w-full text-left"
                     >
                       <Button
@@ -1361,7 +1361,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       </Button>
                     </Link>
                     <Link
-                      to="/store/returns"
+                      to="/returns"
                       className="block w-full text-left"
                     >
                       <Button
@@ -1494,7 +1494,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
               <ul className="space-y-3 text-gray-600">
                 <li>
                   <Link
-                    to="/store"
+                    to="/"
                     className="hover:text-cyan-400 transition-colors"
                   >
                     Home
@@ -1574,7 +1574,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     style={{ animationDelay: '0.1s' }}
                   >
                     <Link
-                      to="/store"
+                      to="/"
                       className="block py-2 text-sm hover:text-cyan-400 transition-colors duration-300 hover:translate-x-2 transform"
                     >
                       Home

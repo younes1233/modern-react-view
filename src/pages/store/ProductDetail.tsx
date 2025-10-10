@@ -602,10 +602,10 @@ const ProductDetail = () => {
 
   // Memoize breadcrumbs - only recalculate when category path or product name changes
   const breadcrumbs = useMemo(() => [
-    { label: 'Home', path: '/store' },
+    { label: 'Home', path: '/' },
     ...(product?.category?.path?.map((cat) => ({
       label: cat.name,
-      path: `/store/categories/${cat.slug}`,
+      path: `/categories/${cat.slug}`,
     })) || []),
     { label: product?.name || 'Product', path: '', current: true },
   ], [product?.category?.path, product?.name])
@@ -624,7 +624,7 @@ const ProductDetail = () => {
               Product not found
             </h1>
             <Button
-              onClick={() => navigate('/store')}
+              onClick={() => navigate('/')}
               className="bg-cyan-600 hover:bg-cyan-700"
             >
               Back to Store

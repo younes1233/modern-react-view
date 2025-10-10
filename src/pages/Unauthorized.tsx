@@ -35,7 +35,7 @@ const Unauthorized = () => {
           <div className="flex flex-col gap-2">
             {user?.role === 'customer' ? (
               <Button asChild className="w-full">
-                <Link to="/store">
+                <Link to="/">
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Go to Store
                 </Link>

@@ -180,10 +180,21 @@ export interface AdminOrderItemView {
   is_variant: boolean;
   is_package: boolean;
   product_name: string;
-  variant_values: string;
+  variant_values: Array<{
+    attribute: string;
+    type: string;
+    value: string;
+    slug?: string;
+    hex_color?: string;
+  }> | null;
+  product_image?: string;
+  debug_variant_info?: any;
   quantity: number;
   selling_price: string;
   discount_amount: string;
+  item_discount_amount?: string;
+  item_discount_percentage?: string;
+  discount_type?: string;
   subtotal: string;
   final_total: string;
   product_id: string;
@@ -195,8 +206,15 @@ export interface AdminOrderView {
   user: string;
   user_address: string;
   total_price: string;
+  subtotal: string;
   order_status: string;
   payment_method: string;
+  payment_method_details?: any;
+  delivery_fee: string;
+  delivery_method_type?: string;
+  delivery_tracking_number?: string;
+  estimated_delivery_date?: string;
+  is_custom_delivery_cost: boolean;
   created_at: string;
   items: AdminOrderItemView[];
 }
@@ -275,6 +293,13 @@ class OrderService extends BaseApiService {
   /** Admin view order (matches /admin/orders/{order} response) */
   async getAdminOrderView(orderId: number | string): Promise<AdminOrderViewResponse> {
     return this.get<AdminOrderViewResponse>(`/admin/orders/${orderId}`);
+  }
+
+  /** Update order status (admin) */
+  async updateOrderStatus(orderId: number | string, status: string): Promise<{ message: string; order: any }> {
+    return this.put<{ message: string; order: any }>(`/admin/orders/${orderId}`, {
+      order_status: status
+    });
   }
 }
 

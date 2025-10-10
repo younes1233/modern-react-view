@@ -31,7 +31,7 @@ const Wishlist = () => {
               >
                 Sign In
               </Button>
-              <Link to="/store">
+              <Link to="/">
                 <Button variant="outline">
                   Continue Shopping
                 </Button>
@@ -77,7 +77,7 @@ const Wishlist = () => {
             <p className="text-gray-600 mb-6 sm:mb-8 max-w-md mx-auto text-sm sm:text-base px-4">
               Start browsing our products and add items you love to your wishlist for easy access later.
             </p>
-            <Link to="/store/categories">
+            <Link to="/categories">
               <Button className="bg-cyan-600 hover:bg-cyan-700">
                 <ShoppingBag className="w-4 sm:w-5 h-4 sm:h-5 mr-2" />
                 Start Shopping

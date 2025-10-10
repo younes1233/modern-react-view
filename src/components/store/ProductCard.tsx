@@ -122,7 +122,7 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
   }
 
   const handleProductClick = () => {
-    navigate(`/store/product/${product.slug}`)
+    navigate(`/product/${product.slug}`)
   }
 
   // Cover image handling

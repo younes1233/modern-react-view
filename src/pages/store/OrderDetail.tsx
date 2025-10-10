@@ -151,7 +151,7 @@ const OrderDetail = () => {
         <Button
           variant="ghost"
           className="mb-6"
-          onClick={() => navigate('/store')}
+          onClick={() => navigate('/')}
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Store
@@ -166,7 +166,7 @@ const OrderDetail = () => {
           <Card>
             <CardContent className="p-12 text-center">
               <p className="text-red-600 text-lg mb-4">Order not found or you don't have access to this order.</p>
-              <Button onClick={() => navigate('/store')}>Return to Store</Button>
+              <Button onClick={() => navigate('/')}>Return to Store</Button>
             </CardContent>
           </Card>
         ) : order.status === 'payment_failed' || order.status === 'canceled' || order.status === 'cancelled' ? (
@@ -183,10 +183,10 @@ const OrderDetail = () => {
                       Unfortunately, your payment could not be processed. Please try again or use a different payment method.
                     </p>
                     <div className="flex gap-3 justify-center">
-                      <Button onClick={() => navigate('/store/cart')} className="bg-cyan-600 hover:bg-cyan-700">
+                      <Button onClick={() => navigate('/cart')} className="bg-cyan-600 hover:bg-cyan-700">
                         Return to Cart
                       </Button>
-                      <Button variant="outline" onClick={() => navigate('/store')}>
+                      <Button variant="outline" onClick={() => navigate('/')}>
                         Continue Shopping
                       </Button>
                     </div>
@@ -200,7 +200,7 @@ const OrderDetail = () => {
                     <p className="text-gray-600 mb-6">
                       This order has been canceled. If you have any questions, please contact our support team.
                     </p>
-                    <Button onClick={() => navigate('/store')} className="bg-cyan-600 hover:bg-cyan-700">
+                    <Button onClick={() => navigate('/')} className="bg-cyan-600 hover:bg-cyan-700">
                       Continue Shopping
                     </Button>
                   </>
@@ -374,8 +374,14 @@ const OrderDetail = () => {
                             <div className="flex justify-between items-start gap-4">
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-gray-900 text-sm">{item.product_name}</h4>
-                                {item.variant_values && (
-                                  <p className="text-xs text-gray-500 mt-0.5">{item.variant_values}</p>
+                                {item.variant_values && Array.isArray(item.variant_values) && item.variant_values.length > 0 && (
+                                  <div className="flex flex-wrap gap-1 mt-0.5">
+                                    {item.variant_values.map((variant: any, index: number) => (
+                                      <span key={index} className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                                        {variant.attribute}: {variant.value}
+                                      </span>
+                                    ))}
+                                  </div>
                                 )}
                                 
                                 {/* Show comprehensive pricing info */}

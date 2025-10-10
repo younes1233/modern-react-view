@@ -94,15 +94,14 @@ function App() {
                         <Route path="/unauthorized" element={<Unauthorized />} />
 
                         {/* Store Routes (Public) */}
-                        <Route path="/store" element={<Store />} />
-                        <Route path="/" element={<ComingSoon />} />
-                        <Route path="/store/product/:slug" element={<ProductDetail />} />
-                        <Route path="/store/categories" element={<StoreCategories />} />
-                        <Route path="/store/checkout" element={<Checkout />} />
-                        <Route path="/store/orders/:id" element={<OrderDetail />} />
-                        <Route path="/store/returns" element={<StoreReturns />} />
-                        <Route path="/store/wishlist" element={<Wishlist />} />
-                        <Route path="/store/addresses" element={<AddressManagement />} />
+                        <Route path="/" element={<Store />} />
+                        <Route path="/product/:slug" element={<ProductDetail />} />
+                        <Route path="/categories" element={<StoreCategories />} />
+                        <Route path="/checkout" element={<Checkout />} />
+                        <Route path="/orders/:id" element={<OrderDetail />} />
+                        <Route path="/returns" element={<StoreReturns />} />
+                        <Route path="/wishlist" element={<Wishlist />} />
+                        <Route path="/addresses" element={<AddressManagement />} />
 
                         {/* Protected Admin Routes */}
                         <Route path="/dashboard" element={
