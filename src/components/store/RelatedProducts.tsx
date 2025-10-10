@@ -60,8 +60,8 @@ const LazyProductCard = memo(({ product, isVisible }: { product: RelatedProduct;
     cover_image: product.cover_image || '/placeholder.svg',
     stock: product.stock,
     rating: {
-      average: 0,
-      count: 0,
+      average: product.rating?.average || 0,
+      count: product.rating?.count || 0,
     },
   };
 

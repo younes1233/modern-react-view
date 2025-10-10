@@ -86,12 +86,12 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
   const { selectedCurrency } = useCountryCurrency()
   const navigate = useNavigate()
 
-  // Discount calculations
+  // Discount calculations with safe fallbacks following ProductDetail pattern
   const hasBackendDiscount = product.pricing?.applied_discounts?.length > 0
-  const backendOriginalPrice = product.pricing?.original_price
-  const backendDiscountedPrice = product.pricing?.price
+  const backendOriginalPrice = product.pricing?.original_price || 0
+  const backendDiscountedPrice = product.pricing?.price || 0
   const backendDiscountPercentage =
-    hasBackendDiscount && backendOriginalPrice
+    hasBackendDiscount && backendOriginalPrice && backendDiscountedPrice
       ? Math.round(
           ((backendOriginalPrice - backendDiscountedPrice) /
             backendOriginalPrice) *
@@ -103,7 +103,7 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
     product.pricing?.currency?.symbol || selectedCurrency?.symbol || '$'
 
   const savings =
-    backendOriginalPrice && backendOriginalPrice > backendDiscountedPrice
+    backendOriginalPrice && backendDiscountedPrice && backendOriginalPrice > backendDiscountedPrice
       ? backendOriginalPrice - backendDiscountedPrice
       : 0
 
@@ -133,7 +133,7 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
         '/placeholder-product.png'
       : product.cover_image || '/placeholder-product.png'
 
-  const hasDiscount = hasBackendDiscount || product.flags?.on_sale
+  const hasDiscount = hasBackendDiscount || (product.flags?.on_sale ?? false)
 
   return (
     <Card className="group cursor-pointer hover:shadow-lg transition-all duration-300 border border-gray-200 bg-white relative overflow-hidden h-full">

@@ -5,9 +5,53 @@ import { toast } from '@/components/ui/sonner';
 import { wishlistService, WishlistResponse, AddWishlistResponse } from '@/services/wishlistService';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Backend product interface to match ProductCard expectations
+interface BackendProduct {
+  id: number
+  name: string
+  slug: string
+  short_description?: string | null
+  category?: any | null
+  store?: string
+  cover_image?:
+    | {
+        desktop: string
+        tablet: string
+        mobile: string
+      }
+    | string
+  pricing?: {
+    original_price: number | null
+    price: number
+    currency_id: number | null
+    currency: {
+      code: string
+      symbol: string
+    } | null
+    applied_discounts: Array<any>
+    vat: {
+      rate: number
+      amount: number
+    }
+  }
+  flags?: {
+    on_sale: boolean
+    is_featured: boolean
+    is_new_arrival: boolean
+    is_best_seller: boolean
+    is_vat_exempt?: boolean
+    seller_product_status?: string
+  }
+  stock?: number
+  rating?: {
+    average: number
+    count: number
+  }
+}
+
 interface WishlistContextType {
-  items: Product[];
-  addToWishlist: (product: Product) => Promise<void>;
+  items: BackendProduct[];
+  addToWishlist: (product: Product | BackendProduct) => Promise<void>;
   removeFromWishlist: (productId: number) => Promise<void>;
   isInWishlist: (productId: number) => boolean;
   clearWishlist: () => Promise<void>;
@@ -18,32 +62,48 @@ interface WishlistContextType {
 const WishlistContext = createContext<WishlistContextType | undefined>(undefined);
 
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<Product[]>([]);
+  const [items, setItems] = useState<BackendProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
-  // Convert API wishlist items to our Product format
-  const convertApiWishlistItems = (apiWishlist: WishlistResponse): Product[] => {
-    return apiWishlist.details.wishlist.map(item => ({
-      id: item.wishlist_item.id,
-      name: item.wishlist_item.name || '',
-      price: item.wishlist_item.pricing?.price || 0,
-      originalPrice: item.wishlist_item.pricing?.original_price || undefined,
-      image: item.wishlist_item.cover_image?.desktop || '',
-      slug: item.wishlist_item.slug || '',
-      inStock: item.wishlist_item.stock > 0,
-      rating: item.wishlist_item.rating?.average || 0,
-      reviews: item.wishlist_item.rating?.count || 0,
-      // Add default values for required Product fields with null safety
-      description: item.wishlist_item.short_description || '',
-      category: item.wishlist_item.category || 'Uncategorized',
-      isFeatured: item.wishlist_item.flags?.is_featured || false,
-      isNewArrival: item.wishlist_item.flags?.is_new_arrival || false,
-      isOnSale: item.wishlist_item.flags?.on_sale || false,
-      sku: item.wishlist_item.meta?.seo_title || '',
-      thumbnails: [],
-      variations: []
-    }));
+  // Convert API wishlist items to BackendProduct format (exactly like RelatedProducts)
+  const convertApiWishlistItems = (apiWishlist: WishlistResponse): BackendProduct[] => {
+    console.log('Wishlist API response:', apiWishlist);
+    return apiWishlist.details.wishlist.map(item => {
+      const product = item.wishlist_item;
+      console.log('Converting wishlist item:', product);
+      console.log('Product pricing:', product.pricing);
+      
+      // Transform following exact RelatedProducts pattern
+      return {
+        id: product.id,
+        name: product.name,
+        slug: product.slug,
+        pricing: {
+          original_price: product.pricing?.original_price,
+          price: product.pricing?.price,
+          currency_id: product.pricing?.currency_id,
+          currency: product.pricing?.currency,
+          applied_discounts: product.pricing?.applied_discounts || [],
+          vat: {
+            rate: 0,
+            amount: 0,
+          },
+        },
+        flags: {
+          on_sale: product.flags?.on_sale || false,
+          is_featured: product.flags?.is_featured || false,
+          is_new_arrival: product.flags?.is_new_arrival || false,
+          is_best_seller: false,
+        },
+        cover_image: product.cover_image || '/placeholder.svg',
+        stock: product.stock,
+        rating: {
+          average: product.rating?.average || 0,
+          count: product.rating?.count || 0,
+        },
+      };
+    });
   };
 
   // Load wishlist when user logs in
@@ -79,7 +139,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const addToWishlist = async (product: Product) => {
+  const addToWishlist = async (product: Product | BackendProduct) => {
     if (!user) {
       toast.error("Please login to save items to your wishlist");
       return;
