@@ -139,7 +139,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
-      navigate('/categories')
+      navigate(`/products?q=${encodeURIComponent(searchQuery.trim())}`)
       setShowSearchResults(false)
       setShowMobileSearchResults(false)
     }
@@ -229,7 +229,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
   }
 
   const goAll = () => {
-    navigate('/categories') // you already do this elsewhere
+    navigate(`/products?q=${encodeURIComponent(searchQuery)}`)
     setShowSearchResults(false)
     setShowMobileSearchResults(false)
   }

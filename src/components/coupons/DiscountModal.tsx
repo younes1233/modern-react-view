@@ -29,7 +29,7 @@ interface DiscountModalProps {
 type DiscountScope = 'global' | 'product' | 'category';
 
 interface DiscountFormData {
-  type: 'percentage' | 'fixed';
+  type: 'percentage' | 'fixed' | 'discounted_price';
   value: number;
   label: string;
   description?: string;
@@ -82,7 +82,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                                   editingDiscount.discountable_type === 'App\\Models\\Category' ? 'category' : 'global';
 
       setFormData({
-        type: editingDiscount.type as 'percentage' | 'fixed',
+        type: editingDiscount.type as 'percentage' | 'fixed' | 'discounted_price',
         value: editingDiscount.value,
         label: editingDiscount.label || '',
         description: editingDiscount.label || '',
@@ -121,8 +121,8 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
         value: formData.value,
         label: formData.label,
         max_discount: formData.max_discount,
-        starts_at: formData.starts_at?.toISOString(),
-        expires_at: formData.expires_at?.toISOString(),
+        starts_at: formData.starts_at ? formData.starts_at.toISOString() : undefined,
+        expires_at: formData.expires_at ? formData.expires_at.toISOString() : undefined,
         is_active: formData.is_active,
         is_stackable: formData.is_stackable,
       };
@@ -233,13 +233,20 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Discount Type</Label>
-                  <Select value={formData.type} onValueChange={(value: 'percentage' | 'fixed') => setFormData({ ...formData, type: value })}>
+                  <Select value={formData.type} onValueChange={(value: 'percentage' | 'fixed' | 'discounted_price') => {
+                    const newFormData = { ...formData, type: value };
+                    if (value === 'discounted_price') {
+                      newFormData.scope = 'product';
+                    }
+                    setFormData(newFormData);
+                  }}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="percentage">Percentage</SelectItem>
                       <SelectItem value="fixed">Fixed Amount</SelectItem>
+                      <SelectItem value="discounted_price">Discounted Price</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -259,14 +266,16 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="value">
-                    {formData.type === 'percentage' ? 'Percentage (%)' : 'Amount ($)'}
+                    {formData.type === 'percentage' ? 'Percentage (%)' : 
+                     formData.type === 'fixed' ? 'Amount ($)' : 'New Price ($)'}
                   </Label>
                   <Input
                     id="value"
                     type="number"
                     value={formData.value || ''}
                     onChange={(e) => setFormData({ ...formData, value: Number(e.target.value) })}
-                    placeholder={formData.type === 'percentage' ? '20' : '50'}
+                    placeholder={formData.type === 'percentage' ? '20' : 
+                                formData.type === 'fixed' ? '50' : '99.99'}
                     min="0"
                     max={formData.type === 'percentage' ? '100' : undefined}
                   />
@@ -292,12 +301,16 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="scope">Discount Scope</Label>
-              <Select value={formData.scope} onValueChange={(value: DiscountScope) => setFormData({ ...formData, scope: value })}>
+              <Select 
+                value={formData.scope} 
+                onValueChange={(value: DiscountScope) => setFormData({ ...formData, scope: value })}
+                disabled={formData.type === 'discounted_price'}
+              >
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="global">
+                  <SelectItem value="global" disabled={formData.type === 'discounted_price'}>
                     <div className="flex items-center gap-2">
                       <Globe className="w-4 h-4" />
                       <span>Global - All products</span>
@@ -309,7 +322,7 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                       <span>Product - Specific products</span>
                     </div>
                   </SelectItem>
-                  <SelectItem value="category">
+                  <SelectItem value="category" disabled={formData.type === 'discounted_price'}>
                     <div className="flex items-center gap-2">
                       <Tag className="w-4 h-4" />
                       <span>Category - Product categories</span>
@@ -318,7 +331,9 @@ export const DiscountModal: React.FC<DiscountModalProps> = ({
                 </SelectContent>
               </Select>
               <div className="text-xs text-muted-foreground">
-                {getScopeDescription(formData.scope)}
+                {formData.type === 'discounted_price' 
+                  ? 'Discounted price requires specific product targeting'
+                  : getScopeDescription(formData.scope)}
               </div>
             </div>
             

@@ -250,14 +250,26 @@ const Coupons = () => {
   ]);
 
   // Filter functions for different types
+  console.log('All discounts before filtering:', discounts);
+  console.log('Search term:', searchTerm);
+  console.log('Filter status:', filterStatus);
+  
   const filteredDiscounts = discounts?.filter(discount => {
-    const matchesSearch = discount.label?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = searchTerm === '' || 
+                         discount.label?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         discount.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         discount.id?.toString().includes(searchTerm);
+    
     const matchesStatus = filterStatus === "all" || 
                          (filterStatus === "active" && getDiscountStatus(discount) === 'active') ||
                          (filterStatus === "inactive" && getDiscountStatus(discount) === 'inactive') ||
                          (filterStatus === "expired" && getDiscountStatus(discount) === 'expired');
+    
     return matchesSearch && matchesStatus;
   }) || [];
+  
+  console.log('Filtered discounts:', filteredDiscounts);
+  console.log('Filtered discounts count:', filteredDiscounts.length);
 
   const filteredCoupons = coupons?.filter(coupon => {
     const matchesSearch = coupon.code?.toLowerCase().includes(searchTerm.toLowerCase()) ||

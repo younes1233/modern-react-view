@@ -52,6 +52,7 @@ const Store = lazy(() => import("@/pages/store/Store"));
 import ComingSoon from "./pages/store/ComingSoon";
 const ProductDetail = lazy(() => import("@/pages/store/ProductDetail"));
 const StoreCategories = lazy(() => import("@/pages/store/StoreCategories"));
+const StoreProducts = lazy(() => import("@/pages/store/StoreProducts"));
 const Checkout = lazy(() => import("@/pages/store/Checkout"));
 const StoreReturns = lazy(() => import("@/pages/store/Returns"));
 const Wishlist = lazy(() => import("@/pages/store/Wishlist"));
@@ -97,6 +98,7 @@ function App() {
                         <Route path="/" element={<Store />} />
                         <Route path="/product/:slug" element={<ProductDetail />} />
                         <Route path="/categories" element={<StoreCategories />} />
+                        <Route path="/products" element={<StoreProducts />} />
                         <Route path="/checkout" element={<Checkout />} />
                         <Route path="/orders/:id" element={<OrderDetail />} />
                         <Route path="/returns" element={<StoreReturns />} />

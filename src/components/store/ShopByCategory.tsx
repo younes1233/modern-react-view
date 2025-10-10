@@ -11,7 +11,7 @@ export function ShopByCategory() {
   const { categories, loading } = useStoreCategories();
 
   const handleCategoryClick = (categorySlug: string) => {
-    // Handle category selection if needed
+    // Navigate to products page with category filter
     console.log('Category selected:', categorySlug);
   };
 
@@ -44,7 +44,7 @@ export function ShopByCategory() {
               {visibleCategories.map((category) => (
                 <Link
                   key={category.id}
-                  to="/categories"
+                  to={`/products?category=${category.slug}`}
                   onClick={() => handleCategoryClick(category.slug)}
                   className="group flex-shrink-0"
                 >
@@ -106,7 +106,7 @@ export function ShopByCategory() {
             {categories.map((category) => (
               <div key={category.id} className="group flex-shrink-0 flex flex-col items-center">
                 <Link
-                  to="/categories"
+                  to={`/products?category=${category.slug}`}
                   onClick={() => handleCategoryClick(category.slug)}
                   className="block"
                 >

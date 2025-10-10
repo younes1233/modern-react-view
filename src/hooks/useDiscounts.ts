@@ -41,6 +41,10 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
       });
 
       if (response.error === false && response.details?.discounts) {
+        console.log('Raw API response:', response);
+        console.log('Discounts data received:', response.details.discounts.data);
+        console.log('Total discounts count:', response.details.discounts.data?.length);
+        
         setDiscounts(response.details.discounts.data || []);
         setPagination({
           current_page: response.details.discounts.current_page || 1,

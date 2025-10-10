@@ -11,7 +11,7 @@ export interface Discount {
   store_id?: number;
   coupon_id?: number;
   user_id?: number;
-  type: 'percentage' | 'fixed' | 'buy_x_get_y';
+  type: 'percentage' | 'fixed' | 'discounted_price' | 'buy_x_get_y';
   value: number;
   max_discount?: number;
   starts_at?: string;
@@ -107,7 +107,7 @@ export interface DiscountPreviewResponse {
 
 export interface CreateDiscountRequest {
   // Basic discount fields
-  type: 'percentage' | 'fixed' | 'buy_x_get_y';
+  type: 'percentage' | 'fixed' | 'discounted_price' | 'buy_x_get_y';
   value: number;
   label?: string;
   max_discount?: number;
@@ -509,6 +509,8 @@ class DiscountService {
       case 'percentage':
         return `${discount.value}%`;
       case 'fixed':
+        return `$${discount.value}`;
+      case 'discounted_price':
         return `$${discount.value}`;
       case 'buy_x_get_y':
         const rule = discount.promotion_rule;
