@@ -218,67 +218,8 @@ const Store = () => {
         }}
       />
 
-      {/* Overlay gradient for text legibility */}
-      <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent pointer-events-none" />
 
-      {/* Content overlay */}
-      <div className="absolute inset-0 flex items-center justify-center z-20 px-3 sm:px-6">
-        <div className="w-full max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center text-white">
-          {/* Text */}
-          <div className="max-w-2xl">
-            <h1 className="text-lg sm:text-xl md:text-2xl lg:text-4xl xl:text-5xl font-bold leading-tight mb-3">
-              {currentSlide.title}
-            </h1>
-            <p className="text-xs sm:text-sm md:text-base text-gray-200 leading-relaxed mb-6 max-w-xl">
-              {currentSlide.subtitle}
-            </p>
-          </div>
 
-          {/* CTA Button */}
-          {currentSlide.cta_text && currentSlide.cta_link && (
-            <Button
-              size="lg"
-              className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold shadow-xl"
-              onClick={() => window.open(currentSlide.cta_link, "_blank")}
-            >
-              {currentSlide.cta_text}
-            </Button>
-          )}
-        </div>
-      </div>
-
-      {/* Navigation arrows (if multiple slides) */}
-      {slides.length > 1 && (
-        <>
-          <button
-            onClick={prevSlide}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all"
-          >
-            <ArrowRight className="h-6 w-6 text-white rotate-180" />
-          </button>
-          <button
-            onClick={nextSlide}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-30 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-full p-2 transition-all"
-          >
-            <ArrowRight className="h-6 w-6 text-white" />
-          </button>
-
-          {/* Slide indicators */}
-          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 flex space-x-2">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => goToSlide(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  index === currentSlideIndex
-                    ? "bg-white"
-                    : "bg-white/50 hover:bg-white/70"
-                }`}
-              />
-            ))}
-          </div>
-        </>
-      )}
     </section>
   )
 )}
