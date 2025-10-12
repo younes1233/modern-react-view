@@ -64,12 +64,19 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes
       gcTime: 10 * 60 * 1000, // 10 minutes
-      retry: 2, // Retry failed requests up to 2 times
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff: 1s, 2s, 4s, max 30s
+      retry: (failureCount, error: any) => {
+        // Don't retry if it's a rate limit error (429) or authentication error (401)
+        if (error?.status === 429 || error?.status === 401) {
+          return false;
+        }
+        // Only retry once for other errors
+        return failureCount < 1;
+      },
+      retryDelay: (attemptIndex) => Math.min(2000 * 2 ** attemptIndex, 5000), // Slower backoff: 2s, 4s, max 5s
     },
     mutations: {
-      retry: 1, // Retry mutations once
-      retryDelay: 1000, // Wait 1s before retry
+      retry: 0, // Don't retry mutations to avoid duplicate actions
+      retryDelay: 1000,
     },
   },
 });

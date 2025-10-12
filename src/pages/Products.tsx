@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   useAdminProducts,
   useDeleteProduct,
@@ -60,6 +60,8 @@ import {
   Package,
   TrendingUp,
   AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { exportToExcel, exportToPDF } from '@/utils/exportUtils';
 
@@ -89,6 +91,7 @@ export default function Products() {
 
   const products = productsData?.products || [];
   const pagination = productsData?.pagination;
+
 
   // Event handlers
   const handleSearch = (term: string) => {
@@ -441,21 +444,21 @@ export default function Products() {
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                   </div>
                 ) : (
-                  <div className="rounded-md border">
-                    <Table>
+                  <div className="rounded-md border overflow-x-auto scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300">
+                      <Table>
                       <TableHeader>
                         <TableRow>
-                          <TableHead>Image</TableHead>
-                          <TableHead>Product</TableHead>
-                          <TableHead>SKU</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead>Store</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Seller Status</TableHead>
-                          <TableHead>Variants</TableHead>
-                          <TableHead>Pricing</TableHead>
-                          <TableHead>Flags</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
+                          <TableHead className="w-20">Image</TableHead>
+                          <TableHead className="min-w-48">Product</TableHead>
+                          <TableHead className="w-32">SKU</TableHead>
+                          <TableHead className="min-w-40">Category</TableHead>
+                          <TableHead className="min-w-40">Store</TableHead>
+                          <TableHead className="w-24">Status</TableHead>
+                          <TableHead className="w-32">Seller Status</TableHead>
+                          <TableHead className="w-24">Variants</TableHead>
+                          <TableHead className="w-28">Pricing</TableHead>
+                          <TableHead className="min-w-32">Flags</TableHead>
+                          <TableHead className="text-right w-20">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -591,7 +594,7 @@ export default function Products() {
                         ))}
                       </TableBody>
                       </Table>
-                    </div>
+                  </div>
                 )}
 
                 {/* Pagination */}
@@ -601,6 +604,9 @@ export default function Products() {
                       Showing {(pagination.current_page - 1) * pagination.per_page + 1} to{' '}
                       {Math.min(pagination.current_page * pagination.per_page, pagination.total)} of{' '}
                       {pagination.total} products
+                      <div className="text-xs mt-1 text-muted-foreground/70">
+                        Use ← → arrow keys to scroll table horizontally
+                      </div>
                     </div>
                     <div className="flex items-center space-x-2">
                       <Button
@@ -608,17 +614,23 @@ export default function Products() {
                         size="sm"
                         onClick={() => setCurrentPage(pagination.current_page - 1)}
                         disabled={pagination.current_page === 1}
+                        className="flex items-center gap-1"
                       >
+                        <ChevronLeft className="h-4 w-4" />
                         Previous
                       </Button>
-                      <div className="text-sm">Page {pagination.current_page} of {pagination.last_page}</div>
+                      <div className="text-sm bg-muted px-3 py-1 rounded-md">
+                        Page {pagination.current_page} of {pagination.last_page}
+                      </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setCurrentPage(pagination.current_page + 1)}
                         disabled={pagination.current_page === pagination.last_page}
+                        className="flex items-center gap-1"
                       >
                         Next
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
@@ -629,6 +641,7 @@ export default function Products() {
             {/* End of main content wrapper */}
           </div>
         </div>
+
       </div>
 
       {/* Modals */}

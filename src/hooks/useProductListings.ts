@@ -30,7 +30,9 @@ export const useProductListings = () => {
       }
       console.log('useProductListings: No product listings found in response');
       return [];
-    }
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 
   const createMutation = useMutation({

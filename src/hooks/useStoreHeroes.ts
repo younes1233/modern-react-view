@@ -16,6 +16,8 @@ export const useStoreHeroes = () => {
       }
       console.log('useStoreHeroes: No heroes data found, returning empty array');
       return [];
-    }
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 };

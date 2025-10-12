@@ -20,7 +20,9 @@ export const useHomeSections = () => {
         return data.details.home_sections;
       }
       return [];
-    }
+    },
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 15 * 60 * 1000, // 15 minutes
   });
 };
 

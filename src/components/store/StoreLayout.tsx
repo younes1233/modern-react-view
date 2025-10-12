@@ -186,9 +186,15 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
   const closeMobileMenu = () => {
     setIsMobileMenuClosing(true)
+    // Also close categories when closing sidebar
+    if (isCategoriesOpen) {
+      setIsCategoriesClosing(true)
+      setIsCategoriesOpen(false)
+    }
     setTimeout(() => {
       setIsMobileMenuOpen(false)
       setIsMobileMenuClosing(false)
+      setIsCategoriesClosing(false)
     }, 200) // Fast close animation duration
   }
 
@@ -595,8 +601,11 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Store Navigation */}
             <div
-              className="flex-1 overflow-y-auto p-4"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+              className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400"
+              style={{ 
+                scrollbarWidth: 'thin',
+                msOverflowStyle: 'auto'
+              }}
             >
               <div className="space-y-1">
                 {/* Main Navigation */}
@@ -701,7 +710,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                         categories.map((category, index) => (
                           <Link
                             key={category.id}
-                            to={`/categories/${category.slug}`}
+                            to={`/products?category=${category.slug}`}
                             className={`flex items-center gap-3 px-8 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-300 text-sm group ${
                               isCategoriesOpen ? 'opacity-100' : 'opacity-0'
                             }`}

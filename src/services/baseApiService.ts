@@ -5,7 +5,7 @@ export interface ApiResponse<T = any> {
 }
 
 class BaseApiService {
-  protected baseURL = 'https://meemhome.com/api';
+  protected baseURL = import.meta.env.VITE_API_BASE_URL || 'https://meemhome.com/api';
   private static token: string | null = null;
   private apiSecret = import.meta.env.VITE_API_SECRET || '';
   private static isRefreshing = false;

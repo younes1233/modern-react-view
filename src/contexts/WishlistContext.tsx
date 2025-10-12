@@ -69,10 +69,18 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
   // Convert API wishlist items to BackendProduct format (exactly like RelatedProducts)
   const convertApiWishlistItems = (apiWishlist: WishlistResponse): BackendProduct[] => {
     console.log('Wishlist API response:', apiWishlist);
-    return apiWishlist.details.wishlist.map(item => {
-      const product = item.wishlist_item;
-      console.log('Converting wishlist item:', product);
-      console.log('Product pricing:', product.pricing);
+    
+    if (!apiWishlist?.details?.wishlist || !Array.isArray(apiWishlist.details.wishlist)) {
+      console.warn('Invalid wishlist data structure:', apiWishlist);
+      return [];
+    }
+    
+    return apiWishlist.details.wishlist
+      .filter(item => item?.wishlist_item !== null && item?.wishlist_item !== undefined)
+      .map(item => {
+        const product = item.wishlist_item;
+        console.log('Converting wishlist item:', product);
+        console.log('Product pricing:', product.pricing);
       
       // Transform following exact RelatedProducts pattern
       return {
@@ -86,15 +94,17 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           currency: product.pricing?.currency,
           applied_discounts: product.pricing?.applied_discounts || [],
           vat: {
-            rate: 0,
-            amount: 0,
+            rate: product.pricing?.vat?.rate || 0,
+            amount: product.pricing?.vat?.amount || 0,
           },
         },
         flags: {
           on_sale: product.flags?.on_sale || false,
           is_featured: product.flags?.is_featured || false,
           is_new_arrival: product.flags?.is_new_arrival || false,
-          is_best_seller: false,
+          is_best_seller: product.flags?.is_best_seller || false,
+          is_vat_exempt: product.flags?.is_vat_exempt || false,
+          seller_product_status: product.flags?.seller_product_status,
         },
         cover_image: product.cover_image || '/placeholder.svg',
         stock: product.stock,
@@ -102,6 +112,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
           average: product.rating?.average || 0,
           count: product.rating?.count || 0,
         },
+        short_description: product.short_description,
+        category: product.category,
+        store: product.store,
+        variants_count: product.variants_count,
+        has_variants: product.has_variants,
+        variations: product.variations,
       };
     });
   };
@@ -125,7 +141,8 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       const wishlist = await wishlistService.getWishlist();
-      setItems(convertApiWishlistItems(wishlist));
+      const convertedItems = convertApiWishlistItems(wishlist);
+      setItems(convertedItems);
     } catch (error: any) {
       console.error('Error loading wishlist:', error);
       if (error?.status === 401) {
