@@ -1017,33 +1017,78 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           <div className="flex justify-center items-center">
             <div className="flex items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
               <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-scroll">
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                <a 
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   TIKTOK
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                </a>
+                <a 
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   INSTAGRAM
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   FACEBOOK
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                </a>
+                <a 
+                  href="https://youtube.com/@meemhome?si=Kz9tpa_2EUQ8eno1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
+                  YOUTUBE
+                </a>
+                <a 
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   TIKTOK
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                </a>
+                <a 
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   INSTAGRAM
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   FACEBOOK
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
+                </a>
+                <a 
+                  href="https://youtube.com/@meemhome?si=Kz9tpa_2EUQ8eno1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
+                  YOUTUBE
+                </a>
+                <a 
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
+                >
                   TIKTOK
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
-                  INSTAGRAM
-                </span>
-                <span className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap">
-                  FACEBOOK
-                </span>
+                </a>
               </div>
             </div>
           </div>
@@ -1480,18 +1525,36 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 Home
               </h3>
               <div className="flex space-x-3 mb-8">
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                <a 
+                  href="tel:+96176591765"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <Phone className="w-5 h-5" />
-                </div>
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-bold">f</span>
-                </div>
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                </a>
+                <a 
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-bold">in</span>
-                </div>
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                </a>
+                <a 
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-bold">@</span>
-                </div>
+                </a>
               </div>
             </div>
 
@@ -1553,18 +1616,36 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 Meem Home
               </h3>
               <div className="flex justify-center space-x-3 mb-6">
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                <a 
+                  href="tel:+96176591765"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <Phone className="w-5 h-5" />
-                </div>
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                </a>
+                <a 
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-bold">f</span>
-                </div>
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                </a>
+                <a 
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-bold">in</span>
-                </div>
-                <div className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer">
+                </a>
+                <a 
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                >
                   <span className="text-sm font-bold">@</span>
-                </div>
+                </a>
               </div>
             </div>
 

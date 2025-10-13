@@ -12,6 +12,14 @@ class BaseApiService {
   private static refreshPromise: Promise<string> | null = null;
 
   constructor() {
+    // Debug: Log environment variables
+    console.log('🔍 Environment Debug:', {
+      baseURL: this.baseURL,
+      apiSecret: this.apiSecret ? `${this.apiSecret.slice(0, 8)}...` : 'NOT SET',
+      envViteApiBaseUrl: import.meta.env.VITE_API_BASE_URL,
+      envViteApiSecret: import.meta.env.VITE_API_SECRET ? `${import.meta.env.VITE_API_SECRET.slice(0, 8)}...` : 'NOT SET'
+    });
+    
     // Get token from localStorage on initialization if not already loaded
     if (!BaseApiService.token) {
       const storedToken = localStorage.getItem('auth_token');
@@ -78,11 +86,10 @@ class BaseApiService {
         // Clear everything on refresh failure
         this.removeToken();
 
-        // Redirect to login if we're not already there
-        if (window.location.pathname !== '/login' && window.location.pathname !== '/role-login') {
-          console.log('🔒 Redirecting to login due to token refresh failure');
-          window.location.href = '/login';
-        }
+        // For store frontend, just clear auth and stay on current page
+        // Don't redirect to login as this is a store app, not admin
+        console.log('🔒 Token refresh failed, clearing authentication');
+        // Let the app handle the unauthenticated state gracefully
 
         throw error;
       } finally {
