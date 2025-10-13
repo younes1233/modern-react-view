@@ -35,10 +35,7 @@ export const OrderActions: React.FC<OrderActionsProps> = ({
     if (onTrack) {
       onTrack(orderId);
     } else {
-      toast({
-        title: "Tracking Order",
-        description: `Tracking information for order ${orderId}`,
-      });
+      toast.success(`Tracking information for order ${orderId}`, { duration: 2000 });
     }
   };
 
@@ -46,10 +43,7 @@ export const OrderActions: React.FC<OrderActionsProps> = ({
     if (onRefund) {
       onRefund(orderId);
     } else {
-      toast({
-        title: "Processing Refund",
-        description: `Refund initiated for order ${orderId}`,
-      });
+      toast.success(`Refund initiated for order ${orderId}`, { duration: 2000 });
     }
   };
 

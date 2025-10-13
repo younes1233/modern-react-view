@@ -110,10 +110,7 @@ const Returns = () => {
     setReturns(returns.map(returnItem => 
       returnItem.id === returnId ? { ...returnItem, status: newStatus } : returnItem
     ));
-    toast({
-      title: "Status Updated",
-      description: `Return ${returnId} status changed to ${newStatus}`,
-    });
+    toast.success(`Return ${returnId} status changed to ${newStatus}`, { duration: 2000 });
   };
 
   const getStatusCounts = () => {

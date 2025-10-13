@@ -95,11 +95,7 @@ const Categories = () => {
         setCategories(sanitizedCategories);
       } else {
         console.error('Categories API error:', response);
-        toast({
-          title: "Error",
-          description: response.message || "Failed to load categories",
-          variant: "destructive"
-        });
+        toast.error(response.message || "Failed to load categories", { duration: 2500 });
       }
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -174,17 +170,10 @@ const Categories = () => {
     try {
       const response = await categoryService.deleteCategory(categoryId);
       if (!response.error) {
-        toast({
-          title: "Success",
-          description: "Category deleted successfully",
-        });
+        toast.success("Category deleted successfully", { duration: 2000 });
         loadCategories();
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to delete category",
-          variant: "destructive"
-        });
+        toast.error(response.message || "Failed to delete category", { duration: 2500 });
       }
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -215,11 +204,7 @@ const Categories = () => {
         setIsAddDialogOpen(false); // Close modal after successful save
       } else {
         console.error('Category save failed:', response);
-        toast({
-          title: "Error",
-          description: response?.message || `Failed to ${modalMode} category`,
-          variant: "destructive"
-        });
+        toast.error(response?.message || `Failed to ${modalMode} category`, { duration: 2500 });
       }
     } catch (error) {
       console.error(`Error ${modalMode} category:`, error);

@@ -73,17 +73,10 @@ export const useWarehouses = (countryId?: number | string) => {
 
       if (!response.error && response.details?.warehouse) {
         setWarehouses([...warehouses, response.details.warehouse]);
-        toast({
-          title: 'Success',
-          description: 'Warehouse created successfully',
-        });
+        toast.success('Warehouse created successfully', { duration: 2000 });
         return response.details.warehouse;
       } else {
-        toast({
-          title: 'Error',
-          description: response.message || 'Failed to create warehouse',
-          variant: 'destructive',
-        });
+        toast.error(response.message || 'Failed to create warehouse', { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -114,17 +107,10 @@ export const useWarehouses = (countryId?: number | string) => {
         setWarehouses(
           warehouses.map((warehouse) => (warehouse.id === id ? response.details!.warehouse : warehouse))
         );
-        toast({
-          title: 'Success',
-          description: 'Warehouse updated successfully',
-        });
+        toast.success('Warehouse updated successfully', { duration: 2000 });
         return response.details.warehouse;
       } else {
-        toast({
-          title: 'Error',
-          description: response.message || 'Failed to update warehouse',
-          variant: 'destructive',
-        });
+        toast.error(response.message || 'Failed to update warehouse', { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -139,16 +125,9 @@ export const useWarehouses = (countryId?: number | string) => {
 
       if (!response.error) {
         setWarehouses(warehouses.filter((warehouse) => warehouse.id !== id));
-        toast({
-          title: 'Success',
-          description: 'Warehouse deleted successfully',
-        });
+        toast.success('Warehouse deleted successfully', { duration: 2000 });
       } else {
-        toast({
-          title: 'Error',
-          description: response.message || 'Failed to delete warehouse',
-          variant: 'destructive',
-        });
+        toast.error(response.message || 'Failed to delete warehouse', { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {

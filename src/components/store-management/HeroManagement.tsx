@@ -257,11 +257,7 @@ export function HeroManagement() {
       setIsEditing(false);
       setEditingSlide(null);
     } else {
-      toast({
-        title: "Error",
-        description: formData.isSlider ? "Please complete all slides with title, subtitle, and background image" : "Please fill in all required fields",
-        variant: "destructive"
-      });
+      toast.error(formData.isSlider ? "Please complete all slides with title, subtitle, and background image" : "Please fill in all required fields", { duration: 2500 });
     }
   };
 

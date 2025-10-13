@@ -101,16 +101,9 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       // Invalidate bootstrap cache to refresh data
       await invalidate();
 
-      toast({
-        title: 'Success',
-        description: 'Localization settings saved',
-      });
+      toast.success('Localization settings saved', { duration: 2000 });
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Failed to save settings',
-        variant: 'destructive',
-      });
+      toast.error('Failed to save settings', { duration: 2500 });
     } finally {
       setIsLoading(false);
     }
@@ -145,16 +138,9 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     try {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
-      toast({
-        title: 'Profile Updated',
-        description: 'Your profile has been updated successfully',
-      });
+      toast.success('Your profile has been updated successfully', { duration: 2000 });
     } catch (error) {
-      toast({
-        title: 'Update Failed',
-        description: 'Failed to update profile. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Failed to update profile. Please try again.', { duration: 2500 });
     } finally {
       setIsLoading(false);
     }
@@ -165,10 +151,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       const file = files[0];
       const imageUrl = URL.createObjectURL(file);
       setProfile((prev) => ({ ...prev, avatar: imageUrl }));
-      toast({
-        title: 'Avatar Uploaded',
-        description: 'Your profile picture has been updated',
-      });
+      toast.success('Your profile picture has been updated', { duration: 2000 });
     }
   };
 

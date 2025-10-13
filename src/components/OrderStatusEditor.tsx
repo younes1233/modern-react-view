@@ -49,10 +49,7 @@ export const OrderStatusEditor: React.FC<OrderStatusEditorProps> = ({
   const handleStatusUpdate = () => {
     if (selectedStatus !== currentStatus) {
       onStatusChange(orderId, selectedStatus);
-      toast({
-        title: "Status Updated",
-        description: `Order ${orderId} status changed to ${selectedStatus}`,
-      });
+      toast.success(`Order ${orderId} status changed to ${selectedStatus}`, { duration: 2000 });
     }
     setIsOpen(false);
   };

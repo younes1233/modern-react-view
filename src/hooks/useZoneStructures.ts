@@ -61,17 +61,10 @@ export const useZoneStructures = () => {
       
       if (!response.error && response.details?.zone_structure) {
         setZoneStructures([...zoneStructures, response.details.zone_structure]);
-        toast({
-          title: "Success",
-          description: "Zone structure created successfully",
-        });
+        toast.success("Zone structure created successfully", { duration: 2000 });
         return response.details.zone_structure;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to create zone structure",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to create zone structure", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -85,20 +78,13 @@ export const useZoneStructures = () => {
       const response = await zoneStructureService.updateZoneStructure(id, data);
       
       if (!response.error && response.details?.zone_structure) {
-        setZoneStructures(zoneStructures.map(zs => 
+        setZoneStructures(zoneStructures.map(zs =>
           zs.id === id ? response.details!.zone_structure : zs
         ));
-        toast({
-          title: "Success",
-          description: "Zone structure updated successfully",
-        });
+        toast.success("Zone structure updated successfully", { duration: 2000 });
         return response.details.zone_structure;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to update zone structure",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to update zone structure", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -113,16 +99,9 @@ export const useZoneStructures = () => {
       
       if (!response.error) {
         setZoneStructures(zoneStructures.filter(zs => zs.id !== id));
-        toast({
-          title: "Success",
-          description: "Zone structure deleted successfully",
-        });
+        toast.success("Zone structure deleted successfully", { duration: 2000 });
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to delete zone structure",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to delete zone structure", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -137,17 +116,10 @@ export const useZoneStructures = () => {
       
       if (!response.error && response.details?.level) {
         setLevels([...levels, response.details.level]);
-        toast({
-          title: "Success",
-          description: "Level created successfully",
-        });
+        toast.success("Level created successfully", { duration: 2000 });
         return response.details.level;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to create level",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to create level", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -161,20 +133,13 @@ export const useZoneStructures = () => {
       const response = await zoneStructureService.updateLevel(id, data);
       
       if (!response.error && response.details?.level) {
-        setLevels(levels.map(level => 
+        setLevels(levels.map(level =>
           level.id === id ? response.details!.level : level
         ));
-        toast({
-          title: "Success",
-          description: "Level updated successfully",
-        });
+        toast.success("Level updated successfully", { duration: 2000 });
         return response.details.level;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to update level",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to update level", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -189,16 +154,9 @@ export const useZoneStructures = () => {
       
       if (!response.error) {
         setLevels(levels.filter(level => level.id !== id));
-        toast({
-          title: "Success",
-          description: "Level deleted successfully",
-        });
+        toast.success("Level deleted successfully", { duration: 2000 });
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to delete level",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to delete level", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {

@@ -44,17 +44,10 @@ export const UserReviewActions: React.FC<UserReviewActionsProps> = ({
     try {
       await reviewService.deleteReview(productId);
 
-      toast({
-        title: "Success",
-        description: "Review deleted successfully",
-      });
+      toast.success("Review deleted successfully", { duration: 2000 });
       onReviewDeleted();
     } catch (error) {
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete review",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Failed to delete review", { duration: 2500 });
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);

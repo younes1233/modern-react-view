@@ -132,10 +132,7 @@ const ReviewFormComponent: React.FC<ReviewFormProps> = ({
 
       await reviewService.addReview(productId, reviewData);
 
-      toast({
-        title: "Success",
-        description: existingReview ? "Review updated successfully" : "Review submitted successfully",
-      });
+      toast.success(existingReview ? "Review updated successfully" : "Review submitted successfully", { duration: 2000 });
 
       setValidationErrors({});
       onReviewSubmitted();
@@ -148,11 +145,7 @@ const ReviewFormComponent: React.FC<ReviewFormProps> = ({
         setValidationErrors(error.response.details);
       } else {
         // Generic error handling
-        toast({
-          title: "Error",
-          description: error instanceof Error ? error.message : "Failed to submit review",
-          variant: "destructive",
-        });
+        toast.error(error instanceof Error ? error.message : "Failed to submit review", { duration: 2500 });
       }
     } finally {
       setIsSubmitting(false);

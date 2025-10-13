@@ -119,10 +119,7 @@ export const RoleManagement = () => {
         setRoles(prev => [...prev, response.details.role]);
         setNewRole({ name: '', description: '', permissions: [] });
         setIsAddModalOpen(false);
-        toast({
-          title: "Success",
-          description: "Role created successfully",
-        });
+        toast.success("Role created successfully", { duration: 2000 });
       } else {
         toast.error(response.message, { duration: 2500 });
       }
@@ -152,10 +149,7 @@ export const RoleManagement = () => {
         ));
         setEditingRole(null);
         setNewRole({ name: '', description: '', permissions: [] });
-        toast({
-          title: "Success",
-          description: "Role updated successfully",
-        });
+        toast.success("Role updated successfully", { duration: 2000 });
       } else {
         toast.error(response.message, { duration: 2500 });
       }
@@ -178,10 +172,7 @@ export const RoleManagement = () => {
       
       if (!response.error) {
         setRoles(prev => prev.filter(role => role.id !== roleId));
-        toast({
-          title: "Success",
-          description: "Role deleted successfully",
-        });
+        toast.success("Role deleted successfully", { duration: 2000 });
       } else {
         toast.error(response.message, { duration: 2500 });
       }

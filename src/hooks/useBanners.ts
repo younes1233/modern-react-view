@@ -94,11 +94,7 @@ export const useBanners = () => {
       toast.success("Banner created successfully", { duration: 2000 });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || 'Failed to create banner',
-        variant: "destructive"
-      });
+      toast.error(error.message || 'Failed to create banner', { duration: 2500 });
     }
   });
 

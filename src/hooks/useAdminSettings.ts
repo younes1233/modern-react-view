@@ -35,17 +35,10 @@ export const useAdminSettings = () => {
     onSuccess: (data) => {
       // Update the cache with new data
       queryClient.setQueryData(['admin-settings'], data);
-      toast({
-        title: 'Settings Updated',
-        description: 'Admin settings have been saved successfully.',
-      });
+      toast.success('Admin settings have been saved successfully.', { duration: 2000 });
     },
     onError: (error: Error) => {
-      toast({
-        title: 'Update Failed',
-        description: error.message || 'Failed to update admin settings.',
-        variant: 'destructive',
-      });
+      toast.error(error.message || 'Failed to update admin settings.', { duration: 2500 });
     },
   });
 

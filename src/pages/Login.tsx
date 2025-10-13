@@ -20,11 +20,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email || !password) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in all fields', { duration: 2500 });
       return;
     }
 
@@ -34,24 +30,13 @@ const Login = () => {
       const response = await authService.login(email, password);
       
       if (!response.error && response.details?.user && response.details?.token) {
-        toast({
-          title: 'Success',
-          description: 'Login successful!',
-        });
+        toast.success('Login successful!', { duration: 2000 });
         navigate('/');
       } else {
-        toast({
-          title: 'Error',
-          description: response.message || 'Invalid credentials. Please check your email and password.',
-          variant: 'destructive',
-        });
+        toast.error(response.message || 'Invalid credentials. Please check your email and password.', { duration: 2500 });
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'Login failed. Please try again.',
-        variant: 'destructive',
-      });
+      toast.error('Login failed. Please try again.', { duration: 2500 });
     } finally {
       setIsLoading(false);
     }

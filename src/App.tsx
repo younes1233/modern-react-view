@@ -47,9 +47,10 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/NotFound";
 import Unauthorized from "@/pages/Unauthorized";
 
-// Store Pages - Lazy load except ComingSoon (landing page)
+// Store Pages - Lazy load with proper skeleton fallback
 const Store = lazy(() => import("@/pages/store/Store"));
 import ComingSoon from "./pages/store/ComingSoon";
+import { StoreLoadingSkeleton } from "@/components/store/StoreLoadingSkeleton";
 const ProductDetail = lazy(() => import("@/pages/store/ProductDetail"));
 const StoreCategories = lazy(() => import("@/pages/store/StoreCategories"));
 const StoreProducts = lazy(() => import("@/pages/store/StoreProducts"));
@@ -149,7 +150,11 @@ function App() {
                         <Route path="/unauthorized" element={<Unauthorized />} />
 
                         {/* Store Routes (Public) */}
-                        <Route path="/" element={<Store />} />
+                        <Route path="/" element={
+                          <Suspense fallback={<StoreLoadingSkeleton />}>
+                            <Store />
+                          </Suspense>
+                        } />
                         <Route path="/product/:slug" element={<ProductDetail />} />
                         <Route path="/categories" element={<StoreCategories />} />
                         <Route path="/products" element={<StoreProducts />} />

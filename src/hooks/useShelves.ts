@@ -33,21 +33,13 @@ export const useShelves = () => {
       } else {
         setError(response.message || 'Failed to load shelves');
         setShelves([]);
-        toast({
-          title: 'Error',
-          description: response.message || 'Failed to load shelves',
-          variant: 'destructive',
-        });
+        toast.error(response.message || 'Failed to load shelves', { duration: 2500 });
       }
     } catch (err) {
       console.error('Error fetching shelves:', err);
       setError('Failed to load shelves');
       setShelves([]);
-      toast({
-        title: 'Error',
-        description: 'Failed to load shelves',
-        variant: 'destructive',
-      });
+      toast.error('Failed to load shelves', { duration: 2500 });
     } finally {
       setLoading(false);
     }

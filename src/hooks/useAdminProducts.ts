@@ -132,18 +132,11 @@ export const useCreateProduct = () => {
     mutationFn: (productData: FormData) => adminProductService.createProduct(productData),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
-      toast({
-        title: "Success",
-        description: data.message || "Product created successfully"
-      });
+      toast.success(data.message || "Product created successfully", { duration: 2000 });
     },
     onError: (error: Error) => {
       console.error('Create product error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create product",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to create product", { duration: 2500 });
     }
   });
 };
@@ -160,18 +153,11 @@ export const useUpdateProduct = () => {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['admin-product'] });
-      toast({
-        title: "Success",
-        description: data.message || "Product updated successfully"
-      });
+      toast.success(data.message || "Product updated successfully", { duration: 2000 });
     },
     onError: (error: Error) => {
       console.error('Update product error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update product",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to update product", { duration: 2500 });
     }
   });
 };
@@ -192,18 +178,11 @@ export const useDeleteProduct = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       
       // Show success toast
-      toast({
-        title: "Success",
-        description: data.message || `Product deleted successfully`
-      });
+      toast.success(data.message || `Product deleted successfully`, { duration: 2000 });
     },
     onError: (error: Error, variables) => {
       console.error('useDeleteProduct: Delete failed:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete product",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to delete product", { duration: 2500 });
     }
   });
 };

@@ -36,17 +36,10 @@ export const useProductListings = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
-      toast({
-        title: "Success",
-        description: data.message || "Product listing created successfully"
-      });
+      toast.success(data.message || "Product listing created successfully", { duration: 2000 });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create product listing",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to create product listing", { duration: 2500 });
     }
   });
 
@@ -56,17 +49,10 @@ export const useProductListings = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
-      toast({
-        title: "Success",
-        description: data.message || "Product listing updated successfully"
-      });
+      toast.success(data.message || "Product listing updated successfully", { duration: 2000 });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update product listing",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to update product listing", { duration: 2500 });
     }
   });
 
@@ -76,17 +62,10 @@ export const useProductListings = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
-      toast({
-        title: "Success",
-        description: data.message || "Product listing deleted successfully"
-      });
+      toast.success(data.message || "Product listing deleted successfully", { duration: 2000 });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete product listing",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to delete product listing", { duration: 2500 });
     }
   });
 
@@ -96,17 +75,10 @@ export const useProductListings = () => {
     },
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['productListings'] });
-      toast({
-        title: "Success",
-        description: data.message || "Product listings reordered successfully"
-      });
+      toast.success(data.message || "Product listings reordered successfully", { duration: 2000 });
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reorder product listings",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to reorder product listings", { duration: 2500 });
     }
   });
 

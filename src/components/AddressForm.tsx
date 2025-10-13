@@ -160,16 +160,10 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
 
       if (address) {
         await addressService.updateAddress(address.id, submitData);
-        toast({
-          title: "Success",
-          description: "Address updated successfully",
-        });
+        toast.success("Address updated successfully", { duration: 2000 });
       } else {
         await addressService.createAddress(submitData);
-        toast({
-          title: "Success",
-          description: "Address created successfully",
-        });
+        toast.success("Address created successfully", { duration: 2000 });
       }
       onSuccess();
       onOpenChange(false);
@@ -177,11 +171,7 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
       if (error.response?.data?.errors) {
         setValidationErrors(error.response.data.errors);
       } else {
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: error.message || "Failed to save address",
-        });
+        toast.error(error.message || "Failed to save address", { duration: 2500 });
       }
     } finally {
       setLoading(false);

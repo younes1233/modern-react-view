@@ -76,16 +76,9 @@ export function ZoneStructureManagement() {
   const handleDeleteZoneStructure = async (id: number) => {
     try {
       await deleteZoneStructure(id);
-      toast({
-        title: "Success",
-        description: "Zone structure deleted successfully",
-      });
+      toast.success("Zone structure deleted successfully", { duration: 2000 });
     } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error?.message || "Failed to delete zone structure",
-        variant: "destructive",
-      });
+      toast.error(error?.message || "Failed to delete zone structure", { duration: 2500 });
     }
   };
 

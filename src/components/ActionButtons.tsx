@@ -40,43 +40,27 @@ export function ActionButtons({
 
   const handleView = () => {
     onView?.(itemId);
-    toast({
-      title: "Viewing item",
-      description: `Opening details for ${itemName || `item ${itemId}`}`,
-    });
+    toast.success(`Opening details for ${itemName || `item ${itemId}`}`, { duration: 2000 });
   };
 
   const handleEdit = () => {
     onEdit?.(itemId);
-    toast({
-      title: "Edit mode",
-      description: `Editing ${itemName || `item ${itemId}`}`,
-    });
+    toast.success(`Editing ${itemName || `item ${itemId}`}`, { duration: 2000 });
   };
 
   const handleDelete = () => {
     onDelete?.(itemId);
-    toast({
-      title: "Item deleted",
-      description: `${itemName || `Item ${itemId}`} has been deleted`,
-      variant: "destructive",
-    });
+    toast.success(`${itemName || `Item ${itemId}`} has been deleted`, { duration: 2000 });
   };
 
   const handleDownload = () => {
     onDownload?.(itemId);
-    toast({
-      title: "Download started",
-      description: `Downloading ${itemName || `item ${itemId}`}`,
-    });
+    toast.success(`Downloading ${itemName || `item ${itemId}`}`, { duration: 2000 });
   };
 
   const handleEmail = () => {
     onEmail?.(itemId);
-    toast({
-      title: "Email sent",
-      description: `Email notification sent for ${itemName || `item ${itemId}`}`,
-    });
+    toast.success(`Email notification sent for ${itemName || `item ${itemId}`}`, { duration: 2000 });
   };
 
   if (variant === "compact") {

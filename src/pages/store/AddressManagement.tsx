@@ -38,11 +38,7 @@ const AddressManagement = () => {
     } catch (error) {
       console.error('Failed to fetch addresses:', error);
       setAddresses([]);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to load addresses",
-      });
+      toast.error("Failed to load addresses", { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -51,17 +47,10 @@ const AddressManagement = () => {
   const handleSetDefault = async (id: number) => {
     try {
       await addressService.setDefaultAddress(id);
-      toast({
-        title: "Success",
-        description: "Default address updated",
-      });
+      toast.success("Default address updated", { duration: 2000 });
       fetchAddresses();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to set default address",
-      });
+      toast.error("Failed to set default address", { duration: 2500 });
     }
   };
 
@@ -70,18 +59,11 @@ const AddressManagement = () => {
 
     try {
       await addressService.deleteAddress(deleteId);
-      toast({
-        title: "Success",
-        description: "Address deleted successfully",
-      });
+      toast.success("Address deleted successfully", { duration: 2000 });
       setDeleteId(null);
       fetchAddresses();
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to delete address",
-      });
+      toast.error("Failed to delete address", { duration: 2500 });
     }
   };
 

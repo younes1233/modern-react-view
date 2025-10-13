@@ -96,10 +96,7 @@ const Orders = () => {
     }));
 
     exportToExcel(exportData, "orders-export", "Orders");
-    toast({
-      title: "Export Successful",
-      description: "Orders data has been exported to Excel file",
-    });
+    toast.success("Orders data has been exported to Excel file", { duration: 2000 });
   };
 
   /* -------- Row actions (stubbed except view) -------- */
@@ -109,69 +106,43 @@ const Orders = () => {
       const response = await orderService.updateOrderStatus(orderId, newStatus);
       console.log('Status update response:', response);
       
-      toast({
-        title: "Status Updated",
-        description: `Order #${orderId} status has been updated to ${newStatus}`,
-      });
+      toast.success(`Order #${orderId} status has been updated to ${newStatus}`, { duration: 2000 });
       
       // Invalidate and refetch the orders cache
       await queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       await refetch();
     } catch (error) {
       console.error('Failed to update order status:', error);
-      toast({
-        title: "Update Failed",
-        description: `Failed to update order #${orderId} status. Please try again.`,
-        variant: "destructive",
-      });
+      toast.error(`Failed to update order #${orderId} status. Please try again.`, { duration: 2500 });
     }
   };
 
   const handleEditOrder = (orderId: string) => {
-    toast({
-      title: "Edit Order",
-      description: `Opening edit form for order ${orderId}`,
-    });
+    toast.success(`Opening edit form for order ${orderId}`, { duration: 2000 });
     // TODO: navigate to edit page or open edit dialog
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    toast({
-      title: "Order Deletion",
-      description: `Order #${orderId} deletion is not yet implemented`,
-      variant: "destructive",
-    });
+    toast.error(`Order #${orderId} deletion is not yet implemented`, { duration: 2500 });
   };
 
   const handleDownloadOrder = (orderId: string) => {
-    toast({
-      title: "Download Started",
-      description: `Downloading invoice for order ${orderId}`,
-    });
+    toast.success(`Downloading invoice for order ${orderId}`, { duration: 2000 });
     // TODO: trigger invoice download
   };
 
   const handleEmailOrder = (orderId: string) => {
-    toast({
-      title: "Email Sent",
-      description: `Order confirmation email sent for ${orderId}`,
-    });
+    toast.success(`Order confirmation email sent for ${orderId}`, { duration: 2000 });
     // TODO: call email endpoint
   };
 
   const handleTrackOrder = (orderId: string) => {
-    toast({
-      title: "Tracking Information",
-      description: `Showing tracking details for order ${orderId}`,
-    });
+    toast.success(`Showing tracking details for order ${orderId}`, { duration: 2000 });
     // TODO: show tracking info
   };
 
   const handleRefundOrder = (orderId: string) => {
-    toast({
-      title: "Refund Processing",
-      description: `Refund has been initiated for order ${orderId}`,
-    });
+    toast.success(`Refund has been initiated for order ${orderId}`, { duration: 2000 });
     // TODO: call refund endpoint
   };
 

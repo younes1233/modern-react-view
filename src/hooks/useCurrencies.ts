@@ -56,26 +56,15 @@ export const useCurrencies = () => {
       
       if (!response.error && response.details?.currency) {
         setCurrencies(prev => [...prev, response.details!.currency]);
-        toast({
-          title: "Success",
-          description: "Currency created successfully",
-        });
+        toast.success("Currency created successfully", { duration: 2000 });
         return response.details.currency;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to create currency",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to create currency", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
       console.error('Error creating currency:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create currency",
-        variant: "destructive",
-      });
+      toast.error("Failed to create currency", { duration: 2500 });
       throw error;
     }
   };
@@ -104,29 +93,18 @@ export const useCurrencies = () => {
       console.log('Update currency response:', response);
       
       if (!response.error && response.details?.currency) {
-        setCurrencies(prev => prev.map(currency => 
+        setCurrencies(prev => prev.map(currency =>
           currency.id === id ? response.details!.currency : currency
         ));
-        toast({
-          title: "Success",
-          description: "Currency updated successfully",
-        });
+        toast.success("Currency updated successfully", { duration: 2000 });
         return response.details.currency;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to update currency",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to update currency", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
       console.error('Error updating currency:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update currency",
-        variant: "destructive",
-      });
+      toast.error("Failed to update currency", { duration: 2500 });
       throw error;
     }
   };
@@ -139,25 +117,14 @@ export const useCurrencies = () => {
       
       if (!response.error) {
         setCurrencies(prev => prev.filter(currency => currency.id !== id));
-        toast({
-          title: "Success",
-          description: "Currency deleted successfully",
-        });
+        toast.success("Currency deleted successfully", { duration: 2000 });
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to delete currency",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to delete currency", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
       console.error('Error deleting currency:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete currency",
-        variant: "destructive",
-      });
+      toast.error("Failed to delete currency", { duration: 2500 });
       throw error;
     }
   };

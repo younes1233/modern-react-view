@@ -83,10 +83,7 @@ const SellerProducts = () => {
     setNewProduct({ name: '', description: '', price: '', category: '', image: '/placeholder.svg' });
     setIsAddModalOpen(false);
     
-    toast({
-      title: "Product Submitted",
-      description: "Your product has been submitted for approval",
-    });
+    toast.success("Your product has been submitted for approval", { duration: 2000 });
   };
 
   const getStatusBadge = (status: string) => {

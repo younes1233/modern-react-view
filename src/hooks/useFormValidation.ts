@@ -195,11 +195,7 @@ export function useFormValidation(options: UseFormValidationOptions = {}) {
    * @param description - Error description
    */
   const showToastError = (title: string, description: string) => {
-    toast({
-      title,
-      description,
-      variant: "destructive"
-    });
+    toast.error(description, { duration: 2500 });
   };
 
   return {

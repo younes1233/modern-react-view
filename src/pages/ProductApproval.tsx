@@ -68,10 +68,7 @@ const ProductApproval = () => {
     ));
     
     const product = products.find(p => p.id === productId);
-    toast({
-      title: "Product Approved",
-      description: `${product?.name} has been approved for sale`,
-    });
+    toast.success(`${product?.name} has been approved for sale`, { duration: 2000 });
   };
 
   const handleReject = (productId: string, reason: string) => {

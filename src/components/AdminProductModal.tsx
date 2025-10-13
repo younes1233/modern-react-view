@@ -833,11 +833,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     } else {
       setLastClickTime(currentTime);
       setClickConfirmNeeded(true);
-      toast({
-        title: "Click again to exit",
-        description: "Click outside the form again to close it",
-        variant: "default"
-      });
+      toast.success("Click outside the form again to close it", { duration: 2000 });
 
       // Reset confirmation after 2 seconds
       setTimeout(() => {
@@ -915,7 +911,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     // Validate variants if has_variants is true
     if (formData.has_variants) {
       if (variantEntries.length === 0) {
-        toast({ title: "Error", description: "At least one variant is required when 'Has Variants' is enabled", variant: "destructive" });
+        toast.error("At least one variant is required when 'Has Variants' is enabled", { duration: 2500 });
         return;
       }
 

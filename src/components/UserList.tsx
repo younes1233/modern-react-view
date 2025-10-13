@@ -84,11 +84,7 @@ export const UserList = () => {
         setUsers(response.details.users);
         setPagination(response.details.pagination);
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to fetch users",
-          variant: "destructive"
-        });
+        toast.error(response.message || "Failed to fetch users", { duration: 2500 });
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
@@ -146,16 +142,9 @@ export const UserList = () => {
         setIsAddModalOpen(false);
         await fetchUsers(); // Refresh the list
         
-        toast({
-          title: "User Added",
-          description: `${newUser.firstName} ${newUser.lastName} has been added as ${newUser.role}`,
-        });
+        toast.success(`${newUser.firstName} ${newUser.lastName} has been added as ${newUser.role}`, { duration: 2000 });
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to add user",
-          variant: "destructive"
-        });
+        toast.error(response.message || "Failed to add user", { duration: 2500 });
       }
     } catch (error) {
       toast.error("Failed to add user", { duration: 2500 });
@@ -171,16 +160,9 @@ export const UserList = () => {
       if (!response.error) {
         await fetchUsers(); // Refresh the list
         const user = users.find(u => u.id === userId);
-        toast({
-          title: "User Status Updated",
-          description: `${user?.firstName} ${user?.lastName} status has been updated`,
-        });
+        toast.success(`${user?.firstName} ${user?.lastName} status has been updated`, { duration: 2000 });
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to update user status",
-          variant: "destructive"
-        });
+        toast.error(response.message || "Failed to update user status", { duration: 2500 });
       }
     } catch (error) {
       toast.error("Failed to update user status", { duration: 2500 });
@@ -209,13 +191,9 @@ export const UserList = () => {
 
       console.log('Assigning role:', roleObj.id, 'to user:', userId);
       const response = await userService.assignRole(userId, roleObj.id);
-      
+
       if (response.error) {
-        toast({
-          title: "Error", 
-          description: response.message || "Failed to assign role",
-          variant: "destructive"
-        });
+        toast.error(response.message || "Failed to assign role", { duration: 2500 });
         return;
       }
 

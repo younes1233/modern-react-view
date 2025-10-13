@@ -54,17 +54,10 @@ export const useCountries = () => {
       
       if (!response.error && response.details?.country) {
         setCountries([...countries, response.details.country]);
-        toast({
-          title: "Success",
-          description: "Country created successfully",
-        });
+        toast.success("Country created successfully", { duration: 2000 });
         return response.details.country;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to create country",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to create country", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -101,20 +94,13 @@ export const useCountries = () => {
       const response = await countryService.updateCountry(id, requestData);
       
       if (!response.error && response.details?.country) {
-        setCountries(countries.map(country => 
+        setCountries(countries.map(country =>
           country.id === id ? response.details!.country : country
         ));
-        toast({
-          title: "Success",
-          description: "Country updated successfully",
-        });
+        toast.success("Country updated successfully", { duration: 2000 });
         return response.details.country;
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to update country",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to update country", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {
@@ -129,16 +115,9 @@ export const useCountries = () => {
       
       if (!response.error) {
         setCountries(countries.filter(country => country.id !== id));
-        toast({
-          title: "Success",
-          description: "Country deleted successfully",
-        });
+        toast.success("Country deleted successfully", { duration: 2000 });
       } else {
-        toast({
-          title: "Error",
-          description: response.message || "Failed to delete country",
-          variant: "destructive",
-        });
+        toast.error(response.message || "Failed to delete country", { duration: 2500 });
         throw new Error(response.message);
       }
     } catch (error) {

@@ -27,28 +27,17 @@ const ForgotPassword = () => {
     e.preventDefault();
     
     if (!email) {
-      toast({
-        title: 'Error',
-        description: 'Please enter your email address',
-        variant: 'destructive',
-      });
+      toast.error('Please enter your email address', { duration: 2500 });
       return;
     }
 
     const result = await forgotPassword(email);
     
     if (result.success) {
-      toast({
-        title: 'Success',
-        description: result.message,
-      });
+      toast.success(result.message, { duration: 2000 });
       setStep('otp');
     } else {
-      toast({
-        title: 'Error',
-        description: result.message,
-        variant: 'destructive',
-      });
+      toast.error(result.message, { duration: 2500 });
       
       if (result.waitingPeriod) {
         setWaitingPeriod(result.waitingPeriod);
@@ -60,28 +49,17 @@ const ForgotPassword = () => {
     e.preventDefault();
     
     if (!otp || otp.length !== 6) {
-      toast({
-        title: 'Error',
-        description: 'Please enter the 6-digit OTP',
-        variant: 'destructive',
-      });
+      toast.error('Please enter the 6-digit OTP', { duration: 2500 });
       return;
     }
 
     const result = await verifyOtp(email, parseInt(otp));
     
     if (result.success) {
-      toast({
-        title: 'Success',
-        description: result.message,
-      });
+      toast.success(result.message, { duration: 2000 });
       setStep('reset');
     } else {
-      toast({
-        title: 'Error',
-        description: result.message,
-        variant: 'destructive',
-      });
+      toast.error(result.message, { duration: 2500 });
     }
   };
 
@@ -89,47 +67,28 @@ const ForgotPassword = () => {
     e.preventDefault();
     
     if (!password || !confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in all fields', { duration: 2500 });
       return;
     }
 
     if (password.length < 8) {
-      toast({
-        title: 'Error',
-        description: 'Password must be at least 8 characters',
-        variant: 'destructive',
-      });
+      toast.error('Password must be at least 8 characters', { duration: 2500 });
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-        variant: 'destructive',
-      });
+      toast.error('Passwords do not match', { duration: 2500 });
       return;
     }
 
     const result = await resetPassword(email, password, confirmPassword);
     
     if (result.success) {
-      toast({
-        title: 'Success',
-        description: 'Password reset successfully! You can now sign in with your new password.',
-      });
+      toast.success('Password reset successfully! You can now sign in with your new password.', { duration: 2000 });
       // Redirect to home after successful reset
       window.location.href = '/';
     } else {
-      toast({
-        title: 'Error',
-        description: result.message,
-        variant: 'destructive',
-      });
+      toast.error(result.message, { duration: 2500 });
     }
   };
 

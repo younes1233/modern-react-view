@@ -58,11 +58,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch discounts';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -74,10 +70,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
       const response = await discountService.createDiscount(data);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Discount created successfully",
-        });
+        toast.success(response.message || "Discount created successfully", { duration: 2000 });
         await fetchDiscounts(); // Refresh list
         return response.details?.discount;
       } else {
@@ -86,11 +79,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to create discount';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -103,10 +92,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
       const response = await discountService.updateDiscount(id, data);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Discount updated successfully",
-        });
+        toast.success(response.message || "Discount updated successfully", { duration: 2000 });
         await fetchDiscounts(); // Refresh list
         return response.details?.discount;
       } else {
@@ -115,11 +101,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to update discount';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -132,10 +114,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
       const response = await discountService.deleteDiscount(id);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Discount deleted successfully",
-        });
+        toast.success(response.message || "Discount deleted successfully", { duration: 2000 });
         await fetchDiscounts(); // Refresh list
       } else {
         throw new Error(response.message || 'Failed to delete discount');
@@ -143,11 +122,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to delete discount';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -159,10 +134,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
       const response = await discountService.toggleDiscountStatus(id, is_active);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Discount status updated successfully",
-        });
+        toast.success(response.message || "Discount status updated successfully", { duration: 2000 });
         // Update the local state immediately for better UX
         setDiscounts(prev => prev.map(discount => 
           discount.id === id ? { ...discount, is_active } : discount
@@ -173,11 +145,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to update discount status';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     }
   }, [toast]);
@@ -190,11 +158,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to calculate discount preview';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -336,11 +300,7 @@ export const useCoupons = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch coupons';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -352,10 +312,7 @@ export const useCoupons = () => {
       const response = await discountService.createCoupon(data);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Coupon created successfully",
-        });
+        toast.success(response.message || "Coupon created successfully", { duration: 2000 });
         await fetchCoupons(); // Refresh list
         return response.details?.coupon;
       } else {
@@ -364,11 +321,7 @@ export const useCoupons = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to create coupon';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -381,10 +334,7 @@ export const useCoupons = () => {
       const response = await discountService.updateCoupon(id, data);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Coupon updated successfully",
-        });
+        toast.success(response.message || "Coupon updated successfully", { duration: 2000 });
         await fetchCoupons(); // Refresh list
         return response.details?.coupon;
       } else {
@@ -393,11 +343,7 @@ export const useCoupons = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to update coupon';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -410,10 +356,7 @@ export const useCoupons = () => {
       const response = await discountService.deleteCoupon(id);
       
       if (response.error === false) {
-        toast({
-          title: "Success",
-          description: response.message || "Coupon deleted successfully",
-        });
+        toast.success(response.message || "Coupon deleted successfully", { duration: 2000 });
         await fetchCoupons(); // Refresh list
       } else {
         throw new Error(response.message || 'Failed to delete coupon');
@@ -421,11 +364,7 @@ export const useCoupons = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to delete coupon';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -443,10 +382,7 @@ export const useCoupons = () => {
       const response = await discountService.applyCoupon(data);
       
       if (response.success) {
-        toast({
-          title: "Success",
-          description: response.message || "Coupon applied successfully",
-        });
+        toast.success(response.message || "Coupon applied successfully", { duration: 2000 });
         return response;
       } else {
         throw new Error(response.message || 'Failed to apply coupon');
@@ -454,11 +390,7 @@ export const useCoupons = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to apply coupon';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
       throw err;
     } finally {
       setLoading(false);
@@ -526,11 +458,7 @@ export const useDiscountAnalytics = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.message || err.message || 'Failed to fetch analytics';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage, { duration: 2500 });
     } finally {
       setLoading(false);
     }
