@@ -28,40 +28,65 @@ export default defineConfig(({ mode }) => ({
       output: {
         // Manual chunk splitting for better caching
         manualChunks: (id) => {
-          // Vendor chunks - separate large libraries
+          // Vendor chunks - separate large libraries for better caching
           if (id.includes('node_modules')) {
-            // React core in its own chunk
-            if (id.includes('react') || id.includes('react-dom')) {
-              return 'react-vendor'
+            // React core only (small, frequently used)
+            if (id.includes('/react/') && !id.includes('react-dom') && !id.includes('react-router') && !id.includes('react-hook')) {
+              return 'react-core'
             }
 
-            // UI libraries (Radix, shadcn components)
-            if (id.includes('@radix-ui')) {
-              return 'ui-vendor'
+            // React DOM (medium, frequently used)
+            if (id.includes('react-dom')) {
+              return 'react-dom'
             }
 
-            // React Query for data fetching
-            if (id.includes('@tanstack')) {
-              return 'query-vendor'
-            }
-
-            // Chart libraries
-            if (id.includes('recharts') || id.includes('d3')) {
-              return 'chart-vendor'
-            }
-
-            // Form libraries
-            if (id.includes('react-hook-form') || id.includes('zod')) {
-              return 'form-vendor'
-            }
-
-            // Router
+            // Router (medium, store pages only)
             if (id.includes('react-router')) {
-              return 'router-vendor'
+              return 'router'
             }
 
-            // All other node_modules
-            return 'vendor'
+            // UI libraries - Radix (large, used across site)
+            if (id.includes('@radix-ui')) {
+              return 'ui-radix'
+            }
+
+            // React Query (medium, used for data fetching)
+            if (id.includes('@tanstack/react-query')) {
+              return 'query'
+            }
+
+            // Chart libraries (large, admin only - lazy load)
+            if (id.includes('recharts') || id.includes('d3-')) {
+              return 'charts'
+            }
+
+            // Excel/PDF libraries (large, admin only - lazy load)
+            if (id.includes('xlsx') || id.includes('jspdf')) {
+              return 'documents'
+            }
+
+            // Form libraries (medium, checkout/admin)
+            if (id.includes('react-hook-form') || id.includes('zod') || id.includes('@hookform')) {
+              return 'forms'
+            }
+
+            // Carousel/Swiper (medium, store homepage)
+            if (id.includes('swiper') || id.includes('embla-carousel')) {
+              return 'carousel'
+            }
+
+            // Icons (medium, used everywhere)
+            if (id.includes('lucide-react')) {
+              return 'icons'
+            }
+
+            // DnD Kit (medium, admin only)
+            if (id.includes('@dnd-kit')) {
+              return 'dnd'
+            }
+
+            // All other small utilities
+            return 'vendor-utils'
           }
         },
 
