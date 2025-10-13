@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { shelfService, Shelf } from '../services/shelfService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
@@ -14,7 +14,7 @@ export const useShelves = () => {
   const [shelves, setShelves] = useState<Shelf[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  
   const { warehouse } = useAuth();
 
   const fetchShelves = async () => {

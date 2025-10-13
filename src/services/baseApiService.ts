@@ -12,14 +12,6 @@ class BaseApiService {
   private static refreshPromise: Promise<string> | null = null;
 
   constructor() {
-    // Debug: Log environment variables
-    console.log('🔍 Environment Debug:', {
-      baseURL: this.baseURL,
-      apiSecret: this.apiSecret ? `${this.apiSecret.slice(0, 8)}...` : 'NOT SET',
-      envViteApiBaseUrl: import.meta.env.VITE_API_BASE_URL,
-      envViteApiSecret: import.meta.env.VITE_API_SECRET ? `${import.meta.env.VITE_API_SECRET.slice(0, 8)}...` : 'NOT SET'
-    });
-    
     // Get token from localStorage on initialization if not already loaded
     if (!BaseApiService.token) {
       const storedToken = localStorage.getItem('auth_token');

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { Plus, Eye, Mail, Phone, Users } from "lucide-react";
 import { exportToExcel } from "@/utils/exportUtils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
@@ -31,7 +31,7 @@ const statusOptions = [
 const Customers = () => {
   const [customers] = useState(mockCustomers);
   const [filteredCustomers, setFilteredCustomers] = useState(mockCustomers);
-  const { toast } = useToast();
+  // Removed useToast hook;
     const [searchTerm, setSearchTerm] = useState("");
 
   const handleSearch = (term: string) => {
@@ -77,10 +77,7 @@ const Customers = () => {
     }));
     
     exportToExcel(exportData, 'customers-export', 'Customers');
-    toast({
-      title: "Export Successful",
-      description: "Customers data has been exported to Excel file"
-    });
+    toast.success("Customers data has been exported to Excel file", { duration: 2000 });
   };
 
   const getStatusBadge = (status: string) => {

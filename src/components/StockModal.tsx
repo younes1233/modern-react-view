@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { Package, Plus, Minus } from "lucide-react";
 
 interface StockModalProps {
@@ -24,7 +24,7 @@ export function StockModal({
   mode,
   products = []
 }: StockModalProps) {
-  const { toast } = useToast();
+  // Removed useToast hook;
   const [formData, setFormData] = useState({
     productId: '',
     quantity: '',
@@ -55,21 +55,13 @@ export function StockModal({
     e.preventDefault();
     
     if (!formData.productId || !formData.quantity) {
-      toast({
-        title: "Validation Error",
-        description: "Product and quantity are required",
-        variant: "destructive"
-      });
+      toast.error("Product and quantity are required", { duration: 2500 });
       return;
     }
 
     const quantity = parseInt(formData.quantity);
     if (isNaN(quantity) || quantity <= 0) {
-      toast({
-        title: "Validation Error",
-        description: "Quantity must be a positive number",
-        variant: "destructive"
-      });
+      toast.error("Quantity must be a positive number", { duration: 2500 });
       return;
     }
 
@@ -82,10 +74,7 @@ export function StockModal({
     };
 
     onSave(stockData);
-    toast({
-      title: "Success",
-      description: `Stock ${mode === 'add' ? 'added' : 'adjusted'} successfully`
-    });
+    toast.success(`Stock ${mode === 'add' ? 'added' : 'adjusted'} successfully`, { duration: 2000 });
     onClose();
   };
 

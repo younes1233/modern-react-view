@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { bannerService, BannerImages } from '@/services/bannerService';
 
 export interface Banner {
@@ -40,7 +40,7 @@ const transformBannerFromAPI = (apiBanner: any): Banner => ({
 
 export const useBanners = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   const {
     data: banners = [],

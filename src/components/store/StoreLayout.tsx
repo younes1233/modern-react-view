@@ -48,6 +48,7 @@ import { CountryCurrencySelector } from './CountryCurrencySelector'
 import { useStoreCategories } from '@/hooks/useStoreCategories'
 import { AddToCartNotification } from './AddToCartNotification'
 import { VariantSelectionModal } from './VariantSelectionModal'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 
 interface StoreLayoutProps {
   children: ReactNode
@@ -1132,15 +1133,14 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     }}
                     className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
                   >
-                    {product.cover_image ? (
-                      <img
+                    <div className="w-8 h-8 flex-shrink-0">
+                      <OptimizedImage
                         src={product.cover_image}
                         alt={product.name}
-                        className="w-8 h-8 object-cover rounded-lg shadow-md"
+                        className="w-full h-full object-cover rounded-lg shadow-md"
+                        eager
                       />
-                    ) : (
-                      <div className="w-8 h-8 rounded-lg bg-gray-100" />
-                    )}
+                    </div>
 
                     <div className="flex-1 min-w-0">
                       <h4 className="font-medium text-gray-900 truncate text-xs">
@@ -1229,15 +1229,14 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       }}
                       className="w-full flex items-center space-x-3 p-3 hover:bg-blue-50 rounded-xl transition-all duration-300 text-left"
                     >
-                      {product.cover_image ? (
-                        <img
+                      <div className="w-8 h-8 flex-shrink-0">
+                        <OptimizedImage
                           src={product.cover_image}
                           alt={product.name}
-                          className="w-8 h-8 object-cover rounded-lg shadow-md"
+                          className="w-full h-full object-cover rounded-lg shadow-md"
+                          eager
                         />
-                      ) : (
-                        <div className="w-8 h-8 rounded-lg bg-gray-100" />
-                      )}
+                      </div>
 
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 truncate text-xs">
@@ -1922,10 +1921,13 @@ export function StoreLayout({ children }: StoreLayoutProps) {
       </style>
 
       {/* Add to Cart Notification */}
-      <AddToCartNotification
-        item={notificationItem}
-        onClose={clearNotification}
-      />
+      {notificationItem && (
+        <AddToCartNotification
+          key={`${notificationItem.name}-${notificationItem.price}-${notificationItem.quantity}`}
+          item={notificationItem}
+          onClose={clearNotification}
+        />
+      )}
 
       {/* Variant Selection Modal */}
       {variantSelectionRequest && (

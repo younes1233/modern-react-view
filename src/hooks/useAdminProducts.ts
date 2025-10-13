@@ -1,7 +1,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminProductService, AdminProductAPI, CreateProductData } from '@/services/adminProductService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useAdminProducts = (
   filters: {
@@ -126,7 +126,7 @@ export const useAdminProductBySku = (sku: string) => {
 
 export const useCreateProduct = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (productData: FormData) => adminProductService.createProduct(productData),
@@ -150,7 +150,7 @@ export const useCreateProduct = () => {
 
 export const useUpdateProduct = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: FormData }) => {
@@ -178,7 +178,7 @@ export const useUpdateProduct = () => {
 
 export const useDeleteProduct = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (id: number) => {

@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { SortableItem } from '@/components/localization/SortableItem';
@@ -40,7 +40,7 @@ export function ZoneStructureModal({ isOpen, onClose, onSave, zoneStructure, lev
     selectedLevels: [] as number[]
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -67,20 +67,12 @@ export function ZoneStructureModal({ isOpen, onClose, onSave, zoneStructure, lev
     e.preventDefault();
     
     if (!formData.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a zone structure name",
-        variant: "destructive"
-      });
+      toast.error("Please enter a zone structure name", { duration: 2500 });
       return;
     }
 
     if (formData.selectedLevels.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one level",
-        variant: "destructive"
-      });
+      toast.error("Please select at least one level", { duration: 2500 });
       return;
     }
 

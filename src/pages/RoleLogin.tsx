@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { Eye, EyeOff, LogIn, Shield } from 'lucide-react';
 
 const RoleLogin = () => {
@@ -15,7 +15,7 @@ const RoleLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  
 
   // Redirect if user is already signed in
   useEffect(() => {

@@ -4,6 +4,7 @@ import { Product } from '@/data/storeData';
 import { toast } from '@/components/ui/sonner';
 import { wishlistService, WishlistResponse, AddWishlistResponse } from '@/services/wishlistService';
 import { useAuth } from '@/contexts/AuthContext';
+import { metaPixelService } from '@/services/metaPixelService';
 
 // Backend product interface to match ProductCard expectations
 interface BackendProduct {
@@ -177,6 +178,13 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       // Reload wishlist after adding
       await loadWishlist();
       toast.success(`Added ${product.name} to wishlist`);
+
+      // Track Meta Pixel AddToWishlist event
+      try {
+        await metaPixelService.trackAddToWishlist(product)
+      } catch (pixelError) {
+        console.warn('Meta Pixel tracking failed:', pixelError)
+      }
     } catch (error: any) {
       console.error('Error adding to wishlist:', error);
       if (error?.status === 401) {

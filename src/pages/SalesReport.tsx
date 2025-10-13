@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip, LineChart, Line } from "recharts";
 import { Calendar, Filter, TrendingUp, DollarSign, ShoppingCart, Users, FileText } from "lucide-react";
 import { exportToPDF } from "@/utils/exportUtils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 // TODO: Replace with API calls to fetch sales report data
 const salesReportData = [
@@ -30,7 +30,7 @@ const topSellingProducts = [
 
 const SalesReport = () => {
   const [dateRange, setDateRange] = useState("last_6_months");
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const handleExportPDF = () => {
     const columns = [
@@ -52,17 +52,10 @@ const SalesReport = () => {
       }));
       
       exportToPDF(dataToExport, 'sales-report', 'Sales Report', columns);
-      toast({
-        title: "Export Successful",
-        description: "Sales report has been exported to PDF file"
-      });
+      toast.success("Sales report has been exported to PDF file", { duration: 2000 });
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error exporting the sales report",
-        variant: "destructive"
-      });
+      toast.error("There was an error exporting the sales report", { duration: 2500 });
     }
   };
 

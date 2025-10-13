@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, PieChart, 
 import { TrendingUp, TrendingDown, Users, ShoppingCart, DollarSign, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToPDF } from "@/utils/exportUtils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 // TODO: Replace with API calls to fetch analytics data
 const revenueData = [
@@ -36,7 +36,7 @@ const trafficData = [
 ];
 
 const Analytics = () => {
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const handleExportPDF = () => {
     const analyticsData = [
@@ -54,17 +54,10 @@ const Analytics = () => {
     
     try {
       exportToPDF(analyticsData, 'analytics-report', 'Analytics Report', columns);
-      toast({
-        title: "Export Successful",
-        description: "Analytics report has been exported to PDF file"
-      });
+      toast.success("Analytics report has been exported to PDF file", { duration: 2000 });
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error exporting the analytics report",
-        variant: "destructive"
-      });
+      toast.error("There was an error exporting the analytics report", { duration: 2500 });
     }
   };
 

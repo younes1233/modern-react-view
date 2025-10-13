@@ -5,7 +5,7 @@ import {
   CreateWarehouseRequest,
   UpdateWarehouseRequest,
 } from '../services/warehouseService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 /**
  * A hook that manages the lifecycle of warehouse data within the UI. It can
@@ -19,7 +19,7 @@ export const useWarehouses = (countryId?: number | string) => {
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  
 
   const fetchWarehouses = async () => {
     try {

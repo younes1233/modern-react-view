@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/ui/file-upload";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { BannerImages } from "@/services/bannerService";
 import { BannerFormData } from "@/hooks/useBanners";
 
@@ -44,7 +44,7 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
   });
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   useEffect(() => {
     if (banner && mode === 'edit') {
@@ -86,20 +86,12 @@ export function BannerModal({ isOpen, onClose, onSave, banner, mode }: BannerMod
     e.preventDefault();
     
     if (!formData.title) {
-      toast({
-        title: "Error",
-        description: "Please enter a banner title",
-        variant: "destructive"
-      });
+      toast.error("Please enter a banner title", { duration: 2500 });
       return;
     }
 
     if (mode === 'add' && !formData.image) {
-      toast({
-        title: "Error",
-        description: "Please select an image",
-        variant: "destructive"
-      });
+      toast.error("Please select an image", { duration: 2500 });
       return;
     }
 

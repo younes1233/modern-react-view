@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { Save, Eye, Grid, List, Star, TrendingUp } from "lucide-react";
 import { 
   getDisplaySettings, 
@@ -17,7 +17,7 @@ import {
 
 export function ProductDisplay() {
   const [settings, setSettings] = useState<DisplaySettings>(getDisplaySettings());
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   useEffect(() => {
     setSettings(getDisplaySettings());
@@ -25,10 +25,7 @@ export function ProductDisplay() {
 
   const handleSaveSettings = () => {
     updateDisplaySettings(settings);
-    toast({
-      title: "Success",
-      description: "Product display settings saved successfully"
-    });
+    toast.success("Product display settings saved successfully", { duration: 2000 });
   };
 
   const updateSetting = <K extends keyof DisplaySettings>(

@@ -1,14 +1,16 @@
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback, lazy, Suspense } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { StoreLayout } from "@/components/store/StoreLayout";
 import { ProductCard } from "@/components/store/ProductCard";
-import { ShopByCategory } from "@/components/store/ShopByCategory";
-import { ProductSection } from "@/components/store/ProductSection";
-import { StoriesRing } from "@/components/store/StoriesRing";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowRight, Star, Heart, ShoppingCart, ShoppingBag, Zap, Shield, Truck, AlertCircle, RefreshCw, Wifi } from "lucide-react";
+
+// Lazy load heavy components for better initial page load
+const ShopByCategory = lazy(() => import("@/components/store/ShopByCategory").then(module => ({ default: module.ShopByCategory })));
+const ProductSection = lazy(() => import("@/components/store/ProductSection").then(module => ({ default: module.ProductSection })));
+const StoriesRing = lazy(() => import("@/components/store/StoriesRing").then(module => ({ default: module.StoriesRing })));
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { useHomeSections } from "@/hooks/useHomeSections";
@@ -42,22 +44,17 @@ const Store = () => {
     selectedCurrency?.id || 1
   );
 
-  // console.log('Store: Heroes data:', heroes);
-  // console.log('Store: Heroes loading state:', heroesLoading);
-
   // Memoize hero slides calculation to prevent unnecessary recalculations
   const slides = useMemo(() => {
     if (!heroes?.length) return [];
-    
+
     const sliderHero = heroes.find(hero => hero.type === 'slider');
     const singleHeroes = heroes.filter(hero => hero.type === 'single') || [];
-    
-    return sliderHero?.slides?.length > 0 
-      ? sliderHero.slides 
+
+    return sliderHero?.slides?.length > 0
+      ? sliderHero.slides
       : singleHeroes;
   }, [heroes]);
-  
-  // console.log('Store: Final slides array:', slides);
   
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   
@@ -215,8 +212,6 @@ const Store = () => {
               const sectionTop = window.scrollY + rect.top;
               const offset = parseInt(savedOffset, 10);
               targetPosition = sectionTop + offset;
-              
-              console.log('Store: Using relative positioning to section', savedSection, 'at position', targetPosition);
             }
           }
           
@@ -286,8 +281,9 @@ const Store = () => {
   }, []);
 
   // Memoize API product conversion to prevent unnecessary recalculations
-  const convertAPIProductToLegacy = useCallback((apiProduct: any) => {
-    return {
+  // This conversion is stable and doesn't need dependencies
+  const convertAPIProductToLegacy = useMemo(() => {
+    return (apiProduct: any) => ({
       id: apiProduct.id,
       name: apiProduct.name,
       slug: apiProduct.slug,
@@ -308,7 +304,7 @@ const Store = () => {
       has_variants: apiProduct.has_variants || false,
       variants_count: apiProduct.variants_count || 0,
       variations: apiProduct.variations || []
-    };
+    });
   }, []);
 
   const getSectionContent = useCallback((section: any) => {
@@ -356,33 +352,20 @@ const Store = () => {
       // Find banner by ID and check if it's active using the correct property name
       const banner = banners.find((b) => b.id === section.item_id && b.isActive);
       if (!banner) return null;
-      
-      // Get the responsive image based on device type
-      let bannerImage = '/placeholder.svg';
-      if (banner.images?.urls?.banner) {
-        bannerImage = banner.images.urls.banner[deviceType] || 
-                     banner.images.urls.banner.desktop || 
-                     banner.images.urls.original || 
-                     '/placeholder.svg';
-      }
-      
-      console.log('Banner found:', banner);
-      console.log('Device type:', deviceType);
-      console.log('Selected image URL:', bannerImage);
-      
+
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
           <div className="w-full max-w-full overflow-hidden bg-white">
             <div className="relative overflow-hidden shadow-lg bg-white" style={{ aspectRatio: '4/1' }}>
               <img
-                src={bannerImage}
-                alt={banner.images?.alt || banner.title}
+                src={banner.images?.urls?.banner?.[deviceType] || banner.images?.urls?.banner?.desktop || banner.images?.urls?.original || '/placeholder.svg'}
+                alt={banner.images?.alt || banner.title || 'Banner'}
                 className="w-full transition-all duration-300"
                 style={{ height: 'auto', objectFit: 'cover' }}
-                loading="lazy"
+                fetchpriority="high"
                 decoding="async"
                 onError={(e) => {
-                  console.error('Failed to load banner image:', bannerImage);
+                  // Simple one-time fallback to placeholder
                   e.currentTarget.src = '/placeholder.svg';
                 }}
               />
@@ -436,7 +419,9 @@ const Store = () => {
 
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
-          <ProductSection listing={listing} disableIndividualLoading />
+          <Suspense fallback={<ProductSectionSkeleton />}>
+            <ProductSection listing={listing} disableIndividualLoading />
+          </Suspense>
         </section>
       );
     }
@@ -454,10 +439,6 @@ const Store = () => {
   const convertedSaleProducts = useMemo(() => {
     return saleProducts.map(convertAPIProductToLegacy);
   }, [saleProducts, convertAPIProductToLegacy]);
-
-  // console.log('Store: Home sections from API:', homeSections);
-  // console.log('Store: Product listings from API:', productListings);
-  // console.log('Store: Banners from API:', banners);
 
   // Handle critical errors that would break the entire store experience
   if (hasCriticalErrors) {
@@ -539,16 +520,20 @@ const Store = () => {
 
 
         {/* Stories Ring */}
-        <StoriesRing />
+        <Suspense fallback={<div className="h-24 bg-gray-50 animate-pulse" />}>
+          <StoriesRing />
+        </Suspense>
 
         {/* Shop by Category with Loading */}
         <div className="w-full overflow-hidden">
           {isGlobalLoading ? (
             <ShopByCategorySkeleton />
           ) : (
-            <div className="animate-fade-in">
-              <ShopByCategory />
-            </div>
+            <Suspense fallback={<ShopByCategorySkeleton />}>
+              <div className="animate-fade-in">
+                <ShopByCategory />
+              </div>
+            </Suspense>
           )}
         </div>
 

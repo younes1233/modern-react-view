@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { discountService, Discount, Coupon, CreateDiscountRequest, CreateCouponRequest, DiscountPreviewRequest } from '@/services/discountService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 interface UseDiscountsOptions {
   autoFetch?: boolean;
@@ -19,7 +19,7 @@ export const useDiscounts = (options: UseDiscountsOptions = {}) => {
     total: 0,
     last_page: 1
   });
-  const { toast } = useToast();
+  
 
   const fetchDiscounts = useCallback(async (params?: {
     page?: number;
@@ -308,7 +308,7 @@ export const useCoupons = () => {
     total: 0,
     last_page: 1
   });
-  const { toast } = useToast();
+  
 
   const fetchCoupons = useCallback(async (params?: {
     page?: number;
@@ -505,7 +505,7 @@ export const useDiscountAnalytics = () => {
   const [analytics, setAnalytics] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  
 
   const fetchAnalytics = useCallback(async (params?: {
     date_from?: string;

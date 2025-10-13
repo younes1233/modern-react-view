@@ -31,7 +31,9 @@ export const useResponsiveImage = () => {
 };
 
 export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [deviceType, setDeviceType] = useState<DeviceType>(() => {
+  // Device type is determined ONCE on initial load and never changes
+  // This prevents unnecessary image reloads when resizing the browser
+  const [deviceType] = useState<DeviceType>(() => {
     // Initialize with correct device type on first render
     const width = window.innerWidth;
     if (width < 768) return 'mobile';
@@ -39,28 +41,8 @@ export const ResponsiveImageProvider: React.FC<{ children: React.ReactNode }> = 
     return 'desktop';
   });
 
-  useEffect(() => {
-    const checkDeviceType = () => {
-      const width = window.innerWidth;
-      let newDeviceType: DeviceType;
-      if (width < 768) {
-        newDeviceType = 'mobile';
-      } else if (width < 1024) {
-        newDeviceType = 'tablet';
-      } else {
-        newDeviceType = 'desktop';
-      }
-
-      // Only update state if device type actually changed
-      setDeviceType(prevType => prevType === newDeviceType ? prevType : newDeviceType);
-    };
-
-    window.addEventListener('resize', checkDeviceType);
-
-    return () => {
-      window.removeEventListener('resize', checkDeviceType);
-    };
-  }, []);
+  // Removed resize listener - device type is fixed for the session
+  // This ensures loaded images stay loaded even when resizing
 
   const getResponsiveImage = useCallback((images: BannerImages): string => {
     // Add null checks to prevent errors

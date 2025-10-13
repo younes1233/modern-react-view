@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Package } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { useBanners, Banner } from "@/hooks/useBanners";
 import { useProductListings } from "@/hooks/useProductListings";
 import { useResponsiveImage } from "@/contexts/ResponsiveImageContext";
@@ -32,7 +32,7 @@ import {
 import { DraggableLayoutRow } from './DraggableLayoutRow';
 
 export function LayoutManagement() {
-  const { toast } = useToast();
+  // Removed useToast hook;
   const { getImageUrl } = useResponsiveImage();
   
   const { data: homeSections = [], isLoading: homeSectionsLoading } = useHomeSections();

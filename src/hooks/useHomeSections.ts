@@ -1,10 +1,10 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { homeSectionService, HomeSectionAPI, CreateHomeSectionRequest, UpdateHomeSectionRequest } from '@/services/homeSectionService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useHomeSections = () => {
-  const { toast } = useToast();
+  
 
   return useQuery({
     queryKey: ['homeSections'],
@@ -28,7 +28,7 @@ export const useHomeSections = () => {
 
 export const useCreateHomeSection = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (data: CreateHomeSectionRequest) => homeSectionService.createHomeSection(data),
@@ -52,7 +52,7 @@ export const useCreateHomeSection = () => {
 
 export const useUpdateHomeSection = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateHomeSectionRequest }) => 
@@ -77,7 +77,7 @@ export const useUpdateHomeSection = () => {
 
 export const useDeleteHomeSection = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (id: number) => homeSectionService.deleteHomeSection(id),
@@ -101,7 +101,7 @@ export const useDeleteHomeSection = () => {
 
 export const useReorderHomeSections = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (order: number[]) => homeSectionService.reorderHomeSections(order),

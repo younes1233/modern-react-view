@@ -17,6 +17,7 @@ import { useAddresses } from '@/hooks/useAddresses';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { AreebaCheckout } from '@/components/payment/AreebaCheckout';
 import { StockUnavailableModal } from '@/components/modals/StockUnavailableModal';
+import { metaPixelService } from '@/services/metaPixelService';
 
 const CheckoutNew = () => {
   const { items, getTotalPrice, clearCart } = useCart();
@@ -72,6 +73,21 @@ const CheckoutNew = () => {
       calculatePricing();
     }
   }, [selectedAddressId, appliedCoupon]);
+
+  // Track Meta Pixel InitiateCheckout event when checkout page loads with items
+  useEffect(() => {
+    if (items.length > 0 && user) {
+      const trackCheckout = async () => {
+        try {
+          const totalValue = getTotalPrice();
+          await metaPixelService.trackInitiateCheckout(items, totalValue);
+        } catch (error) {
+          console.warn('Meta Pixel InitiateCheckout tracking failed:', error);
+        }
+      };
+      trackCheckout();
+    }
+  }, [items, user]); // Track when items change or user logs in
 
   const calculatePricing = async () => {
     if (!selectedAddressId) return;

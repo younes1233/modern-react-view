@@ -38,7 +38,7 @@ import {
 } from "lucide-react";
 import { roleService } from "@/services/roleService";
 import { userService, UserAPIResponse } from "@/services/userService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { PermissionsCell } from "@/components/PermissionsCell";
 
 export const UserList = () => {
@@ -63,7 +63,7 @@ export const UserList = () => {
     password: '',
     role: 'seller'
   });
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   useEffect(() => {
     fetchAvailableRoles();
@@ -92,11 +92,7 @@ export const UserList = () => {
       }
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch users",
-        variant: "destructive"
-      });
+      toast.error("Failed to fetch users", { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -125,20 +121,12 @@ export const UserList = () => {
 
   const handleAddUser = async () => {
     if (!newUser.firstName || !newUser.lastName || !newUser.email || !newUser.password || !newUser.role) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
+      toast.error("Please fill in all required fields", { duration: 2500 });
       return;
     }
 
     if (users.some(u => u.email === newUser.email)) {
-      toast({
-        title: "Error",
-        description: "A user with this email already exists",
-        variant: "destructive"
-      });
+      toast.error("A user with this email already exists", { duration: 2500 });
       return;
     }
 
@@ -170,11 +158,7 @@ export const UserList = () => {
         });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add user",
-        variant: "destructive"
-      });
+      toast.error("Failed to add user", { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -199,11 +183,7 @@ export const UserList = () => {
         });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to update user status",
-        variant: "destructive"
-      });
+      toast.error("Failed to update user status", { duration: 2500 });
     }
   };
 
@@ -213,11 +193,7 @@ export const UserList = () => {
     if (loading) return;
     
     if (!userId || userId === 0) {
-      toast({
-        title: "Error",
-        description: "Invalid user ID - cannot assign role",
-        variant: "destructive"
-      });
+      toast.error("Invalid user ID - cannot assign role", { duration: 2500 });
       return;
     }
     
@@ -227,11 +203,7 @@ export const UserList = () => {
       // Find the role object by name to get the ID
       const roleObj = availableRoles.find(role => role.name === newRoleName);
       if (!roleObj) {
-        toast({
-          title: "Error",
-          description: "Invalid role selected",
-          variant: "destructive"
-        });
+        toast.error("Invalid role selected", { duration: 2500 });
         return;
       }
 
@@ -247,20 +219,13 @@ export const UserList = () => {
         return;
       }
 
-      toast({
-        title: "Success",
-        description: "Role assigned successfully"
-      });
+      toast.success("Role assigned successfully", { duration: 2000 });
 
       // Refresh users list
       await fetchUsers();
     } catch (error) {
       console.error('Failed to assign role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to assign role",
-        variant: "destructive"
-      });
+      toast.error("Failed to assign role", { duration: 2500 });
     } finally {
       setLoading(false);
     }

@@ -58,6 +58,7 @@ import { useProductDetail } from '@/hooks/useProductDetail'
 import { ProductDetailSkeleton } from '@/components/store/ProductDetailSkeleton'
 import { ProductAPI } from '@/services/productService'
 import { useResponsiveImage } from '@/contexts/ResponsiveImageContext'
+import { metaPixelService } from '@/services/metaPixelService'
 import { ReviewForm } from '@/components/store/ReviewForm'
 import { ReviewCard } from '@/components/store/ReviewCard'
 import { UserReviewActions } from '@/components/store/UserReviewActions'
@@ -185,6 +186,20 @@ const ProductDetail = () => {
         setThumbnailsVisible(true)
       }, 100)
       return () => clearTimeout(timer)
+    }
+  }, [product])
+
+  // Track Meta Pixel ViewContent event when product loads
+  useEffect(() => {
+    if (product) {
+      const trackProductView = async () => {
+        try {
+          await metaPixelService.trackViewContent(product)
+        } catch (error) {
+          console.warn('Meta Pixel ViewContent tracking failed:', error)
+        }
+      }
+      trackProductView()
     }
   }, [product])
 
@@ -453,37 +468,14 @@ const ProductDetail = () => {
   const handleAddToCart = useCallback(() => {
     if (!product) return
 
-    // Convert API product to cart format
-    const cartProduct = {
-      id: product.id,
-      name: product.name,
-      slug: product.slug,
-      price: currentPrice,
-      originalPrice: originalPrice > currentPrice ? originalPrice : undefined,
-      image: allImages[0]?.url || '',
-      category: product.category?.name || 'Uncategorized',
-      inStock,
-      rating: 0, // Rating not available in new format
-      reviews: 0, // Reviews count not available in new format
-      isFeatured: product.flags.is_featured,
-      isNewArrival: product.flags.is_new_arrival,
-      isOnSale: product.flags.on_sale,
-      sku: product.identifiers.sku,
-      description: product.description,
-      thumbnails: allImages.map((img, index) => ({
-        id: index,
-        url: img.thumbnailUrl,
-        alt: img.alt,
-      })),
-      variations: product.variants || [],
-    }
-
     // Pass the selected variant ID if one is selected
     const productVariantId = selectedVariant?.id
       ? selectedVariant.id.toString()
       : undefined
-    addToCart(cartProduct, quantity, productVariantId)
-  }, [product, currentPrice, originalPrice, allImages, inStock, selectedVariant, quantity, addToCart])
+
+    // Pass the product directly - CartContext only needs id, name, has_variants, and pricing
+    addToCart(product, quantity, productVariantId)
+  }, [product, selectedVariant, quantity, addToCart])
 
   const handleShare = async () => {
     if (!product) return

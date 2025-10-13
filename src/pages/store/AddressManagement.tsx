@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, MapPin, Phone, Pencil, Trash2, Check, Package } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { addressService, Address } from "@/services/addressService";
 import AddressForm from "@/components/AddressForm";
 import { StoreLayout } from "@/components/store/StoreLayout";
@@ -24,7 +24,7 @@ const AddressManagement = () => {
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [selectedAddress, setSelectedAddress] = useState<Address | undefined>(undefined);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   useEffect(() => {
     fetchAddresses();

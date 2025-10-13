@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import {
   useZoneStructures,
   ZoneStructure,
@@ -42,7 +42,7 @@ export function ZoneStructureManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedZoneStructure, setSelectedZoneStructure] = useState<ZoneStructure | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<number | null>(null);
-  const { toast } = useToast();
+  // Removed useToast hook;
   const {
     zoneStructures,
     levels,

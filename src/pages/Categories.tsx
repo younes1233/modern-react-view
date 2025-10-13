@@ -28,7 +28,7 @@ import {
   Trash2,
   Loader2
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { categoryService, Category } from "@/services/categoryService";
 
 const Categories = () => {
@@ -46,7 +46,7 @@ const Categories = () => {
     products: 0,
     revenue: 0
   });
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   useEffect(() => {
     loadCategories();
@@ -104,11 +104,7 @@ const Categories = () => {
     } catch (error) {
       console.error('Error loading categories:', error);
       setCategories([]);
-      toast({
-        title: "Error",
-        description: "Failed to load categories",
-        variant: "destructive"
-      });
+      toast.error("Failed to load categories", { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -192,11 +188,7 @@ const Categories = () => {
       }
     } catch (error) {
       console.error('Error deleting category:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete category",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete category", { duration: 2500 });
     }
   };
 
@@ -215,10 +207,7 @@ const Categories = () => {
       console.log('Category save response:', response);
 
       if (response && !response.error) {
-        toast({
-          title: "Success",
-          description: `Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`
-        });
+        toast.success(`Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`, { duration: 2000 });
         console.log('Reloading categories after successful save...');
         // Force reload categories and stats
         await loadCategories();
@@ -234,19 +223,12 @@ const Categories = () => {
       }
     } catch (error) {
       console.error(`Error ${modalMode} category:`, error);
-      toast({
-        title: "Error",
-        description: `Failed to ${modalMode} category`,
-        variant: "destructive"
-      });
+      toast.error(`Failed to ${modalMode} category`, { duration: 2500 });
     }
   };
 
   const handleExportExcel = () => {
-    toast({
-      title: "Export Started",
-      description: "Categories are being exported to Excel"
-    });
+    toast.success("Categories are being exported to Excel", { duration: 2000 });
   };
 
   const getCategoryPath = (category: Category): string => {

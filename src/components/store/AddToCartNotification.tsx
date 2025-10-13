@@ -1,10 +1,11 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useMemo } from 'react';
 import { X, CheckCircle2 } from 'lucide-react';
+import { getBestImageUrl } from '@/utils/imageUtils';
 
 interface AddToCartNotificationProps {
   item: {
     name: string;
-    image: string;
+    image: string | { desktop?: string; tablet?: string; mobile?: string } | null;
     price: number;
     quantity: number;
     currency?: {
@@ -43,7 +44,7 @@ export function AddToCartNotification({ item, onClose }: AddToCartNotificationPr
         if (timerRef.current) clearTimeout(timerRef.current);
       };
     }
-  }, [item, onClose]);
+  }, [item]); // Re-trigger when entire item object changes
 
   const handleTouchStart = (e: React.TouchEvent) => {
     startX.current = e.touches[0].clientX;
@@ -84,6 +85,15 @@ export function AddToCartNotification({ item, onClose }: AddToCartNotificationPr
       }
     }
   };
+
+  // Get the best image URL with intelligent fallback
+  // MUST be before early return to avoid "hooks order" error
+  // NOTE: We DON'T add cache-busting timestamp because the image is already
+  // loaded in the ProductCard, so we want to reuse that cached image for instant display
+  const imageUrl = useMemo(() => {
+    if (!item) return '';
+    return getBestImageUrl(item.image);
+  }, [item?.image]); // Re-compute when image changes
 
   if (!item) return null;
 
@@ -136,7 +146,8 @@ export function AddToCartNotification({ item, onClose }: AddToCartNotificationPr
           <div className="flex gap-2 md:gap-3 items-center">
             <div className="relative flex-shrink-0">
               <img
-                src={item.image}
+                key={imageUrl} // Force re-render when URL changes
+                src={imageUrl}
                 alt={item.name}
                 className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-lg border border-gray-200/50"
                 onError={(e) => {

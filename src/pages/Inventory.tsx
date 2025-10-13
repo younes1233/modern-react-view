@@ -9,7 +9,7 @@ import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { StockModal } from "@/components/StockModal";
 import { Plus, AlertTriangle, Package, TrendingDown, TrendingUp, Settings } from "lucide-react";
 import { exportToPDF } from "@/utils/exportUtils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 // TODO: Replace with API call to fetch inventory data
 const mockInventory = [
@@ -31,7 +31,7 @@ const Inventory = () => {
   const [filteredInventory, setFilteredInventory] = useState(mockInventory);
   const [isStockModalOpen, setIsStockModalOpen] = useState(false);
   const [stockModalMode, setStockModalMode] = useState<'add' | 'adjust'>('add');
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const handleSearch = (term: string) => {
     const filtered = inventory.filter(item =>
@@ -126,17 +126,10 @@ const Inventory = () => {
       }));
       
       exportToPDF(dataToExport, 'inventory-report', 'Inventory Report', columns);
-      toast({
-        title: "Export Successful",
-        description: "Inventory report has been exported to PDF file"
-      });
+      toast.success("Inventory report has been exported to PDF file", { duration: 2000 });
     } catch (error) {
       console.error('Export error:', error);
-      toast({
-        title: "Export Failed",
-        description: "There was an error exporting the inventory report",
-        variant: "destructive"
-      });
+      toast.error("There was an error exporting the inventory report", { duration: 2500 });
     }
   };
 

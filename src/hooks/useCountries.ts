@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
 import { countryService, Country, CreateCountryRequest, UpdateCountryRequest } from '../services/countryService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useCountries = () => {
   const [countries, setCountries] = useState<Country[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  
 
   const fetchCountries = async () => {
     try {

@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { FileUpload } from '@/components/ui/file-upload';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { User, Mail, Phone, MapPin, Bell, Shield, Palette } from 'lucide-react';
 import { useDashboardBootstrap } from '@/hooks/useDashboardBootstrap';
 import {
@@ -33,7 +33,7 @@ interface ProfileSettingsModalProps {
 
 export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
   const { user } = useAuth() || {};
-  const { toast } = useToast();
+  
   const [isLoading, setIsLoading] = useState(false);
 
   // Access localization from context; destructure setters as well

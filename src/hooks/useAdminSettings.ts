@@ -1,9 +1,9 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminSettingsService, AdminSettings, UpdateAdminSettingsRequest } from '@/services/adminSettingsService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useAdminSettings = () => {
-  const { toast } = useToast();
+  
   const queryClient = useQueryClient();
 
   // Query to get admin settings

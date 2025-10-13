@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Edit, Package, Truck, Clock, CheckCircle, XCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 interface OrderStatus {
   value: string;
@@ -36,7 +36,7 @@ export const OrderStatusEditor: React.FC<OrderStatusEditorProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState(currentStatus);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const statusOptions = useMemo(() => {
     return statuses.map(status => ({

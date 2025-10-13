@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { useFlatCategories } from "@/hooks/useCategories";
 import { Plus, X, Star } from "lucide-react";
 
@@ -82,7 +82,7 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
   
   const [newThumbnail, setNewThumbnail] = useState({ url: '', alt: '' });
   const [newVariation, setNewVariation] = useState({ type: '', value: '', priceAdjustment: 0, inStock: true });
-  const { toast } = useToast();
+  // Removed useToast hook;
   const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
 
   useEffect(() => {
@@ -189,21 +189,14 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
     e.preventDefault();
     
     if (!formData.name || !formData.category || !formData.sku || !formData.image) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields including main image",
-        variant: "destructive"
-      });
+      toast.error("Please fill in all required fields including main image", { duration: 2500 });
       return;
     }
 
     onSave(formData);
     onClose();
     
-    toast({
-      title: "Success",
-      description: `Product ${mode === 'add' ? 'added' : 'updated'} successfully`
-    });
+    toast.success(`Product ${mode === 'add' ? 'added' : 'updated'} successfully`, { duration: 2000 });
   };
 
   return (

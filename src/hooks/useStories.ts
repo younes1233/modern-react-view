@@ -1,11 +1,11 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { storyService, Story } from '@/services/storyService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useStories = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   const {
     data: stories = [],

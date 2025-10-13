@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Heart, ShoppingCart, Package } from 'lucide-react'
 import { StarRating } from '@/components/ui/star-rating'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 import { useCart } from '@/contexts/CartContext'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { useNavigate } from 'react-router-dom'
@@ -125,14 +126,6 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
     navigate(`/product/${product.slug}`)
   }
 
-  // Cover image handling
-  const currentImage =
-    typeof product.cover_image === 'object' && product.cover_image
-      ? product.cover_image.mobile ||
-        product.cover_image.desktop ||
-        '/placeholder-product.png'
-      : product.cover_image || '/placeholder-product.png'
-
   const hasDiscount = hasBackendDiscount || (product.flags?.on_sale ?? false)
 
   return (
@@ -143,8 +136,8 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
       >
         {/* Product Image */}
         <div className="aspect-[1/1] bg-white overflow-hidden">
-          <img
-            src={currentImage}
+          <OptimizedImage
+            src={product.cover_image}
             alt={product.name}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
@@ -250,12 +243,24 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
 export const ProductCard = memo(
   ProductCardComponent,
   (prevProps, nextProps) => {
+    // Only re-render if critical data changes
+    const prev = prevProps.product;
+    const next = nextProps.product;
+
     return (
-      prevProps.product.id === nextProps.product.id &&
-      prevProps.product.name === nextProps.product.name &&
-      prevProps.product.pricing?.price === nextProps.product.pricing?.price &&
-      (prevProps.product.pricing?.applied_discounts?.length || 0) ===
-        (nextProps.product.pricing?.applied_discounts?.length || 0)
+      prev.id === next.id &&
+      prev.name === next.name &&
+      prev.slug === next.slug &&
+      prev.pricing?.price === next.pricing?.price &&
+      prev.pricing?.original_price === next.pricing?.original_price &&
+      (prev.pricing?.applied_discounts?.length || 0) === (next.pricing?.applied_discounts?.length || 0) &&
+      prev.stock === next.stock &&
+      prev.rating?.average === next.rating?.average &&
+      prev.rating?.count === next.rating?.count &&
+      prev.cover_image === next.cover_image &&
+      prev.flags?.on_sale === next.flags?.on_sale &&
+      prev.flags?.is_featured === next.flags?.is_featured &&
+      prev.flags?.is_new_arrival === next.flags?.is_new_arrival
     )
   }
 )

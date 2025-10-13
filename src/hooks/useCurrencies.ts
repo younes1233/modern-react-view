@@ -1,13 +1,13 @@
 
 import { useState, useEffect } from 'react';
 import { currencyService, Currency, CreateCurrencyRequest, UpdateCurrencyRequest } from '../services/currencyService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useCurrencies = () => {
   const [currencies, setCurrencies] = useState<Currency[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  
 
   const fetchCurrencies = async () => {
     try {

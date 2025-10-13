@@ -42,7 +42,7 @@ import {
 } from "lucide-react";
 import { demoProducts, Product } from "@/data/users";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 const SellerProducts = () => {
   const { user } = useAuth();
@@ -55,18 +55,14 @@ const SellerProducts = () => {
     category: '',
     image: '/placeholder.svg'
   });
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   // Filter products for current seller
   const sellerProducts = products.filter(p => p.sellerId === user?.sellerId);
 
   const handleAddProduct = () => {
     if (!newProduct.name || !newProduct.description || !newProduct.price || !newProduct.category) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields",
-        variant: "destructive"
-      });
+      toast.error("Please fill in all required fields", { duration: 2500 });
       return;
     }
 

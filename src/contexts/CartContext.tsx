@@ -9,6 +9,7 @@ import React, {
 import { toast } from '@/components/ui/sonner'
 import { cartService, Cart, AddToCartRequest } from '@/services/cartService'
 import { useAuth } from '@/contexts/AuthContext'
+import { metaPixelService } from '@/services/metaPixelService'
 
 // New API-based product interface for cart
 export interface ApiProduct {
@@ -87,7 +88,7 @@ export interface CartItem {
 
 interface CartNotificationItem {
   name: string
-  image: string
+  image: string | { desktop?: string; tablet?: string; mobile?: string } | null
   price: number
   quantity: number
   currency?: {
@@ -106,7 +107,8 @@ interface CartContextType {
   addToCart: (
     product: ApiProduct,
     quantity?: number,
-    productVariantId?: string
+    productVariantId?: string,
+    preloadedImage?: string
   ) => Promise<void>
   removeFromCart: (itemId: string) => Promise<void>
   updateQuantity: (itemId: string, quantity: number) => Promise<void>
@@ -181,7 +183,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         !productVariantId && product.stock !== undefined && product.stock <= 0
 
       if (isOutOfStock) {
-        toast.error('This product is out of stock')
+        toast.error('This product is out of stock', { duration: 2500 })
         return
       }
 
@@ -207,38 +209,78 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         const cart = await cartService.addToCart(requestData)
         setItems(convertApiCartItems(cart))
-        
-        console.log('🔍 DEBUG: Cart response after adding:', cart)
 
-        // Get the newly added item from cart response
-        const addedItem = cart.items[cart.items.length - 1] // Get last item (newly added)
-        console.log('🔍 DEBUG: Added item:', addedItem)
-
-        // Use data from the cart item which has the correct variant info
-        let variantName = addedItem.product?.name || product.name
-        let variantImage = addedItem.product?.image || '/placeholder.svg'
-        let variantPrice = addedItem.price || product.pricing?.price || 0
-
-        // If it's a variant, enhance the name with variant details
-        if (addedItem.isVariant && addedItem.selectedVariations && Array.isArray(addedItem.selectedVariations)) {
-          const variantLabels = addedItem.selectedVariations.map((v: any) => v.value).join(', ')
-          variantName = `${variantName} - ${variantLabels}`
+        // Find the cart item to get the total quantity (after increment)
+        let cartItem = null
+        if (productVariantId) {
+          cartItem = cart.items.find((item: any) =>
+            item.productVariantId === parseInt(productVariantId)
+          )
+        } else if (isPackage) {
+          cartItem = cart.items.find((item: any) =>
+            item.isPackage && item.purchasableId === product.id
+          )
+        } else {
+          cartItem = cart.items.find((item: any) =>
+            item.productId === product.id && !item.isVariant
+          )
         }
 
-        setNotificationItem({
-          name: variantName,
-          image: variantImage,
-          price: variantPrice || 0,
-          quantity: quantity,
-          currency: {
-            symbol: cart.currency === 'USD' ? '$' : cart.currency, // Use cart currency from user settings
-            code: cart.currency || 'USD'
-          },
-        })
+        // Always use the ORIGINAL product data that was clicked
+        let notificationName = product.name
+        const notificationImage = product.cover_image || '/placeholder.svg'
+        const notificationPrice = product.pricing?.price || 0
+        const notificationQuantity = cartItem?.quantity || quantity // Show total quantity in cart
+        const notificationCurrency = {
+          symbol: cart.currency === 'USD' ? '$' : cart.currency,
+          code: cart.currency || 'USD'
+        }
+
+        // For variants, add variant labels to the name
+        if (productVariantId && cartItem?.selectedVariations && Array.isArray(cartItem.selectedVariations)) {
+          const variantLabels = cartItem.selectedVariations.map((v: any) => v.value).join(', ')
+          notificationName = `${notificationName} - ${variantLabels}`
+        }
+
+        // Clear any existing notification first to ensure clean state
+        setNotificationItem(null)
+
+        // Set new notification after a brief delay to force component remount
+        setTimeout(() => {
+          setNotificationItem({
+            name: notificationName,
+            image: notificationImage,
+            price: notificationPrice,
+            quantity: notificationQuantity,
+            currency: notificationCurrency,
+          })
+        }, 100) // 100ms delay ensures clean state reset between notifications
+
+        // Track Meta Pixel AddToCart event
+        try {
+          await metaPixelService.trackAddToCart(product, quantity)
+        } catch (pixelError) {
+          console.warn('Meta Pixel tracking failed:', pixelError)
+        }
       } catch (error: any) {
         console.error('Error adding to cart:', error)
-        const errorMessage = error?.message || 'Failed to add item to cart'
-        toast.error(errorMessage)
+
+        // Extract clean error message from backend response
+        let errorMessage = 'Failed to add item to cart'
+
+        if (error?.message) {
+          // The error message from baseApiService already contains the backend message
+          // Remove the "HTTP 400: Bad Request - " prefix if present
+          errorMessage = error.message.replace(/^HTTP \d+: .+ - /, '')
+
+          // If message still has "Details:" in it, extract just the main message
+          const detailsIndex = errorMessage.indexOf(' - Details:')
+          if (detailsIndex > 0) {
+            errorMessage = errorMessage.substring(0, detailsIndex)
+          }
+        }
+
+        toast.error(errorMessage, { duration: 3000 })
       } finally {
         setIsLoading(false)
       }
@@ -256,11 +298,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await loadCart() // Reload cart after removal
 
         if (item) {
-          toast.success(`Removed ${item.product.name} from cart`)
+          toast.success(`Removed ${item.product.name} from cart`, { duration: 2000 })
         }
       } catch (error) {
         console.error('Error removing from cart:', error)
-        toast.error('Failed to remove item from cart')
+        toast.error('Failed to remove item from cart', { duration: 2500 })
       } finally {
         setIsLoading(false)
       }
@@ -281,7 +323,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await loadCart() // Reload cart after update
       } catch (error) {
         console.error('Error updating quantity:', error)
-        toast.error('Failed to update quantity')
+        toast.error('Failed to update quantity', { duration: 2500 })
       } finally {
         setIsLoading(false)
       }
@@ -294,10 +336,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true)
       await cartService.clearCart()
       setItems([])
-      toast.success('Cart cleared')
+      toast.success('Cart cleared', { duration: 2000 })
     } catch (error) {
       console.error('Error clearing cart:', error)
-      toast.error('Failed to clear cart')
+      toast.error('Failed to clear cart', { duration: 2500 })
     } finally {
       setIsLoading(false)
     }
@@ -306,7 +348,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const moveToWishlist = useCallback(
     async (itemId: string) => {
       if (!user) {
-        toast.error('Please login to save to wishlist')
+        toast.error('Please login to save to wishlist', { duration: 2500 })
         return
       }
 
@@ -318,14 +360,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         await loadCart() // Reload cart after moving item
 
         if (item) {
-          toast.success(`Moved ${item.product.name} to wishlist`)
+          toast.success(`Moved ${item.product.name} to wishlist`, { duration: 2000 })
         }
       } catch (error: any) {
         console.error('Error moving to wishlist:', error)
         if (error?.status === 401) {
-          toast.error('Please login to save to wishlist')
+          toast.error('Please login to save to wishlist', { duration: 2500 })
         } else {
-          toast.error('Failed to move item to wishlist')
+          toast.error('Failed to move item to wishlist', { duration: 2500 })
         }
       } finally {
         setIsLoading(false)

@@ -8,8 +8,9 @@ import { useCountryCurrency } from "@/contexts/CountryCurrencyContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkoutService, isStockUnavailableError, UnavailableItem } from "@/services/checkoutService";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "@/components/ui/sonner";
 import { StockUnavailableModal } from "@/components/modals/StockUnavailableModal";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 export function CartSidebar() {
   const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart, isLoading } = useCart();
@@ -24,10 +25,8 @@ export function CartSidebar() {
 
   const handleCheckout = async () => {
     if (!selectedCountry) {
-      toast({
-        title: "Country Required",
-        description: "Please select a country before proceeding to checkout.",
-        variant: "destructive",
+      toast.error("Please select a country before proceeding to checkout.", {
+        duration: 2500,
       });
       return;
     }
@@ -37,10 +36,8 @@ export function CartSidebar() {
     try {
       // Use selected country from context (saved in user_settings)
       if (!selectedCountry) {
-        toast({
-          title: "Country Required",
-          description: "Please select your country from the header before proceeding to checkout.",
-          variant: "destructive",
+        toast.error("Please select your country from the header before proceeding to checkout.", {
+          duration: 2500,
         });
         setIsCheckingOut(false);
         return;
@@ -54,9 +51,8 @@ export function CartSidebar() {
       // Store checkout session details
       sessionStorage.setItem('checkout_session', JSON.stringify(response.details));
 
-      toast({
-        title: "Checkout Started",
-        description: response.message,
+      toast.success(response.message || "Checkout started successfully", {
+        duration: 2000,
       });
 
       // Navigate to checkout with session data
@@ -68,7 +64,7 @@ export function CartSidebar() {
       setIsOpen(false);
     } catch (error: any) {
       console.error('Checkout start error:', error);
-      
+
       // Handle stock unavailable errors
       if (isStockUnavailableError(error)) {
         setStockUnavailableModal({
@@ -77,11 +73,9 @@ export function CartSidebar() {
         });
         return;
       }
-      
-      toast({
-        title: "Checkout Failed",
-        description: error.response?.data?.message || "Failed to start checkout. Please try again.",
-        variant: "destructive",
+
+      toast.error(error.response?.data?.message || "Failed to start checkout. Please try again.", {
+        duration: 3000,
       });
     } finally {
       setIsCheckingOut(false);
@@ -154,28 +148,20 @@ export function CartSidebar() {
             <div className="space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="flex items-start space-x-3 bg-gray-50 p-3 rounded-lg">
-                  <img
-                    src={
-                      typeof item.product.image === 'string'
-                        ? item.product.image
-                        : (() => {
-                            const img = item.product.image as any;
-                            if (img?.urls) {
-                              return img.urls.catalog || img.urls.main || img.urls.original || img.urls.thumbnail_small || '/placeholder.svg';
-                            }
-                            return img?.desktop || img?.tablet || img?.mobile || img?.url || img?.image_url || '/placeholder.svg';
-                          })()
-                    }
-                    alt={item.product.name}
-                    className="w-20 h-20 object-cover rounded-md cursor-pointer flex-shrink-0 border border-gray-200"
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
+                  <div
+                    className="w-20 h-20 cursor-pointer flex-shrink-0"
                     onClick={() => {
                       navigate(`/product/${item.product.slug}`);
                       setIsOpen(false);
                     }}
-                  />
+                  >
+                    <OptimizedImage
+                      src={item.product.image}
+                      alt={item.product.name}
+                      className="w-full h-full object-cover rounded-md border border-gray-200"
+                      eager
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h4 className="font-medium text-sm text-gray-900 line-clamp-2 cursor-pointer hover:text-cyan-600 transition-colors mb-1"
                         onClick={() => {

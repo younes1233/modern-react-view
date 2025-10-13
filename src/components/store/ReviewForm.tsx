@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, Upload, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { reviewService } from '@/services/reviewService';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -33,7 +33,7 @@ const ReviewFormComponent: React.FC<ReviewFormProps> = ({
   const [hoveredStar, setHoveredStar] = useState(0);
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
 
-  const { toast } = useToast();
+  
   const { user } = useAuth();
 
   // Helper function to render validation errors for a field

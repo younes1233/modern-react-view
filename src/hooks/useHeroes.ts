@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { heroService, HeroAPI, CreateSingleHeroRequest, CreateSliderRequest, UpdateHeroRequest, CreateSlideRequest, UpdateSlideRequest } from '@/services/heroService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 // Public heroes for store front
 export const useHeroes = () => {
@@ -41,7 +41,7 @@ export const useAdminHeroes = () => {
 // Create single hero
 export const useCreateSingleHero = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (data: CreateSingleHeroRequest) => heroService.createSingleHero(data),
@@ -66,7 +66,7 @@ export const useCreateSingleHero = () => {
 // Create slider
 export const useCreateSlider = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (data: CreateSliderRequest) => heroService.createSlider(data),
@@ -91,7 +91,7 @@ export const useCreateSlider = () => {
 // Add slide to slider
 export const useAddSlide = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ sliderId, data }: { sliderId: number; data: CreateSlideRequest }) => 
@@ -117,7 +117,7 @@ export const useAddSlide = () => {
 // Update hero
 export const useUpdateHero = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateHeroRequest }) => 
@@ -143,7 +143,7 @@ export const useUpdateHero = () => {
 // Update slide
 export const useUpdateSlide = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ sliderId, slideId, data }: { sliderId: number; slideId: number; data: UpdateSlideRequest }) => 
@@ -169,7 +169,7 @@ export const useUpdateSlide = () => {
 // Delete hero
 export const useDeleteHero = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (id: number) => heroService.deleteHero(id),
@@ -194,7 +194,7 @@ export const useDeleteHero = () => {
 // Delete slide
 export const useDeleteSlide = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ sliderId, slideId }: { sliderId: number; slideId: number }) => 
@@ -220,7 +220,7 @@ export const useDeleteSlide = () => {
 // Reorder heroes
 export const useReorderHeroes = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: (order: number[]) => heroService.reorderHeroes(order),
@@ -245,7 +245,7 @@ export const useReorderHeroes = () => {
 // Reorder slides
 export const useReorderSlides = () => {
   const queryClient = useQueryClient();
-  const { toast } = useToast();
+  
 
   return useMutation({
     mutationFn: ({ sliderId, order }: { sliderId: number; order: number[] }) => 

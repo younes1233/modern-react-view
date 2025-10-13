@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { FileUpload } from "@/components/ui/file-upload";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { useFlatCategories } from "@/hooks/useCategories";
 import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
 import { X } from "lucide-react";
@@ -340,7 +340,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     }
   };
 
-  const { toast } = useToast();
+  // Removed useToast hook;
   const { data: categories = [], isLoading: categoriesLoading } = useFlatCategories();
   const { data: attributes = [], isLoading: attributesLoading } = useAttributes();
 
@@ -908,7 +908,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
     // Validate delivery method for non-variant products
     if (!formData.has_variants && !formData.delivery_type) {
-      toast({ title: "Error", description: "Delivery method is required", variant: "destructive" });
+      toast.error("Delivery method is required", { duration: 2500 });
       return;
     }
 
@@ -922,11 +922,11 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       for (let i = 0; i < variantEntries.length; i++) {
         const variant = variantEntries[i];
         if (variant.variations.length === 0) {
-          toast({ title: "Error", description: `Variant ${i + 1} must have at least one attribute value selected`, variant: "destructive" });
+          toast.error(`Variant ${i + 1} must have at least one attribute value selected`, { duration: 2500 });
           return;
         }
         if (!variant.stock || variant.stock <= 0) {
-          toast({ title: "Error", description: `Variant ${i + 1} must have stock quantity greater than 0`, variant: "destructive" });
+          toast.error(`Variant ${i + 1} must have stock quantity greater than 0`, { duration: 2500 });
           return;
         }
       }
@@ -996,11 +996,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       );
 
       if (missingInProduct.length > 0) {
-        toast({
-          title: "Error",
-          description: `Missing required product specifications: ${missingInProduct.join(', ')}`,
-          variant: "destructive"
-        });
+        toast.error(`Missing required product specifications: ${missingInProduct.join(', ')}`, { duration: 2500 });
         return;
       }
     }
@@ -1022,11 +1018,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     for (let i = 0; i < prices.length; i++) {
       const price = prices[i];
       if (price.net_price < price.cost) {
-        toast({
-          title: "Error",
-          description: `Net price cannot be less than cost in price entry ${i + 1}`,
-          variant: "destructive"
-        });
+        toast.error(`Net price cannot be less than cost in price entry ${i + 1}`, { duration: 2500 });
         return;
       }
     }
@@ -1047,11 +1039,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           const cost = parseFloat(variant.variantPrices.cost);
 
           if (!isNaN(netPrice) && !isNaN(cost) && netPrice < cost) {
-            toast({
-              title: "Error",
-              description: `Net price cannot be less than cost in variant ${variantIndex + 1}`,
-              variant: "destructive"
-            });
+            toast.error(`Net price cannot be less than cost in variant ${variantIndex + 1}`, { duration: 2500 });
             return;
           }
         }
@@ -1061,20 +1049,12 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         const variantDeliveryCost = variant.delivery_cost;
 
         if (variantDeliveryType === 'company' && variantDeliveryCost) {
-          toast({
-            title: "Error",
-            description: `Variant ${variantIndex + 1}: Delivery cost cannot be set for company delivery type`,
-            variant: "destructive"
-          });
+          toast.error(`Variant ${variantIndex + 1}: Delivery cost cannot be set for company delivery type`, { duration: 2500 });
           return;
         }
 
         if (variantDeliveryType === 'meemhome' && !variantDeliveryCost && !formData.delivery_cost) {
-          toast({
-            title: "Error",
-            description: `Variant ${variantIndex + 1}: Delivery cost is required for meemhome delivery type`,
-            variant: "destructive"
-          });
+          toast.error(`Variant ${variantIndex + 1}: Delivery cost is required for meemhome delivery type`, { duration: 2500 });
           return;
         }
       }

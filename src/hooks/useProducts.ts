@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { productService, ProductAPI } from '@/services/productService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useProducts = (
   countryId: number = 1,
@@ -8,7 +8,7 @@ export const useProducts = (
   page: number = 1,
   limit: number = 25
 ) => {
-  const { toast } = useToast();
+  
 
   return useQuery({
     queryKey: ['products', countryId, currencyId, page, limit],

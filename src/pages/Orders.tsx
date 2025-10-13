@@ -11,7 +11,7 @@ import { OrderActions } from "@/components/OrderActions";
 import { Package, Truck, Clock, DollarSign, Plus, XCircle, Tag, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToExcel } from "@/utils/exportUtils";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import {
   orderService,
   Order,
@@ -35,7 +35,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
    ========================= */
 
 const Orders = () => {
-  const { toast } = useToast();
+  // Removed useToast hook;
   const queryClient = useQueryClient();
 
   /* -------- Filters & Lists -------- */

@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 interface Level {
   id: number;
@@ -27,7 +27,7 @@ export function LevelModal({ isOpen, onClose, onSave, level }: LevelModalProps) 
     type: ''
   });
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   useEffect(() => {
     if (level) {
@@ -45,11 +45,7 @@ export function LevelModal({ isOpen, onClose, onSave, level }: LevelModalProps) 
     e.preventDefault();
     
     if (!formData.type.trim()) {
-      toast({
-        title: "Error",
-        description: "Please enter a level type",
-        variant: "destructive"
-      });
+      toast.error("Please enter a level type", { duration: 2500 });
       return;
     }
 

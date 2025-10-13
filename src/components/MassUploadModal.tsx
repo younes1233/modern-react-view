@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle, XCircle, Upload, Download, AlertTriangle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import * as XLSX from 'xlsx';
 
 interface MassUploadModalProps {
@@ -30,7 +30,7 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const requiredFieldsProducts = ['name', 'sku', 'base_price', 'category_id'];
   const requiredFieldsCategories = ['name', 'description'];
@@ -49,11 +49,7 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
         setUploadedFile(file);
         validateFile(file);
       } else {
-        toast({
-          title: "Invalid File Type",
-          description: "Please upload an Excel file (.xlsx or .xls)",
-          variant: "destructive"
-        });
+        toast.error("Please upload an Excel file (.xlsx or .xls)", { duration: 2500 });
       }
     }
   };
@@ -82,24 +78,13 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
       setUploadProgress(100);
 
       if (validation.isValid) {
-        toast({
-          title: "File Validated Successfully",
-          description: `${validation.data.length} ${type} ready for upload`
-        });
+        toast.success(`${validation.data.length} ${type} ready for upload`, { duration: 2000 });
       } else {
-        toast({
-          title: "Validation Issues Found",
-          description: `Found ${validation.errors.length} errors that need to be fixed`,
-          variant: "destructive"
-        });
+        toast.error(`Found ${validation.errors.length} errors that need to be fixed`, { duration: 2500 });
       }
     } catch (error) {
       console.error('File processing error:', error);
-      toast({
-        title: "File Processing Error",
-        description: "Unable to process the Excel file. Please check the format.",
-        variant: "destructive"
-      });
+      toast.error("Unable to process the Excel file. Please check the format.", { duration: 2500 });
       setValidationResult({
         isValid: false,
         errors: ["Failed to process Excel file"],
@@ -208,18 +193,11 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
     if (validationResult && validationResult.isValid) {
       console.log('Uploading data:', validationResult.data);
       onUploadComplete(validationResult.data);
-      toast({
-        title: "Upload Successful",
-        description: `${validationResult.data.length} ${type} uploaded successfully`
-      });
+      toast.success(`${validationResult.data.length} ${type} uploaded successfully`, { duration: 2000 });
       onClose();
       resetState();
     } else {
-      toast({
-        title: "Cannot Upload",
-        description: "Please fix validation errors before uploading",
-        variant: "destructive"
-      });
+      toast.error("Please fix validation errors before uploading", { duration: 2500 });
     }
   };
 
@@ -283,10 +261,7 @@ export function MassUploadModal({ isOpen, onClose, type, onUploadComplete }: Mas
     XLSX.utils.book_append_sheet(wb, ws, type);
     XLSX.writeFile(wb, `${type}_template.xlsx`);
 
-    toast({
-      title: "Template Downloaded",
-      description: `${type} template has been downloaded`
-    });
+    toast.success(`${type} template has been downloaded`, { duration: 2000 });
   };
 
   // Reset state when modal closes

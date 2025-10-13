@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Edit, Trash2, Eye, MoreHorizontal, Download, Mail } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 interface ActionButtonsProps {
   itemId: string | number;
@@ -36,7 +36,7 @@ export function ActionButtons({
   showEmail = false,
   variant = "default"
 }: ActionButtonsProps) {
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const handleView = () => {
     onView?.(itemId);

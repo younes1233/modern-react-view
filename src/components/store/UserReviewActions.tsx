@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Edit, Trash2 } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { reviewService } from '@/services/reviewService';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -30,7 +30,7 @@ export const UserReviewActions: React.FC<UserReviewActionsProps> = ({
 }) => {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
+  
   const { user } = useAuth();
 
   // Only show actions if the current user owns this review

@@ -8,14 +8,14 @@ import {
   CreateLevelRequest,
   UpdateLevelRequest
 } from '../services/zoneStructureService';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 
 export const useZoneStructures = () => {
   const [zoneStructures, setZoneStructures] = useState<ZoneStructure[]>([]);
   const [levels, setLevels] = useState<Level[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  
 
   const fetchZoneStructures = async () => {
     try {

@@ -1,11 +1,11 @@
 import React from "react";
-import { lazy, Suspense } from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { lazy, Suspense, useEffect, useRef } from "react";
+import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { StoreThemeHandler } from "@/components/StoreThemeHandler";
+import { metaPixelService } from "@/services/metaPixelService";
 
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CartProvider } from "@/contexts/CartContext";
@@ -62,8 +62,11 @@ const OrderDetail = lazy(() => import("@/pages/store/OrderDetail"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 5 * 60 * 1000, // 5 minutes
-      gcTime: 10 * 60 * 1000, // 10 minutes
+      staleTime: 10 * 60 * 1000, // 10 minutes - increased for better caching
+      gcTime: 30 * 60 * 1000, // 30 minutes - keep data in cache longer
+      refetchOnWindowFocus: false, // Prevent unnecessary refetches
+      refetchOnMount: false, // Use cache when available
+      refetchOnReconnect: false, // Avoid refetch on reconnect
       retry: (failureCount, error: any) => {
         // Don't retry if it's a rate limit error (429) or authentication error (401)
         if (error?.status === 429 || error?.status === 401) {
@@ -81,6 +84,49 @@ const queryClient = new QueryClient({
   },
 });
 
+// Global flag to ensure only one MetaPixelTracker initializes
+let globalPixelInitialized = false;
+
+// Meta Pixel route tracking component
+function MetaPixelTracker() {
+  const location = useLocation();
+  const initializeRef = useRef(false);
+
+  useEffect(() => {
+    // Initialize Meta Pixel only once globally
+    if (!initializeRef.current && !globalPixelInitialized) {
+      initializeRef.current = true;
+      globalPixelInitialized = true;
+      metaPixelService.initialize().catch(console.error);
+    }
+  }, []);
+
+  useEffect(() => {
+    // Track page views on route changes
+    const trackPageView = async () => {
+      try {
+        // Only track if pixel is ready and we've moved past the initial load
+        if (metaPixelService.isReady() && metaPixelService.isInitialPageViewTracked()) {
+          await metaPixelService.trackPageView();
+        }
+      } catch (error) {
+        console.warn('Meta Pixel page view tracking failed:', error);
+      }
+    };
+    
+    // Add a small delay to ensure initialization is complete
+    const timeoutId = setTimeout(() => {
+      if (globalPixelInitialized) {
+        trackPageView();
+      }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
+  }, [location.pathname]);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -92,6 +138,7 @@ function App() {
                   <SearchProvider>
                     <ResponsiveImageProvider>
                     <Router>
+                    <MetaPixelTracker />
                     <StoreThemeHandler />
                     <Suspense fallback={<PageLoader />}>
                         <Routes>
@@ -208,7 +255,6 @@ function App() {
                       </Routes>
                       </Suspense>
                     </Router>
-                    <Toaster />
                     <Sonner />
                   </ResponsiveImageProvider>
                 </SearchProvider>

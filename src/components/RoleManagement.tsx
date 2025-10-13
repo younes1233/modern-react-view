@@ -30,7 +30,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { roleService, Role } from "@/services/roleService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 export const RoleManagement = () => {
   const [roles, setRoles] = useState<Role[]>([]);
@@ -46,7 +46,7 @@ export const RoleManagement = () => {
     description: '',
     permissions: [] as string[]
   });
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const protectedRoles = ['super_admin', 'seller', 'user'];
 
@@ -72,21 +72,13 @@ export const RoleManagement = () => {
         const errorMessage = response.message || 'Failed to fetch roles';
         setError(errorMessage);
         console.error('RoleManagement: Error in roles response:', errorMessage);
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive"
-        });
+        toast.error(errorMessage, { duration: 2500 });
       }
     } catch (error) {
       console.error('RoleManagement: Failed to fetch roles:', error);
       const errorMessage = error instanceof Error ? error.message : 'Failed to fetch roles';
       setError(errorMessage);
-      toast({
-        title: "Error",
-        description: "Failed to fetch roles. Please check your connection and try again.",
-        variant: "destructive"
-      });
+      toast.error("Failed to fetch roles. Please check your connection and try again.", { duration: 2500 });
     } finally {
       setLoading(false);
     }
@@ -109,11 +101,7 @@ export const RoleManagement = () => {
 
   const handleAddRole = async () => {
     if (!newRole.name.trim()) {
-      toast({
-        title: "Error",
-        description: "Role name is required",
-        variant: "destructive"
-      });
+      toast.error("Role name is required", { duration: 2500 });
       return;
     }
 
@@ -136,19 +124,11 @@ export const RoleManagement = () => {
           description: "Role created successfully",
         });
       } else {
-        toast({
-          title: "Error",
-          description: response.message,
-          variant: "destructive"
-        });
+        toast.error(response.message, { duration: 2500 });
       }
     } catch (error) {
       console.error('RoleManagement: Failed to create role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to create role",
-        variant: "destructive"
-      });
+      toast.error("Failed to create role", { duration: 2500 });
     }
   };
 
@@ -177,29 +157,17 @@ export const RoleManagement = () => {
           description: "Role updated successfully",
         });
       } else {
-        toast({
-          title: "Error",
-          description: response.message,
-          variant: "destructive"
-        });
+        toast.error(response.message, { duration: 2500 });
       }
     } catch (error) {
       console.error('RoleManagement: Failed to update role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update role",
-        variant: "destructive"
-      });
+      toast.error("Failed to update role", { duration: 2500 });
     }
   };
 
   const handleDeleteRole = async (roleId: number, roleName: string) => {
     if (protectedRoles.includes(roleName)) {
-      toast({
-        title: "Error",
-        description: "Cannot delete protected roles",
-        variant: "destructive"
-      });
+      toast.error("Cannot delete protected roles", { duration: 2500 });
       return;
     }
 
@@ -215,19 +183,11 @@ export const RoleManagement = () => {
           description: "Role deleted successfully",
         });
       } else {
-        toast({
-          title: "Error",
-          description: response.message,
-          variant: "destructive"
-        });
+        toast.error(response.message, { duration: 2500 });
       }
     } catch (error) {
       console.error('RoleManagement: Failed to delete role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete role",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete role", { duration: 2500 });
     }
   };
 

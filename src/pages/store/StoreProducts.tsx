@@ -13,7 +13,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Search, Filter, X, SlidersHorizontal, ChevronDown } from 'lucide-react';
 import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
 import { useStoreCategories } from '@/hooks/useStoreCategories';
+import { useDebounce } from '@/hooks/useDebounce';
 import BaseApiService from '@/services/baseApiService';
+import { metaPixelService } from '@/services/metaPixelService';
 
 const StoreProducts = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -25,6 +27,7 @@ const StoreProducts = () => {
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
+  const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search by 500ms
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
@@ -33,6 +36,7 @@ const StoreProducts = () => {
   
   // Filter states
   const [priceRange, setPriceRange] = useState([0, 1000]);
+  const debouncedPriceRange = useDebounce(priceRange, 800); // Debounce price slider by 800ms
   const [maxPrice, setMaxPrice] = useState(1000);
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
@@ -56,20 +60,20 @@ const StoreProducts = () => {
         params.append('currency_id', selectedCurrency.id.toString());
       }
 
-      if (searchQuery) {
-        params.append('q', searchQuery);
+      if (debouncedSearchQuery) {
+        params.append('q', debouncedSearchQuery);
       }
 
       if (selectedCategory && selectedCategory !== 'all') {
         params.append('category', selectedCategory);
       }
 
-      // Add price range filters
-      if (priceRange[0] > 0) {
-        params.append('min_price', priceRange[0].toString());
+      // Add price range filters (using debounced values)
+      if (debouncedPriceRange[0] > 0) {
+        params.append('min_price', debouncedPriceRange[0].toString());
       }
-      if (priceRange[1] < maxPrice) {
-        params.append('max_price', priceRange[1].toString());
+      if (debouncedPriceRange[1] < maxPrice) {
+        params.append('max_price', debouncedPriceRange[1].toString());
       }
 
       // Add sort parameter
@@ -101,14 +105,38 @@ const StoreProducts = () => {
       const response = await apiService.get(`/products/search?${params.toString()}`);
       
       if (response.error === false) {
-        setProducts(response.details.products.data || []);
+        const productsData = response.details.products.data || [];
+        setProducts(productsData);
         setTotalPages(response.details.products.last_page || 1);
         
         // Update max price based on available products
-        const prices = response.details.products.data.map((p: any) => p.pricing?.price || 0);
+        const prices = productsData.map((p: any) => p.pricing?.price || 0);
         if (prices.length > 0) {
           const newMaxPrice = Math.max(...prices);
           setMaxPrice(Math.ceil(newMaxPrice));
+        }
+
+        // Track Meta Pixel category view event
+        try {
+          if (selectedCategory && selectedCategory !== 'all') {
+            const categoryName = categories.find(c => c.id.toString() === selectedCategory)?.name || selectedCategory;
+            await metaPixelService.trackProductListView(productsData, categoryName);
+            await metaPixelService.trackCustomEvent('CategoryView', {
+              category_name: categoryName,
+              product_count: productsData.length,
+              search_query: debouncedSearchQuery || undefined,
+              sort_by: sortBy,
+              page: currentPage
+            });
+          } else if (searchQuery) {
+            // Track product list view for search results
+            await metaPixelService.trackProductListView(productsData, 'Search Results');
+          } else {
+            // Track general product browsing
+            await metaPixelService.trackProductListView(productsData, 'All Products');
+          }
+        } catch (pixelError) {
+          console.warn('Meta Pixel category tracking failed:', pixelError);
         }
       }
     } catch (error) {
@@ -126,12 +154,45 @@ const StoreProducts = () => {
   // Effect to reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedCategory, priceRange, sortBy, selectedFeatures, selectedRating]);
+  }, [debouncedSearchQuery, selectedCategory, debouncedPriceRange, sortBy, selectedFeatures, selectedRating]);
+
+  // Track filter usage
+  useEffect(() => {
+    const trackFilterUsage = async () => {
+      try {
+        if (sortBy !== 'newest') {
+          await metaPixelService.trackFilterUsage('sort', sortBy);
+        }
+        if (selectedCategory && selectedCategory !== 'all') {
+          const categoryName = categories.find(c => c.id.toString() === selectedCategory)?.name || selectedCategory;
+          await metaPixelService.trackFilterUsage('category', categoryName);
+        }
+        if (priceRange[0] > 0 || priceRange[1] < maxPrice) {
+          await metaPixelService.trackFilterUsage('price_range', `${priceRange[0]}-${priceRange[1]}`);
+        }
+        if (selectedFeatures.length > 0) {
+          for (const feature of selectedFeatures) {
+            await metaPixelService.trackFilterUsage('feature', feature);
+          }
+        }
+        if (selectedRating) {
+          await metaPixelService.trackFilterUsage('rating', selectedRating.toString());
+        }
+      } catch (pixelError) {
+        console.warn('Meta Pixel filter tracking failed:', pixelError);
+      }
+    };
+
+    // Only track if there are actual filters applied (not initial load)
+    if (hasActiveFilters) {
+      trackFilterUsage();
+    }
+  }, [selectedCategory, sortBy, priceRange, selectedFeatures, selectedRating]); // Don't include searchQuery to avoid duplicate search tracking
 
   // Effect to fetch products when params change
   useEffect(() => {
     fetchProducts();
-  }, [selectedCountry, selectedCurrency, searchQuery, selectedCategory, currentPage, priceRange, sortBy, selectedRating, selectedFeatures]);
+  }, [selectedCountry, selectedCurrency, debouncedSearchQuery, selectedCategory, currentPage, debouncedPriceRange, sortBy, selectedRating, selectedFeatures]);
 
   // Effect to update URL when filters change
   useEffect(() => {
@@ -164,7 +225,7 @@ const StoreProducts = () => {
     // Page reset is handled automatically by useEffect
   };
 
-  const hasActiveFilters = searchQuery || (selectedCategory && selectedCategory !== 'all') || sortBy !== 'newest' || 
+  const hasActiveFilters = debouncedSearchQuery || (selectedCategory && selectedCategory !== 'all') || sortBy !== 'newest' ||
     priceRange[0] > 0 || priceRange[1] < maxPrice || selectedFeatures.length > 0 || selectedRating !== null;
 
   return (

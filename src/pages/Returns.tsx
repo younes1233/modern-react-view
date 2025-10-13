@@ -13,7 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Search, Filter, Eye, CheckCircle, XCircle, Clock, RotateCcw, Package } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 // Mock data for returns
 const mockReturns = [
@@ -73,7 +73,7 @@ const Returns = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedReturn, setSelectedReturn] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const getStatusBadge = (status: string) => {
     const variants = {

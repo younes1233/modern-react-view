@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 import { addressService, Address, CreateAddressRequest } from "@/services/addressService";
 import { deliveryZoneService, DeliveryZone } from "@/services/deliveryZoneService";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { useAuth } from "@/contexts/AuthContext";
 
 interface AddressFormProps {
@@ -37,7 +37,7 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [isFirstAddress, setIsFirstAddress] = useState(false);
-  const { toast } = useToast();
+  // Removed useToast hook;
   const { user } = useAuth();
 
   const [formData, setFormData] = useState<CreateAddressRequest>({

@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/sonner';
 import { Mail, Lock, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 
 type Step = 'email' | 'otp' | 'reset';
@@ -21,7 +21,7 @@ const ForgotPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [waitingPeriod, setWaitingPeriod] = useState<number | null>(null);
   const { forgotPassword, verifyOtp, resetPassword, isLoading } = useAuth();
-  const { toast } = useToast();
+  
 
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,8 +122,8 @@ const ForgotPassword = () => {
         title: 'Success',
         description: 'Password reset successfully! You can now sign in with your new password.',
       });
-      // Redirect to login after successful reset
-      window.location.href = '/login';
+      // Redirect to home after successful reset
+      window.location.href = '/';
     } else {
       toast({
         title: 'Error',
@@ -292,11 +292,11 @@ const ForgotPassword = () => {
           
           <div className="mt-6 text-center">
             <Link
-              to="/login"
+              to="/"
               className="text-sm text-blue-600 hover:text-blue-500 flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
-              Back to Login
+              Back to Home
             </Link>
           </div>
         </CardContent>

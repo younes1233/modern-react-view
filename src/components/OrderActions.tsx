@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Eye, Edit, Trash2, Download, Mail, MoreHorizontal, Package, Truck, RefreshCw } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 interface OrderActionsProps {
   orderId: string;
@@ -29,7 +29,7 @@ export const OrderActions: React.FC<OrderActionsProps> = ({
   onTrack,
   onRefund,
 }) => {
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const handleTrackOrder = () => {
     if (onTrack) {

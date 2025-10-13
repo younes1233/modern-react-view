@@ -155,16 +155,6 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
     setCurrentSlide(slideIndex);
   }, []);
 
-  console.log(`ProductSection for "${listing.title}":`, {
-    listing,
-    listingData,
-    isLoading,
-    error,
-    layoutType: listing.layout,
-    isGrid: listing.layout === 'grid',
-    isSlider: listing.layout === 'slider'
-  });
-
   // Early returns after all hooks are called
   if (!listing.is_active) {
     return null;
@@ -176,7 +166,6 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
 
   // Better error handling
   if (error) {
-    console.error(`ProductSection "${listing.title}" error:`, error);
     return (
       <section className="py-2 md:py-4 bg-white">
         <div className="w-full max-w-full px-2 md:px-4">
@@ -199,7 +188,6 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
 
   // Empty state - hide section completely when no products
   if (products.length === 0) {
-    console.log(`ProductSection "${listing.title}" has no products - hiding section`);
     return null;
   }
 

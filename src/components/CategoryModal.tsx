@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { Package, Image, X } from "lucide-react";
 import { Category } from "@/services/categoryService";
 
@@ -28,7 +28,7 @@ export function CategoryModal({
   mode,
   categories = []
 }: CategoryModalProps) {
-  const { toast } = useToast();
+  // Removed useToast hook;
   const [formData, setFormData] = useState<Category>({
     name: '',
     slug: '',
@@ -98,40 +98,24 @@ export function CategoryModal({
     
     // Validate required fields according to API specification
     if (!formData.name.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Category name is required",
-        variant: "destructive"
-      });
+      toast.error("Category name is required", { duration: 2500 });
       return;
     }
 
     if (!formData.slug.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Slug is required",
-        variant: "destructive"
-      });
+      toast.error("Slug is required", { duration: 2500 });
       return;
     }
 
     // For new categories, require image (upload file or URL)
     if (mode === 'add' && !imageFile && !formData.image?.trim()) {
-      toast({
-        title: "Validation Error", 
-        description: "Category image is required (upload file or provide URL)",
-        variant: "destructive"
-      });
+      toast.error("Category image is required (upload file or provide URL)", { duration: 2500 });
       return;
     }
 
     // For new categories, require either file upload or URL for icon
     if (mode === 'add' && !iconFile && !formData.icon?.trim()) {
-      toast({
-        title: "Validation Error",
-        description: "Icon is required (upload file or provide URL)",
-        variant: "destructive"
-      });
+      toast.error("Icon is required (upload file or provide URL)", { duration: 2500 });
       return;
     }
 

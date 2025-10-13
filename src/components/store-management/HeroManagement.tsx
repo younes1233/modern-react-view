@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Save, Eye, EyeOff, Image, Type, Link as LinkIcon, Monitor, Smartphone, Plus, Upload, Trash2, ChevronLeft, ChevronRight, Play, Pause, RotateCcw, Layers, GripVertical } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 import { getHeroSection, updateHeroSection, HeroSection, HeroSlide } from "@/data/storeData";
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable';
@@ -82,7 +82,7 @@ export function HeroManagement() {
     isSlider: false,
     slides: []
   });
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -164,10 +164,7 @@ export function HeroManagement() {
       slides: [firstSlide]
     }));
     
-    toast({
-      title: "Converted to Slider",
-      description: "Your hero section is now a slider. Add more slides to create a carousel."
-    });
+    toast.success("Your hero section is now a slider. Add more slides to create a carousel.", { duration: 2000 });
   };
 
   const handleAddSlide = () => {
@@ -200,10 +197,7 @@ export function HeroManagement() {
       );
       setFormData(prev => ({ ...prev, slides: updatedSlides }));
       setEditingSlide(null);
-      toast({
-        title: "Slide Updated",
-        description: "Your slide has been updated successfully."
-      });
+      toast.success("Your slide has been updated successfully.", { duration: 2000 });
     }
   };
 
@@ -220,10 +214,7 @@ export function HeroManagement() {
         setCurrentSlideIndex(Math.max(0, updatedSlides.length - 1));
       }
       
-      toast({
-        title: "Slide Deleted",
-        description: "The slide has been removed from your carousel."
-      });
+      toast.success("The slide has been removed from your carousel.", { duration: 2000 });
     }
   };
 
@@ -257,17 +248,11 @@ export function HeroManagement() {
         updateHeroSection(newHero);
         setHeroSection(newHero);
         setIsCreating(false);
-        toast({
-          title: "Success",
-          description: `Hero ${formData.isSlider ? 'slider' : 'section'} created successfully`
-        });
+        toast.success(`Hero ${formData.isSlider ? 'slider' : 'section'} created successfully`, { duration: 2000 });
       } else {
         updateHeroSection(formData);
         setHeroSection({ ...heroSection!, ...formData });
-        toast({
-          title: "Success",
-          description: `Hero ${formData.isSlider ? 'slider' : 'section'} updated successfully`
-        });
+        toast.success(`Hero ${formData.isSlider ? 'slider' : 'section'} updated successfully`, { duration: 2000 });
       }
       setIsEditing(false);
       setEditingSlide(null);
@@ -311,10 +296,7 @@ export function HeroManagement() {
         handleInputChange('backgroundImage', imageUrl);
       }
       
-      toast({
-        title: "Image uploaded",
-        description: "Background image has been updated"
-      });
+      toast.success("Background image has been updated", { duration: 2000 });
     }
   };
 
@@ -844,10 +826,7 @@ export function HeroManagement() {
                                 <AlertDialogCancel>Cancel</AlertDialogCancel>
                                 <AlertDialogAction onClick={() => {
                                   setFormData(prev => ({ ...prev, isSlider: false, slides: [] }));
-                                  toast({
-                                    title: "Converted to Single Hero",
-                                    description: "Your slider has been converted back to a single hero section."
-                                  });
+                                  toast.success("Your slider has been converted back to a single hero section.", { duration: 2000 });
                                 }}>
                                   Convert
                                 </AlertDialogAction>
@@ -902,10 +881,7 @@ export function HeroManagement() {
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
                               onClick={() => {
-                                toast({
-                                  title: "Delete Feature",
-                                  description: "This feature will be implemented with the backend API"
-                                });
+                                toast.success("This feature will be implemented with the backend API", { duration: 2000 });
                               }}
                             >
                               Delete

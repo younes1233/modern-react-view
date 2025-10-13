@@ -14,7 +14,7 @@ import {
 import { FileUpload } from "@/components/ui/file-upload";
 import { Story } from "@/services/storyService";
 import { useStories } from "@/hooks/useStories";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 interface StoryModalProps {
   isOpen: boolean;
@@ -25,7 +25,7 @@ interface StoryModalProps {
 
 export const StoryModal = ({ isOpen, onClose, story, onSuccess }: StoryModalProps) => {
   const { createStory, updateStory, loading } = useStories();
-  const { toast } = useToast();
+  // Removed useToast hook;
   const [formData, setFormData] = useState({
     title: "",
     content: "",

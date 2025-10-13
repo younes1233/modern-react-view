@@ -3,6 +3,7 @@ import React from 'react';
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import productService from '@/services/productService';
 import { useCountryCurrency } from './CountryCurrencyContext';
+import { metaPixelService } from '@/services/metaPixelService';
 
 export interface UIProduct {
   name: string;
@@ -70,6 +71,13 @@ export function SearchProvider({
 
         const items = (res.details?.products ?? []) as UIProduct[];
         setResults(items);
+
+        // Track Meta Pixel search event
+        try {
+          await metaPixelService.trackSearch(q, items)
+        } catch (pixelError) {
+          console.warn('Meta Pixel search tracking failed:', pixelError)
+        }
       } catch (e: any) {
         if (e?.name !== 'AbortError') {
           setErrorMsg(e?.message || 'Failed to search products');

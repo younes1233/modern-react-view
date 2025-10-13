@@ -34,7 +34,7 @@ import {
   AlertCircle 
 } from "lucide-react";
 import { demoProducts, Product } from "@/data/users";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from '@/components/ui/sonner';
 
 const ProductApproval = () => {
   const [products, setProducts] = useState<Product[]>(demoProducts);
@@ -43,7 +43,7 @@ const ProductApproval = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
-  const { toast } = useToast();
+  // Removed useToast hook;
 
   // Filter and search products
   const filteredProducts = useMemo(() => {
@@ -82,11 +82,7 @@ const ProductApproval = () => {
     ));
     
     const product = products.find(p => p.id === productId);
-    toast({
-      title: "Product Rejected",
-      description: `${product?.name} has been rejected`,
-      variant: "destructive"
-    });
+    toast.error(`${product?.name} has been rejected`, { duration: 2500 });
     setRejectionReason("");
   };
 

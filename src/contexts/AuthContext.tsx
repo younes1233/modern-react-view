@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { apiService } from '@/services/apiService';
 import { Country } from '@/services/countryService';
 import { Warehouse } from '@/services/warehouseService';
+import { metaPixelService } from '@/services/metaPixelService';
 
 /**
  * User represents the authenticated user returned from the backend.
@@ -209,6 +210,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({ ...response.details.user, isSeller: (response.details.user as any).isSeller || false });
         localStorage.setItem('user', JSON.stringify(response.details.user));
         apiService.setToken(response.details.token);
+
+        // Track Meta Pixel registration event
+        try {
+          await metaPixelService.trackCompleteRegistration('email');
+          // Set user data using actual user object structure
+          await metaPixelService.setUserData({
+            email: response.details.user.email,
+            firstName: response.details.user.firstName,
+            lastName: response.details.user.lastName,
+            phone: response.details.user.phone,
+            externalId: response.details.user.id
+          });
+        } catch (pixelError) {
+          console.warn('Meta Pixel registration tracking failed:', pixelError);
+        }
+
         return { success: true, message: response.message };
       }
       return { success: false, message: response.message };
