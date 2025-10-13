@@ -1,23 +1,59 @@
-
 export function ShopByCategorySkeleton() {
   return (
-    <section className="py-8 md:py-16 bg-white animate-pulse">
-      <div className="w-full max-w-full px-2 md:px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Title skeleton */}
-          <div className="text-center mb-8 md:mb-12">
-            <div className="bg-gray-300 dark:bg-gray-600 h-8 md:h-10 w-64 mx-auto rounded mb-4"></div>
-            <div className="bg-gray-400 dark:bg-gray-700 h-4 md:h-5 w-96 mx-auto rounded"></div>
+    <section className="py-6 sm:py-8 md:py-12 bg-white animate-pulse">
+      <div className="container mx-auto px-4">
+        {/* Header - matches actual component */}
+        <div className="hidden sm:block text-center mb-4 sm:mb-6 md:mb-8">
+          <div className="bg-gray-300 h-7 sm:h-8 md:h-9 w-64 mx-auto rounded"></div>
+        </div>
+
+        {/* Desktop Layout: Tall vertical cards (unhovered state - 135px × 420px) */}
+        <div className="hidden lg:block relative">
+          <div className="mx-32">
+            <div className="flex justify-center items-center gap-6">
+              {Array.from({ length: 7 }).map((_, index) => (
+                <div key={index} className="flex-shrink-0">
+                  {/* Matches: w-[135px] h-[420px] rounded-3xl */}
+                  <div className="w-[135px] h-[420px] bg-gray-200 rounded-3xl shadow-lg overflow-hidden">
+                    {/* Image area */}
+                    <div className="w-full h-full bg-gray-300 relative">
+                      {/* Gradient overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+
+                      {/* Bottom content area */}
+                      <div className="absolute bottom-4 left-0 right-0 flex flex-col items-center px-4">
+                        {/* Rotated text placeholder - matches h-[110px] */}
+                        <div className="w-[120px] h-[110px] mb-2 flex items-center justify-center">
+                          <div className="bg-gray-400 h-4 w-24 rounded -rotate-90"></div>
+                        </div>
+
+                        {/* Icon circle - matches w-10 h-10 */}
+                        <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-full border border-white/30"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Categories grid skeleton */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={index} className="group">
-                <div className="bg-gray-200 dark:bg-gray-700 rounded-2xl p-4 md:p-6 text-center h-32 md:h-40 flex flex-col justify-center items-center">
-                  <div className="bg-gray-300 dark:bg-gray-600 w-12 h-12 md:w-16 md:h-16 rounded-full mb-3"></div>
-                  <div className="bg-gray-400 dark:bg-gray-600 h-4 w-16 md:w-20 rounded"></div>
-                </div>
+          {/* Navigation Dots */}
+          <div className="flex justify-end mt-6 space-x-2">
+            {Array.from({ length: 3 }).map((_, index) => (
+              <div key={index} className={`w-3 h-3 rounded-full ${index === 0 ? 'bg-gray-400' : 'bg-gray-300'}`}></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile & Tablet: Small cards with text below */}
+        <div className="lg:hidden">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div key={index} className="flex-shrink-0 flex flex-col items-center">
+                {/* Matches: w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 rounded-2xl */}
+                <div className="w-20 h-28 sm:w-24 sm:h-32 md:w-28 md:h-36 bg-gray-200 rounded-2xl shadow-lg"></div>
+                {/* Text below */}
+                <div className="bg-gray-300 h-3 w-16 sm:w-20 rounded mt-2"></div>
               </div>
             ))}
           </div>

@@ -310,33 +310,8 @@ const Store = () => {
   const getSectionContent = useCallback((section: any) => {
     if (!section.is_active) return null;
 
-    // Only use progressive loading on FIRST render when core data is still loading
-    // If data is cached (homeSections loaded), show content immediately
-    const shouldUseProgressiveLoading = homeSectionsLoading; // Only wait for sections structure
-    const isVisible = visibleSections.has(section.id) || !shouldUseProgressiveLoading;
-    
-    if (!isVisible && shouldUseProgressiveLoading) {
-      return (
-        <div 
-          key={section.id}
-          data-section-id={section.id}
-          ref={(el) => {
-            if (el && observerRef.current) {
-              observerRef.current.observe(el);
-            }
-          }}
-          className="min-h-[200px] bg-gray-50 animate-pulse"
-        />
-      );
-    }
-
     if (section.type === 'banner') {
-      // Show skeleton only if banners are actually loading
-      if (bannersLoading) {
-        return <BannerSkeleton key={`banner-skeleton-${section.id}`} />;
-      }
-
-      // Show error if banners failed to load
+      // Show error if banners failed to load completely
       if (bannersError) {
         return (
           <div key={section.id} className="py-8">
@@ -349,9 +324,19 @@ const Store = () => {
         );
       }
 
-      // Find banner by ID and check if it's active using the correct property name
+      // Show skeleton while loading
+      if (bannersLoading) {
+        return <BannerSkeleton key={`banner-skeleton-${section.id}`} />;
+      }
+
+      // Try to find the banner for this section
       const banner = banners.find((b) => b.id === section.item_id && b.isActive);
-      if (!banner) return null;
+
+      // If banner not found after loading completed, hide section silently
+      // (banners shouldn't show "not available" messages - just hide them)
+      if (!banner) {
+        return null;
+      }
 
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
@@ -387,12 +372,7 @@ const Store = () => {
         </section>
       );
     } else if (section.type === 'productListing') {
-      // Show skeleton only if product listings are actually loading
-      if (productListingsLoading) {
-        return <ProductSectionSkeleton key={`product-skeleton-${section.id}`} />;
-      }
-
-      // Show error if product listings failed to load
+      // Show error if product listings failed to load completely
       if (productListingsError) {
         return (
           <div key={section.id} className="py-8">
@@ -405,7 +385,15 @@ const Store = () => {
         );
       }
 
+      // Show skeleton while loading
+      if (productListingsLoading) {
+        return <ProductSectionSkeleton key={`product-skeleton-${section.id}`} />;
+      }
+
+      // Try to find the listing for this section
       const listing = productListings.find((l) => l.id === section.item_id && l.is_active) || section.item;
+
+      // If listing not found after loading completed, show empty state
       if (!listing) {
         return (
           <div key={section.id} className="py-8">
@@ -417,6 +405,7 @@ const Store = () => {
         );
       }
 
+      // Render ProductSection - it will handle its own loading/empty states
       return (
         <section key={section.id} className="py-1 md:py-2 bg-white animate-fade-in">
           <Suspense fallback={<ProductSectionSkeleton />}>
@@ -426,7 +415,7 @@ const Store = () => {
       );
     }
     return null;
-  }, [isGlobalLoading, homeSectionsLoading, banners, productListings, deviceType, visibleSections]);
+  }, [bannersLoading, banners, bannersError, refetchBanners, productListingsLoading, productListings, productListingsError, refetchProductListings, deviceType]);
 
   // Memoize filtered and sorted sections to prevent unnecessary processing
   const activeSortedSections = useMemo(() => {
@@ -537,17 +526,20 @@ const Store = () => {
           )}
         </div>
 
-        {/* Dynamic Home Sections from API with Loading */}
+        {/* Dynamic Home Sections from API - Layout established immediately with skeletons */}
         <div className="w-full overflow-hidden bg-white">
           {isGlobalLoading ? (
-            // Show skeleton sections while loading
-            <div className="animate-fade-in">
+            // Show placeholder skeletons while waiting for homeSections structure
+            <div className="animate-pulse">
               <BannerSkeleton />
               <ProductSectionSkeleton />
               <BannerSkeleton />
+              <ProductSectionSkeleton />
             </div>
           ) : (
-            <div className="animate-fade-in">
+            // Once we have homeSections, render ALL sections immediately
+            // Each section will show its own skeleton until its data loads
+            <div>
               {activeSortedSections.map((section) => getSectionContent(section))}
             </div>
           )}
@@ -578,8 +570,8 @@ const Store = () => {
                   />
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6">
-                    {convertedSaleProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
+                    {convertedSaleProducts.map((product, index) => (
+                      <ProductCard key={product.id} product={product} priority={index < 6} />
                     ))}
                   </div>
                 )}
