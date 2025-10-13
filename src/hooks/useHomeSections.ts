@@ -34,67 +34,46 @@ export const useCreateHomeSection = () => {
     mutationFn: (data: CreateHomeSectionRequest) => homeSectionService.createHomeSection(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homeSections'] });
-      toast({
-        title: "Success",
-        description: "Home section created successfully"
-      });
+      toast.success("Home section created successfully", { duration: 2000 });
     },
     onError: (error: any) => {
       console.error('Create home section error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create home section",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to create home section", { duration: 2500 });
     }
   });
 };
 
 export const useUpdateHomeSection = () => {
   const queryClient = useQueryClient();
-  
+
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: number; data: UpdateHomeSectionRequest }) => 
+    mutationFn: ({ id, data }: { id: number; data: UpdateHomeSectionRequest }) =>
       homeSectionService.updateHomeSection(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homeSections'] });
-      toast({
-        title: "Success",
-        description: "Home section updated successfully"
-      });
+      toast.success("Home section updated successfully", { duration: 2000 });
     },
     onError: (error: any) => {
       console.error('Update home section error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update home section",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to update home section", { duration: 2500 });
     }
   });
 };
 
 export const useDeleteHomeSection = () => {
   const queryClient = useQueryClient();
-  
+
 
   return useMutation({
     mutationFn: (id: number) => homeSectionService.deleteHomeSection(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homeSections'] });
-      toast({
-        title: "Success",
-        description: "Home section deleted successfully"
-      });
+      toast.success("Home section deleted successfully", { duration: 2000 });
     },
     onError: (error: any) => {
       console.error('Delete home section error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete home section",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to delete home section", { duration: 2500 });
     }
   });
 };
@@ -107,18 +86,11 @@ export const useReorderHomeSections = () => {
     mutationFn: (order: number[]) => homeSectionService.reorderHomeSections(order),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['homeSections'] });
-      toast({
-        title: "Success",
-        description: "Home sections reordered successfully"
-      });
+      toast.success("Home sections reordered successfully", { duration: 2000 });
     },
     onError: (error: any) => {
       console.error('Reorder home sections error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to reorder home sections",
-        variant: "destructive"
-      });
+      toast.error(error.message || "Failed to reorder home sections", { duration: 2500 });
     }
   });
 };

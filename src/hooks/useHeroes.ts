@@ -48,17 +48,10 @@ export const useCreateSingleHero = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Hero created successfully"
-      });
+      toast.success("Hero created successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create hero",
-        variant: "destructive"
-      });
+      toast.error("Failed to create hero", { duration: 2500 });
     }
   });
 };
@@ -73,17 +66,10 @@ export const useCreateSlider = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Slider created successfully"
-      });
+      toast.success("Slider created successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to create slider",
-        variant: "destructive"
-      });
+      toast.error("Failed to create slider", { duration: 2500 });
     }
   });
 };
@@ -99,17 +85,10 @@ export const useAddSlide = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Slide added successfully"
-      });
+      toast.success("Slide added successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add slide",
-        variant: "destructive"
-      });
+      toast.error("Failed to add slide", { duration: 2500 });
     }
   });
 };
@@ -125,17 +104,10 @@ export const useUpdateHero = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Hero updated successfully"
-      });
+      toast.success("Hero updated successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update hero",
-        variant: "destructive"
-      });
+      toast.error("Failed to update hero", { duration: 2500 });
     }
   });
 };
@@ -151,17 +123,10 @@ export const useUpdateSlide = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Slide updated successfully"
-      });
+      toast.success("Slide updated successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to update slide",
-        variant: "destructive"
-      });
+      toast.error("Failed to update slide", { duration: 2500 });
     }
   });
 };
@@ -176,17 +141,10 @@ export const useDeleteHero = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Hero deleted successfully"
-      });
+      toast.success("Hero deleted successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete hero",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete hero", { duration: 2500 });
     }
   });
 };
@@ -202,17 +160,10 @@ export const useDeleteSlide = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Slide deleted successfully"
-      });
+      toast.success("Slide deleted successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete slide",
-        variant: "destructive"
-      });
+      toast.error("Failed to delete slide", { duration: 2500 });
     }
   });
 };
@@ -227,17 +178,10 @@ export const useReorderHeroes = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Heroes reordered successfully"
-      });
+      toast.success("Heroes reordered successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to reorder heroes",
-        variant: "destructive"
-      });
+      toast.error("Failed to reorder heroes", { duration: 2500 });
     }
   });
 };
@@ -253,17 +197,10 @@ export const useReorderSlides = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['heroes'] });
       queryClient.invalidateQueries({ queryKey: ['admin-heroes'] });
-      toast({
-        title: "Success",
-        description: "Slides reordered successfully"
-      });
+      toast.success("Slides reordered successfully", { duration: 2000 });
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to reorder slides",
-        variant: "destructive"
-      });
+      toast.error("Failed to reorder slides", { duration: 2500 });
     }
   });
 };

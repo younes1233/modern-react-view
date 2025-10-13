@@ -34,29 +34,18 @@ const RoleLogin = () => {
     e.preventDefault();
 
     if (!email || !password) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all fields',
-        variant: 'destructive',
-      });
+      toast.error('Please fill in all fields');
       return;
     }
 
     const success = await login(email, password);
 
     if (success) {
-      toast({
-        title: 'Success',
-        description: 'Login successful!',
-      });
+      toast.success('Login successful!');
       // Navigation will be handled automatically by the useEffect hook
       // when the user state updates after login
     } else {
-      toast({
-        title: 'Error',
-        description: 'Invalid credentials. Please check your email and password.',
-        variant: 'destructive',
-      });
+      toast.error('Invalid credentials. Please check your email and password.');
     }
   };
 

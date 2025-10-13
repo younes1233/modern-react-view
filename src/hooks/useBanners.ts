@@ -91,10 +91,7 @@ export const useBanners = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['banners'] });
-      toast({
-        title: "Success",
-        description: "Banner created successfully"
-      });
+      toast.success("Banner created successfully", { duration: 2000 });
     },
     onError: (error: any) => {
       toast({

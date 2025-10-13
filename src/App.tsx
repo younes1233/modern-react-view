@@ -47,8 +47,8 @@ import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/NotFound";
 import Unauthorized from "@/pages/Unauthorized";
 
-// Store Pages - Store eager loaded (main landing page), rest lazy loaded
-import Store from "@/pages/store/Store";
+// Store Pages - Lazy load except ComingSoon (landing page)
+const Store = lazy(() => import("@/pages/store/Store"));
 import ComingSoon from "./pages/store/ComingSoon";
 const ProductDetail = lazy(() => import("@/pages/store/ProductDetail"));
 const StoreCategories = lazy(() => import("@/pages/store/StoreCategories"));

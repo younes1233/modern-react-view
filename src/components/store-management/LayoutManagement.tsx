@@ -145,22 +145,22 @@ export function LayoutManagement() {
               <CardTitle>Current Home Page Layout ({homeSections.length} sections)</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 dark:bg-gray-800 border-b">
-                    <tr className="text-left">
-                      <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Order</th>
-                      <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Section</th>
-                      <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Type</th>
-                      <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <DndContext
-                      sensors={sensors}
-                      collisionDetection={closestCenter}
-                      onDragEnd={handleDragEnd}
-                    >
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 dark:bg-gray-800 border-b">
+                      <tr className="text-left">
+                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Order</th>
+                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Section</th>
+                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Type</th>
+                        <th className="p-4 font-semibold text-gray-700 dark:text-gray-300">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
                       <SortableContext
                         items={homeSections.map(s => s.id)}
                         strategy={verticalListSortingStrategy}
@@ -178,10 +178,10 @@ export function LayoutManagement() {
                           );
                         })}
                       </SortableContext>
-                    </DndContext>
-                  </tbody>
-                </table>
-              </div>
+                    </tbody>
+                  </table>
+                </div>
+              </DndContext>
             </CardContent>
           </Card>
         </div>
