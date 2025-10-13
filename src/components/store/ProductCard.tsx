@@ -73,9 +73,10 @@ interface BackendProduct {
 
 interface ProductCardProps {
   product: BackendProduct
+  priority?: boolean // For above-the-fold images (first 6-8 products)
 }
 
-const ProductCardComponent = ({ product }: ProductCardProps) => {
+const ProductCardComponent = ({ product, priority = false }: ProductCardProps) => {
   const [hoveredThumbnail, setHoveredThumbnail] = useState<number | null>(null)
   const { addToCart, isLoading: cartLoading } = useCart()
   const {
@@ -139,6 +140,7 @@ const ProductCardComponent = ({ product }: ProductCardProps) => {
           <OptimizedImage
             src={product.cover_image}
             alt={product.name}
+            eager={priority}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
         </div>

@@ -224,7 +224,7 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
                       index % 5 === 3 ? 'mt-2 md:mt-4' : ''
                     }`}
                   >
-                    <ProductCard product={product} />
+                    <ProductCard product={product} priority={index < 6} />
                   </div>
                 ))}
               </div>
@@ -234,13 +234,13 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
                 /* Mobile Slider: Horizontal scroll */
                 <div className="overflow-x-auto scrollbar-hide">
                   <div className="flex gap-2 pb-2" style={{ width: 'max-content' }}>
-                    {products.map((product: any) => (
+                    {products.map((product: any, index: number) => (
                       <div
                         key={product.id}
                         className="flex-shrink-0"
                         style={{ width: 'calc(40vw - 8px)' }}
                       >
-                        <ProductCard product={product} />
+                        <ProductCard product={product} priority={index < 4} />
                       </div>
                     ))}
                   </div>
@@ -262,9 +262,12 @@ export function ProductSection({ listing, disableIndividualLoading = false }: Pr
                           className="w-full flex-shrink-0"
                         >
                           <div className="grid gap-2 grid-cols-6">
-                            {slideProducts.map((product: any) => (
-                              <ProductCard key={product.id} product={product} />
-                            ))}
+                            {slideProducts.map((product: any, productIndex: number) => {
+                              const globalIndex = slideIndex * productsPerSlide + productIndex;
+                              return (
+                                <ProductCard key={product.id} product={product} priority={globalIndex < 6} />
+                              );
+                            })}
                           </div>
                         </div>
                       );

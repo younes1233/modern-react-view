@@ -1,30 +1,43 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState, useCallback, useMemo, memo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowRight, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useStoreCategories } from '@/hooks/useStoreCategories';
-import { Category } from '@/services/categoryService';
+import { ShopByCategorySkeleton } from './ShopByCategorySkeleton';
 
-export function ShopByCategory() {
+export const ShopByCategory = memo(function ShopByCategory() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const { categories, loading } = useStoreCategories();
 
-  const handleCategoryClick = (categorySlug: string) => {
-    // Navigate to products page with category filter
+  // Show skeleton while loading
+  if (loading) {
+    return <ShopByCategorySkeleton />;
+  }
+
+  // Hide if no categories
+  if (categories.length === 0) {
+    return null;
+  }
+
+  // Memoize handlers to prevent re-creating on every render
+  const handleCategoryClick = useCallback((categorySlug: string) => {
     console.log('Category selected:', categorySlug);
-  };
+  }, []);
 
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % Math.ceil(categories.length / 7));
-  };
+  const totalSlides = useMemo(() => Math.ceil(categories.length / 7), [categories.length]);
 
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + Math.ceil(categories.length / 7)) % Math.ceil(categories.length / 7));
-  };
+  const nextSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev + 1) % totalSlides);
+  }, [totalSlides]);
 
-  const startIndex = currentSlide * 7;
-  const visibleCategories = categories.slice(startIndex, startIndex + 7);
+  const prevSlide = useCallback(() => {
+    setCurrentSlide((prev) => (prev - 1 + totalSlides) % totalSlides);
+  }, [totalSlides]);
+
+  // Memoize visible categories for current slide
+  const visibleCategories = useMemo(() => {
+    const startIndex = currentSlide * 7;
+    return categories.slice(startIndex, startIndex + 7);
+  }, [currentSlide, categories]);
 
   return (
     <section className="py-6 sm:py-8 md:py-12 bg-white">
@@ -54,6 +67,9 @@ export function ShopByCategory() {
                         <img
                           src={category.image}
                           alt={category.name}
+                          loading="eager"
+                          decoding="async"
+                          fetchpriority="high"
                           className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700 group-hover:object-center"
                         />
 
@@ -87,17 +103,20 @@ export function ShopByCategory() {
           </div>
 
           {/* Navigation Dots */}
-          <div className="flex justify-end mt-6 space-x-2">
-            {Array.from({ length: Math.ceil(categories.length / 7) }).map((_, index) => (
-              <button
-                key={index}
-                onClick={() => setCurrentSlide(index)}
-                className={`w-3 h-3 rounded-full transition-colors duration-300 ${
-                  index === currentSlide ? 'bg-cyan-500' : 'bg-gray-300'
-                }`}
-              />
-            ))}
-          </div>
+          {totalSlides > 1 && (
+            <div className="flex justify-end mt-6 space-x-2">
+              {Array.from({ length: totalSlides }).map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setCurrentSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-colors duration-300 ${
+                    index === currentSlide ? 'bg-cyan-500' : 'bg-gray-300'
+                  }`}
+                  aria-label={`Go to slide ${index + 1}`}
+                />
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Mobile & Tablet: Text Below Image Design */}
@@ -115,6 +134,9 @@ export function ShopByCategory() {
                       <img
                         src={category.image}
                         alt={category.name}
+                        loading="eager"
+                        decoding="async"
+                        fetchpriority="high"
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       />
                     </CardContent>
@@ -131,4 +153,4 @@ export function ShopByCategory() {
       </div>
     </section>
   );
-}
+});
