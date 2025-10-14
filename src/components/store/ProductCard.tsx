@@ -102,7 +102,7 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
       : 0
 
   const currencySymbol =
-    product.pricing?.currency?.symbol || selectedCurrency?.symbol || '$'
+    selectedCurrency?.symbol || product.pricing?.currency?.symbol || '$'
 
   const savings =
     backendOriginalPrice && backendDiscountedPrice && backendOriginalPrice > backendDiscountedPrice

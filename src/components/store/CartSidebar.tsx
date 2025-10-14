@@ -5,18 +5,22 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { ShoppingCart, Plus, Minus, Trash2, X } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useCountryCurrency } from "@/contexts/CountryCurrencyContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { checkoutService, isStockUnavailableError, UnavailableItem } from "@/services/checkoutService";
 import { toast } from "@/components/ui/sonner";
 import { StockUnavailableModal } from "@/components/modals/StockUnavailableModal";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { AuthModal } from "@/components/auth/AuthModal";
 
 export function CartSidebar() {
   const { items, updateQuantity, removeFromCart, getTotalItems, getTotalPrice, clearCart, isLoading } = useCart();
   const { selectedCountry, selectedCurrency } = useCountryCurrency();
+  const auth = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isCheckingOut, setIsCheckingOut] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [stockUnavailableModal, setStockUnavailableModal] = useState<{
     isOpen: boolean;
     items: UnavailableItem[];
@@ -24,27 +28,19 @@ export function CartSidebar() {
   const navigate = useNavigate();
 
   const handleCheckout = async () => {
-    if (!selectedCountry) {
-      toast.error("Please select a country before proceeding to checkout.", {
-        duration: 2500,
-      });
+    // Check if user is authenticated
+    if (!auth?.user) {
+      setAuthModalOpen(true);
       return;
     }
 
     setIsCheckingOut(true);
 
     try {
-      // Use selected country from context (saved in user_settings)
-      if (!selectedCountry) {
-        toast.error("Please select your country from the header before proceeding to checkout.", {
-          duration: 2500,
-        });
-        setIsCheckingOut(false);
-        return;
-      }
-
+      // selectedCountry will have a default value from geo-detection or Lebanon fallback
+      // For authenticated users, backend will use their saved preferences
       const response = await checkoutService.startCheckout({
-        country_id: selectedCountry.id,
+        country_id: selectedCountry?.id,
         currency_id: selectedCurrency?.id,
       });
 
@@ -265,6 +261,13 @@ export function CartSidebar() {
         isOpen={stockUnavailableModal.isOpen}
         onClose={() => setStockUnavailableModal({ isOpen: false, items: [] })}
         unavailableItems={stockUnavailableModal.items}
+      />
+
+      {/* Auth Modal */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        defaultMode="signin"
       />
     </Sheet>
   );

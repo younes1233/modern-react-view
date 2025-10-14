@@ -5,6 +5,7 @@ import { toast } from '@/components/ui/sonner';
 import { wishlistService, WishlistResponse, AddWishlistResponse } from '@/services/wishlistService';
 import { useAuth } from '@/contexts/AuthContext';
 import { metaPixelService } from '@/services/metaPixelService';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 // Backend product interface to match ProductCard expectations
 interface BackendProduct {
@@ -65,6 +66,7 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 export function WishlistProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<BackendProduct[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { user } = useAuth();
 
   // Convert API wishlist items to BackendProduct format (exactly like RelatedProducts)
@@ -159,7 +161,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
 
   const addToWishlist = async (product: Product | BackendProduct) => {
     if (!user) {
-      toast.error("Please login to save items to your wishlist");
+      setAuthModalOpen(true);
       return;
     }
 
@@ -188,7 +190,7 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('Error adding to wishlist:', error);
       if (error?.status === 401) {
-        toast.error("Please login to save to wishlist");
+        setAuthModalOpen(true);
       } else {
         toast.error("Failed to add item to wishlist");
       }
@@ -293,6 +295,12 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
       isLoading
     }}>
       {children}
+      {/* Global auth modal for wishlist actions */}
+      <AuthModal
+        open={authModalOpen}
+        onOpenChange={setAuthModalOpen}
+        defaultMode="signin"
+      />
     </WishlistContext.Provider>
   );
 }

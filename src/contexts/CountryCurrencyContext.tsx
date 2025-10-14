@@ -20,8 +20,8 @@ interface SelectedCurrency {
   symbol: string;
 }
 
-// Default country configuration (Iraq)
-const DEFAULT_COUNTRY_ISO = 'IQ'; // Iraq ISO code
+// Default country configuration (Lebanon)
+const DEFAULT_COUNTRY_ISO = 'LB'; // Lebanon ISO code
 const STORAGE_KEY_COUNTRY = 'selectedCountry';
 const STORAGE_KEY_CURRENCY = 'selectedCurrency';
 const STORAGE_KEY_GEO_DETECTED = 'geoDetectionCompleted';

@@ -1148,12 +1148,12 @@ const ProductDetail = () => {
                     <div className="space-y-2">
                       <div className="flex items-baseline space-x-3">
                         <span className="text-3xl lg:text-4xl font-bold text-gray-900">
-                          {product.pricing.currency?.symbol || '$'}
+                          {selectedCurrency?.symbol || '$'}
                           {currentPrice ? currentPrice.toFixed(2) : '0.00'}
                         </span>
                         {originalPrice > currentPrice && (
                           <span className="text-lg text-gray-500 line-through">
-                            {product.pricing.currency?.symbol || '$'}
+                            {selectedCurrency?.symbol || '$'}
                             {originalPrice ? originalPrice.toFixed(2) : '0.00'}
                           </span>
                         )}
@@ -1186,7 +1186,7 @@ const ProductDetail = () => {
                       )}
                       <p className="text-sm text-gray-600">
                         Inclusive of VAT (
-                        {product.pricing.currency?.code || 'USD'})
+                        {selectedCurrency?.code || 'USD'})
                       </p>
                     </div>
 
@@ -1249,9 +1249,7 @@ const ProductDetail = () => {
                           </div>
                           <span className="text-gray-700">
                             Delivery:{' '}
-                            {product.delivery?.symbol ||
-                              product.pricing.currency?.symbol ||
-                              '$'}
+                            {selectedCurrency?.symbol || '$'}
                             {product.delivery?.cost
                               ? Number(product.delivery.cost).toFixed(2)
                               : '0.00'}
@@ -1300,7 +1298,7 @@ const ProductDetail = () => {
                           selectedVariant?.applied_discounts ||
                           product.pricing.applied_discounts
                         }
-                        currency={product.pricing.currency}
+                        currency={selectedCurrency || product.pricing.currency}
                       />
                     )}
                   </div>
