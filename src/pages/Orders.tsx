@@ -91,7 +91,7 @@ const Orders = () => {
       Email: order.user?.email || "N/A",
       Date: new Date(order.created_at).toLocaleDateString(),
       Items: order.items?.length || 0,
-      Total: `$${order.total_price}`,
+      Total: `${(order as any).currency?.symbol || '$'}${order.total_price}`,
       Status: order.status.replace("_", " ").toUpperCase(),
     }));
 
@@ -379,7 +379,7 @@ const Orders = () => {
                               {order.items?.length || 0}
                             </td>
                             <td className="p-4 font-semibold text-gray-900">
-                              ${order.total_price}
+                              {(order as any).currency?.symbol || '$'}{order.total_price}
                             </td>
                             <td className="p-4">
                               <OrderStatusEditor
@@ -468,7 +468,9 @@ const Orders = () => {
                             <DollarSign className="w-8 h-8 text-green-600" />
                             <div>
                               <p className="text-xs text-green-600 font-medium">TOTAL</p>
-                              <p className="font-bold text-xl text-green-900">${adminOrderView.order.total_price}</p>
+                              <p className="font-bold text-xl text-green-900">
+                                {(adminOrderView.order as any).currency?.symbol || '$'}{adminOrderView.order.total_price}
+                              </p>
                             </div>
                           </div>
                         </CardContent>
@@ -510,7 +512,7 @@ const Orders = () => {
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Delivery Cost</p>
                             <div className="flex items-center gap-2">
                               <p className="text-sm font-semibold text-green-600">
-                                ${Number(adminOrderView.order.delivery_fee || 0).toFixed(2)}
+                                {(adminOrderView.order as any).currency?.symbol || '$'}{Number(adminOrderView.order.delivery_fee || 0).toFixed(2)}
                               </p>
                               {adminOrderView.order.is_custom_delivery_cost && (
                                 <Badge variant="outline" className="text-xs">Custom</Badge>
@@ -666,10 +668,10 @@ const Orders = () => {
                                       {hasDiscount ? (
                                         <div className="flex items-center gap-2">
                                           <span className="text-sm line-through text-gray-400">
-                                            ${Number(originalPrice).toFixed(2)}
+                                            {(adminOrderView.order as any).currency?.symbol || '$'}{Number(originalPrice).toFixed(2)}
                                           </span>
                                           <span className="text-sm font-medium text-green-600">
-                                            ${Number(item.selling_price).toFixed(2)}
+                                            {(adminOrderView.order as any).currency?.symbol || '$'}{Number(item.selling_price).toFixed(2)}
                                           </span>
                                           <Badge className="bg-green-100 text-green-800 text-xs">
                                             {discountPercentage}% OFF
@@ -677,7 +679,7 @@ const Orders = () => {
                                         </div>
                                       ) : (
                                         <span className="text-sm font-medium text-gray-900">
-                                          ${Number(item.selling_price).toFixed(2)}
+                                          {(adminOrderView.order as any).currency?.symbol || '$'}{Number(item.selling_price).toFixed(2)}
                                         </span>
                                       )}
                                     </div>
@@ -686,11 +688,11 @@ const Orders = () => {
                                   {/* Total */}
                                   <div className="text-right">
                                     <div className="font-semibold text-gray-900">
-                                      ${Number(item.final_total || item.subtotal || (item.selling_price * item.quantity)).toFixed(2)}
+                                      {(adminOrderView.order as any).currency?.symbol || '$'}{Number(item.final_total || item.subtotal || (item.selling_price * item.quantity)).toFixed(2)}
                                     </div>
                                     {hasDiscount && (
                                       <div className="text-xs text-green-600 mt-1">
-                                        Save ${(discountAmount * item.quantity).toFixed(2)}
+                                        Save {(adminOrderView.order as any).currency?.symbol || '$'}{(discountAmount * item.quantity).toFixed(2)}
                                       </div>
                                     )}
                                   </div>
@@ -715,7 +717,9 @@ const Orders = () => {
                           {/* Items Total */}
                           <div className="flex justify-between items-center py-1">
                             <span className="text-sm text-gray-600">Items ({adminOrderView.order.items.length})</span>
-                            <span className="text-sm font-medium">${Number(adminOrderView.order.subtotal || 0).toFixed(2)}</span>
+                            <span className="text-sm font-medium">
+                              {(adminOrderView.order as any).currency?.symbol || '$'}{Number(adminOrderView.order.subtotal || 0).toFixed(2)}
+                            </span>
                           </div>
                           
                           {/* Discounts if any */}
@@ -749,7 +753,7 @@ const Orders = () => {
                                 
                                 return (
                                   <div key={item.id} className="text-xs text-green-700 ml-6 flex justify-between items-center">
-                                    <span>{item.product_name}: -{discountPercentage}% (Save ${totalSavings.toFixed(2)})</span>
+                                    <span>{item.product_name}: -{discountPercentage}% (Save {(adminOrderView.order as any).currency?.symbol || '$'}{totalSavings.toFixed(2)})</span>
                                     <span className="bg-green-200 text-green-800 px-2 py-1 rounded text-xs font-medium">
                                       {discountName}
                                     </span>
@@ -764,24 +768,28 @@ const Orders = () => {
                             <div className="flex justify-between items-center py-1">
                               <span className="text-sm text-gray-600">Tax</span>
                               <span className="text-sm font-medium">
-                                ${adminOrderView.order.items.reduce((total: number, item: any) => 
+                                {(adminOrderView.order as any).currency?.symbol || '$'}{adminOrderView.order.items.reduce((total: number, item: any) =>
                                   total + (Number(item.pricing_details?.tax_amount || 0) * item.quantity), 0
                                 ).toFixed(2)}
                               </span>
                             </div>
                           )}
-                          
+
                           {/* Delivery Fee */}
                           <div className="flex justify-between items-center py-1">
                             <span className="text-sm text-gray-600">Delivery Fee</span>
-                            <span className="text-sm font-medium text-green-600">${Number(adminOrderView.order.delivery_fee || 0).toFixed(2)}</span>
+                            <span className="text-sm font-medium text-green-600">
+                              {(adminOrderView.order as any).currency?.symbol || '$'}{Number(adminOrderView.order.delivery_fee || 0).toFixed(2)}
+                            </span>
                           </div>
-                          
+
                           {/* Total */}
                           <div className="border-t pt-2">
                             <div className="flex justify-between items-center">
                               <span className="font-semibold text-gray-900">Total</span>
-                              <span className="font-bold text-lg text-gray-900">${Number(adminOrderView.order.total_price).toFixed(2)}</span>
+                              <span className="font-bold text-lg text-gray-900">
+                                {(adminOrderView.order as any).currency?.symbol || '$'}{Number(adminOrderView.order.total_price).toFixed(2)}
+                              </span>
                             </div>
                           </div>
                           

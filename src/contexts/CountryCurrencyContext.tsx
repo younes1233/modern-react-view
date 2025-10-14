@@ -49,8 +49,31 @@ interface CountryCurrencyProviderProps {
 }
 
 export function CountryCurrencyProvider({ children }: CountryCurrencyProviderProps) {
-  const [selectedCountry, setSelectedCountryState] = useState<SelectedCountry | null>(null);
-  const [selectedCurrency, setSelectedCurrencyState] = useState<SelectedCurrency | null>(null);
+  // Initialize from localStorage synchronously to avoid flash of wrong currency
+  const [selectedCountry, setSelectedCountryState] = useState<SelectedCountry | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_COUNTRY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
+  const [selectedCurrency, setSelectedCurrencyState] = useState<SelectedCurrency | null>(() => {
+    const saved = localStorage.getItem(STORAGE_KEY_CURRENCY);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
+
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 

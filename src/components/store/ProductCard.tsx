@@ -101,8 +101,9 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
         )
       : 0
 
-  const currencySymbol =
-    selectedCurrency?.symbol || product.pricing?.currency?.symbol || '$'
+  // Always use selectedCurrency or fallback to $ (Lebanon's base currency)
+  // Don't use product.pricing.currency as it may contain stale/cached data
+  const currencySymbol = selectedCurrency?.symbol || '$'
 
   const savings =
     backendOriginalPrice && backendDiscountedPrice && backendOriginalPrice > backendDiscountedPrice

@@ -526,8 +526,7 @@ export default function Products() {
                               <div className="text-sm">
                                 {product.pricing && product.pricing.length > 0 && (
                                   <div>
-                                    {product.pricing[0].currency.symbol}
-                                    {product.pricing[0].net_price}
+                                    ${product.pricing[0].net_price}
                                     {product.pricing.length > 1 && (
                                       <span className="text-muted-foreground">
                                         {' '}
