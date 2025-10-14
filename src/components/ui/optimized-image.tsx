@@ -1,11 +1,12 @@
 import { useState, useEffect, ImgHTMLAttributes } from 'react';
 import { getBestImageUrl, getImageFallbackUrls, imageLoadCache, ResponsiveImageUrls } from '@/utils/imageUtils';
 
-interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet'> {
+interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'loading'> {
   src: string | ResponsiveImageUrls | null | undefined;
   alt: string;
   className?: string;
   eager?: boolean; // For hero images that should load immediately
+  fetchpriority?: 'high' | 'low' | 'auto'; // Priority hint for browser (lowercase per React spec)
 }
 
 /**
@@ -22,6 +23,7 @@ export function OptimizedImage({
   alt,
   className = '',
   eager = false,
+  fetchpriority,
   ...props
 }: OptimizedImageProps) {
   const [currentSrc, setCurrentSrc] = useState<string>('');
@@ -80,6 +82,7 @@ export function OptimizedImage({
         alt={alt}
         className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}
         loading={eager ? 'eager' : 'lazy'}
+        fetchpriority={fetchpriority || (eager ? 'high' : 'auto')}
         decoding="async"
         onError={handleError}
         onLoad={handleLoad}

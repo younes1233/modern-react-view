@@ -98,8 +98,8 @@ const RelatedProductsComponent = ({ products }: RelatedProductsProps) => {
         });
       },
       {
-        rootMargin: '100px', // Start loading 100px before the element is visible
-        threshold: 0.1,
+        rootMargin: '600px', // Aggressive preloading: start loading 600px before element is visible
+        threshold: 0.01,
       }
     );
 

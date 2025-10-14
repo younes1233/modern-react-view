@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { FileUpload } from "@/components/ui/file-upload";
 import { toast } from '@/components/ui/sonner';
 import { useFlatCategories } from "@/hooks/useCategories";
-import { Plus, X, Star } from "lucide-react";
+import { Plus, X, Star, Loader2 } from "lucide-react";
 
 interface ProductThumbnail {
   id: number;
@@ -52,12 +52,13 @@ interface Product {
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (product: Product) => void;
+  onSave: (product: Product) => Promise<void>;
   product?: Product | null;
   mode: 'add' | 'edit';
 }
 
 export function ProductModal({ isOpen, onClose, onSave, product, mode }: ProductModalProps) {
+  const [saving, setSaving] = useState(false);
   const [formData, setFormData] = useState<Product>({
     name: '',
     slug: '',
@@ -185,18 +186,25 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Prevent double submission
+    if (saving) return;
+
     if (!formData.name || !formData.category || !formData.sku || !formData.image) {
       toast.error("Please fill in all required fields including main image", { duration: 2500 });
       return;
     }
 
-    onSave(formData);
-    onClose();
-    
-    toast.success(`Product ${mode === 'add' ? 'added' : 'updated'} successfully`, { duration: 2000 });
+    setSaving(true);
+    try {
+      await onSave(formData);
+      // Only close if save was successful - parent will handle success/error
+    } catch (error) {
+      // Error handling is done by parent, just reset saving state
+      setSaving(false);
+    }
   };
 
   return (
@@ -540,11 +548,28 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
           </Card>
 
           <div className="flex gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className={saving ? "flex-1 cursor-not-allowed opacity-60" : "flex-1"}
+              disabled={saving}
+            >
               Cancel
             </Button>
-            <Button type="submit" className="flex-1">
-              {mode === 'add' ? 'Add Product' : 'Save Changes'}
+            <Button
+              type="submit"
+              className={saving ? "flex-1 cursor-not-allowed opacity-80" : "flex-1 hover:opacity-90 active:scale-95 transition-all"}
+              disabled={saving}
+            >
+              {saving ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {mode === 'add' ? 'Creating...' : 'Saving...'}
+                </>
+              ) : (
+                mode === 'add' ? 'Add Product' : 'Save Changes'
+              )}
             </Button>
           </div>
         </form>

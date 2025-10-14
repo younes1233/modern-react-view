@@ -278,9 +278,8 @@ class AdminProductService extends BaseApiService {
     try {
       const endpoint = `/admin/products/${id}`;
       if (data instanceof FormData) {
-        // Laravel requires POST + _method=PUT for FormData with file uploads
-        data.append('_method', 'PUT');
-        const response = await this.postFormData<ApiResponse<any>>(endpoint, data);
+        // Use putFormData which automatically handles Laravel's method spoofing
+        const response = await this.putFormData<ApiResponse<any>>(endpoint, data);
         console.log('Product update API response:', response);
         return response;
       } else {

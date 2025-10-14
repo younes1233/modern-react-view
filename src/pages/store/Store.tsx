@@ -27,6 +27,7 @@ const Store = () => {
   const [favorites, setFavorites] = useState<string[]>([]);
   const [visibleSections, setVisibleSections] = useState(new Set<number>());
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const scrollRestoredRef = useRef(false);
   const location = useLocation();
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -63,11 +64,17 @@ const Store = () => {
     if (slides.length > 1) {
       const interval = setInterval(() => {
         setCurrentSlideIndex((prev) => (prev + 1) % slides.length);
+        setHeroImageLoaded(false); // Reset loaded state for new slide
       }, 5000); // Change slide every 5 seconds
-      
+
       return () => clearInterval(interval);
     }
   }, [slides.length]);
+
+  // Reset hero image loaded state when slide changes
+  useEffect(() => {
+    setHeroImageLoaded(false);
+  }, [currentSlideIndex]);
 
   const currentSlide = useMemo(() => slides[currentSlideIndex], [slides, currentSlideIndex]);
   
@@ -247,9 +254,9 @@ const Store = () => {
           }
         });
       },
-      { 
-        rootMargin: '100px 0px', // Start loading 100px before entering viewport
-        threshold: 0.1 
+      {
+        rootMargin: '800px 0px', // Aggressive preloading: start loading images 800px before they enter viewport
+        threshold: 0.01 // Lower threshold for earlier detection
       }
     );
 
@@ -468,7 +475,7 @@ const Store = () => {
           </div>
         )}
   {/* Hero Section (auto height, image contained) */}
-{heroesLoading ? (
+{heroesLoading || (!heroImageLoaded && currentSlide) ? (
   <HeroSkeleton />
 ) : heroesError && slides.length === 0 ? (
   <div className="py-16">
@@ -478,32 +485,35 @@ const Store = () => {
       onRetry={refetchHeroes}
     />
   </div>
-) : (
-  currentSlide && (
-    <section
-      className="relative w-full overflow-hidden z-10 flex justify-center items-center bg-white"
-      style={{
-        // no fixed height — section will match image height
-        maxHeight: deviceType === 'mobile' ? 'auto' : 'none',
+) : null}
+
+{/* Real hero - positioned absolutely over skeleton until loaded */}
+{!heroesLoading && currentSlide && (
+  <section
+    className={`relative w-full overflow-hidden z-10 flex justify-center items-center bg-white transition-opacity duration-300 ${
+      heroImageLoaded ? 'opacity-100' : 'opacity-0 absolute top-0 left-0 right-0'
+    }`}
+    style={{
+      // no fixed height — section will match image height
+      maxHeight: deviceType === 'mobile' ? 'auto' : 'none',
+    }}
+  >
+    {/* SINGLE IMAGE — contained, centered */}
+    <img
+      src={currentSlide.images?.urls?.hero?.[deviceType] || currentSlide.image_url || "/placeholder.svg"}
+      alt="Hero Background"
+      className="max-w-full h-auto object-contain"
+      style={{ objectPosition: "center center" }}
+      loading="eager"
+      fetchPriority="high"
+      decoding="async"
+      onLoad={() => setHeroImageLoaded(true)}
+      onError={(e) => {
+        e.currentTarget.src = "/placeholder.svg";
+        setHeroImageLoaded(true);
       }}
-    >
-      {/* SINGLE IMAGE — contained, centered */}
-      <img
-        src={currentSlide.image_url || "/placeholder.svg"}
-        alt="Hero Background"
-        className="max-w-full h-auto object-contain transition-opacity duration-500"
-        style={{ objectPosition: "center center" }}
-        loading="eager"
-        decoding="async"
-        onError={(e) => {
-          e.currentTarget.src = "/placeholder.svg";
-        }}
-      />
-
-
-
-    </section>
-  )
+    />
+  </section>
 )}
 
 

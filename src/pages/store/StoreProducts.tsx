@@ -28,7 +28,11 @@ const StoreProducts = () => {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
   const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounce search by 500ms
-  const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    // Ensure we properly read category from URL on mount (Safari fix)
+    const categoryParam = searchParams.get('category');
+    return categoryParam || 'all';
+  });
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -45,16 +49,18 @@ const StoreProducts = () => {
 
   // Fetch products
   const fetchProducts = async () => {
-    if (!selectedCountry) return;
-    
     setLoading(true);
     try {
       // Build query parameters
       const params = new URLSearchParams({
-        country_id: selectedCountry.id.toString(),
         page: currentPage.toString(),
         limit: '20'
       });
+
+      // Add country and currency if available (backend uses user settings as fallback)
+      if (selectedCountry?.id) {
+        params.append('country_id', selectedCountry.id.toString());
+      }
 
       if (selectedCurrency?.id) {
         params.append('currency_id', selectedCurrency.id.toString());
@@ -151,6 +157,14 @@ const StoreProducts = () => {
     }
   };
 
+  // Sync category from URL params (Safari fix - ensures URL params are respected)
+  useEffect(() => {
+    const categoryParam = searchParams.get('category');
+    if (categoryParam && categoryParam !== selectedCategory) {
+      setSelectedCategory(categoryParam);
+    }
+  }, [searchParams]);
+
   // Effect to reset page when filters change
   useEffect(() => {
     setCurrentPage(1);
@@ -189,10 +203,11 @@ const StoreProducts = () => {
     }
   }, [selectedCategory, sortBy, priceRange, selectedFeatures, selectedRating]); // Don't include searchQuery to avoid duplicate search tracking
 
-  // Effect to fetch products when params change
+  // Effect to fetch products when params change (initial load + filter changes)
   useEffect(() => {
     fetchProducts();
-  }, [selectedCountry, selectedCurrency, debouncedSearchQuery, selectedCategory, currentPage, debouncedPriceRange, sortBy, selectedRating, selectedFeatures]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCurrency, debouncedSearchQuery, selectedCategory, currentPage, debouncedPriceRange, sortBy, selectedRating, selectedFeatures]);
 
   // Effect to update URL when filters change
   useEffect(() => {
@@ -203,8 +218,9 @@ const StoreProducts = () => {
     if (currentPage > 1) params.set('page', currentPage.toString());
     if (priceRange[0] > 0) params.set('min_price', priceRange[0].toString());
     if (priceRange[1] < maxPrice) params.set('max_price', priceRange[1].toString());
-    
-    setSearchParams(params);
+
+    // Use replace: true to avoid creating multiple history entries
+    setSearchParams(params, { replace: true });
   }, [searchQuery, selectedCategory, sortBy, currentPage, priceRange, maxPrice]);
 
   // Handle search

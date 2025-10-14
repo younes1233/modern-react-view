@@ -9,15 +9,17 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { CategoryModal } from "@/components/CategoryModal";
 import { ExportButton } from "@/components/ui/export-button";
+import { ToggleFeaturedButton } from "@/components/ui/toggle-featured-button";
+import { DraggableCategoryRow } from "@/components/DraggableCategoryRow";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { 
-  Search, 
-  Plus, 
-  ChevronDown, 
-  ChevronRight, 
-  Grid, 
-  Trees, 
+import {
+  Search,
+  Plus,
+  ChevronDown,
+  ChevronRight,
+  Grid,
+  Trees,
   Filter,
   Star,
   Package,
@@ -30,6 +32,21 @@ import {
 } from "lucide-react";
 import { toast } from '@/components/ui/sonner';
 import { categoryService, Category } from "@/services/categoryService";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 
 const Categories = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,6 +65,14 @@ const Categories = () => {
   });
   // Removed useToast hook;
 
+  // Drag and drop sensors
+  const sensors = useSensors(
+    useSensor(PointerSensor),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
   useEffect(() => {
     loadCategories();
     loadStats();
@@ -59,27 +84,23 @@ const Categories = () => {
 
   const loadCategories = async () => {
     try {
-      console.log('Loading categories...');
       setLoading(true);
       const filters = {
         search: searchTerm || undefined,
         status: statusFilter === "all" ? undefined : statusFilter as "active" | "inactive"
       };
-      
+
       const response = await categoryService.getCategories();
-      console.log('Categories API response:', response);
-      
+
       if (!response.error) {
         let categoriesData: Category[] = [];
-        
+
         if (Array.isArray(response.details)) {
           categoriesData = response.details;
         } else if (response.details && typeof response.details === 'object' && Array.isArray((response.details as any).categories)) {
           categoriesData = (response.details as any).categories;
         }
-        
-        console.log('Processed categories data:', categoriesData);
-        
+
         const sanitizedCategories = categoriesData.map(category => ({
           ...category,
           products: category.products ?? 0,
@@ -90,11 +111,9 @@ const Categories = () => {
           featured: category.featured ?? false,
           order: category.order ?? 0
         }));
-        
-        console.log('Setting categories state with:', sanitizedCategories);
+
         setCategories(sanitizedCategories);
       } else {
-        console.error('Categories API error:', response);
         toast.error(response.message || "Failed to load categories", { duration: 2500 });
       }
     } catch (error) {
@@ -181,34 +200,51 @@ const Categories = () => {
     }
   };
 
+  const handleToggleFeatured = async (categoryId: number, currentFeatured: boolean) => {
+    try {
+      const response = await categoryService.toggleFeatured(categoryId);
+      if (!response.error) {
+        const newStatus = !currentFeatured;
+        toast.success(`Category ${newStatus ? 'featured' : 'unfeatured'} successfully`, { duration: 2000 });
+        loadCategories();
+      } else {
+        toast.error(response.message || "Failed to toggle featured status", { duration: 2500 });
+      }
+    } catch (error) {
+      console.error('Error toggling featured status:', error);
+      toast.error("Failed to toggle featured status", { duration: 2500 });
+    }
+  };
+
   const handleSaveCategory = async (categoryData: Category, imageFile?: File, iconFile?: File) => {
     try {
-      console.log('Saving category:', { modalMode, categoryData, selectedCategory });
       let response;
-      
+
       if (modalMode === 'add') {
         response = await categoryService.createCategory(categoryData, imageFile, iconFile);
       } else if (selectedCategory?.id) {
-        console.log('Updating category with ID:', selectedCategory.id);
         response = await categoryService.updateCategory(selectedCategory.id, categoryData, imageFile, iconFile);
       }
 
-      console.log('Category save response:', response);
-
       if (response && !response.error) {
+        // Show success message
         toast.success(`Category ${modalMode === 'add' ? 'created' : 'updated'} successfully`, { duration: 2000 });
-        console.log('Reloading categories after successful save...');
-        // Force reload categories and stats
+
+        // Reload categories and stats
         await loadCategories();
         await loadStats();
-        setIsAddDialogOpen(false); // Close modal after successful save
+
+        // Close modal AFTER everything completes successfully
+        setIsAddDialogOpen(false);
+        setSelectedCategory(null);
       } else {
-        console.error('Category save failed:', response);
         toast.error(response?.message || `Failed to ${modalMode} category`, { duration: 2500 });
+        throw new Error(response?.message || 'Save failed');
       }
     } catch (error) {
       console.error(`Error ${modalMode} category:`, error);
       toast.error(`Failed to ${modalMode} category`, { duration: 2500 });
+      throw error; // Re-throw so modal knows to reset saving state
     }
   };
 
@@ -216,165 +252,61 @@ const Categories = () => {
     toast.success("Categories are being exported to Excel", { duration: 2000 });
   };
 
-  const getCategoryPath = (category: Category): string => {
-    if (category.level === 0) return category.name;
-    
-    const parent = flattenCategories(categories).find(cat => cat.id === category.parent_id);
-    if (!parent) return category.name;
-    
-    return `${getCategoryPath(parent)} > ${category.name}`;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      // Flatten all categories to work with them
+      const allCategories = flattenCategories(categories);
+
+      const oldIndex = allCategories.findIndex(cat => cat.id === active.id);
+      const newIndex = allCategories.findIndex(cat => cat.id === over.id);
+
+      if (oldIndex === -1 || newIndex === -1) return;
+
+      const activeCategory = allCategories[oldIndex];
+      const overCategory = allCategories[newIndex];
+
+      // Only allow reordering within the same parent
+      if (activeCategory.parent_id !== overCategory.parent_id) {
+        toast.error("Cannot reorder categories across different parent levels", { duration: 2500 });
+        return;
+      }
+
+      // Get all categories with the same parent
+      const sameLevelCategories = allCategories.filter(
+        cat => cat.parent_id === activeCategory.parent_id
+      );
+
+      const levelOldIndex = sameLevelCategories.findIndex(cat => cat.id === active.id);
+      const levelNewIndex = sameLevelCategories.findIndex(cat => cat.id === over.id);
+
+      // Reorder within the same level
+      const newOrder = arrayMove(sameLevelCategories, levelOldIndex, levelNewIndex);
+      const orderIds = newOrder.map(cat => cat.id!);
+
+      try {
+        const response = await categoryService.reorderCategories(orderIds);
+        if (!response.error) {
+          toast.success("Categories reordered successfully", { duration: 2000 });
+          loadCategories();
+        } else {
+          toast.error(response.message || "Failed to reorder categories", { duration: 2500 });
+        }
+      } catch (error) {
+        console.error('Error reordering categories:', error);
+        toast.error("Failed to reorder categories", { duration: 2500 });
+      }
+    }
   };
 
-  const renderCategoryRow = (category: Category) => {
-    const hasChildren = category.children && category.children.length > 0;
-    const indentLevel = (category.level || 0) * 24;
+  const getCategoryPath = (category: Category): string => {
+    if (category.level === 0) return category.name;
 
-    const displayImage = category.images?.urls?.original || category.image;
+    const parent = flattenCategories(categories).find(cat => cat.id === category.parent_id);
+    if (!parent) return category.name;
 
-    return (
-      <div key={category.id}>
-        <div 
-          className="flex items-center justify-between p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
-          style={{ paddingLeft: `${16 + indentLevel}px` }}
-        >
-          <div className="flex items-center gap-3 flex-1">
-            {hasChildren ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="p-0 w-6 h-6"
-                onClick={() => toggleExpand(category.id!)}
-              >
-                {category.isExpanded ? (
-                  <ChevronDown className="w-4 h-4" />
-                ) : (
-                  <ChevronRight className="w-4 h-4" />
-                )}
-              </Button>
-            ) : (
-              <div className="w-6" />
-            )}
-            
-            <div className="w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-              {displayImage ? (
-                <img src={displayImage} alt={category.name} className="w-8 h-8 rounded object-cover" />
-              ) : (
-                <Package className="w-6 h-6 text-blue-600" />
-              )}
-            </div>
-            
-            <div className="flex-1">
-              <div className="flex items-center gap-2">
-                <h3 className="font-semibold text-gray-900">{category.name}</h3>
-                {category.level === 0 && <Star className="w-4 h-4 text-yellow-500" />}
-                <Badge className={category.is_active ? "bg-green-100 text-green-800" : "bg-gray-100 text-gray-800"}>
-                  {category.is_active ? 'active' : 'inactive'}
-                </Badge>
-              </div>
-              <p className="text-sm text-gray-600">{category.description || ''}</p>
-              {category.level && category.level > 0 && (
-                <p className="text-xs text-gray-500">
-                  {getCategoryPath(category)}
-                </p>
-              )}
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <div className="text-right">
-              <div className="flex items-center gap-1">
-                <Package className="w-4 h-4 text-gray-400" />
-                <span className="font-medium">{(category.products || 0)}</span>
-              </div>
-            </div>
-            
-            <div className="text-right">
-              <div className="flex items-center gap-1 text-green-600">
-                <DollarSign className="w-4 h-4" />
-                <span className="font-bold">${(category.revenue || 0).toLocaleString()}</span>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleAddSubcategory(category)}
-                className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => handleEditCategory(category)}
-                className="text-gray-600 hover:text-gray-700"
-              >
-                <Edit className="w-4 h-4" />
-              </Button>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-red-600 hover:text-red-700"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Category</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Are you sure you want to delete "{category.name}"? This action cannot be undone and will also delete all subcategories.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction 
-                      onClick={() => handleDeleteCategory(category.id!)}
-                      className="bg-red-600 hover:bg-red-700"
-                    >
-                      Delete
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-gray-600"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleEditCategory(category)}>
-                    <Edit className="w-4 h-4 mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleAddSubcategory(category)}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Subcategory
-                  </DropdownMenuItem>
-                  <DropdownMenuItem 
-                    onClick={() => handleDeleteCategory(category.id!)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Delete
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </div>
-        </div>
-
-        {hasChildren && category.isExpanded && category.children?.map(child => renderCategoryRow(child))}
-      </div>
-    );
+    return `${getCategoryPath(parent)} > ${category.name}`;
   };
 
   const flattenCategories = (cats: Category[]): Category[] => {
@@ -550,20 +482,43 @@ const Categories = () => {
               </CardHeader>
               <CardContent className="p-0">
                 {viewMode === "tree" ? (
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {filteredCategories.map(category => renderCategoryRow(category))}
-                    {filteredCategories.length === 0 && (
-                      <div className="text-center py-12 text-muted-foreground">
-                        <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                        <h3 className="text-xl font-semibold mb-2">No Categories Found</h3>
-                        <p>Get started by creating your first category.</p>
-                        <Button onClick={handleAddCategory} className="mt-4">
-                          <Plus className="w-4 h-4 mr-2" />
-                          Add Category
-                        </Button>
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={flattenCategories(filteredCategories).map(cat => cat.id!)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                        {filteredCategories.map(category => (
+                          <DraggableCategoryRow
+                            key={category.id}
+                            category={category}
+                            onToggleExpand={toggleExpand}
+                            onToggleFeatured={handleToggleFeatured}
+                            onAddSubcategory={handleAddSubcategory}
+                            onEditCategory={handleEditCategory}
+                            onDeleteCategory={handleDeleteCategory}
+                            getCategoryPath={getCategoryPath}
+                            loading={loading}
+                          />
+                        ))}
+                        {filteredCategories.length === 0 && (
+                          <div className="text-center py-12 text-muted-foreground">
+                            <Package className="w-16 h-16 mx-auto mb-4 opacity-50" />
+                            <h3 className="text-xl font-semibold mb-2">No Categories Found</h3>
+                            <p>Get started by creating your first category.</p>
+                            <Button onClick={handleAddCategory} className="mt-4">
+                              <Plus className="w-4 h-4 mr-2" />
+                              Add Category
+                            </Button>
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </SortableContext>
+                  </DndContext>
                 ) : (
                   <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {flattenCategories(filteredCategories).map((category) => {
@@ -596,17 +551,22 @@ const Categories = () => {
                               <span className="text-sm font-bold text-green-600 dark:text-green-400">${(category.revenue || 0).toLocaleString()}</span>
                             </div>
                             <div className="flex gap-2">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
+                              <ToggleFeaturedButton
+                                isFeatured={category.featured}
+                                onToggle={() => handleToggleFeatured(category.id!, category.featured)}
+                                disabled={loading}
+                              />
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 className="flex-1"
                                 onClick={() => handleEditCategory(category)}
                               >
                                 <Edit className="w-4 h-4 mr-2" />
                                 Edit
                               </Button>
-                              <Button 
-                                variant="ghost" 
+                              <Button
+                                variant="ghost"
                                 size="sm"
                                 onClick={() => handleAddSubcategory(category)}
                               >

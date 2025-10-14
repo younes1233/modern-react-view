@@ -257,6 +257,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   src="/meemhome-logo.svg"
                   alt="Meem Home"
                   className="h-12 md:h-14 lg:h-16 w-auto object-contain"
+                  fetchpriority="high"
+                  loading="eager"
                 />
               </Link>
             </div>
@@ -544,6 +546,8 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       ? 'animate-scale-in opacity-0'
                       : 'opacity-0'
                   }`}
+                  fetchpriority="high"
+                  loading="eager"
                   style={{
                     animationDelay: isMobileMenuClosing
                       ? '0s'

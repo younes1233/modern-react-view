@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { StoreLayout } from '@/components/store/StoreLayout';
-import { useStoreCategories } from '@/hooks/useStoreCategories';
+import { useStoreCategoriesFlattened } from '@/hooks/useStoreCategoriesFlattened';
 import { Category } from '@/services/categoryService';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -10,13 +10,13 @@ import { Button } from '@/components/ui/button';
 
 const StoreCategories = () => {
   const navigate = useNavigate();
-  const { categories, loading, error } = useStoreCategories();
+  const { categories, loading, error } = useStoreCategoriesFlattened();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedParent, setSelectedParent] = useState<Category | null>(null);
 
-  // Get top-level categories (no parent)
+  // Categories are already top-level (root categories with flattened children)
   const topLevelCategories = useMemo(() => {
-    return categories.filter(cat => !cat.parent_id);
+    return categories;
   }, [categories]);
 
   // Filter top-level categories based on search
@@ -28,26 +28,10 @@ const StoreCategories = () => {
     );
   }, [topLevelCategories, searchQuery]);
 
-  // Get all children of selected parent (recursive - all levels)
-  const getAllChildren = (parentCategory: Category): Category[] => {
-    let allChildren: Category[] = [];
-    
-    const findChildren = (category: Category) => {
-      if (category.children && category.children.length > 0) {
-        category.children.forEach(child => {
-          allChildren.push(child);
-          findChildren(child); // Recursively find children's children
-        });
-      }
-    };
-    
-    findChildren(parentCategory);
-    return allChildren;
-  };
-
+  // Get all children of selected parent (already flattened from API)
   const childrenCategories = useMemo(() => {
-    if (!selectedParent) return [];
-    return getAllChildren(selectedParent);
+    if (!selectedParent || !selectedParent.children) return [];
+    return selectedParent.children;
   }, [selectedParent]);
 
   const handleCategoryClick = (category: Category) => {
@@ -170,7 +154,7 @@ const StoreCategories = () => {
                       <div className="flex items-center space-x-1 flex-shrink-0">
                         {category.children && category.children.length > 0 && (
                           <Badge variant="secondary" className="text-xs px-1 py-0 h-4">
-                            {getAllChildren(category).length}
+                            {category.children.length}
                           </Badge>
                         )}
                         <ChevronRight className="w-4 h-4 md:w-3 md:h-3 text-gray-400" />

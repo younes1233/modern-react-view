@@ -10,7 +10,7 @@ import { FileUpload } from "@/components/ui/file-upload";
 import { toast } from '@/components/ui/sonner';
 import { useFlatCategories } from "@/hooks/useCategories";
 import { AdminProductAPI, CreateProductData } from "@/services/adminProductService";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useShelves } from "@/hooks/useShelves";
 import { cn } from "@/lib/utils";
@@ -295,6 +295,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
     console.log('Scrolling to error field:', firstErrorField);
 
     if (firstErrorField) {
+      // Increased delay to ensure DOM updates and toast rendering complete
       setTimeout(() => {
         // Check if it's a variant-specific error
         if (firstErrorField.startsWith('variant_') && firstErrorField.includes('_attributes')) {
@@ -306,16 +307,31 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
           const variantAttributeSection = document.querySelector(`[data-variant-id="${variantId}"] .variant-attributes`) as HTMLElement;
           if (variantAttributeSection) {
             console.log('Found variant attribute section:', variantAttributeSection);
-            variantAttributeSection.scrollIntoView({
-              behavior: 'smooth',
-              block: 'center',
-              inline: 'nearest'
-            });
+
+            // Get the modal content container for proper scroll context
+            const modalContent = document.querySelector('.max-h-\\[85vh\\]') as HTMLElement;
+            if (modalContent) {
+              const elementTop = variantAttributeSection.offsetTop;
+              const modalTop = modalContent.scrollTop;
+              const targetScroll = elementTop - 100; // 100px offset from top
+
+              modalContent.scrollTo({
+                top: targetScroll,
+                behavior: 'smooth'
+              });
+            } else {
+              // Fallback to scrollIntoView
+              variantAttributeSection.scrollIntoView({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+              });
+            }
 
             // Add a temporary highlight to draw attention
-            variantAttributeSection.classList.add('ring-2', 'ring-red-500', 'ring-opacity-50');
+            variantAttributeSection.classList.add('ring-2', 'ring-red-500', 'ring-opacity-50', 'rounded-md', 'p-2');
             setTimeout(() => {
-              variantAttributeSection.classList.remove('ring-2', 'ring-red-500', 'ring-opacity-50');
+              variantAttributeSection.classList.remove('ring-2', 'ring-red-500', 'ring-opacity-50', 'rounded-md', 'p-2');
             }, 3000);
 
             console.log('Scrolled to variant attribute section');
@@ -328,15 +344,30 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         if (validationError) {
           console.log('Found validation error element:', validationError);
 
-          validationError.scrollIntoView({
-            behavior: 'smooth',
-            block: 'center',
-            inline: 'nearest'
-          });
+          // Get the modal content container for proper scroll context
+          const modalContent = document.querySelector('.max-h-\\[85vh\\]') as HTMLElement;
+          if (modalContent) {
+            const elementTop = validationError.offsetTop;
+            const targetScroll = elementTop - 100; // 100px offset from top
+
+            modalContent.scrollTo({
+              top: targetScroll,
+              behavior: 'smooth'
+            });
+          } else {
+            // Fallback to scrollIntoView
+            validationError.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+              inline: 'nearest'
+            });
+          }
 
           console.log('Scrolled to validation error');
+        } else {
+          console.warn('No validation error element found in DOM');
         }
-      }, 200);
+      }, 500); // Increased from 200ms to 500ms to ensure toast rendering completes
     }
   };
 
@@ -908,22 +939,36 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       return;
     }
 
-    // Validate variants if has_variants is true
-    if (formData.has_variants) {
-      if (variantEntries.length === 0) {
-        toast.error("At least one variant is required when 'Has Variants' is enabled", { duration: 2500 });
-        return;
-      }
-
+    // Validate variant stock, pricing, and delivery
+    if (formData.has_variants && variantEntries.length > 0) {
       for (let i = 0; i < variantEntries.length; i++) {
         const variant = variantEntries[i];
-        if (variant.variations.length === 0) {
-          toast.error(`Variant ${i + 1} must have at least one attribute value selected`, { duration: 2500 });
-          return;
-        }
+
+        // Validate stock
         if (!variant.stock || variant.stock <= 0) {
-          toast.error(`Variant ${i + 1} must have stock quantity greater than 0`, { duration: 2500 });
-          return;
+          errors[`variant_${variant.id}_stock`] = [`Variant ${i + 1} must have stock quantity greater than 0`];
+        }
+
+        // Validate variant pricing if set
+        if (variant.variantPrices.net_price && variant.variantPrices.cost) {
+          const netPrice = parseFloat(variant.variantPrices.net_price);
+          const cost = parseFloat(variant.variantPrices.cost);
+
+          if (!isNaN(netPrice) && !isNaN(cost) && netPrice < cost) {
+            errors[`variant_${variant.id}_net_price`] = [`Variant ${i + 1}: Net price cannot be less than cost`];
+          }
+        }
+
+        // Validate variant delivery settings
+        const variantDeliveryType = variant.delivery_type || formData.delivery_type;
+        const variantDeliveryCost = variant.delivery_cost;
+
+        if (variantDeliveryType === 'company' && variantDeliveryCost) {
+          errors[`variant_${variant.id}_delivery_cost`] = [`Variant ${i + 1}: Delivery cost cannot be set for company delivery type`];
+        }
+
+        if (variantDeliveryType === 'meemhome' && !variantDeliveryCost && !formData.delivery_cost) {
+          errors[`variant_${variant.id}_delivery_cost`] = [`Variant ${i + 1}: Delivery cost is required for meemhome delivery type`];
         }
       }
 
@@ -1025,36 +1070,6 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
     let variantsPayload: any[] = [];
     if (formData.has_variants && variantEntries.length > 0) {
-      // Validate variant prices and delivery settings
-      for (let variantIndex = 0; variantIndex < variantEntries.length; variantIndex++) {
-        const variant = variantEntries[variantIndex];
-
-        // Validate variant pricing
-        if (variant.variantPrices.net_price && variant.variantPrices.cost) {
-          const netPrice = parseFloat(variant.variantPrices.net_price);
-          const cost = parseFloat(variant.variantPrices.cost);
-
-          if (!isNaN(netPrice) && !isNaN(cost) && netPrice < cost) {
-            toast.error(`Net price cannot be less than cost in variant ${variantIndex + 1}`, { duration: 2500 });
-            return;
-          }
-        }
-
-        // Validate variant delivery settings (inherit from product if not set)
-        const variantDeliveryType = variant.delivery_type || formData.delivery_type;
-        const variantDeliveryCost = variant.delivery_cost;
-
-        if (variantDeliveryType === 'company' && variantDeliveryCost) {
-          toast.error(`Variant ${variantIndex + 1}: Delivery cost cannot be set for company delivery type`, { duration: 2500 });
-          return;
-        }
-
-        if (variantDeliveryType === 'meemhome' && !variantDeliveryCost && !formData.delivery_cost) {
-          toast.error(`Variant ${variantIndex + 1}: Delivery cost is required for meemhome delivery type`, { duration: 2500 });
-          return;
-        }
-      }
-
       variantsPayload = variantEntries.map((variant) => {
         const variations = variant.variations;
         const variantPricesParsed = [];
@@ -1075,8 +1090,13 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
         const delivery_cost = delivery_type === "meemhome" && variant.delivery_cost ? parseFloat(String(variant.delivery_cost)) : undefined;
         const stock = variant.stock || 0;
 
+        // Check if this is an existing variant (has a database ID) or a new one (temporary Date.now() ID)
+        // Existing variants from the product will have IDs, new variants will have Date.now() IDs (very large numbers)
+        const isExistingVariant = mode === 'edit' && product?.variants?.some(v => v.id === variant.id);
+
         const variantData: any = {
-          id: variant.id, // Include variant ID for updates
+          // Only include ID for existing variants, not new ones
+          ...(isExistingVariant ? { id: variant.id } : {}),
           image: variant.image,
           delete_image: (variant as any).delete_image, // Include deletion flag
           variations,
@@ -1179,10 +1199,26 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
       if (error.response && error.response.details) {
         console.log('Setting validation errors:', error.response.details);
         setValidationErrors(error.response.details);
+
+        // Show toast with the first validation error
+        const firstErrorKey = Object.keys(error.response.details)[0];
+        const firstErrorMessages = error.response.details[firstErrorKey];
+        const firstErrorMessage = Array.isArray(firstErrorMessages) ? firstErrorMessages[0] : firstErrorMessages;
+
+        toast.error(`Validation Error: ${firstErrorMessage}`, {
+          duration: 4000,
+          description: 'Please check the highlighted fields below'
+        });
       } else {
         console.log('No validation errors found, clearing state');
         // Clear validation errors if it's not a validation error
         setValidationErrors({});
+
+        // Show generic error toast
+        toast.error('Failed to save product', {
+          duration: 3000,
+          description: error.message || 'An unexpected error occurred'
+        });
       }
     }
   };
@@ -1738,6 +1774,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                           onChange={(e) => updateVariantPrice(variant.id, 'net_price', e.target.value)}
                           placeholder="Net Price (optional)"
                         />
+                        {renderFieldError(`variant_${variant.id}_net_price`)}
                       </div>
                     </div>
                     {variant.variantPrices.net_price && variant.variantPrices.cost && parseFloat(variant.variantPrices.net_price) < parseFloat(variant.variantPrices.cost) && (
@@ -1782,6 +1819,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                          placeholder="Stock quantity"
                          required
                        />
+                       {renderFieldError(`variant_${variant.id}_stock`)}
                      </div>
 
                      {/* Only show shelf override in create mode */}
@@ -1859,6 +1897,7 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
                          }
                          required={variant.delivery_type === 'meemhome' || (!variant.delivery_type && formData.delivery_type === 'meemhome')}
                        />
+                       {renderFieldError(`variant_${variant.id}_delivery_cost`)}
                        {(!variant.delivery_type || variant.delivery_type === 'inherit') && (
                          <div className="text-xs text-muted-foreground mt-1">
                            Use main product delivery cost: {formData.delivery_cost || '0'}
@@ -1957,15 +1996,25 @@ export function AdminProductModal({ isOpen, onClose, onSave, product, mode, isLo
 
           {/* Actions */}
           <div className="flex justify-end space-x-2 pt-4">
-            <Button type="button" variant="secondary" onClick={handleCancel} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={handleCancel}
+              disabled={isLoading}
+              className={isLoading ? "cursor-not-allowed opacity-60" : ""}
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className={isLoading ? "cursor-not-allowed opacity-80" : "hover:opacity-90 active:scale-95 transition-all"}
+            >
               {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  <span>{mode === 'add' ? 'Creating...' : 'Updating...'}</span>
-                </div>
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  {mode === 'add' ? 'Creating...' : 'Updating...'}
+                </>
               ) : (
                 mode === 'add' ? 'Create Product' : 'Update Product'
               )}

@@ -189,25 +189,34 @@ export default function Products() {
       formDataKeys: Array.from(formData.keys())
     });
 
+    // Prevent double submission
+    if (createProductMutation.isPending || updateProductMutation.isPending) {
+      console.log('⚠️ Save already in progress, ignoring duplicate request');
+      return;
+    }
+
     try {
       if (modalMode === 'add') {
         console.log('📝 Creating product...');
         await createProductMutation.mutateAsync(formData);
-        toast.success('Product created successfully');
-        setIsModalOpen(false);
+        // Toast is already shown by the mutation hook
         refetch();
+        // Close modal AFTER everything completes successfully
+        setIsModalOpen(false);
       } else if (modalMode === 'edit' && selectedProduct) {
         console.log('✏️ Updating product...', { id: selectedProduct.id });
         await updateProductMutation.mutateAsync({ id: selectedProduct.id, data: formData });
-        toast.success('Product updated successfully');
-        setIsModalOpen(false);
+        // Toast is already shown by the mutation hook
         refetch();
+        // Close modal AFTER everything completes successfully
+        setIsModalOpen(false);
       } else {
         console.error('❌ Invalid state for handleSaveProduct', {
           modalMode,
           hasSelectedProduct: !!selectedProduct,
           selectedProductId: selectedProduct?.id
         });
+        throw new Error('Invalid product save state');
       }
     } catch (error: any) {
       // Don't close modal on error, let user see the error and try again
@@ -227,7 +236,7 @@ export default function Products() {
         }
       };
 
-      throw structuredError; // Re-throw so modal knows there was an error
+      throw structuredError; // Re-throw so modal can reset saving state
     }
   };
 
@@ -651,6 +660,7 @@ export default function Products() {
         onSave={handleSaveProduct}
         mode={modalMode}
         product={selectedProduct}
+        isLoading={createProductMutation.isPending || updateProductMutation.isPending}
       />
 
       <MassUploadModal

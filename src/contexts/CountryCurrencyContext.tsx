@@ -2,12 +2,15 @@ import React from 'react';
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { userSettingsService } from '@/services/userSettingsService';
 import { useAuth } from '@/contexts/AuthContext';
+import { geoDetectionService } from '@/services/geoDetectionService';
+import { countryService } from '@/services/countryService';
 
 interface SelectedCountry {
   id: number;
   name: string;
   flag: string;
   iso_code: string;
+  base_currency?: SelectedCurrency; // Include base currency for easy access
 }
 
 interface SelectedCurrency {
@@ -16,6 +19,12 @@ interface SelectedCurrency {
   name: string;
   symbol: string;
 }
+
+// Default country configuration (Iraq)
+const DEFAULT_COUNTRY_ISO = 'IQ'; // Iraq ISO code
+const STORAGE_KEY_COUNTRY = 'selectedCountry';
+const STORAGE_KEY_CURRENCY = 'selectedCurrency';
+const STORAGE_KEY_GEO_DETECTED = 'geoDetectionCompleted';
 
 interface CountryCurrencyContextType {
   selectedCountry: SelectedCountry | null;
@@ -45,40 +54,136 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
   const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
 
-  // Load preferences from user object or localStorage
-  const loadPreferences = useCallback(() => {
-    // If user is logged in and has preferences in their profile, use those
-    if (user?.preferences) {
-      if (user.preferences.country) {
-        setSelectedCountryState(user.preferences.country);
-        localStorage.setItem('selectedCountry', JSON.stringify(user.preferences.country));
+  // Fetch all countries from backend
+  const fetchCountries = useCallback(async () => {
+    try {
+      const response = await countryService.getCountries();
+      if (response.error === false && response.details?.countries) {
+        return response.details.countries;
       }
-      if (user.preferences.currency) {
-        setSelectedCurrencyState(user.preferences.currency);
-        localStorage.setItem('selectedCurrency', JSON.stringify(user.preferences.currency));
-      }
-    } else {
-      // Otherwise, load from localStorage (for guests or if DB has no data)
-      const savedCountry = localStorage.getItem('selectedCountry');
-      const savedCurrency = localStorage.getItem('selectedCurrency');
-
-      if (savedCountry) {
-        try {
-          setSelectedCountryState(JSON.parse(savedCountry));
-        } catch (e) {
-          console.error('Error parsing saved country:', e);
-        }
-      }
-
-      if (savedCurrency) {
-        try {
-          setSelectedCurrencyState(JSON.parse(savedCurrency));
-        } catch (e) {
-          console.error('Error parsing saved currency:', e);
-        }
-      }
+      return [];
+    } catch (error) {
+      console.error('Error fetching countries:', error);
+      return [];
     }
-  }, [user]);
+  }, []);
+
+  // Load preferences with geo-detection and fallback logic
+  const loadPreferences = useCallback(async () => {
+    setIsLoading(true);
+    let countryToSet: SelectedCountry | null = null;
+    let currencyToSet: SelectedCurrency | null = null;
+
+    try {
+      // Priority 1: User's saved preferences (from database)
+      if (user?.preferences) {
+        if (user.preferences.country) {
+          countryToSet = user.preferences.country;
+          localStorage.setItem(STORAGE_KEY_COUNTRY, JSON.stringify(user.preferences.country));
+        }
+        if (user.preferences.currency) {
+          currencyToSet = user.preferences.currency;
+          localStorage.setItem(STORAGE_KEY_CURRENCY, JSON.stringify(user.preferences.currency));
+        }
+      }
+
+      // Priority 2: Load from localStorage (for guests or if DB has no data)
+      if (!countryToSet) {
+        const savedCountry = localStorage.getItem(STORAGE_KEY_COUNTRY);
+        if (savedCountry) {
+          try {
+            countryToSet = JSON.parse(savedCountry);
+          } catch (e) {
+            console.error('Error parsing saved country:', e);
+          }
+        }
+      }
+
+      // Priority 3: Geo-detection (only if not already done and no saved preference)
+      if (!countryToSet && !localStorage.getItem(STORAGE_KEY_GEO_DETECTED)) {
+        console.log('No saved country found, attempting geo-detection...');
+
+        const detectedIsoCode = await geoDetectionService.detectCountry();
+        localStorage.setItem(STORAGE_KEY_GEO_DETECTED, 'true'); // Mark detection as attempted
+
+        if (detectedIsoCode) {
+          console.log('Geo-detected country:', detectedIsoCode);
+
+          // Fetch all countries to find the matching one
+          const countries = await fetchCountries();
+          const matchedCountry = countries.find(
+            c => c.iso_code?.toUpperCase() === detectedIsoCode.toUpperCase()
+          );
+
+          if (matchedCountry) {
+            countryToSet = {
+              id: matchedCountry.id,
+              name: matchedCountry.name,
+              flag: matchedCountry.flag,
+              iso_code: matchedCountry.iso_code,
+              base_currency: matchedCountry.base_currency
+            };
+            console.log('Matched country from geo-detection:', countryToSet.name);
+          }
+        }
+      }
+
+      // Priority 4: Fallback to default country (Iraq)
+      if (!countryToSet) {
+        console.log('No country found, falling back to default (Iraq)...');
+        const countries = await fetchCountries();
+        const defaultCountry = countries.find(
+          c => c.iso_code?.toUpperCase() === DEFAULT_COUNTRY_ISO
+        );
+
+        if (defaultCountry) {
+          countryToSet = {
+            id: defaultCountry.id,
+            name: defaultCountry.name,
+            flag: defaultCountry.flag,
+            iso_code: defaultCountry.iso_code,
+            base_currency: defaultCountry.base_currency
+          };
+          console.log('Using default country:', countryToSet.name);
+        } else {
+          // Ultimate fallback: use first available country
+          const firstCountry = countries[0];
+          if (firstCountry) {
+            countryToSet = {
+              id: firstCountry.id,
+              name: firstCountry.name,
+              flag: firstCountry.flag,
+              iso_code: firstCountry.iso_code,
+              base_currency: firstCountry.base_currency
+            };
+            console.log('Using first available country:', countryToSet.name);
+          }
+        }
+      }
+
+      // Set currency to country's base currency (always)
+      if (countryToSet?.base_currency) {
+        currencyToSet = countryToSet.base_currency;
+        console.log('Using country base currency:', currencyToSet.code);
+      }
+
+      // Apply the selections
+      if (countryToSet) {
+        setSelectedCountryState(countryToSet);
+        localStorage.setItem(STORAGE_KEY_COUNTRY, JSON.stringify(countryToSet));
+      }
+
+      if (currencyToSet) {
+        setSelectedCurrencyState(currencyToSet);
+        localStorage.setItem(STORAGE_KEY_CURRENCY, JSON.stringify(currencyToSet));
+      }
+
+    } catch (error) {
+      console.error('Error loading preferences:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user, fetchCountries]);
 
   // Load preferences when user changes
   useEffect(() => {
@@ -88,14 +193,30 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
   const setSelectedCountry = useCallback(async (country: SelectedCountry | null) => {
     setSelectedCountryState(country);
 
-    // Update localStorage
-    if (country) {
-      localStorage.setItem('selectedCountry', JSON.stringify(country));
-    } else {
-      localStorage.removeItem('selectedCountry');
+    // Automatically set currency to country's base currency
+    if (country?.base_currency) {
+      setSelectedCurrencyState(country.base_currency);
+      localStorage.setItem(STORAGE_KEY_CURRENCY, JSON.stringify(country.base_currency));
+      console.log('Auto-set currency to country base currency:', country.base_currency.code);
+
+      // Sync currency to database if authenticated
+      if (user) {
+        try {
+          await userSettingsService.setUserSetting('preferred_currency', country.base_currency);
+        } catch (error) {
+          console.error('Error syncing currency to database:', error);
+        }
+      }
     }
 
-    // Sync to database if authenticated
+    // Update localStorage
+    if (country) {
+      localStorage.setItem(STORAGE_KEY_COUNTRY, JSON.stringify(country));
+    } else {
+      localStorage.removeItem(STORAGE_KEY_COUNTRY);
+    }
+
+    // Sync country to database if authenticated
     if (user) {
       try {
         setIsLoading(true);
@@ -113,13 +234,17 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
   }, [user]);
 
   const setSelectedCurrency = useCallback(async (currency: SelectedCurrency | null) => {
+    // Note: Currency should always match the country's base currency
+    // This function is kept for compatibility but will log a warning
+    console.warn('Direct currency changes are discouraged. Currency should match country base currency.');
+
     setSelectedCurrencyState(currency);
 
     // Update localStorage
     if (currency) {
-      localStorage.setItem('selectedCurrency', JSON.stringify(currency));
+      localStorage.setItem(STORAGE_KEY_CURRENCY, JSON.stringify(currency));
     } else {
-      localStorage.removeItem('selectedCurrency');
+      localStorage.removeItem(STORAGE_KEY_CURRENCY);
     }
 
     // Sync to database if authenticated

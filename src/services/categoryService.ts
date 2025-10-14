@@ -15,7 +15,8 @@ export interface Category {
       };
     };
   };
-  icon: string;
+  icon?: string;
+  image_path?: string; // Direct image path for simplified access
   description?: string;
   category_image?: string;
   order?: number;
@@ -29,6 +30,7 @@ export interface Category {
   children?: Category[];
   level?: number;
   products?: number;
+  products_count?: number; // API returns this field for flattened structure
   revenue?: number;
   isExpanded?: boolean;
 }
@@ -126,13 +128,6 @@ class CategoryService extends BaseApiService {
 
   // Update category with file upload - only send changed fields
   async updateCategory(id: number, categoryData: Partial<Category>, imageFile?: File, iconFile?: File): Promise<ApiResponse<Category>> {
-    console.log('CategoryService.updateCategory called with:', {
-      id,
-      categoryData,
-      imageFile: imageFile?.name,
-      iconFile: iconFile?.name
-    });
-
     const formData = new FormData();
     
     // Only add fields that are provided (changed)
@@ -159,15 +154,7 @@ class CategoryService extends BaseApiService {
       formData.append('icon_url', categoryData.icon || '');
     }
 
-    // Log FormData contents
-    console.log('FormData being sent:');
-    for (const [key, value] of formData.entries()) {
-      console.log(`${key}:`, value);
-    }
-
-    const result = await this.putFormData<ApiResponse<Category>>(`/admin/categories/${id}`, formData);
-    console.log('Update API response:', result);
-    return result;
+    return this.putFormData<ApiResponse<Category>>(`/admin/categories/${id}`, formData);
   }
 
   // Delete category
@@ -184,13 +171,9 @@ class CategoryService extends BaseApiService {
     return this.put<ApiResponse<Category>>(`/admin/categories/${id}/move`, payload);
   }
 
-  // Reorder categories within same parent
-  async reorderCategories(categoryOrders: { id: number; order: number }[]): Promise<ApiResponse<{ message: string }>> {
-    const payload = {
-      orders: categoryOrders
-    };
-
-    return this.post<ApiResponse<{ message: string }>>('/admin/categories/reorder', payload);
+  // Reorder categories
+  async reorderCategories(order: number[]): Promise<ApiResponse<{ categories: Category[] }>> {
+    return this.patch<ApiResponse<{ categories: Category[] }>>('/admin/categories/reorder', { order });
   }
 
   // Get category tree/hierarchy
@@ -241,7 +224,7 @@ class CategoryService extends BaseApiService {
   async searchCategories(query: string, filters: Partial<CategoryFilters> = {}): Promise<ApiResponse<Category[]>> {
     const queryParams = new URLSearchParams();
     queryParams.append('q', query);
-    
+
     if (filters.is_active !== undefined) queryParams.append('is_active', filters.is_active.toString());
     if (filters.parent_id) queryParams.append('parent_id', filters.parent_id.toString());
     if (filters.level) queryParams.append('level', filters.level.toString());
@@ -249,9 +232,19 @@ class CategoryService extends BaseApiService {
     return this.get<ApiResponse<Category[]>>(`/admin/categories/search?${queryParams.toString()}`);
   }
 
-  // Store API: Get all active categories for store frontend
+  // Toggle featured status of a category
+  async toggleFeatured(id: number): Promise<ApiResponse<{ category: Category; featured: boolean }>> {
+    return this.patch<ApiResponse<{ category: Category; featured: boolean }>>(`/admin/categories/${id}/toggle-featured`, {});
+  }
+
+  // Store API: Get all active categories for store frontend (hierarchical tree)
   async getStoreCategories(): Promise<ApiResponse<{ categories: Category[] }>> {
     return this.get<ApiResponse<{ categories: Category[] }>>('/categories');
+  }
+
+  // Store API: Get flattened categories (parent categories with all descendants in flat array)
+  async getStoreCategoriesFlattened(): Promise<ApiResponse<Category[]>> {
+    return this.get<ApiResponse<Category[]>>('/categories?flat=true');
   }
 }
 

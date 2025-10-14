@@ -34,49 +34,20 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
   const { selectedCountry, selectedCurrency, setSelectedCountry, setSelectedCurrency } = useCountryCurrency();
   const [availableCurrencies, setAvailableCurrencies] = useState<SelectedCurrency[]>([]);
 
-  // Set default country and currency on first load
-  useEffect(() => {
-    if (countries.length > 0 && !selectedCountry) {
-      const firstCountry = countries[0];
-      const countryData = {
-        id: firstCountry.id,
-        name: firstCountry.name,
-        flag: firstCountry.flag,
-        iso_code: firstCountry.iso_code,
-      };
-      setSelectedCountry(countryData);
-      
-      // Set base currency for the first country
-      const baseCurrency = {
-        id: firstCountry.base_currency.id,
-        code: firstCountry.base_currency.code,
-        name: firstCountry.base_currency.name,
-        symbol: firstCountry.base_currency.symbol,
-      };
-      setSelectedCurrency(baseCurrency);
-    }
-  }, [countries, selectedCountry, setSelectedCountry, setSelectedCurrency]);
+  // No longer needed - CountryCurrencyContext handles initialization with geo-detection
+  // This component just displays and allows changing the selection
 
   // Update available currencies when country changes
   useEffect(() => {
     if (selectedCountry && countries.length > 0) {
       const country = countries.find(c => c.id === selectedCountry.id);
       if (country) {
+        // Show all currencies for the country (for display purposes)
+        // But we'll enforce base currency on change
         setAvailableCurrencies(country.currencies.filter(c => c.is_active));
-        
-        // If no currency selected or current currency not available, set base currency
-        if (!selectedCurrency || !country.currencies.find(c => c.id === selectedCurrency.id)) {
-          const baseCurrency = {
-            id: country.base_currency.id,
-            code: country.base_currency.code,
-            name: country.base_currency.name,
-            symbol: country.base_currency.symbol,
-          };
-          setSelectedCurrency(baseCurrency);
-        }
       }
     }
-  }, [selectedCountry, countries, selectedCurrency, setSelectedCurrency]);
+  }, [selectedCountry, countries]);
 
   const handleCountryChange = (countryId: string) => {
     const country = countries.find(c => c.id === parseInt(countryId));
@@ -86,12 +57,16 @@ export function CountryCurrencySelector({ variant = 'desktop' }: CountryCurrency
         name: country.name,
         flag: country.flag,
         iso_code: country.iso_code,
+        base_currency: country.base_currency // Include base currency for auto-setting
       };
       setSelectedCountry(countryData);
+      // Currency will be automatically set to base currency in the context
     }
   };
 
   const handleCurrencyChange = (currencyId: string) => {
+    // Note: Currency changes are allowed but discouraged
+    // The system prefers currency to match country's base currency
     const currency = availableCurrencies.find(c => c.id === parseInt(currencyId));
     if (currency) {
       const currencyData = {

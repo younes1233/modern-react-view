@@ -254,9 +254,19 @@ class BaseApiService {
   }
 
   protected putFormData<T>(endpoint: string, formData: FormData, includeCredentials: boolean = false): Promise<T> {
+    // Laravel cannot parse FormData with PUT requests properly
+    // Use POST with _method spoofing instead
+    formData.append('_method', 'PUT');
     return this.request<T>(endpoint, {
-      method: 'PUT',
+      method: 'POST',
       body: formData,
+    }, includeCredentials);
+  }
+
+  protected patch<T>(endpoint: string, data?: any, includeCredentials: boolean = false): Promise<T> {
+    return this.request<T>(endpoint, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
     }, includeCredentials);
   }
 
