@@ -55,6 +55,7 @@ import { ImageZoom } from '@/components/store/ImageZoom'
 import InnerImageZoom from 'react-inner-image-zoom'
 import 'react-inner-image-zoom/lib/styles.min.css'
 import { useProductDetail } from '@/hooks/useProductDetail'
+import { OptimizedImage } from '@/components/ui/optimized-image'
 import { ProductDetailSkeleton } from '@/components/store/ProductDetailSkeleton'
 import { ProductAPI } from '@/services/productService'
 import { useResponsiveImage } from '@/contexts/ResponsiveImageContext'
@@ -71,6 +72,7 @@ import { ProductAttributes } from '@/components/store/ProductAttributes'
 import { ProductDiscounts } from '@/components/store/ProductDiscounts'
 import { useCountryCurrency } from '@/contexts/CountryCurrencyContext'
 import { toast } from 'sonner'
+import { imageRegistry } from '@/services/imageRegistry'
 
 const ProductDetail = () => {
   // TOGGLE BETWEEN REVIEW VERSIONS: 'simple' | 'enhanced'
@@ -444,6 +446,22 @@ const ProductDetail = () => {
     }
   }, [selectedVariant])
 
+  // Register variant image in ImageRegistry when variant is selected
+  useEffect(() => {
+    if (selectedVariant?.id && currentImage?.url) {
+      console.log(`[ProductDetail] Registering variant image: variantId=${selectedVariant.id}, url=${currentImage.url}`);
+      imageRegistry.registerVariant(selectedVariant.id, currentImage.url);
+
+      // Also ensure product image is registered
+      if (product?.id) {
+        console.log(`[ProductDetail] Also registering product image: productId=${product.id}, url=${allImages[0]?.url}`);
+        if (allImages[0]?.url) {
+          imageRegistry.register(product.id, allImages[0].url, product.slug);
+        }
+      }
+    }
+  }, [selectedVariant?.id, currentImage?.url, product?.id, product?.slug, allImages])
+
   // Preload images for faster transitions
   useEffect(() => {
     if (allImages.length > 0) {
@@ -473,9 +491,21 @@ const ProductDetail = () => {
       ? selectedVariant.id.toString()
       : undefined
 
+    // Register the current image before adding to cart
+    // This ensures the image is in the registry for the notification
+    if (currentImage?.url) {
+      if (selectedVariant?.id) {
+        // Register variant-specific image
+        imageRegistry.registerVariant(selectedVariant.id, currentImage.url);
+      }
+
+      // ALWAYS also register as product image (fallback for partial selections or when variant not fully selected)
+      imageRegistry.register(product.id, currentImage.url, product.slug);
+    }
+
     // Pass the product directly - CartContext only needs id, name, has_variants, and pricing
     addToCart(product, quantity, productVariantId)
-  }, [product, selectedVariant, quantity, addToCart])
+  }, [product, selectedVariant, quantity, addToCart, currentImage])
 
   const handleShare = async () => {
     if (!product) return
@@ -850,6 +880,19 @@ const ProductDetail = () => {
                       />
                     </div>
 
+                    {/* Hidden OptimizedImage for ImageRegistry registration */}
+                    <div className="sr-only" aria-hidden="true">
+                      <OptimizedImage
+                        src={currentImage?.url}
+                        alt={product.name}
+                        productId={product.id}
+                        productSlug={product.slug}
+                        variantId={selectedVariant?.id}
+                        eager
+                        key={`${product.id}-${selectedVariant?.id || 'base'}-${currentImage?.url}`}
+                      />
+                    </div>
+
                     {/* Mobile: Stock badge */}
                     <div className="md:hidden absolute top-4 left-4">
                       {inStock ? (
@@ -935,6 +978,19 @@ const ProductDetail = () => {
                     alt={currentImage?.alt}
                     className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                   />
+
+                  {/* Hidden OptimizedImage for ImageRegistry registration */}
+                  <div className="sr-only" aria-hidden="true">
+                    <OptimizedImage
+                      src={currentImage?.url}
+                      alt={product.name}
+                      productId={product.id}
+                      productSlug={product.slug}
+                      variantId={selectedVariant?.id}
+                      eager
+                      key={`${product.id}-${selectedVariant?.id || 'base'}-${currentImage?.url}`}
+                    />
+                  </div>
 
                   {/* Desktop: Zoom button */}
                   <Button

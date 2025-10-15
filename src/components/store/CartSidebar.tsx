@@ -86,6 +86,7 @@ export function CartSidebar() {
           size="sm"
           className="relative hover:bg-cyan-50 hover:text-cyan-600 p-1.5 rounded-xl transition-all duration-300"
           data-cart-trigger
+          aria-label={`Shopping cart with ${getTotalItems()} items`}
         >
           <ShoppingCart className="w-5 h-5" />
           {getTotalItems() > 0 && (
@@ -108,7 +109,7 @@ export function CartSidebar() {
                   size="sm"
                   onClick={clearCart}
                   className="text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-2"
-                  title="Clear cart"
+                  aria-label="Clear cart"
                 >
                   <Trash2 className="w-5 h-5" />
                 </Button>
@@ -118,7 +119,7 @@ export function CartSidebar() {
                   variant="ghost"
                   size="sm"
                   className="rounded-full p-2 hover:bg-gray-100"
-                  title="Close"
+                  aria-label="Close cart"
                 >
                   <X className="w-5 h-5" />
                 </Button>
@@ -190,6 +191,7 @@ export function CartSidebar() {
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           className="w-7 h-7 p-0 hover:bg-gray-100"
                           disabled={isLoading}
+                          aria-label={`Decrease quantity of ${item.product.name}`}
                         >
                           <Minus className="w-3 h-3" />
                         </Button>
@@ -200,6 +202,7 @@ export function CartSidebar() {
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           className="w-7 h-7 p-0 hover:bg-gray-100"
                           disabled={isLoading}
+                          aria-label={`Increase quantity of ${item.product.name}`}
                         >
                           <Plus className="w-3 h-3" />
                         </Button>
@@ -215,7 +218,7 @@ export function CartSidebar() {
                           onClick={() => removeFromCart(item.id)}
                           className="text-red-500 hover:text-red-700 hover:bg-red-50 w-7 h-7 p-0"
                           disabled={isLoading}
-                          title="Remove item"
+                          aria-label={`Remove ${item.product.name} from cart`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>

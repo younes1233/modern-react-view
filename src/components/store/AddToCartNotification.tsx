@@ -144,12 +144,12 @@ export function AddToCartNotification({ item, onClose }: AddToCartNotificationPr
         <div className="relative">
           {/* Product info - compact single row */}
           <div className="flex gap-2 md:gap-3 items-center">
-            <div className="relative flex-shrink-0">
+            <div className="relative flex-shrink-0 w-12 h-12 md:w-16 md:h-16">
               <img
                 key={imageUrl} // Force re-render when URL changes
                 src={imageUrl}
                 alt={item.name}
-                className="w-12 h-12 md:w-16 md:h-16 object-cover rounded-lg border border-gray-200/50"
+                className="w-full h-full object-cover rounded-lg border border-gray-200/50"
                 onError={(e) => {
                   e.currentTarget.src = '/placeholder.svg';
                 }}

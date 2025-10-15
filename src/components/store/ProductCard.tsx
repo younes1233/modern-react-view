@@ -143,6 +143,8 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
             alt={product.name}
             eager={priority}
             fetchPriority={priority ? 'high' : 'auto'}
+            productId={product.id}
+            productSlug={product.slug}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
           />
         </div>
@@ -174,6 +176,7 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
                 ? 'bg-red-500 text-white hover:bg-red-600'
                 : 'bg-white/90 hover:bg-white'
             }`}
+            aria-label={isInWishlist(product.id) ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
           >
             <Heart
               className={`w-3 h-3 ${
@@ -234,6 +237,7 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
               disabled={cartLoading}
               className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-lg w-9 h-9 p-0 flex items-center justify-center shadow-sm hover:shadow transition-all duration-200"
               variant="outline"
+              aria-label={`Add ${product.name} to cart`}
             >
               <ShoppingCart className="w-4 h-4 text-gray-600" />
             </Button>

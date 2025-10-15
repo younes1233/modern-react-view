@@ -10,6 +10,8 @@ import { toast } from '@/components/ui/sonner'
 import { cartService, Cart, AddToCartRequest } from '@/services/cartService'
 import { useAuth } from '@/contexts/AuthContext'
 import { metaPixelService } from '@/services/metaPixelService'
+import { imageRegistry } from '@/services/imageRegistry'
+import { getBestImageUrl } from '@/utils/imageUtils'
 
 // New API-based product interface for cart
 export interface ApiProduct {
@@ -179,7 +181,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [user, loadCart])
 
   const addToCart = useCallback(
-    async (product: ApiProduct, quantity = 1, productVariantId?: string) => {
+    async (product: ApiProduct, quantity = 1, productVariantId?: string, preloadedImage?: string) => {
       // Skip stock check if adding a variant (stock will be checked for the specific variant on the backend)
       const isOutOfStock =
         !productVariantId && product.stock !== undefined && product.stock <= 0
@@ -230,7 +232,35 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
         // Always use the ORIGINAL product data that was clicked
         let notificationName = product.name
-        const notificationImage = product.cover_image || '/placeholder.svg'
+
+        // Smart image selection with fallback chain:
+        // 1. Check ImageRegistry for variant image (if adding a variant)
+        // 2. Check ImageRegistry for product image (if adding base product)
+        // 3. Use preloadedImage if passed explicitly
+        // 4. Use product.cover_image from API
+        // 5. Fallback to placeholder
+        const notificationImage = (() => {
+          // Try variant image first if adding a variant
+          if (productVariantId) {
+            const cachedVariantImage = imageRegistry.getVariant(parseInt(productVariantId));
+            if (cachedVariantImage) return cachedVariantImage;
+          }
+
+          // Try product image from ImageRegistry (best performance)
+          const cachedImage = imageRegistry.get(product.id);
+          if (cachedImage) return cachedImage;
+
+          // Fallback to preloaded image if provided
+          if (preloadedImage) return preloadedImage;
+
+          // Fallback to product cover image
+          if (product.cover_image) {
+            return getBestImageUrl(product.cover_image);
+          }
+
+          // Final fallback
+          return '/placeholder.svg';
+        })()
         const notificationPrice = product.pricing?.price || 0
         const notificationQuantity = cartItem?.quantity || quantity // Show total quantity in cart
         const notificationCurrency = {

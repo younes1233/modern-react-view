@@ -1528,9 +1528,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 Home
               </h3>
               <div className="flex space-x-3 mb-8">
-                <a 
+                <a
                   href="tel:+96176591765"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                  aria-label="Call us at +961 76 591 765"
                 >
                   <Phone className="w-5 h-5" />
                 </a>
@@ -1619,9 +1620,10 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 Meem Home
               </h3>
               <div className="flex justify-center space-x-3 mb-6">
-                <a 
+                <a
                   href="tel:+96176591765"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
+                  aria-label="Call us at +961 76 591 765"
                 >
                   <Phone className="w-5 h-5" />
                 </a>

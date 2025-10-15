@@ -12,6 +12,7 @@ import { Product } from '@/data/storeData';
 import { useQuery } from '@tanstack/react-query';
 import { productService } from '@/services/productService';
 import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
+import { imageRegistry } from '@/services/imageRegistry';
 
 interface VariantSelectionModalProps {
   isOpen: boolean;
@@ -115,6 +116,14 @@ export function VariantSelectionModal({
 
   const handleConfirm = () => {
     if (selectedVariant) {
+      // Register the current variant image before adding to cart
+      // This ensures the image is in the registry for the notification
+      if (currentImage && fullProduct?.id) {
+        imageRegistry.registerVariant(selectedVariant.id, currentImage);
+        // Also register as product image (fallback)
+        imageRegistry.register(fullProduct.id, currentImage, fullProduct.slug);
+      }
+
       onConfirm(selectedVariant.id.toString(), fullProduct);
       onClose();
     }

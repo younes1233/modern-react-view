@@ -98,31 +98,41 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
     let currencyToSet: SelectedCurrency | null = null;
 
     try {
-      // Priority 1: User's saved preferences (from database)
-      if (user?.preferences) {
-        if (user.preferences.country) {
-          countryToSet = user.preferences.country;
-          localStorage.setItem(STORAGE_KEY_COUNTRY, JSON.stringify(user.preferences.country));
-        }
-        if (user.preferences.currency) {
-          currencyToSet = user.preferences.currency;
-          localStorage.setItem(STORAGE_KEY_CURRENCY, JSON.stringify(user.preferences.currency));
-        }
-      }
+      // NOTE: We intentionally skip user.preferences from database because:
+      // 1. Backend always sends prices in country's base currency
+      // 2. Old user preferences might have wrong currency (e.g., L.L instead of $)
+      // 3. localStorage + country base_currency is the source of truth
 
-      // Priority 2: Load from localStorage (for guests or if DB has no data)
-      if (!countryToSet) {
-        const savedCountry = localStorage.getItem(STORAGE_KEY_COUNTRY);
-        if (savedCountry) {
-          try {
-            countryToSet = JSON.parse(savedCountry);
-          } catch (e) {
-            console.error('Error parsing saved country:', e);
+      // Priority 1: Load from localStorage (for guests and authenticated users)
+      const savedCountry = localStorage.getItem(STORAGE_KEY_COUNTRY);
+      if (savedCountry) {
+        try {
+          const parsedCountry = JSON.parse(savedCountry);
+
+          // Fetch latest country data to ensure base_currency is up-to-date
+          const countries = await fetchCountries();
+          const freshCountry = countries.find(c => c.id === parsedCountry.id);
+
+          if (freshCountry) {
+            countryToSet = {
+              id: freshCountry.id,
+              name: freshCountry.name,
+              flag: freshCountry.flag,
+              iso_code: freshCountry.iso_code,
+              base_currency: freshCountry.base_currency
+            };
+            console.log('Loaded country from localStorage and refreshed base_currency:', countryToSet.name);
+          } else {
+            // If country no longer exists, keep the parsed version but it will be validated later
+            countryToSet = parsedCountry;
+            console.log('Loaded country from localStorage (no refresh available):', countryToSet?.name);
           }
+        } catch (e) {
+          console.error('Error parsing saved country:', e);
         }
       }
 
-      // Priority 3: Geo-detection (only if not already done and no saved preference)
+      // Priority 2: Geo-detection (only if not already done and no saved preference)
       if (!countryToSet && !localStorage.getItem(STORAGE_KEY_GEO_DETECTED)) {
         console.log('No saved country found, attempting geo-detection...');
 
@@ -151,9 +161,9 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
         }
       }
 
-      // Priority 4: Fallback to default country (Iraq)
+      // Priority 3: Fallback to default country (Lebanon)
       if (!countryToSet) {
-        console.log('No country found, falling back to default (Iraq)...');
+        console.log('No country found, falling back to default (Lebanon)...');
         const countries = await fetchCountries();
         const defaultCountry = countries.find(
           c => c.iso_code?.toUpperCase() === DEFAULT_COUNTRY_ISO

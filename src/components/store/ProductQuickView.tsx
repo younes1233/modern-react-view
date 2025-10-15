@@ -237,11 +237,12 @@ export function ProductQuickView({ product, open, onOpenChange }: ProductQuickVi
                   variant="outline"
                   onClick={handleWishlistToggle}
                   className={`px-4 ${
-                    isInWishlist(product.id) 
-                      ? 'text-red-500 border-red-500 hover:bg-red-50' 
+                    isInWishlist(product.id)
+                      ? 'text-red-500 border-red-500 hover:bg-red-50'
                       : 'hover:text-red-500 hover:border-red-500'
                   }`}
                   size="lg"
+                  aria-label={isInWishlist(product.id) ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`}
                 >
                   <Heart className={`w-5 h-5 ${isInWishlist(product.id) ? 'fill-current' : ''}`} />
                 </Button>

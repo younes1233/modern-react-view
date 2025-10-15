@@ -71,6 +71,10 @@ class GeoDetectionService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // Handle rate limiting gracefully
+        if (response.status === 429) {
+          console.info('Geo-detection rate limit reached (ipapi.co), using fallback service');
+        }
         return null;
       }
 
@@ -93,19 +97,24 @@ class GeoDetectionService {
   /**
    * Fallback detection using ip-api.com
    * Free tier: 45 requests/minute
+   * Note: HTTPS requires paid plan, but we only use this as fallback
    */
   private async tryIpApi(): Promise<GeoLocation | null> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
 
     try {
-      const response = await fetch('http://ip-api.com/json/', {
+      const response = await fetch('https://ip-api.com/json/', {
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
       if (!response.ok) {
+        // Handle specific error cases
+        if (response.status === 403) {
+          console.info('Geo-detection service access restricted (ip-api.com)');
+        }
         return null;
       }
 
