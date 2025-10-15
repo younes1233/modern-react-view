@@ -152,13 +152,13 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
         {/* Top Left Badges */}
         <div className="absolute top-1 left-1 flex flex-col gap-1">
           {hasDiscount && savings > 0 && (
-            <span className="bg-green-500 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-sm">
+            <span className="bg-green-500 text-white text-[8px] xs:text-[10px] sm:text-[11px] font-semibold px-1 xs:px-1.5 sm:px-2 py-0.5 rounded-full shadow-sm">
               Save {currencySymbol}
               {savings.toFixed(2)}
             </span>
           )}
           {product.flags?.is_new_arrival && (
-            <Badge className="bg-green-500 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">
+            <Badge className="bg-green-500 text-white text-[8px] xs:text-[9px] sm:text-[10px] px-1 xs:px-1.5 py-0.5 rounded font-medium">
               NEW
             </Badge>
           )}
@@ -188,13 +188,13 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
       </div>
 
       <CardContent
-        className="p-3 flex flex-col flex-1"
+        className="p-2 xs:p-2.5 sm:p-3 flex flex-col flex-1"
         onClick={handleProductClick}
       >
         {/* Product Title & Rating */}
         <div className="flex-1">
-          <div className="flex items-start justify-between gap-2 h-10">
-            <h3 className="font-medium text-sm text-gray-800 line-clamp-2 leading-tight flex-1">
+          <div className="flex items-start justify-between gap-1.5 xs:gap-2 min-h-[2.25rem] xs:min-h-[2.5rem]">
+            <h3 className="font-medium text-xs xs:text-sm text-gray-800 line-clamp-2 leading-tight flex-1">
               {product.name}
             </h3>
             <StarRating
@@ -205,18 +205,18 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
         </div>
 
         {/* Price & Express */}
-        <div className="space-y-2 mt-auto pt-2">
+        <div className="space-y-1.5 xs:space-y-2 mt-auto pt-1.5 xs:pt-2">
           {/* Price Section */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <div className="flex items-baseline gap-2">
-              <span className="text-base md:text-lg font-semibold text-gray-900">
+          <div className="flex items-center gap-1.5 xs:gap-2 flex-wrap">
+            <div className="flex items-baseline gap-1 xs:gap-1.5">
+              <span className="text-sm xs:text-base md:text-lg font-semibold text-gray-900">
                 {currencySymbol}
                 {backendDiscountedPrice.toFixed(2)}
               </span>
               {hasDiscount &&
                 backendOriginalPrice &&
                 backendOriginalPrice !== backendDiscountedPrice && (
-                  <span className="text-sm text-gray-400 line-through font-medium">
+                  <span className="text-xs xs:text-sm text-gray-400 line-through font-medium">
                     {currencySymbol}
                     {backendOriginalPrice.toFixed(2)}
                   </span>
@@ -225,21 +225,21 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
           </div>
 
           {/* Express + Cart */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center bg-red-500 text-white text-[11px] font-medium px-2.5 py-1 rounded-full">
-              <Package size={10} className="text-white mr-1" />
-              <span>EXPRESS</span>
+          <div className="flex items-center justify-between gap-1.5 xs:gap-2">
+            <div className="flex items-center bg-red-500 text-white text-[8px] xs:text-[10px] sm:text-[11px] font-medium px-1.5 xs:px-2 sm:px-2.5 py-0.5 xs:py-1 rounded-full">
+              <Package className="w-2 h-2 xs:w-2.5 xs:h-2.5 sm:w-3 sm:h-3 text-white mr-0.5 xs:mr-1" />
+              <span className="leading-none">EXPRESS</span>
             </div>
 
             <Button
               size="sm"
               onClick={handleAddToCart}
               disabled={cartLoading}
-              className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-lg w-9 h-9 p-0 flex items-center justify-center shadow-sm hover:shadow transition-all duration-200"
+              className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-gray-300 rounded-lg w-7 h-7 xs:w-8 xs:h-8 sm:w-9 sm:h-9 p-0 flex items-center justify-center shadow-sm hover:shadow transition-all duration-200"
               variant="outline"
               aria-label={`Add ${product.name} to cart`}
             >
-              <ShoppingCart className="w-4 h-4 text-gray-600" />
+              <ShoppingCart className="w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 text-gray-600" />
             </Button>
           </div>
         </div>
