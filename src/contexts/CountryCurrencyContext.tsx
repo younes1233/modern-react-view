@@ -54,7 +54,16 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
     const saved = localStorage.getItem(STORAGE_KEY_COUNTRY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // IMPORTANT: Clear if it has L.L currency (old stale data)
+        if (parsed?.base_currency?.symbol === 'L.L' || parsed?.base_currency?.code === 'LBP') {
+          console.log('Clearing stale country data with L.L currency');
+          localStorage.removeItem(STORAGE_KEY_COUNTRY);
+          localStorage.removeItem(STORAGE_KEY_CURRENCY);
+          localStorage.removeItem(STORAGE_KEY_GEO_DETECTED); // Force re-detection
+          return null;
+        }
+        return parsed;
       } catch (e) {
         return null;
       }
@@ -66,7 +75,14 @@ export function CountryCurrencyProvider({ children }: CountryCurrencyProviderPro
     const saved = localStorage.getItem(STORAGE_KEY_CURRENCY);
     if (saved) {
       try {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        // IMPORTANT: Clear if it's L.L (old stale data)
+        if (parsed?.symbol === 'L.L' || parsed?.code === 'LBP') {
+          console.log('Clearing stale currency data with L.L');
+          localStorage.removeItem(STORAGE_KEY_CURRENCY);
+          return null;
+        }
+        return parsed;
       } catch (e) {
         return null;
       }
