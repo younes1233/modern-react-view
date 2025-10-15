@@ -43,6 +43,8 @@ const StoreManagement = lazy(() => import("@/pages/StoreManagement"));
 
 // Auth Pages - Keep these eager loaded as they're small and frequently accessed
 import RoleLogin from "@/pages/RoleLogin";
+import Register from "@/pages/Register";
+import SignIn from "@/pages/SignIn";
 import ForgotPassword from "@/pages/ForgotPassword";
 import NotFound from "@/pages/NotFound";
 import Unauthorized from "@/pages/Unauthorized";
@@ -145,6 +147,8 @@ function App() {
                         <Routes>
                         {/* Public Auth Routes */}
                         {/* <Route path="/login" element={<Login />} /> */}
+                        <Route path="/signin" element={<SignIn />} />
+                        <Route path="/register" element={<Register />} />
                         <Route path="/role-login" element={<RoleLogin />} />
                         <Route path="/forgot-password" element={<ForgotPassword />} />
                         <Route path="/unauthorized" element={<Unauthorized />} />
