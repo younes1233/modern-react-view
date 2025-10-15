@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { OrderStatusEditor } from "@/components/OrderStatusEditor";
 import { OrderActions } from "@/components/OrderActions";
+import { OrderCancellationDialog } from "@/components/OrderCancellationDialog";
 import { Package, Truck, Clock, DollarSign, Plus, XCircle, Tag, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToExcel } from "@/utils/exportUtils";
@@ -123,7 +124,34 @@ const Orders = () => {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    toast.error(`Order #${orderId} deletion is not yet implemented`, { duration: 2500 });
+    if (!confirm(`Are you sure you want to delete order #${orderId}? This action can be undone later.`)) {
+      return;
+    }
+
+    try {
+      const response = await orderService.deleteOrder(orderId);
+
+      if (response.error) {
+        toast.error(response.message || `Failed to delete order #${orderId}`);
+        return;
+      }
+
+      toast.success(`Order #${orderId} has been deleted successfully`);
+      await queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+      await refetch();
+    } catch (error: any) {
+      console.error('Failed to delete order:', error);
+      toast.error(`Failed to delete order #${orderId}. Please try again.`);
+    }
+  };
+
+  const handleCancelOrderClick = (orderId: string) => {
+    setCancelOrderId(orderId);
+  };
+
+  const handleCancelOrderSuccess = async () => {
+    await queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    await refetch();
   };
 
   const handleDownloadOrder = (orderId: string) => {
@@ -148,6 +176,9 @@ const Orders = () => {
 
   /* -------- View Order (admin) -------- */
   const [viewOrderId, setViewOrderId] = useState<string | null>(null);
+
+  /* -------- Cancel Order Dialog -------- */
+  const [cancelOrderId, setCancelOrderId] = useState<string | null>(null);
 
   const {
     data: adminOrderView,
@@ -400,6 +431,7 @@ const Orders = () => {
                                 onEmail={handleEmailOrder}
                                 onTrack={handleTrackOrder}
                                 onRefund={handleRefundOrder}
+                                onCancel={handleCancelOrderClick}
                               />
                             </td>
                           </tr>
@@ -804,6 +836,14 @@ const Orders = () => {
               </ScrollArea>
             </DialogContent>
           </Dialog>
+
+          {/* Order Cancellation Dialog */}
+          <OrderCancellationDialog
+            isOpen={!!cancelOrderId}
+            onClose={() => setCancelOrderId(null)}
+            onSuccess={handleCancelOrderSuccess}
+            orderId={cancelOrderId}
+          />
         </main>
       </div>
     </SidebarProvider>

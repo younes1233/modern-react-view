@@ -173,6 +173,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
+    // Load cart when user changes (login/logout) or on mount
+    // The backend will automatically merge guest cart with user cart on first authenticated request
     loadCart()
   }, [user, loadCart])
 

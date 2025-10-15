@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,14 +15,38 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { SearchableDropdown, SearchableDropdownOption } from "@/components/ui/searchable-dropdown";
 import { addressService, Address, CreateAddressRequest } from "@/services/addressService";
 import { deliveryZoneService, DeliveryZone } from "@/services/deliveryZoneService";
 import { toast } from '@/components/ui/sonner';
 import { useAuth } from "@/contexts/AuthContext";
+
+// Country codes data
+const COUNTRY_CODES = [
+  { code: "+961", country: "Lebanon", flag: "🇱🇧" },
+  { code: "+1", country: "United States", flag: "🇺🇸" },
+  { code: "+44", country: "United Kingdom", flag: "🇬🇧" },
+  { code: "+971", country: "UAE", flag: "🇦🇪" },
+  { code: "+966", country: "Saudi Arabia", flag: "🇸🇦" },
+  { code: "+962", country: "Jordan", flag: "🇯🇴" },
+  { code: "+20", country: "Egypt", flag: "🇪🇬" },
+  { code: "+90", country: "Turkey", flag: "🇹🇷" },
+  { code: "+33", country: "France", flag: "🇫🇷" },
+  { code: "+49", country: "Germany", flag: "🇩🇪" },
+  { code: "+39", country: "Italy", flag: "🇮🇹" },
+  { code: "+34", country: "Spain", flag: "🇪🇸" },
+  { code: "+86", country: "China", flag: "🇨🇳" },
+  { code: "+91", country: "India", flag: "🇮🇳" },
+  { code: "+81", country: "Japan", flag: "🇯🇵" },
+  { code: "+82", country: "South Korea", flag: "🇰🇷" },
+  { code: "+61", country: "Australia", flag: "🇦🇺" },
+  { code: "+55", country: "Brazil", flag: "🇧🇷" },
+  { code: "+7", country: "Russia", flag: "🇷🇺" },
+  { code: "+27", country: "South Africa", flag: "🇿🇦" },
+];
 
 interface AddressFormProps {
   open: boolean;
@@ -37,6 +61,8 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
   const [validationErrors, setValidationErrors] = useState<Record<string, string[]>>({});
   const [deliveryZones, setDeliveryZones] = useState<DeliveryZone[]>([]);
   const [isFirstAddress, setIsFirstAddress] = useState(false);
+  const [selectedCountryCode, setSelectedCountryCode] = useState("+961"); // Default to Lebanon
+  const [phoneNumber, setPhoneNumber] = useState("");
   // Removed useToast hook;
   const { user } = useAuth();
 
@@ -87,26 +113,75 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
 
   useEffect(() => {
     if (address) {
+      // Parse existing phone number
+      const phone = address.phone || user?.phone || "";
+      parsePhoneNumber(phone);
+
       setFormData({
         type: address.type || "home",
         address: address.address,
         additional_address_details: "",
-        phone: address.phone || user?.phone || "",
+        phone: phone,
         delivery_zone_id: address.delivery_zone?.id,
         is_default: address.is_default,
       });
     } else {
+      // Parse user's phone number if available
+      const phone = user?.phone || "";
+      parsePhoneNumber(phone);
+
       setFormData({
         type: "home",
         address: "",
         additional_address_details: "",
-        phone: user?.phone || "",
+        phone: phone,
         delivery_zone_id: undefined,
         is_default: isFirstAddress,
       });
     }
     setValidationErrors({});
   }, [address, open, user, isFirstAddress]);
+
+  // Parse phone number to extract country code and number
+  const parsePhoneNumber = (phone: string) => {
+    if (!phone) {
+      setSelectedCountryCode("+961");
+      setPhoneNumber("");
+      return;
+    }
+
+    // Try to match with known country codes
+    const matchedCountry = COUNTRY_CODES.find(c => phone.startsWith(c.code));
+    if (matchedCountry) {
+      setSelectedCountryCode(matchedCountry.code);
+      setPhoneNumber(phone.substring(matchedCountry.code.length).trim());
+    } else {
+      // Default to Lebanon if no match
+      setSelectedCountryCode("+961");
+      setPhoneNumber(phone);
+    }
+  };
+
+  // Update formData.phone when country code or phone number changes
+  useEffect(() => {
+    const fullPhone = phoneNumber ? `${selectedCountryCode}${phoneNumber}` : "";
+    setFormData(prev => ({ ...prev, phone: fullPhone }));
+  }, [selectedCountryCode, phoneNumber]);
+
+  // Convert country codes to dropdown options
+  const countryCodeOptions: SearchableDropdownOption[] = COUNTRY_CODES.map((country) => ({
+    value: country.code,
+    label: country.code,
+    icon: country.flag,
+    subtitle: country.country,
+    searchTerms: [country.code.replace('+', ''), country.country],
+  }));
+
+  // Convert delivery zones to dropdown options
+  const deliveryZoneOptions: SearchableDropdownOption[] = deliveryZones.map((zone) => ({
+    value: zone.id.toString(),
+    label: zone.name,
+  }));
 
   const renderFieldError = (fieldName: string) => {
     const errors = validationErrors[fieldName];
@@ -207,35 +282,41 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
         {/* Delivery Zone */}
         <div>
           <Label htmlFor="delivery_zone_id" className="text-[11px] sm:text-xs">Delivery Zone *</Label>
-          <Select
+          <SearchableDropdown
+            options={deliveryZoneOptions}
             value={formData.delivery_zone_id?.toString() || ""}
-            onValueChange={(value) => updateFormData("delivery_zone_id", value ? Number(value) : undefined)}
-          >
-            <SelectTrigger className="h-7 sm:h-8 text-[11px] sm:text-xs">
-              <SelectValue placeholder="Select zone" />
-            </SelectTrigger>
-            <SelectContent>
-              {deliveryZones.map((zone) => (
-                <SelectItem key={zone.id} value={zone.id.toString()}>
-                  {zone.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            onChange={(value) => updateFormData("delivery_zone_id", value ? Number(value) : undefined)}
+            placeholder="Select zone"
+            noResultsText="No delivery zone found."
+          />
           {renderFieldError("delivery_zone_id")}
         </div>
 
         {/* Phone */}
         <div>
           <Label htmlFor="phone" className="text-[11px] sm:text-xs">Phone Number *</Label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="+1 (555) 123-4567"
-            className="h-7 sm:h-8 text-[11px] sm:text-xs"
-            value={formData.phone || ""}
-            onChange={(e) => updateFormData("phone", e.target.value)}
-          />
+          <div className="flex gap-1 sm:gap-1.5">
+            {/* Country Code Selector */}
+            <SearchableDropdown
+              options={countryCodeOptions}
+              value={selectedCountryCode}
+              onChange={setSelectedCountryCode}
+              placeholder="Code"
+              className="w-[100px] sm:w-[120px] shrink-0"
+              dropdownClassName="w-[calc(100vw-2rem)] sm:w-[400px]"
+              noResultsText="No country found."
+            />
+
+            {/* Phone Number Input */}
+            <Input
+              id="phone"
+              type="tel"
+              placeholder="71 123 456"
+              className="h-7 sm:h-8 text-[11px] sm:text-xs flex-1 min-w-0"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+            />
+          </div>
           {renderFieldError("phone")}
         </div>
 
@@ -244,7 +325,7 @@ const AddressForm = ({ open, onOpenChange, address, onSuccess, inline = false }:
           <Label htmlFor="address" className="text-[11px] sm:text-xs">Address *</Label>
           <Textarea
             id="address"
-            placeholder="Street, city, postal code"
+            placeholder="Building, floor, apartment, street, near landmark..."
             rows={inline ? 2 : 3}
             className="resize-none text-[11px] sm:text-xs min-h-[50px] sm:min-h-[60px] py-1.5"
             value={formData.address}

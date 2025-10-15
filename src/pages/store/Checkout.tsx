@@ -6,25 +6,33 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { CreditCard, Truck, Shield, ArrowLeft, Lock, MapPin, Plus, Tag } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/components/ui/sonner';
 import { AuthModal } from '@/components/auth/AuthModal';
+import AddressForm from '@/components/AddressForm';
 import { checkoutService, PricingBreakdown, isStockUnavailableError, UnavailableItem } from '@/services/checkoutService';
 import { useAddresses } from '@/hooks/useAddresses';
 import { usePaymentMethods } from '@/hooks/usePaymentMethods';
 import { AreebaCheckout } from '@/components/payment/AreebaCheckout';
 import { StockUnavailableModal } from '@/components/modals/StockUnavailableModal';
 import { metaPixelService } from '@/services/metaPixelService';
+import { useQueryClient } from '@tanstack/react-query';
+import { useCountryCurrency } from '@/contexts/CountryCurrencyContext';
+import { OptimizedImage } from '@/components/ui/optimized-image';
 
 const CheckoutNew = () => {
   const { items, getTotalPrice, clearCart } = useCart();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { selectedCurrency } = useCountryCurrency();
 
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isLoadingPricing, setIsLoadingPricing] = useState(false);
   const [stockUnavailableModal, setStockUnavailableModal] = useState<{
@@ -51,6 +59,9 @@ const CheckoutNew = () => {
   // Use custom hooks with automatic caching and cache invalidation
   const { addresses, isLoading: isLoadingAddresses } = useAddresses(user?.id);
   const { paymentMethods, isLoading: isLoadingPaymentMethods } = usePaymentMethods(!!user);
+
+  // Always use selectedCurrency symbol, fallback to $ (matches ProductCard pattern)
+  const currencySymbol = selectedCurrency?.symbol || '$';
 
   // Auto-select default address when addresses load
   useEffect(() => {
@@ -379,7 +390,7 @@ const CheckoutNew = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => navigate('/profile/addresses')}
+                    onClick={() => setAddressModalOpen(true)}
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add New
@@ -392,7 +403,7 @@ const CheckoutNew = () => {
                     <p className="text-gray-600 mb-4">No addresses found</p>
                     <Button
                       type="button"
-                      onClick={() => navigate('/profile/addresses')}
+                      onClick={() => setAddressModalOpen(true)}
                       variant="outline"
                     >
                       Add Address
@@ -498,7 +509,7 @@ const CheckoutNew = () => {
                       <p className="font-medium text-green-800">Coupon Applied: {appliedCoupon}</p>
                       {pricing?.coupon_discount && (
                         <p className="text-sm text-green-600">
-                          You saved {pricing.currency.symbol}{pricing.coupon_discount.toFixed(2)}
+                          You saved {currencySymbol}{pricing.coupon_discount.toFixed(2)}
                         </p>
                       )}
                     </div>
@@ -563,14 +574,14 @@ const CheckoutNew = () => {
 
                     return (
                       <div key={item.id} className="flex items-center space-x-3">
-                        <img
-                          src={item.product.image || '/placeholder.svg'}
-                          alt={item.product.name}
-                          className="w-16 h-16 object-cover rounded-md"
-                          onError={(e) => {
-                            e.currentTarget.src = '/placeholder.svg';
-                          }}
-                        />
+                        <div className="w-16 h-16 flex-shrink-0">
+                          <OptimizedImage
+                            src={item.product.image}
+                            alt={item.product.name || 'Product'}
+                            className="w-full h-full object-cover rounded-md"
+                            eager
+                          />
+                        </div>
                         <div className="flex-1">
                           <h4 className="font-medium text-sm line-clamp-2">{item.product.name}</h4>
                           {item.selectedVariations && item.selectedVariations.length > 0 && (
@@ -584,30 +595,30 @@ const CheckoutNew = () => {
                             <div className="space-y-1">
                               <div className="flex items-center space-x-2">
                                 <span className="text-xs line-through text-gray-400">
-                                  ${discountInfo.original_price.toFixed(2)}
+                                  {currencySymbol}{discountInfo.original_price.toFixed(2)}
                                 </span>
                                 <span className="text-sm font-medium text-green-600">
-                                  ${discountInfo.discounted_price.toFixed(2)}
+                                  {currencySymbol}{discountInfo.discounted_price.toFixed(2)}
                                 </span>
                                 <span className="text-xs bg-green-100 text-green-800 px-1.5 py-0.5 rounded">
                                   {discountInfo.discount_percentage}% OFF
                                 </span>
                               </div>
                               <p className="text-xs text-green-600">
-                                Save ${discountInfo.total_savings.toFixed(2)} × {item.quantity}
+                                Save {currencySymbol}{discountInfo.total_savings.toFixed(2)} × {item.quantity}
                               </p>
                             </div>
                           ) : (
-                            <p className="text-sm text-gray-600">${item.price.toFixed(2)} × {item.quantity}</p>
+                            <p className="text-sm text-gray-600">{currencySymbol}{item.price.toFixed(2)} × {item.quantity}</p>
                           )}
                         </div>
                         <div className="text-right">
                           <span className="font-medium">
-                            ${(item.price * item.quantity).toFixed(2)}
+                            {currencySymbol}{(item.price * item.quantity).toFixed(2)}
                           </span>
                           {discountInfo && (
                             <div className="text-xs text-green-600">
-                              -${discountInfo.total_savings.toFixed(2)}
+                              -{currencySymbol}{discountInfo.total_savings.toFixed(2)}
                             </div>
                           )}
                         </div>
@@ -643,7 +654,7 @@ const CheckoutNew = () => {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">Original Subtotal</span>
                           <span className="text-gray-500 line-through">
-                            {pricing.currency?.symbol || '$'}{originalSubtotal.toFixed(2)}
+                            {currencySymbol}{originalSubtotal.toFixed(2)}
                           </span>
                         </div>
                       ) : null;
@@ -654,62 +665,62 @@ const CheckoutNew = () => {
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Item Discounts</span>
                         <span>
-                          -{pricing.currency?.symbol || '$'}{pricing.item_discounts_total.toFixed(2)}
+                          -{currencySymbol}{pricing.item_discounts_total.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    
+
                     {/* Bulk discounts */}
                     {pricing.bulk_discount_total && pricing.bulk_discount_total > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Bulk Discount</span>
                         <span>
-                          -{pricing.currency?.symbol || '$'}{pricing.bulk_discount_total.toFixed(2)}
+                          -{currencySymbol}{pricing.bulk_discount_total.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    
+
                     {/* Promotion discounts */}
                     {pricing.promotion_discount > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Promotion Discount</span>
                         <span>
-                          -{pricing.currency?.symbol || '$'}{pricing.promotion_discount.toFixed(2)}
+                          -{currencySymbol}{pricing.promotion_discount.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    
+
                     {/* Coupon discounts */}
                     {pricing.coupon_discount > 0 ? (
                       <div className="flex justify-between text-sm text-green-600">
                         <span>Coupon Discount</span>
                         <span>
-                          -{pricing.currency?.symbol || '$'}{pricing.coupon_discount.toFixed(2)}
+                          -{currencySymbol}{pricing.coupon_discount.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
-                    
+
                     {/* Subtotal after discounts */}
                     <div className="flex justify-between text-sm font-medium border-t pt-2">
                       <span className="text-gray-900">Subtotal</span>
                       <span className="text-gray-900">
-                        {pricing.currency?.symbol || '$'}{pricing.subtotal.toFixed(2)}
+                        {currencySymbol}{pricing.subtotal.toFixed(2)}
                       </span>
                     </div>
-                    
+
                     {/* Total savings summary (only if there are discounts) */}
                     {pricing.total_savings && pricing.total_savings > 0 ? (
                       <div className="flex justify-between text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
                         <span>You Saved</span>
                         <span>
-                          {pricing.currency?.symbol || '$'}{pricing.total_savings.toFixed(2)}
+                          {currencySymbol}{pricing.total_savings.toFixed(2)}
                         </span>
                       </div>
                     ) : (pricing.promotion_discount > 0 || pricing.coupon_discount > 0) ? (
                       <div className="flex justify-between text-sm font-semibold text-green-600 bg-green-50 px-2 py-1 rounded">
                         <span>You Saved</span>
                         <span>
-                          {pricing.currency?.symbol || '$'}
+                          {currencySymbol}
                           {((pricing.promotion_discount || 0) + (pricing.coupon_discount || 0)).toFixed(2)}
                         </span>
                       </div>
@@ -718,21 +729,21 @@ const CheckoutNew = () => {
                       <div className="flex justify-between text-sm text-gray-600">
                         <span>VAT ({pricing.vat_rate}%)</span>
                         <span>
-                          {pricing.currency?.symbol || '$'}{pricing.vat_amount.toFixed(2)}
+                          {currencySymbol}{pricing.vat_amount.toFixed(2)}
                         </span>
                       </div>
                     ) : null}
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Delivery Fee</span>
                       <span className="font-semibold">
-                        {pricing.currency?.symbol || '$'}{(pricing.delivery_cost || 0).toFixed(2)}
+                        {currencySymbol}{(pricing.delivery_cost || 0).toFixed(2)}
                       </span>
                     </div>
                     <Separator />
                     <div className="flex justify-between text-lg font-bold">
                       <span>Total</span>
                       <span>
-                        {pricing.currency?.symbol || '$'}
+                        {currencySymbol}
                         {((pricing as any).grand_total ?? pricing.final_total ?? getTotalPrice()).toFixed(2)}
                       </span>
                     </div>
@@ -744,7 +755,7 @@ const CheckoutNew = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span>Subtotal</span>
-                      <span>${getTotalPrice().toFixed(2)}</span>
+                      <span>{currencySymbol}{getTotalPrice().toFixed(2)}</span>
                     </div>
                     <p className="text-xs text-gray-500 text-center">
                       Select an address to see delivery costs
@@ -799,6 +810,16 @@ const CheckoutNew = () => {
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
+      />
+
+      {/* Add Address Modal */}
+      <AddressForm
+        open={addressModalOpen}
+        onOpenChange={setAddressModalOpen}
+        onSuccess={() => {
+          // Invalidate addresses cache to force refresh
+          queryClient.invalidateQueries({ queryKey: ['addresses', user?.id] });
+        }}
       />
     </StoreLayout>
   );

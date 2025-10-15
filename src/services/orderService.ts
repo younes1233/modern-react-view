@@ -301,6 +301,59 @@ class OrderService extends BaseApiService {
       order_status: status
     });
   }
+
+  /** Soft delete order (admin) */
+  async deleteOrder(orderId: number | string): Promise<{ error: boolean; message: string; details: any }> {
+    return this.delete<{ error: boolean; message: string; details: any }>(`/admin/orders/${orderId}`);
+  }
+
+  /** Force delete order permanently (admin) */
+  async forceDeleteOrder(orderId: number | string): Promise<{ error: boolean; message: string; details: any }> {
+    return this.delete<{ error: boolean; message: string; details: any }>(`/admin/orders/${orderId}/force`);
+  }
+
+  /** Restore soft-deleted order (admin) */
+  async restoreOrder(orderId: number | string): Promise<{ error: boolean; message: string; details: any }> {
+    return this.post<{ error: boolean; message: string; details: any }>(`/admin/orders/${orderId}/restore`, {});
+  }
+
+  /** Cancel order with inventory restoration (admin) */
+  async cancelOrderAdmin(
+    orderId: number | string,
+    reason: string,
+    restoreInventory: boolean = true
+  ): Promise<{ error: boolean; message: string; details: any }> {
+    return this.request(`/admin/orders/${orderId}/cancel`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reason, restore_inventory: restoreInventory }),
+    });
+  }
+
+  /** Get cancellation impact analysis (admin) */
+  async getCancellationImpact(orderId: number | string): Promise<{
+    error: boolean;
+    message: string;
+    details: {
+      can_cancel: boolean;
+      current_status: string;
+      items_count: number;
+      has_payment: boolean;
+      transactions_count: number;
+      inventory_impact: Array<{
+        product_id: number;
+        variant_id: number | null;
+        quantity: number;
+        refunded_quantity: number;
+        quantity_to_restore: number;
+        current_stock: number | null;
+        inventory_found: boolean;
+      }>;
+      warnings: string[];
+    };
+  }> {
+    return this.get(`/admin/orders/${orderId}/cancel-impact`);
+  }
 }
 
 export const orderService = new OrderService();

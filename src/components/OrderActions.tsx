@@ -3,7 +3,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Eye, Edit, Trash2, Download, Mail, MoreHorizontal, Package, Truck, RefreshCw } from "lucide-react";
+import { Eye, Edit, Trash2, Download, Mail, MoreHorizontal, Package, Truck, RefreshCw, XCircle } from "lucide-react";
 import { toast } from '@/components/ui/sonner';
 
 interface OrderActionsProps {
@@ -16,6 +16,7 @@ interface OrderActionsProps {
   onEmail: (orderId: string) => void;
   onTrack?: (orderId: string) => void;
   onRefund?: (orderId: string) => void;
+  onCancel?: (orderId: string) => void;
 }
 
 export const OrderActions: React.FC<OrderActionsProps> = ({
@@ -28,6 +29,7 @@ export const OrderActions: React.FC<OrderActionsProps> = ({
   onEmail,
   onTrack,
   onRefund,
+  onCancel,
 }) => {
   // Removed useToast hook;
 
@@ -47,8 +49,17 @@ export const OrderActions: React.FC<OrderActionsProps> = ({
     }
   };
 
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel(orderId);
+    } else {
+      toast.success(`Order ${orderId} has been cancelled`, { duration: 2000 });
+    }
+  };
+
   const canBeTracked = ["shipped", "delivered"].includes(orderStatus);
   const canBeRefunded = ["delivered", "shipped"].includes(orderStatus);
+  const canBeCancelled = !["delivered", "completed", "cancelled", "canceled"].includes(orderStatus);
 
   return (
     <div className="flex items-center gap-1">
@@ -99,7 +110,14 @@ export const OrderActions: React.FC<OrderActionsProps> = ({
               Process Refund
             </DropdownMenuItem>
           )}
-          
+
+          {canBeCancelled && (
+            <DropdownMenuItem onClick={handleCancel} className="text-orange-600">
+              <XCircle className="w-4 h-4 mr-2" />
+              Cancel Order
+            </DropdownMenuItem>
+          )}
+
           <DropdownMenuSeparator />
           
           <AlertDialog>
