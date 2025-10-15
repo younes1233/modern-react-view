@@ -142,7 +142,7 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
             src={product.cover_image}
             alt={product.name}
             eager={priority}
-            fetchPriority={priority ? 'high' : 'auto'}
+            fetchpriority={priority ? 'high' : 'auto'}
             productId={product.id}
             productSlug={product.slug}
             className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"

@@ -47,11 +47,13 @@ export interface UpdateCountryRequest {
 
 class CountryService extends BaseApiService {
   async getCountries(): Promise<ApiResponse<CountriesResponse>> {
-    return this.get<ApiResponse<CountriesResponse>>('/admin/countries');
+    // Use public endpoint (no auth required)
+    return this.get<ApiResponse<CountriesResponse>>('/countries');
   }
 
   async getCountry(id: number): Promise<ApiResponse<CountryResponse>> {
-    return this.get<ApiResponse<CountryResponse>>(`/admin/countries/${id}`);
+    // Use public endpoint (no auth required)
+    return this.get<ApiResponse<CountryResponse>>(`/countries/${id}`);
   }
 
   async createCountry(data: CreateCountryRequest): Promise<ApiResponse<CountryResponse>> {

@@ -2,12 +2,12 @@ import { useState, useEffect, ImgHTMLAttributes, useRef } from 'react';
 import { getBestImageUrl, getImageFallbackUrls, imageLoadCache, ResponsiveImageUrls } from '@/utils/imageUtils';
 import { imageRegistry } from '@/services/imageRegistry';
 
-interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'loading' | 'fetchPriority'> {
+interface OptimizedImageProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 'loading'> {
   src: string | ResponsiveImageUrls | null | undefined;
   alt: string;
   className?: string;
   eager?: boolean; // For hero images that should load immediately
-  fetchPriority?: 'high' | 'low' | 'auto'; // Priority hint for browser
+  fetchpriority?: 'high' | 'low' | 'auto'; // Priority hint for browser (lowercase per React spec)
   productId?: number; // Optional: Register loaded image for this product
   productSlug?: string; // Optional: Product slug for slug-based lookups
   variantId?: number; // Optional: Register loaded image for this product variant
@@ -28,7 +28,7 @@ export function OptimizedImage({
   alt,
   className = '',
   eager = false,
-  fetchPriority,
+  fetchpriority,
   productId,
   productSlug,
   variantId,
@@ -121,7 +121,7 @@ export function OptimizedImage({
         alt={alt}
         className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-${isCached ? '0' : '200'}`}
         loading={eager ? 'eager' : 'lazy'}
-        fetchPriority={fetchPriority || (eager ? 'high' : 'auto')}
+        fetchpriority={fetchpriority || (eager ? 'high' : 'auto')}
         decoding="async"
         onError={handleError}
         onLoad={handleLoad}

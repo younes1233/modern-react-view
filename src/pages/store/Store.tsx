@@ -505,7 +505,7 @@ const Store = () => {
       className="max-w-full h-auto object-contain"
       style={{ objectPosition: "center center" }}
       loading="eager"
-      fetchPriority="high"
+      fetchpriority="high"
       decoding="async"
       onLoad={() => setHeroImageLoaded(true)}
       onError={(e) => {
