@@ -197,6 +197,21 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
       return;
     }
 
+    // If product has no variants, price is required
+    if (formData.variations.length === 0 && (!formData.price || formData.price <= 0)) {
+      toast.error("Price is required for products without variants", { duration: 2500 });
+      return;
+    }
+
+    // If product has variants, ensure all variants have price adjustments or main price is set
+    if (formData.variations.length > 0 && (!formData.price || formData.price <= 0)) {
+      const allVariantsHavePrices = formData.variations.every(v => v.priceAdjustment !== undefined);
+      if (!allVariantsHavePrices) {
+        toast.error("Either set a base price or ensure all variants have price adjustments", { duration: 2500 });
+        return;
+      }
+    }
+
     setSaving(true);
     try {
       await onSave(formData);
@@ -297,7 +312,9 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
             <CardContent className="space-y-4">
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="price">Price *</Label>
+                  <Label htmlFor="price">
+                    Price {formData.variations.length === 0 ? '*' : '(Optional for products with variants)'}
+                  </Label>
                   <Input
                     id="price"
                     type="number"
@@ -305,7 +322,6 @@ export function ProductModal({ isOpen, onClose, onSave, product, mode }: Product
                     value={formData.price}
                     onChange={(e) => setFormData(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                     placeholder="0.00"
-                    required
                   />
                 </div>
                 
