@@ -77,16 +77,24 @@ interface DashboardAccessResponse {
 }
 
 class AuthService extends BaseApiService {
-  async login(email: string, password: string): Promise<AuthResponse> {
+  /**
+   * Login with email or phone
+   * @param identifier - Email address or phone number (with country code)
+   * @param password - User password
+   */
+  async login(identifier: string, password: string): Promise<AuthResponse> {
+    // Determine if identifier is email or phone
+    const isEmail = identifier.includes('@');
+
     const response = await this.post<AuthResponse>('/auth/login', {
-      email,
+      ...(isEmail ? { email: identifier } : { phone: identifier }),
       password,
     });
-    
+
     if (response.details?.token && !response.error) {
       this.setToken(response.details.token);
     }
-    
+
     return response;
   }
 

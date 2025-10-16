@@ -257,7 +257,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                   src="/meemhome-logo.svg"
                   alt="Meem Home"
                   className="h-12 md:h-14 lg:h-16 w-auto object-contain"
-                  fetchPriority="high"
+                  fetchpriority="high"
                   loading="eager"
                 />
               </Link>
@@ -379,10 +379,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                             My Addresses
                           </Button>
                         </Link>
-                        <Link
-                          to="/wishlist"
-                          className="block w-full text-left"
-                        >
+                        <Link to="/wishlist" className="block w-full text-left">
                           <Button
                             variant="ghost"
                             className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
@@ -391,10 +388,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                             My Wishlist
                           </Button>
                         </Link>
-                        <Link
-                          to="/returns"
-                          className="block w-full text-left"
-                        >
+                        <Link to="/returns" className="block w-full text-left">
                           <Button
                             variant="ghost"
                             className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300"
@@ -546,7 +540,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                       ? 'animate-scale-in opacity-0'
                       : 'opacity-0'
                   }`}
-                  fetchPriority="high"
+                  fetchpriority="high"
                   loading="eager"
                   style={{
                     animationDelay: isMobileMenuClosing
@@ -607,9 +601,9 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             {/* Store Navigation */}
             <div
               className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400"
-              style={{ 
+              style={{
                 scrollbarWidth: 'thin',
-                msOverflowStyle: 'auto'
+                msOverflowStyle: 'auto',
               }}
             >
               <div className="space-y-1">
@@ -1022,73 +1016,73 @@ export function StoreLayout({ children }: StoreLayoutProps) {
           <div className="flex justify-center items-center">
             <div className="flex items-center gap-4 md:gap-8 lg:gap-12 text-sm md:text-base lg:text-lg font-light tracking-wider">
               <div className="flex items-center gap-4 md:gap-8 lg:gap-12 animate-scroll">
-                <a 
-                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
-                  target="_blank" 
+                <a
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   TIKTOK
                 </a>
-                <a 
-                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
-                  target="_blank" 
+                <a
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   INSTAGRAM
                 </a>
-                <a 
-                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
-                  target="_blank" 
+                <a
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   FACEBOOK
                 </a>
-                <a 
-                  href="https://youtube.com/@meemhome?si=Kz9tpa_2EUQ8eno1" 
-                  target="_blank" 
+                <a
+                  href="https://youtube.com/@meemhome?si=Kz9tpa_2EUQ8eno1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   YOUTUBE
                 </a>
-                <a 
-                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
-                  target="_blank" 
+                <a
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   TIKTOK
                 </a>
-                <a 
-                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
-                  target="_blank" 
+                <a
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   INSTAGRAM
                 </a>
-                <a 
-                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
-                  target="_blank" 
+                <a
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   FACEBOOK
                 </a>
-                <a 
-                  href="https://youtube.com/@meemhome?si=Kz9tpa_2EUQ8eno1" 
-                  target="_blank" 
+                <a
+                  href="https://youtube.com/@meemhome?si=Kz9tpa_2EUQ8eno1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
                   YOUTUBE
                 </a>
-                <a 
-                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
-                  target="_blank" 
+                <a
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-cyan-100 transition-all duration-500 hover:scale-110 transform cursor-pointer whitespace-nowrap"
                 >
@@ -1315,10 +1309,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
             </span>
           </Link>
 
-          <Link
-            to="/categories"
-            className="flex flex-col items-center group"
-          >
+          <Link to="/categories" className="flex flex-col items-center group">
             <div
               className={`p-1 rounded-xl transition-all duration-300 ${
                 location.pathname === '/categories'
@@ -1393,10 +1384,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Link
-                      to="/addresses"
-                      className="block w-full text-left"
-                    >
+                    <Link to="/addresses" className="block w-full text-left">
                       <Button
                         variant="ghost"
                         className="w-full justify-start rounded-xl hover:bg-red-50 hover:text-red-600 transition-all duration-300"
@@ -1405,10 +1393,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                         My Addresses
                       </Button>
                     </Link>
-                    <Link
-                      to="/wishlist"
-                      className="block w-full text-left"
-                    >
+                    <Link to="/wishlist" className="block w-full text-left">
                       <Button
                         variant="ghost"
                         className="w-full justify-start rounded-xl hover:bg-blue-50 hover:text-blue-600 transition-all duration-300"
@@ -1417,10 +1402,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                         My Wishlist
                       </Button>
                     </Link>
-                    <Link
-                      to="/returns"
-                      className="block w-full text-left"
-                    >
+                    <Link to="/returns" className="block w-full text-left">
                       <Button
                         variant="ghost"
                         className="w-full justify-start rounded-xl hover:bg-purple-50 hover:text-purple-600 transition-all duration-300"
@@ -1535,25 +1517,25 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 >
                   <Phone className="w-5 h-5" />
                 </a>
-                <a 
-                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
-                  target="_blank" 
+                <a
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
                   <span className="text-sm font-bold">f</span>
                 </a>
-                <a 
-                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
-                  target="_blank" 
+                <a
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
                   <span className="text-sm font-bold">in</span>
                 </a>
-                <a 
-                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
-                  target="_blank" 
+                <a
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
@@ -1627,25 +1609,25 @@ export function StoreLayout({ children }: StoreLayoutProps) {
                 >
                   <Phone className="w-5 h-5" />
                 </a>
-                <a 
-                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr" 
-                  target="_blank" 
+                <a
+                  href="https://www.facebook.com/share/1BrYDVRLpd/?mibextid=wwXIfr"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
                   <span className="text-sm font-bold">f</span>
                 </a>
-                <a 
-                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3" 
-                  target="_blank" 
+                <a
+                  href="https://www.instagram.com/meem.comm?igsh=ejJ0M3FycHFoZ3F3"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
                   <span className="text-sm font-bold">in</span>
                 </a>
-                <a 
-                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1" 
-                  target="_blank" 
+                <a
+                  href="https://www.tiktok.com/@meem.comm?_t=ZS-8ycT95KXoal&_r=1"
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-cyan-400 rounded-full flex items-center justify-center text-white hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
