@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import { StoreLayout } from '@/components/store/StoreLayout';
 import { ProductCard } from '@/components/store/ProductCard';
 import { Button } from '@/components/ui/button';
@@ -244,8 +245,33 @@ const StoreProducts = () => {
   const hasActiveFilters = debouncedSearchQuery || (selectedCategory && selectedCategory !== 'all') || sortBy !== 'newest' ||
     priceRange[0] > 0 || priceRange[1] < maxPrice || selectedFeatures.length > 0 || selectedRating !== null;
 
+  // Get current URL for Open Graph
+  const currentUrl = `https://meemhome.com/products${searchParams.toString() ? `?${searchParams.toString()}` : ''}`;
+
+  // Get category name for meta tags
+  const categoryName = selectedCategory && selectedCategory !== 'all'
+    ? categories.find(c => c.slug === selectedCategory)?.name || selectedCategory
+    : 'All Products';
+
+  const pageTitle = selectedCategory && selectedCategory !== 'all'
+    ? `${categoryName} - Meem-Home`
+    : 'Products - Meem-Home';
+
+  const pageDescription = selectedCategory && selectedCategory !== 'all'
+    ? `Shop ${categoryName} at Meem-Home. Find the best deals on quality products.`
+    : 'Browse all products at Meem-Home. Quality products at the best prices.';
+
   return (
     <StoreLayout>
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={currentUrl} />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href={currentUrl} />
+      </Helmet>
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Header */}
         <div className="mb-8">
