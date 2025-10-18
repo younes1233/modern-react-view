@@ -158,7 +158,7 @@ const ProductCardComponent = ({ product, priority = false }: ProductCardProps) =
             </span>
           )}
           {product.flags?.is_new_arrival && (
-            <Badge className="bg-green-500 text-white text-[8px] xs:text-[9px] sm:text-[10px] px-1 xs:px-1.5 py-0.5 rounded font-medium">
+            <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-[8px] xs:text-[9px] sm:text-[10px] px-1.5 xs:px-2 py-0.5 rounded-full font-bold shadow-md animate-pulse">
               NEW
             </Badge>
           )}

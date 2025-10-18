@@ -142,6 +142,7 @@ const ProductDetail = () => {
   const [swiperInstance, setSwiperInstance] = useState<any>(null)
   const [isBeginning, setIsBeginning] = useState(true)
   const [isEnd, setIsEnd] = useState(false)
+  const [mobileThumbnailSwiper, setMobileThumbnailSwiper] = useState<any>(null)
 
   // Fetch product from API with selected country and currency
   console.log('ProductDetail: slug from params:', slug)
@@ -251,36 +252,32 @@ const ProductDetail = () => {
     const deltaY = touch.clientY - touchStartRef.current.y
 
     // Only handle horizontal swipes (ignore vertical scrolling)
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      const allImages = product.media.images.map((img) => {
-        const mainUrls = img.urls?.main
-        const thumbnailUrls = img.urls?.thumbnails
-
-        if (!mainUrls || !thumbnailUrls) {
-          return {
-            url: img.urls?.original || '/placeholder.svg',
-            alt: img.alt_text || product.name,
-            zoomUrl: img.urls?.original || '/placeholder.svg',
-            thumbnailUrl: img.urls?.original || '/placeholder.svg',
-          }
-        }
-
-        return {
-          url: getImageUrl(mainUrls),
-          alt: img.alt_text || product.name,
-          zoomUrl: img.urls?.zoom?.desktop || getImageUrl(mainUrls),
-          thumbnailUrl: getImageUrl(thumbnailUrls),
-        }
-      })
-
+    // Reduced threshold from 50 to 30 for easier swiping
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
       if (deltaX > 0 && selectedImage > 0) {
         // Swipe right - previous image
         setSelectedImage(selectedImage - 1)
         setUserNavigatedGallery(true)
+        // Show thumbnails on swipe
+        setShowThumbnails(true)
+        if (thumbnailTimeoutRef.current) {
+          clearTimeout(thumbnailTimeoutRef.current)
+        }
+        thumbnailTimeoutRef.current = setTimeout(() => {
+          setShowThumbnails(false)
+        }, 1200)
       } else if (deltaX < 0 && selectedImage < allImages.length - 1) {
         // Swipe left - next image
         setSelectedImage(selectedImage + 1)
         setUserNavigatedGallery(true)
+        // Show thumbnails on swipe
+        setShowThumbnails(true)
+        if (thumbnailTimeoutRef.current) {
+          clearTimeout(thumbnailTimeoutRef.current)
+        }
+        thumbnailTimeoutRef.current = setTimeout(() => {
+          setShowThumbnails(false)
+        }, 1200)
       }
     }
 
@@ -301,7 +298,8 @@ const ProductDetail = () => {
   }
 
   const handleImageClick = () => {
-    if (window.innerWidth < 768) {
+    // Only open zoom if it wasn't a swipe
+    if (window.innerWidth < 768 && touchStartRef.current === null) {
       setShowImageZoom(true)
     }
   }
@@ -345,7 +343,8 @@ const ProductDetail = () => {
   const allImages = useMemo(() => {
     if (!product?.media?.images) return []
 
-    return product.media.images.map((img) => {
+    // Start with product images
+    const productImages = product.media.images.map((img) => {
       // Add null checks for image URLs
       const mainUrls = img.urls?.main
       const thumbnailUrls = img.urls?.thumbnails
@@ -366,8 +365,38 @@ const ProductDetail = () => {
         thumbnailUrl: getImageUrl(thumbnailUrls),
       }
     })
+
+    // Add variant images that have their own images (not fallbacks to product images)
+    const variantImages = (product.variants || [])
+      .filter((variant) => variant.image && variant.image.urls) // Only include variants with actual images
+      .map((variant) => {
+        const imageObj = variant.image
+        const mainUrls = imageObj.urls?.main
+        const thumbnailUrls = imageObj.urls?.thumbnails
+
+        if (!mainUrls || !thumbnailUrls) {
+          return {
+            url: imageObj.urls?.original || '/placeholder.svg',
+            alt: `${product.name} - ${variant.sku}`,
+            zoomUrl: imageObj.urls?.original || '/placeholder.svg',
+            thumbnailUrl: imageObj.urls?.original || '/placeholder.svg',
+            variantId: variant.id, // Track which variant this image belongs to
+          }
+        }
+
+        return {
+          url: getImageUrl(mainUrls),
+          alt: `${product.name} - ${variant.sku}`,
+          zoomUrl: imageObj.urls?.zoom?.desktop || getImageUrl(mainUrls),
+          thumbnailUrl: getImageUrl(thumbnailUrls),
+          variantId: variant.id, // Track which variant this image belongs to
+        }
+      })
+
+    // Combine product images and variant images
+    return [...productImages, ...variantImages]
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [product?.id])
+  }, [product?.id, product?.variants])
 
   // Memoize current image calculation
   const currentImage = useMemo(() => {
@@ -375,21 +404,24 @@ const ProductDetail = () => {
     if (userNavigatedGallery || !selectedVariant || !selectedVariant.image) {
       return allImages[selectedImage] || allImages[0]
     }
-    
+
     // Otherwise, show variant image when variant is selected
     if (selectedVariant && selectedVariant.image) {
       // Parse variant image using responsive image logic
       let variantImageUrl = '/placeholder.svg'
       let zoomImageUrl = '/placeholder.svg'
       let thumbnailImageUrl = '/placeholder.svg'
-      
+
       if (typeof selectedVariant.image === 'string') {
         variantImageUrl = selectedVariant.image
         zoomImageUrl = selectedVariant.image
         thumbnailImageUrl = selectedVariant.image
-      } else if (selectedVariant.image && typeof selectedVariant.image === 'object') {
+      } else if (
+        selectedVariant.image &&
+        typeof selectedVariant.image === 'object'
+      ) {
         const imageObj = selectedVariant.image
-        
+
         if (imageObj.urls) {
           // Use responsive image logic for main image
           const mainUrls = imageObj.urls.main
@@ -404,14 +436,15 @@ const ProductDetail = () => {
               variantImageUrl = imageObj.urls.original || '/placeholder.svg'
             }
           }
-          
+
           // Use zoom image (prefer desktop zoom, then main desktop, then original)
-          zoomImageUrl = imageObj.urls.zoom?.desktop || 
-                        imageObj.urls.main?.desktop || 
-                        imageObj.urls.catalog?.desktop ||
-                        imageObj.urls.original || 
-                        variantImageUrl
-          
+          zoomImageUrl =
+            imageObj.urls.zoom?.desktop ||
+            imageObj.urls.main?.desktop ||
+            imageObj.urls.catalog?.desktop ||
+            imageObj.urls.original ||
+            variantImageUrl
+
           // Use thumbnail URLs
           const thumbnailUrls = imageObj.urls.thumbnails
           if (thumbnailUrls) {
@@ -420,12 +453,17 @@ const ProductDetail = () => {
             thumbnailImageUrl = variantImageUrl
           }
         } else {
-          variantImageUrl = imageObj.desktop || imageObj.tablet || imageObj.mobile || imageObj.url || '/placeholder.svg'
+          variantImageUrl =
+            imageObj.desktop ||
+            imageObj.tablet ||
+            imageObj.mobile ||
+            imageObj.url ||
+            '/placeholder.svg'
           zoomImageUrl = variantImageUrl
           thumbnailImageUrl = variantImageUrl
         }
       }
-      
+
       return {
         url: variantImageUrl,
         alt: `${product?.name || 'Product'} - ${selectedVariant.sku}`,
@@ -433,34 +471,99 @@ const ProductDetail = () => {
         thumbnailUrl: thumbnailImageUrl,
       }
     }
-    
-    return allImages[selectedImage] || allImages[0]
-  }, [selectedVariant, selectedImage, allImages, product?.name, getImageUrl, userNavigatedGallery])
 
-  // Handle variant selection - reset image index when variant changes
+    return allImages[selectedImage] || allImages[0]
+  }, [
+    selectedVariant,
+    selectedImage,
+    allImages,
+    product?.name,
+    getImageUrl,
+    userNavigatedGallery,
+  ])
+
+  // Handle variant selection - switch to variant's image in gallery when variant changes
   useEffect(() => {
-    if (selectedVariant && selectedVariant.image) {
-      // When a variant with an image is selected, reset to show the variant image
+    if (
+      selectedVariant &&
+      selectedVariant.image &&
+      selectedVariant.image.urls
+    ) {
+      // Find the index of this variant's image in the gallery
+      const variantImageIndex = allImages.findIndex(
+        (img) => img.variantId === selectedVariant.id
+      )
+
+      if (variantImageIndex !== -1) {
+        // Variant image found in gallery, switch to it
+        setSelectedImage(variantImageIndex)
+        setUserNavigatedGallery(false) // Reset gallery navigation flag
+
+        // Show thumbnails briefly on mobile to indicate image changed
+        if (window.innerWidth < 768 && allImages.length > 1) {
+          setShowThumbnails(true)
+          if (thumbnailTimeoutRef.current) {
+            clearTimeout(thumbnailTimeoutRef.current)
+          }
+          thumbnailTimeoutRef.current = setTimeout(() => {
+            setShowThumbnails(false)
+          }, 1500)
+        }
+      } else {
+        // Variant image not in gallery (fallback image), show first product image
+        setSelectedImage(0)
+        setUserNavigatedGallery(false)
+      }
+    } else if (selectedVariant === null) {
+      // When variant is deselected, go back to first image
       setSelectedImage(0)
-      setUserNavigatedGallery(false) // Reset gallery navigation flag
+      setUserNavigatedGallery(false)
+
+      // Show thumbnails briefly on mobile to indicate back to default
+      if (window.innerWidth < 768 && allImages.length > 1) {
+        setShowThumbnails(true)
+        if (thumbnailTimeoutRef.current) {
+          clearTimeout(thumbnailTimeoutRef.current)
+        }
+        thumbnailTimeoutRef.current = setTimeout(() => {
+          setShowThumbnails(false)
+        }, 1500)
+      }
     }
-  }, [selectedVariant])
+  }, [selectedVariant?.id, allImages]) // Use selectedVariant?.id to trigger only when variant actually changes
 
   // Register variant image in ImageRegistry when variant is selected
   useEffect(() => {
     if (selectedVariant?.id && currentImage?.url) {
-      console.log(`[ProductDetail] Registering variant image: variantId=${selectedVariant.id}, url=${currentImage.url}`);
-      imageRegistry.registerVariant(selectedVariant.id, currentImage.url);
+      console.log(
+        `[ProductDetail] Registering variant image: variantId=${selectedVariant.id}, url=${currentImage.url}`
+      )
+      imageRegistry.registerVariant(selectedVariant.id, currentImage.url)
 
       // Also ensure product image is registered
       if (product?.id) {
-        console.log(`[ProductDetail] Also registering product image: productId=${product.id}, url=${allImages[0]?.url}`);
+        console.log(
+          `[ProductDetail] Also registering product image: productId=${product.id}, url=${allImages[0]?.url}`
+        )
         if (allImages[0]?.url) {
-          imageRegistry.register(product.id, allImages[0].url, product.slug);
+          imageRegistry.register(product.id, allImages[0].url, product.slug)
         }
       }
     }
-  }, [selectedVariant?.id, currentImage?.url, product?.id, product?.slug, allImages])
+  }, [
+    selectedVariant?.id,
+    currentImage?.url,
+    product?.id,
+    product?.slug,
+    allImages,
+  ])
+
+  // Sync mobile thumbnail swiper when selectedImage changes (like zoom modal)
+  useEffect(() => {
+    if (mobileThumbnailSwiper && showThumbnails) {
+      mobileThumbnailSwiper.slideTo(selectedImage)
+    }
+  }, [selectedImage, mobileThumbnailSwiper, showThumbnails])
 
   // Preload images for faster transitions
   useEffect(() => {
@@ -496,11 +599,11 @@ const ProductDetail = () => {
     if (currentImage?.url) {
       if (selectedVariant?.id) {
         // Register variant-specific image
-        imageRegistry.registerVariant(selectedVariant.id, currentImage.url);
+        imageRegistry.registerVariant(selectedVariant.id, currentImage.url)
       }
 
       // ALWAYS also register as product image (fallback for partial selections or when variant not fully selected)
-      imageRegistry.register(product.id, currentImage.url, product.slug);
+      imageRegistry.register(product.id, currentImage.url, product.slug)
     }
 
     // Pass the product directly - CartContext only needs id, name, has_variants, and pricing
@@ -607,7 +710,16 @@ const ProductDetail = () => {
     } else {
       addToWishlist(wishlistProduct)
     }
-  }, [product, currentPrice, originalPrice, allImages, inStock, isInWishlist, removeFromWishlist, addToWishlist])
+  }, [
+    product,
+    currentPrice,
+    originalPrice,
+    allImages,
+    inStock,
+    isInWishlist,
+    removeFromWishlist,
+    addToWishlist,
+  ])
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -623,14 +735,17 @@ const ProductDetail = () => {
   }
 
   // Memoize breadcrumbs - only recalculate when category path or product name changes
-  const breadcrumbs = useMemo(() => [
-    { label: 'Home', path: '/' },
-    ...(product?.category?.path?.map((cat) => ({
-      label: cat.name,
-      path: `/categories/${cat.slug}`,
-    })) || []),
-    { label: product?.name || 'Product', path: '', current: true },
-  ], [product?.category?.path, product?.name])
+  const breadcrumbs = useMemo(
+    () => [
+      { label: 'Home', path: '/' },
+      ...(product?.category?.path?.map((cat) => ({
+        label: cat.name,
+        path: `/categories/${cat.slug}`,
+      })) || []),
+      { label: product?.name || 'Product', path: '', current: true },
+    ],
+    [product?.category?.path, product?.name]
+  )
 
   // Conditional rendering for loading and error states
   if (isLoading) {
@@ -800,7 +915,7 @@ const ProductDetail = () => {
                                     setSelectedImage(index)
                                     setUserNavigatedGallery(true)
                                   }}
-                                  className={`w-full h-20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md ${
+                                  className={`w-full h-20 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md flex items-center justify-center ${
                                     index === selectedImage
                                       ? 'ring-2 ring-cyan-500 shadow-lg scale-105'
                                       : 'hover:ring-1 hover:ring-gray-300 hover:scale-102'
@@ -809,7 +924,7 @@ const ProductDetail = () => {
                                   <img
                                     src={image.thumbnailUrl}
                                     alt={image.alt}
-                                    className="w-full h-full object-cover"
+                                    className="max-w-full max-h-full object-contain"
                                   />
                                 </button>
                               </SwiperSlide>
@@ -845,7 +960,7 @@ const ProductDetail = () => {
                 <div className="flex-1">
                   <div
                     ref={imageContainerRef}
-                    className="relative aspect-square bg-gray-50 rounded-2xl group"
+                    className="relative aspect-square bg-gray-50 rounded-2xl group flex items-center justify-center"
                     onTouchStart={handleTouchStart}
                     onTouchEnd={handleTouchEnd}
                     onMouseEnter={() => handleImageInteraction()}
@@ -856,13 +971,13 @@ const ProductDetail = () => {
                         src={currentImage?.url}
                         zoomSrc={currentImage?.url}
                         zoomType="click"
-                        className="w-full h-full"
+                        className="max-w-full max-h-full"
                         imgAttributes={{
                           alt: currentImage?.alt,
                           style: {
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            objectFit: 'contain',
                           },
                         }}
                       />
@@ -870,13 +985,13 @@ const ProductDetail = () => {
 
                     {/* Mobile: Regular image with click to zoom */}
                     <div
-                      className="md:hidden w-full h-full cursor-pointer"
+                      className="md:hidden w-full h-full cursor-pointer flex items-center justify-center"
                       onClick={handleImageClick}
                     >
                       <img
                         src={currentImage?.url}
                         alt={currentImage?.alt}
-                        className="w-full h-full object-cover"
+                        className="max-w-full max-h-full object-contain"
                       />
                     </div>
 
@@ -889,22 +1004,30 @@ const ProductDetail = () => {
                         productSlug={product.slug}
                         variantId={selectedVariant?.id}
                         eager
-                        key={`${product.id}-${selectedVariant?.id || 'base'}-${currentImage?.url}`}
+                        key={`${product.id}-${selectedVariant?.id || 'base'}-${
+                          currentImage?.url
+                        }`}
                       />
                     </div>
 
-                    {/* Mobile: Stock badge */}
-                    <div className="md:hidden absolute top-4 left-4">
-                      {inStock ? (
-                        <Badge className="bg-green-500 text-white">
-                          In Stock
+                    {/* Desktop/Mobile: Product status badges */}
+                    <div className="absolute top-4 left-4 flex flex-col gap-1">
+                      {product.flags.is_featured && (
+                        <Badge className="bg-cyan-500 text-xs w-fit">
+                          Featured
                         </Badge>
-                      ) : (
-                        <Badge variant="destructive">Out of Stock</Badge>
+                      )}
+                      {product.flags.is_new_arrival && (
+                        <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-md animate-pulse w-fit">
+                          NEW
+                        </Badge>
+                      )}
+                      {product.flags.on_sale && (
+                        <Badge className="bg-red-500 text-xs w-fit">Sale</Badge>
                       )}
                     </div>
 
-                    {/* Mobile: Wishlist and Share buttons - aligned with badge */}
+                    {/* Mobile: Wishlist and Share buttons */}
                     <div className="md:hidden absolute top-4 right-4 flex items-center space-x-1">
                       <Button
                         variant="ghost"
@@ -968,7 +1091,7 @@ const ProductDetail = () => {
               <div className="md:hidden">
                 <div
                   ref={imageContainerRef}
-                  className="relative aspect-square bg-gray-50 overflow-hidden group cursor-pointer"
+                  className="relative aspect-square bg-gray-50 overflow-hidden group cursor-pointer flex items-center justify-center"
                   onClick={handleImageClick}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
@@ -976,7 +1099,7 @@ const ProductDetail = () => {
                   <img
                     src={currentImage?.url}
                     alt={currentImage?.alt}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    className="max-w-full max-h-full object-contain transition-transform duration-300"
                   />
 
                   {/* Hidden OptimizedImage for ImageRegistry registration */}
@@ -988,7 +1111,9 @@ const ProductDetail = () => {
                       productSlug={product.slug}
                       variantId={selectedVariant?.id}
                       eager
-                      key={`${product.id}-${selectedVariant?.id || 'base'}-${currentImage?.url}`}
+                      key={`${product.id}-${selectedVariant?.id || 'base'}-${
+                        currentImage?.url
+                      }`}
                     />
                   </div>
 
@@ -1002,18 +1127,24 @@ const ProductDetail = () => {
                     <ZoomIn className="w-4 h-4" />
                   </Button>
 
-                  {/* Mobile: Stock badge */}
-                  <div className="absolute top-4 left-4">
-                    {inStock ? (
-                      <Badge className="bg-green-500 text-white">
-                        In Stock
+                  {/* Mobile: Product status badges */}
+                  <div className="absolute top-4 left-4 flex flex-col gap-1">
+                    {product.flags.is_featured && (
+                      <Badge className="bg-cyan-500 text-xs w-fit">
+                        Featured
                       </Badge>
-                    ) : (
-                      <Badge variant="destructive">Out of Stock</Badge>
+                    )}
+                    {product.flags.is_new_arrival && (
+                      <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-md animate-pulse w-fit">
+                        NEW
+                      </Badge>
+                    )}
+                    {product.flags.on_sale && (
+                      <Badge className="bg-red-500 text-xs w-fit">Sale</Badge>
                     )}
                   </div>
 
-                  {/* Mobile: Wishlist and Share buttons - aligned with badge */}
+                  {/* Mobile: Wishlist and Share buttons */}
                   <div className="absolute top-4 right-4 flex items-center space-x-1">
                     <Button
                       variant="ghost"
@@ -1047,129 +1178,134 @@ const ProductDetail = () => {
                     </Button>
                   </div>
 
-                  {/* Mobile: Smaller pagination dots */}
+                  {/* Mobile: Thumbnail gallery above dots - auto-hide */}
                   {allImages.length > 1 && (
-                    <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
-                      <div className="flex space-x-1">
-                        {allImages.map((_, index) => (
-                          <button
-                            key={index}
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setSelectedImage(index)
-                              setUserNavigatedGallery(true)
+                    <div
+                      className={`absolute bottom-10 left-1/2 transform -translate-x-1/2 z-10 transition-all duration-200 ease-out ${
+                        showThumbnails
+                          ? 'opacity-100 translate-y-0 scale-100'
+                          : 'opacity-0 translate-y-2 scale-95 pointer-events-none'
+                      }`}
+                      onMouseEnter={() => setShowThumbnails(true)}
+                      onMouseLeave={() => setShowThumbnails(false)}
+                      onTouchStart={() => {
+                        setShowThumbnails(true)
+                        if (thumbnailTimeoutRef.current) {
+                          clearTimeout(thumbnailTimeoutRef.current)
+                        }
+                        thumbnailTimeoutRef.current = setTimeout(() => {
+                          setShowThumbnails(false)
+                        }, 1200)
+                      }}
+                    >
+                      <div className="bg-white/90 backdrop-blur-lg rounded-xl px-3 shadow-sm border border-white/40">
+                        <div className="h-14 flex items-center">
+                          <Swiper
+                            onSwiper={setMobileThumbnailSwiper}
+                            watchSlidesProgress
+                            spaceBetween={6}
+                            slidesPerView="auto"
+                            slideToClickedSlide={true}
+                            centeredSlides={true}
+                            centeredSlidesBounds={true}
+                            initialSlide={selectedImage}
+                            className="thumbnail-swiper"
+                            style={{
+                              maxWidth: 'calc(100vw - 32px)',
                             }}
-                            className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
-                              index === selectedImage
-                                ? 'bg-black scale-125'
-                                : 'bg-black/50 hover:bg-white/75'
-                            }`}
-                          />
-                        ))}
+                          >
+                            {allImages.map((image, index) => (
+                              <SwiperSlide key={index} style={{ width: '54px', height: '56px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setSelectedImage(index)
+                                    setUserNavigatedGallery(true)
+                                  }}
+                                  className={`rounded-lg overflow-hidden transition-all duration-200 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex items-center justify-center ${
+                                    index === selectedImage
+                                      ? 'w-12 h-12 border-2 border-cyan-400 opacity-100 scale-100 shadow-[0_0_8px_rgba(6,182,212,0.4)]'
+                                      : 'w-9 h-9 border border-gray-200 opacity-50 hover:opacity-80 scale-95'
+                                  }`}
+                                >
+                                  <img
+                                    src={image.thumbnailUrl}
+                                    alt={image.alt}
+                                    className="w-full h-full object-cover"
+                                  />
+                                </button>
+                              </SwiperSlide>
+                            ))}
+                          </Swiper>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Mobile: Pagination dots - auto-hide */}
+                  {allImages.length > 1 && (
+                    <div
+                      className={`absolute bottom-2 left-1/2 transform -translate-x-1/2 transition-all duration-500 ${
+                        showThumbnails
+                          ? 'opacity-100'
+                          : 'opacity-0 pointer-events-none'
+                      }`}
+                    >
+                      <div className="bg-white/90 backdrop-blur-sm rounded-full px-2 py-1 shadow-md">
+                        <div className="flex space-x-1.5">
+                          {allImages.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setSelectedImage(index)
+                                setUserNavigatedGallery(true)
+                              }}
+                              className={`rounded-full transition-all duration-300 ${
+                                index === selectedImage
+                                  ? 'w-2 h-2 bg-cyan-500 scale-125'
+                                  : 'w-1.5 h-1.5 bg-gray-400 hover:bg-gray-600'
+                              }`}
+                            />
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
                 </div>
               </div>
-
-              {/* Enhanced Thumbnail Navigation with Animation - No Layout Impact */}
-              {allImages.length > 1 && (
-                <div className="relative">
-                  {/* Mobile: Conditional thumbnails with absolute positioning and centering */}
-                  <div
-                    className={`md:hidden absolute -top-2 left-1/2 transform -translate-x-1/2 z-10 transition-all duration-300 ${
-                      showThumbnails || selectedImage > 0
-                        ? 'opacity-100 pointer-events-auto'
-                        : 'opacity-0 pointer-events-none'
-                    }`}
-                  >
-                    <div className="max-w-xs overflow-x-auto scrollbar-hide">
-                      <div className="flex gap-2 pb-1 pt-1 justify-center">
-                        {allImages.map((image, index) => (
-                          <button
-                            key={index}
-                            onClick={() => {
-                              setSelectedImage(index)
-                              setUserNavigatedGallery(true)
-                              setShowThumbnails(false)
-                            }}
-                            className={`flex-shrink-0 rounded-lg overflow-hidden transition-all duration-300 hover:shadow-md transform ${
-                              thumbnailsVisible
-                                ? `translate-y-0 opacity-100`
-                                : 'translate-y-4 opacity-0'
-                            } ${
-                              index === selectedImage
-                                ? 'w-12 h-12 shadow-lg ring-2 ring-cyan-500'
-                                : 'w-10 h-10 hover:scale-105'
-                            }`}
-                            style={{
-                              transitionDelay: `${index * 50}ms`,
-                            }}
-                          >
-                            <img
-                              src={image.thumbnailUrl}
-                              alt={image.alt}
-                              className="w-full h-full object-cover transition-transform duration-200"
-                            />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Product Info */}
             <div
               className={`lg:col-span-1 px-4 lg:px-0 lg:py-0 space-y-4 ${
-                allImages.length > 1 ? 'pt-8 pb-6 lg:pt-0' : 'py-6'
+                allImages.length > 1 ? 'pt-3 pb-6 lg:pt-0' : 'py-6'
               }`}
             >
-              {/* Brand & Category */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  {product.category && (
-                    <Badge variant="secondary" className="capitalize text-xs">
-                      {product.category.name}
-                    </Badge>
-                  )}
-                  {product.flags.is_featured && (
-                    <Badge className="bg-cyan-500 text-xs">Featured</Badge>
-                  )}
-                  {product.flags.is_new_arrival && (
-                    <Badge className="bg-emerald-500 text-xs">New</Badge>
-                  )}
-                  {product.flags.on_sale && (
-                    <Badge className="bg-red-500 text-xs">Sale</Badge>
-                  )}
-                </div>
-                <div className="hidden md:flex items-center space-x-2">
-                  <Button variant="ghost" size="sm" onClick={handleShare}>
-                    <Share className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleWishlistToggle}
-                    className={isInWishlist(product.id) ? 'text-red-500' : ''}
-                  >
-                    <Heart
-                      className={`w-4 h-4 ${
-                        isInWishlist(product.id) ? 'fill-current' : ''
-                      }`}
-                    />
-                  </Button>
-                </div>
-              </div>
-
               {/* Product Title, Price and Rating */}
               <div className="space-y-3">
-                <div className="flex items-start justify-between gap-4">
-                  <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight flex-1">
-                    {product.name}
-                  </h1>
-                  <div className="flex flex-col items-end gap-1">
+                <div className="relative">
+                  {/* Review section - floated to top right */}
+                  <div className="float-right ml-4 mb-2 flex flex-col items-end gap-1">
+                    <div className="hidden md:flex items-center space-x-2">
+                      <Button variant="ghost" size="sm" onClick={handleShare}>
+                        <Share className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleWishlistToggle}
+                        className={
+                          isInWishlist(product.id) ? 'text-red-500' : ''
+                        }
+                      >
+                        <Heart
+                          className={`w-4 h-4 ${
+                            isInWishlist(product.id) ? 'fill-current' : ''
+                          }`}
+                        />
+                      </Button>
+                    </div>
                     <StarRating
                       rating={
                         reviewsData?.statistics?.average_rating
@@ -1189,11 +1325,30 @@ const ProductDetail = () => {
                           setAuthModalOpen(true)
                         }
                       }}
-                      className="text-xs text-cyan-600 hover:text-cyan-700 font-medium hover:underline transition-all duration-200"
+                      className="text-xs text-cyan-600 hover:text-cyan-700 font-medium hover:underline transition-all duration-200 whitespace-nowrap"
                     >
                       {user ? 'Write a review' : 'Sign in to review'}
                     </button>
                   </div>
+
+                  {/* Product name - flows around the floated review */}
+                  <div className="space-y-1">
+                    <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-900 leading-tight">
+                      {product.name}
+                    </h1>
+                    {inStock ? (
+                      <Badge className="bg-green-500 text-white text-xs">
+                        In Stock
+                      </Badge>
+                    ) : (
+                      <Badge variant="destructive" className="text-xs">
+                        Out of Stock
+                      </Badge>
+                    )}
+                  </div>
+
+                  {/* Clear float */}
+                  <div className="clear-both"></div>
                 </div>
 
                 {/* Two-column grid layout for tablet and desktop */}
@@ -1202,19 +1357,19 @@ const ProductDetail = () => {
                   <div className="space-y-3">
                     {/* Price Section */}
                     <div className="space-y-2">
-                      <div className="flex items-baseline space-x-3">
-                        <span className="text-3xl lg:text-4xl font-bold text-gray-900">
+                      <div className="flex items-baseline flex-wrap gap-x-3 gap-y-1">
+                        <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900">
                           {selectedCurrency?.symbol || '$'}
                           {currentPrice ? currentPrice.toFixed(2) : '0.00'}
                         </span>
                         {originalPrice > currentPrice && (
-                          <span className="text-lg text-gray-500 line-through">
+                          <span className="text-base md:text-lg text-gray-500 line-through">
                             {selectedCurrency?.symbol || '$'}
                             {originalPrice ? originalPrice.toFixed(2) : '0.00'}
                           </span>
                         )}
                         {originalPrice > currentPrice && (
-                          <Badge className="bg-red-500 text-white">
+                          <Badge className="bg-red-500 text-white text-xs">
                             {Math.round(
                               ((originalPrice - currentPrice) / originalPrice) *
                                 100
@@ -1240,9 +1395,8 @@ const ProductDetail = () => {
                           ))}
                         </div>
                       )}
-                      <p className="text-sm text-gray-600">
-                        Inclusive of VAT (
-                        {selectedCurrency?.code || 'USD'})
+                      <p className="text-sm md:text-base text-gray-600">
+                        Inclusive of VAT ({selectedCurrency?.code || 'USD'})
                       </p>
                     </div>
 
@@ -1304,8 +1458,7 @@ const ProductDetail = () => {
                             <Truck className="w-2.5 h-2.5 text-green-600" />
                           </div>
                           <span className="text-gray-700">
-                            Delivery:{' '}
-                            {selectedCurrency?.symbol || '$'}
+                            Delivery: {selectedCurrency?.symbol || '$'}
                             {product.delivery?.cost
                               ? Number(product.delivery.cost).toFixed(2)
                               : '0.00'}
@@ -1857,21 +2010,11 @@ const ProductDetail = () => {
         </div>
 
         <ImageZoom
-          images={
-            selectedVariant && selectedVariant.image
-              ? [{ url: currentImage.zoomUrl, alt: currentImage.alt }]
-              : allImages.map((img) => ({ url: img.zoomUrl, alt: img.alt }))
-          }
-          selectedIndex={
-            selectedVariant && selectedVariant.image ? 0 : selectedImage
-          }
+          images={allImages.map((img) => ({ url: img.zoomUrl, alt: img.alt }))}
+          selectedIndex={selectedImage}
           open={showImageZoom}
           onOpenChange={setShowImageZoom}
-          onImageChange={
-            selectedVariant && selectedVariant.image
-              ? () => {}
-              : setSelectedImage
-          }
+          onImageChange={setSelectedImage}
         />
 
         {/* Auth Modal */}
