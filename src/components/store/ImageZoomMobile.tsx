@@ -36,6 +36,7 @@ export function ImageZoomMobile({
   onOpenChange,
   onImageChange,
 }: ImageZoomMobileProps) {
+  // Custom zoom/pan state
   const [zoom, setZoom] = useState(1)
   const [position, setPosition] = useState({ x: 0, y: 0 })
   const [rotation, setRotation] = useState(0)
@@ -52,23 +53,53 @@ export function ImageZoomMobile({
     x: number
     y: number
   } | null>(null)
+
   const [thumbsSwiper, setThumbsSwiper] = useState<SwiperType | null>(null)
+  const [showUI, setShowUI] = useState(true)
+  const [showGestureHints, setShowGestureHints] = useState(false)
+  const [loadedImages, setLoadedImages] = useState<Set<number>>(new Set())
+  const [preloadedImages, setPreloadedImages] = useState<Set<number>>(new Set())
+  const [maxZoom, setMaxZoom] = useState(5)
+  const [isAnimating, setIsAnimating] = useState(false)
+  const [ariaAnnouncement, setAriaAnnouncement] = useState('')
   const swiperRef = useRef<SwiperType | null>(null)
   const imageRef = useRef<HTMLImageElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
+  const uiTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+  const isAtBoundaryRef = useRef(false)
 
-  const handleZoomIn = useCallback(() => {
-    setZoom((prev) => Math.min(prev + 0.5, 5))
+  // Auto-hide UI after 3 seconds of inactivity
+  const resetUITimeout = useCallback(() => {
+    if (uiTimeoutRef.current) {
+      clearTimeout(uiTimeoutRef.current)
+    }
+    setShowUI(true)
+    uiTimeoutRef.current = setTimeout(() => {
+      setShowUI(false)
+    }, 3000)
   }, [])
 
-  const handleZoomOut = useCallback(() => {
-    setZoom((prev) => Math.max(prev - 0.5, 0.5))
+  // Haptic feedback helper
+  const triggerHaptic = useCallback((style: 'light' | 'medium' | 'heavy' = 'light') => {
+    if ('vibrate' in navigator) {
+      const patterns = {
+        light: 10,
+        medium: 20,
+        heavy: 30,
+      }
+      navigator.vibrate(patterns[style])
+    }
   }, [])
 
-  const handleRotate = useCallback(() => {
-    setRotation((prev) => prev + 90)
-  }, [])
+  // Toggle UI visibility on tap
+  const toggleUI = useCallback(() => {
+    setShowUI((prev) => !prev)
+    if (!showUI) {
+      resetUITimeout()
+    }
+  }, [showUI, resetUITimeout])
 
+  // Reset zoom/pan to defaults
   const resetTransform = useCallback(() => {
     setZoom(1)
     setPosition({ x: 0, y: 0 })
@@ -82,7 +113,7 @@ export function ImageZoomMobile({
       const containerRect = containerRef.current.getBoundingClientRect()
 
       if (zoom === 1) {
-        const newZoom = 2
+        const newZoom = 2 // Reduced zoom level for comfortable viewing
         const tapX = clientX - containerRect.left
         const tapY = clientY - containerRect.top
         const centerX = containerRect.width / 2
@@ -92,8 +123,10 @@ export function ImageZoomMobile({
 
         setZoom(newZoom)
         setPosition({ x: newX, y: newY })
+        setAriaAnnouncement(`Zoomed in to ${Math.round(newZoom * 100)}%`)
       } else {
         resetTransform()
+        setAriaAnnouncement('Zoomed out to fit screen')
       }
     },
     [zoom, resetTransform]
@@ -109,9 +142,18 @@ export function ImageZoomMobile({
     )
   }, [])
 
+  const getTouchCenter = useCallback((touches: Touch[]) => {
+    if (touches.length < 2) return { x: 0, y: 0 }
+    const touch1 = touches[0]
+    const touch2 = touches[1]
+    return {
+      x: (touch1.clientX + touch2.clientX) / 2,
+      y: (touch1.clientY + touch2.clientY) / 2,
+    }
+  }, [])
+
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      e.preventDefault()
       const touches = e.touches
 
       if (touches.length === 1) {
@@ -141,24 +183,74 @@ export function ImageZoomMobile({
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      e.preventDefault()
       const touches = e.touches
 
-      if (touches.length === 1 && isDragging && zoom > 1) {
+      if (touches.length === 1 && isDragging && zoom > 1 && containerRef.current && imageRef.current) {
         const touch = touches[0]
-        setPosition({
-          x: touch.clientX - dragStart.x,
-          y: touch.clientY - dragStart.y,
-        })
-      } else if (touches.length === 2 && lastPinchDistance) {
+        const attemptedX = touch.clientX - dragStart.x
+        const attemptedY = touch.clientY - dragStart.y
+
+        // Constraint: Keep image edges within container bounds
+        const container = containerRef.current.getBoundingClientRect()
+        const image = imageRef.current
+
+        // Get the rendered size of the image (after CSS max-width/max-height but before zoom)
+        const imageRect = image.getBoundingClientRect()
+        const baseWidth = imageRect.width
+        const baseHeight = imageRect.height
+
+        // After zoom, the visual size becomes:
+        const zoomedWidth = baseWidth * zoom
+        const zoomedHeight = baseHeight * zoom
+
+        // Maximum pan offset to keep edges within bounds
+        // This is the standard formula for image viewers
+        const maxX = Math.max(0, (zoomedWidth - container.width) / 2)
+        const maxY = Math.max(0, (zoomedHeight - container.height) / 2)
+
+        // Apply strict constraints - no overflow allowed
+        const newX = Math.max(-maxX, Math.min(maxX, attemptedX))
+        const newY = Math.max(-maxY, Math.min(maxY, attemptedY))
+
+        // Trigger haptic only once when first hitting boundary
+        const isAtBoundary = attemptedX !== newX || attemptedY !== newY
+        if (isAtBoundary && !isAtBoundaryRef.current) {
+          triggerHaptic('light')
+          isAtBoundaryRef.current = true
+        } else if (!isAtBoundary) {
+          isAtBoundaryRef.current = false
+        }
+
+        setPosition({ x: newX, y: newY })
+      } else if (touches.length === 2 && lastPinchDistance && containerRef.current) {
         const touchArray = Array.from(touches) as Touch[]
         const distance = getTouchDistance(touchArray)
         const scale = distance / lastPinchDistance
-        setZoom((prev) => Math.max(0.5, Math.min(5, prev * scale)))
+        const newZoom = Math.max(0.5, Math.min(maxZoom, zoom * scale))
+
+        // Haptic feedback when hitting zoom limits
+        if ((zoom >= maxZoom && scale > 1) || (zoom <= 0.5 && scale < 1)) {
+          triggerHaptic('light')
+        }
+
+        // Get pinch center point
+        const pinchCenter = getTouchCenter(touchArray)
+        const containerRect = containerRef.current.getBoundingClientRect()
+
+        // Calculate focal point relative to container
+        const focalX = pinchCenter.x - containerRect.left - containerRect.width / 2
+        const focalY = pinchCenter.y - containerRect.top - containerRect.height / 2
+
+        // Adjust position to zoom towards focal point
+        const newX = position.x - focalX * (scale - 1)
+        const newY = position.y - focalY * (scale - 1)
+
+        setZoom(newZoom)
+        setPosition({ x: newX, y: newY })
         setLastPinchDistance(distance)
       }
     },
-    [isDragging, zoom, dragStart, lastPinchDistance, getTouchDistance]
+    [isDragging, zoom, dragStart, lastPinchDistance, getTouchDistance, getTouchCenter, position]
   )
 
   const handlePrevious = useCallback(() => {
@@ -192,6 +284,7 @@ export function ImageZoomMobile({
             Math.abs(touch.clientY - lastTap.y) < 50
           ) {
             handleDoubleTapZoom(touch.clientX, touch.clientY)
+            triggerHaptic('medium')
             setLastTap(null)
             setIsDragging(false)
             setTouchStart(null)
@@ -203,6 +296,30 @@ export function ImageZoomMobile({
               x: touch.clientX,
               y: touch.clientY,
             })
+            // Single tap - toggle UI
+            if (zoom === 1) {
+              toggleUI()
+            }
+          }
+        }
+
+        // Snap back to boundaries when released beyond edges
+        if (isDragging && zoom > 1 && containerRef.current && imageRef.current) {
+          const container = containerRef.current.getBoundingClientRect()
+          const image = imageRef.current.getBoundingClientRect()
+          const scaledWidth = image.width * zoom
+          const scaledHeight = image.height * zoom
+          const maxX = Math.max(0, (scaledWidth - container.width) / 2)
+          const maxY = Math.max(0, (scaledHeight - container.height) / 2)
+
+          // Snap back with animation if beyond boundaries
+          const constrainedX = Math.max(-maxX, Math.min(maxX, position.x))
+          const constrainedY = Math.max(-maxY, Math.min(maxY, position.y))
+
+          if (constrainedX !== position.x || constrainedY !== position.y) {
+            // Animate back to boundary
+            setPosition({ x: constrainedX, y: constrainedY })
+            triggerHaptic('light')
           }
         }
       }
@@ -215,15 +332,93 @@ export function ImageZoomMobile({
       touchStart,
       lastTap,
       handleDoubleTapZoom,
+      zoom,
+      toggleUI,
+      isDragging,
+      position,
     ]
   )
 
+  // Handle image loading - track each image individually and calculate max zoom
+  const handleImageLoad = useCallback((index: number) => {
+    setLoadedImages((prev) => new Set(prev).add(index))
+
+    // Calculate smart zoom limit based on image resolution
+    if (index === selectedIndex && imageRef.current && containerRef.current) {
+      const img = imageRef.current
+      const container = containerRef.current
+      const containerRect = container.getBoundingClientRect()
+
+      // Calculate how much the image is currently scaled down
+      const scaleX = containerRect.width / img.naturalWidth
+      const scaleY = containerRect.height / img.naturalHeight
+      const currentScale = Math.min(scaleX, scaleY)
+
+      // Allow zooming up to actual size (1:1 pixel ratio) but not beyond
+      // Add a small buffer (1.2x) to allow slight over-zoom for comfort
+      const calculatedMaxZoom = Math.max(2, Math.min(5, (1 / currentScale) * 1.2))
+      setMaxZoom(calculatedMaxZoom)
+    }
+  }, [selectedIndex])
+
+  const handleImageError = useCallback((index: number) => {
+    setLoadedImages((prev) => new Set(prev).add(index))
+  }, [])
+
+  // Preload adjacent images for instant switching
+  const preloadImage = useCallback((index: number) => {
+    if (index < 0 || index >= images.length || preloadedImages.has(index)) return
+
+    const img = new Image()
+    img.onload = () => {
+      setPreloadedImages((prev) => new Set(prev).add(index))
+    }
+    img.src = images[index].url
+  }, [images, preloadedImages])
+
+  // Preload next and previous images
+  useEffect(() => {
+    if (!open) return
+
+    // Preload adjacent images
+    const prevIndex = selectedIndex > 0 ? selectedIndex - 1 : images.length - 1
+    const nextIndex = selectedIndex < images.length - 1 ? selectedIndex + 1 : 0
+
+    // Delay preloading to prioritize current image
+    const timer = setTimeout(() => {
+      if (images.length > 1) {
+        preloadImage(prevIndex)
+        preloadImage(nextIndex)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [open, selectedIndex, images.length, preloadImage])
+
   useEffect(() => {
     if (open) {
+      // Start with animation state
+      setIsAnimating(true)
+
+      // Trigger entrance animation on next frame
+      requestAnimationFrame(() => {
+        setIsAnimating(false)
+      })
+
       resetTransform()
+      setShowUI(true)
+      resetUITimeout()
+
+      // Show gesture hints on first open (can be stored in localStorage for production)
+      const hasSeenHints = sessionStorage.getItem('hasSeenZoomHints')
+      if (!hasSeenHints) {
+        setShowGestureHints(true)
+        sessionStorage.setItem('hasSeenZoomHints', 'true')
+        setTimeout(() => setShowGestureHints(false), 4000)
+      }
+
       // Update swiper to correct slide when reopening
       if (swiperRef.current) {
-        // Use setTimeout to ensure swiper is fully initialized
         setTimeout(() => {
           if (swiperRef.current && swiperRef.current.activeIndex !== selectedIndex) {
             swiperRef.current.slideTo(selectedIndex, 0)
@@ -231,46 +426,78 @@ export function ImageZoomMobile({
         }, 0)
       }
     }
-  }, [open, resetTransform, selectedIndex])
+    // Don't reset loaded images when closing - keep them cached for better UX
+
+    return () => {
+      if (uiTimeoutRef.current) {
+        clearTimeout(uiTimeoutRef.current)
+      }
+    }
+  }, [open, resetTransform, selectedIndex, resetUITimeout])
+
+  // Sync thumbnail swiper when selectedIndex changes
+  useEffect(() => {
+    if (thumbsSwiper && open) {
+      thumbsSwiper.slideTo(selectedIndex)
+      setAriaAnnouncement(`Image ${selectedIndex + 1} of ${images.length}`)
+    }
+  }, [selectedIndex, thumbsSwiper, open, images.length])
+
+  // Disable/enable swiper based on zoom level
+  useEffect(() => {
+    if (swiperRef.current) {
+      if (zoom > 1) {
+        swiperRef.current.disable()
+      } else {
+        swiperRef.current.enable()
+      }
+    }
+  }, [zoom])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-none max-h-none w-screen h-screen p-0 bg-white border-0 overflow-hidden"
-        aria-label="Image viewer"
+        className={`max-w-none max-h-none w-screen h-screen p-0 bg-slate-900 border-0 overflow-hidden transition-transform duration-300 ${
+          isAnimating ? 'scale-95 opacity-0' : 'scale-100 opacity-100'
+        }`}
         aria-describedby="image-viewer-description"
-        role="dialog"
-        aria-modal="true"
         style={{ height: '100vh' }}
       >
-        <div id="image-viewer-description" className="sr-only">
-          Image viewer with zoom and navigation controls
+        <span id="image-viewer-description" className="sr-only">
+          Image viewer with gesture controls: pinch to zoom, swipe to navigate, double-tap to zoom in/out, single tap to show/hide controls
+        </span>
+        {/* Screen reader announcements */}
+        <div className="sr-only" role="status" aria-live="polite" aria-atomic="true">
+          {ariaAnnouncement}
         </div>
-        {/* Layer 1: White background container - always 100vh */}
-        <div className="absolute inset-0 bg-white" />
+        {/* Layer 1: Modern dark background with subtle cyan tint */}
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950" />
 
-        {/* Layer 2: Image centered in screen with Swiper */}
-        <div className="absolute inset-0 z-10">
-          <Swiper
-            modules={[Navigation, Thumbs]}
-            initialSlide={selectedIndex}
-            onSwiper={(swiper) => {
-              swiperRef.current = swiper
-            }}
-            thumbs={{ swiper: thumbsSwiper }}
-            onSlideChange={(swiper) => {
-              onImageChange(swiper.activeIndex)
-            }}
-            style={{ width: '100%', height: '100%' }}
-            allowTouchMove={zoom === 1}
-            spaceBetween={0}
-            slidesPerView={1}
-          >
+        {/* Layer 2: Image and thumbnails with dynamic positioning */}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4" style={{ paddingBottom: images.length > 1 ? 'max(2rem, env(safe-area-inset-bottom))' : '0' }}>
+          <div className="flex-shrink flex-grow-0" style={{ maxHeight: images.length > 1 ? 'calc(100vh - 200px)' : '100vh', display: 'flex', alignItems: 'center' }}>
+            <Swiper
+              modules={[Navigation, Thumbs]}
+              initialSlide={selectedIndex}
+              onSwiper={(swiper) => {
+                swiperRef.current = swiper
+              }}
+              thumbs={{
+                swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null
+              }}
+              onSlideChange={(swiper) => {
+                onImageChange(swiper.activeIndex)
+              }}
+              style={{ width: '100vw', height: '100%' }}
+              allowTouchMove={zoom === 1}
+              spaceBetween={0}
+              slidesPerView={1}
+            >
             {images.map((image, index) => (
               <SwiperSlide key={index}>
                 <div
                   ref={index === selectedIndex ? containerRef : null}
-                  className="w-full h-full flex items-center justify-center"
+                  className="w-full h-full flex items-center justify-center relative"
                   onTouchStart={handleTouchStart}
                   onTouchMove={handleTouchMove}
                   onTouchEnd={handleTouchEnd}
@@ -278,166 +505,169 @@ export function ImageZoomMobile({
                     touchAction: zoom > 1 ? 'none' : 'auto',
                   }}
                 >
+                  {/* Loading skeleton */}
+                  {!loadedImages.has(index) && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-12 h-12 border-4 border-gray-700 border-t-white rounded-full animate-spin" />
+                    </div>
+                  )}
+
                   <img
                     ref={index === selectedIndex ? imageRef : null}
                     src={image.url}
                     alt={image.alt || 'Image'}
+                    onLoad={() => handleImageLoad(index)}
+                    onError={() => handleImageError(index)}
+                    className={`transition-opacity duration-300 ${
+                      !loadedImages.has(index) ? 'opacity-0' : 'opacity-100'
+                    }`}
                     style={{
                       transform: index === selectedIndex
                         ? `scale(${zoom}) translate(${
                             position.x / zoom
                           }px, ${position.y / zoom}px) rotate(${rotation}deg)`
                         : 'none',
-                      width: zoom === 1 ? '100vw' : 'auto',
-                      height: zoom === 1 ? 'auto' : '100vh',
-                      maxHeight: '100vh',
-                      maxWidth: '100vw',
+                      width: 'auto',
+                      height: 'auto',
+                      maxHeight: 'calc(100vh - 200px)',
+                      maxWidth: 'calc(100vw - 16px)',
                       objectFit: 'contain',
+                      transition: isDragging ? 'none' : 'transform 0.15s ease-out',
+                      padding: '8px',
                     }}
                     draggable={false}
                   />
                 </div>
               </SwiperSlide>
-            ))}
-          </Swiper>
-        </div>
-
-        {/* Layer 3: UI controls with flex layout */}
-        <div className="absolute inset-0 flex flex-col justify-evenly pointer-events-none z-20">
-          {/* Header - Counter and Close (no background) */}
-          <div className="flex items-center justify-between px-4 pointer-events-auto">
-            <div className="bg-white rounded-xl px-3 py-2 border border-gray-200 shadow-sm">
-              <span className="text-gray-700 text-sm font-medium">
-                {selectedIndex + 1} / {images.length}
-              </span>
-            </div>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onOpenChange(false)}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 bg-white border border-gray-200 h-10 w-10 p-0 rounded-full shadow-sm transition-all duration-200"
-              aria-label="Close image viewer"
-            >
-              <X className="w-5 h-5" />
-            </Button>
+              ))}
+            </Swiper>
           </div>
 
-          {/* Empty spacer for flex positioning */}
-          <div style={{ height: '50vh' }} />
-
-          {/* Footer - Controls and Thumbnails */}
-          <div className="flex flex-col items-center gap-3 pointer-events-auto">
-            {/* Controls with Arrows */}
-            <div className="flex items-center gap-1.5">
-              {images.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handlePrevious}
-                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 bg-white border border-gray-200 h-11 w-11 p-0 rounded-full shadow-sm transition-all duration-200"
-                  aria-label="Previous image"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-              )}
-
-              <div className="flex items-center space-x-1.5 bg-white rounded-full px-3 py-2 border border-gray-200 shadow-sm">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomOut}
-                  disabled={zoom <= 0.5}
-                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 disabled:text-gray-300 h-7 w-7 p-0 rounded-full"
-                  aria-label="Zoom out"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <span className="text-gray-700 text-sm font-medium min-w-[55px] text-center">
-                  {Math.round(zoom * 100)}%
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleZoomIn}
-                  disabled={zoom >= 5}
-                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 disabled:text-gray-300 h-7 w-7 p-0 rounded-full"
-                  aria-label="Zoom in"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <div className="w-px h-5 bg-gray-200" />
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleRotate}
-                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 h-7 w-7 p-0 rounded-full"
-                  aria-label="Rotate"
-                >
-                  <RotateCw className="w-4 h-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={resetTransform}
-                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 h-7 px-2.5 rounded-full text-xs"
-                  aria-label="Reset"
-                >
-                  Reset
-                </Button>
+          {/* Thumbnails directly below image - dynamically positioned */}
+          {images.length > 1 && (
+            <div className="pointer-events-auto flex-shrink-0">
+              <div className="bg-gray-800/60 backdrop-blur-md rounded-2xl px-3 py-2.5 border border-gray-700/50 shadow-lg">
+                <div className="py-1.5 px-0.5">
+                  <Swiper
+                    onSwiper={setThumbsSwiper}
+                    watchSlidesProgress
+                    spaceBetween={6}
+                    slidesPerView="auto"
+                    slideToClickedSlide={true}
+                    centeredSlides={true}
+                    centeredSlidesBounds={true}
+                    initialSlide={selectedIndex}
+                    className="thumbnail-swiper"
+                    style={{ maxWidth: 'calc(100vw - 32px)', overflow: 'visible' }}
+                  >
+                    {images.map((image, index) => (
+                      <SwiperSlide key={index} style={{ width: '74px' }}>
+                        <button
+                          onClick={() => {
+                            resetTransform()
+                            swiperRef.current?.slideTo(index)
+                            thumbsSwiper?.slideTo(index)
+                            resetUITimeout()
+                          }}
+                          className={`w-16 h-16 rounded-xl overflow-hidden border-2 transition-all duration-200 ${
+                            index === selectedIndex
+                              ? 'border-cyan-500 ring-2 ring-cyan-500/50 scale-105'
+                              : 'border-gray-600/50 hover:border-cyan-400/60 opacity-70 hover:opacity-100'
+                          }`}
+                        >
+                          <img
+                            src={image.url}
+                            alt=""
+                            className="w-full h-full object-cover"
+                          />
+                        </button>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+                </div>
               </div>
-
-              {images.length > 1 && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleNext}
-                  className="text-gray-600 hover:text-cyan-600 hover:bg-cyan-50 bg-white border border-gray-200 h-11 w-11 p-0 rounded-full shadow-sm transition-all duration-200"
-                  aria-label="Next image"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              )}
             </div>
-
-            {/* Thumbnails with Swiper */}
-            {images.length > 1 && (
-              <div className="bg-white rounded-2xl p-2.5 border border-gray-200 shadow-sm max-w-sm">
-                <Swiper
-                  modules={[Thumbs]}
-                  onSwiper={setThumbsSwiper}
-                  watchSlidesProgress
-                  spaceBetween={8}
-                  slidesPerView="auto"
-                  slideToClickedSlide={true}
-                  className="thumbnail-swiper"
-                >
-                  {images.map((image, index) => (
-                    <SwiperSlide key={index} style={{ width: '40px' }}>
-                      <button
-                        onClick={() => {
-                          resetTransform()
-                          swiperRef.current?.slideToLoop(index)
-                        }}
-                        className={`w-10 h-10 rounded-lg overflow-hidden border-2 transition-all duration-200 ${
-                          index === selectedIndex
-                            ? 'border-cyan-500 ring-2 ring-cyan-500/30'
-                            : 'border-gray-200 hover:border-cyan-400'
-                        }`}
-                      >
-                        <img
-                          src={image.url}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
-                      </button>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              </div>
-            )}
-          </div>
+          )}
         </div>
+
+        {/* Layer 3: Header UI controls - auto-hiding with safe area padding */}
+        <div className={`absolute top-0 left-0 right-0 flex items-center justify-between px-4 pointer-events-none z-20 transition-opacity duration-300 ${
+          showUI ? 'opacity-100' : 'opacity-0'
+        }`} style={{ paddingTop: 'max(2.5rem, env(safe-area-inset-top))' }}>
+          {/* Counter with glassmorphism */}
+          <div className="bg-black/40 backdrop-blur-md rounded-full px-4 py-2 border border-white/10 shadow-lg pointer-events-auto mt-3">
+            <span className="text-white text-sm font-medium">
+              {selectedIndex + 1} / {images.length}
+            </span>
+          </div>
+
+          {/* Close button */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onOpenChange(false)}
+            className="text-white hover:text-white hover:bg-white/20 bg-black/40 backdrop-blur-md border border-white/10 h-10 w-10 p-0 rounded-full shadow-lg transition-all duration-200 pointer-events-auto mt-3"
+            aria-label="Close image viewer"
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        </div>
+
+        {/* Gesture Hints Overlay - Shows on first use */}
+        {showGestureHints && (
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-30 flex items-center justify-center pointer-events-none animate-in fade-in duration-300">
+            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 max-w-sm mx-4 border border-white/20">
+              <h3 className="text-white text-lg font-semibold mb-6 text-center">Gesture Controls</h3>
+              <div className="space-y-4 text-white/90">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Pinch to Zoom</p>
+                    <p className="text-sm text-white/70">Use two fingers</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Swipe to Navigate</p>
+                    <p className="text-sm text-white/70">Left or right</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 15l-2 5L9 9l11 4-5 2zm0 0l5 5M7.188 2.239l.777 2.897M5.136 7.965l-2.898-.777M13.95 4.05l-2.122 2.122m-5.657 5.656l-2.12 2.122" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Double-tap to Zoom</p>
+                    <p className="text-sm text-white/70">Tap twice quickly</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0">
+                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-medium">Tap to Show/Hide</p>
+                    <p className="text-sm text-white/70">Single tap</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         <style>{`
           .scrollbar-hide {

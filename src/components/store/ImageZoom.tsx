@@ -38,13 +38,13 @@ class ImageZoomErrorBoundary extends Component<
     if (this.state.hasError) {
       return (
         <Dialog open={true} onOpenChange={() => {}}>
-          <DialogContent className="max-w-md bg-white border border-gray-200">
+          <DialogContent className="max-w-md bg-white border border-gray-200" aria-describedby="error-description">
             <div className="text-center p-6">
               <div className="text-4xl mb-4">❌</div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">
                 Something went wrong
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p id="error-description" className="text-sm text-gray-600 mb-4">
                 The image viewer encountered an unexpected error. Please try
                 refreshing the page.
               </p>
@@ -513,10 +513,11 @@ function ImageZoomComponent({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="max-w-none max-h-none w-screen h-screen p-0 bg-gray-50 border-0 overflow-hidden"
-        aria-label="Image viewer"
-        role="dialog"
-        aria-modal="true"
+        aria-describedby="desktop-image-viewer-description"
       >
+        <span id="desktop-image-viewer-description" className="sr-only">
+          Desktop image viewer with zoom controls and keyboard navigation
+        </span>
         <div className="w-full h-full flex flex-col bg-white overflow-hidden">
           {/* Header - Top controls */}
           <div className="flex items-center justify-between px-4 py-5 md:px-6 md:py-6 shrink-0">
