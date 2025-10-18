@@ -9,7 +9,7 @@ import { AdvancedFilterBar } from "@/components/AdvancedFilterBar";
 import { OrderStatusEditor } from "@/components/OrderStatusEditor";
 import { OrderActions } from "@/components/OrderActions";
 import { OrderCancellationDialog } from "@/components/OrderCancellationDialog";
-import { Package, Truck, Clock, DollarSign, Plus, XCircle, Tag, CreditCard } from "lucide-react";
+import { Package, Truck, Clock, DollarSign, Plus, XCircle, Tag, CreditCard, Mail, Phone, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { exportToExcel } from "@/utils/exportUtils";
 import { toast } from '@/components/ui/sonner';
@@ -38,6 +38,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const Orders = () => {
   // Removed useToast hook;
   const queryClient = useQueryClient();
+
+  // Helper function to format dates as dd/MM/yyyy
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB'); // en-GB uses dd/MM/yyyy format
+  };
 
   /* -------- Filters & Lists -------- */
   const [filters, setFilters] = useState<OrderFilters>({});
@@ -193,6 +198,61 @@ const Orders = () => {
 
   const handleViewOrder = (orderId: string) => {
     setViewOrderId(orderId);
+  };
+
+  const handleDownloadInvoice = async (orderId: string) => {
+    try {
+      // Use the same base URL as your API service (production ready)
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://meemhome.com/api';
+      const token = localStorage.getItem('auth_token');
+      const apiSecret = import.meta.env.VITE_API_SECRET || '';
+
+      if (!token) {
+        toast.error('Authentication required to download invoice', { duration: 2500 });
+        return;
+      }
+
+      // Build the download URL
+      const downloadUrl = `${baseURL}/admin/orders/${orderId}/invoice`;
+
+      // Fetch the PDF with proper authentication
+      const response = await fetch(downloadUrl, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'X-API-SECRET': apiSecret,
+          'Accept': 'application/pdf',
+        },
+      });
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          toast.error('Session expired. Please login again.', { duration: 2500 });
+          return;
+        }
+        throw new Error(`Failed to download invoice: ${response.statusText}`);
+      }
+
+      // Create blob from response
+      const blob = await response.blob();
+
+      // Create download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `invoice-order-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success(`Invoice for order #${orderId} downloaded successfully`, { duration: 2000 });
+    } catch (error) {
+      console.error('Failed to download invoice:', error);
+      toast.error('Failed to download invoice. Please try again.', { duration: 2500 });
+    }
   };
 
   /* -------- Status badge -------- */
@@ -449,22 +509,30 @@ const Orders = () => {
             open={!!viewOrderId}
             onOpenChange={(open) => !open && setViewOrderId(null)}
           >
-            <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden">
-              <DialogHeader className="px-6 pt-6 pb-2">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <DialogTitle>Order #{viewOrderId}</DialogTitle>
-                    <DialogDescription>
+            <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-3xl lg:max-w-4xl max-h-[90vh] p-0 overflow-hidden">
+              <DialogHeader className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <DialogTitle className="text-lg sm:text-xl">Order #{viewOrderId}</DialogTitle>
+                    <DialogDescription className="text-sm">
                       Detailed view of the selected order.
                     </DialogDescription>
                   </div>
+                  <Button
+                    onClick={() => viewOrderId && handleDownloadInvoice(viewOrderId)}
+                    className="gap-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 shadow-lg hover:shadow-xl transition-all duration-200 w-full sm:w-auto"
+                    disabled={isViewing}
+                  >
+                    <Download className="w-4 h-4" />
+                    <span className="sm:inline">Download Invoice</span>
+                  </Button>
                 </div>
               </DialogHeader>
 
               <Separator />
 
-              <ScrollArea className="max-h-[calc(90vh-120px)]">
-                <div className="p-6">
+              <ScrollArea className="max-h-[calc(90vh-200px)] sm:max-h-[calc(90vh-120px)]">
+                <div className="p-4 sm:p-6 pb-20 sm:pb-6">
                 {isViewing ? (
                   <div className="space-y-3">
                     <Skeleton className="h-6 w-40" />
@@ -478,9 +546,9 @@ const Orders = () => {
                     <p>Failed to fetch order. Please try again.</p>
                   </div>
                 ) : adminOrderView ? (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Header Info Cards */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                       <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
@@ -488,6 +556,18 @@ const Orders = () => {
                             <div className="flex-1">
                               <p className="text-xs text-blue-600 font-medium">CUSTOMER</p>
                               <p className="font-semibold text-blue-900">{adminOrderView.order.user}</p>
+                              {adminOrderView.order.user_email && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <Mail className="w-3 h-3 text-blue-600" />
+                                  <p className="text-xs text-blue-700">{adminOrderView.order.user_email}</p>
+                                </div>
+                              )}
+                              {adminOrderView.order.user_phone && (
+                                <div className="flex items-center gap-1 mt-0.5">
+                                  <Phone className="w-3 h-3 text-blue-600" />
+                                  <p className="text-xs text-blue-700">{adminOrderView.order.user_phone}</p>
+                                </div>
+                              )}
                               <p className="text-xs text-blue-700 mt-1">Order #{adminOrderView.order.id}</p>
                             </div>
                           </div>
@@ -524,7 +604,7 @@ const Orders = () => {
                     </div>
 
                     {/* Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                       {/* Delivery Information */}
                       <Card>
                         <CardHeader className="pb-3">
@@ -568,14 +648,14 @@ const Orders = () => {
                             <div>
                               <p className="text-xs text-gray-500 uppercase tracking-wide">Estimated Delivery</p>
                               <p className="text-sm font-medium text-gray-900">
-                                {new Date(adminOrderView.order.estimated_delivery_date).toLocaleDateString()}
+                                {formatDate(adminOrderView.order.estimated_delivery_date)}
                               </p>
                             </div>
                           )}
                           <div>
                             <p className="text-xs text-gray-500 uppercase tracking-wide">Order Date</p>
                             <p className="text-sm font-medium text-gray-900">
-                              {new Date(adminOrderView.order.created_at).toLocaleString()}
+                              {formatDate(adminOrderView.order.created_at)}
                             </p>
                           </div>
                         </CardContent>
@@ -617,41 +697,40 @@ const Orders = () => {
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
-                        <ScrollArea className="max-h-80">
-                          <div className="space-y-4">
+                        <div className="space-y-3 sm:space-y-4">
                             {adminOrderView.order.items.map((item: any) => {
-                              const hasDiscount = item.pricing_details?.has_discount || 
-                                (item.pricing_details?.original_price && 
+                              const hasDiscount = item.pricing_details?.has_discount ||
+                                (item.pricing_details?.original_price &&
                                  Number(item.pricing_details.original_price) > Number(item.selling_price));
-                              
+
                               const originalPrice = item.pricing_details?.original_price || item.selling_price;
-                              const discountAmount = hasDiscount ? 
+                              const discountAmount = hasDiscount ?
                                 (Number(originalPrice) - Number(item.selling_price)) : 0;
-                              const discountPercentage = hasDiscount && originalPrice > 0 ? 
+                              const discountPercentage = hasDiscount && originalPrice > 0 ?
                                 Math.round((discountAmount / originalPrice) * 100) : 0;
 
                               return (
-                                <div key={item.id} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+                                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
                                   {/* Product Image */}
-                                  <div className="flex-shrink-0">
+                                  <div className="flex-shrink-0 self-start sm:self-center">
                                     {item.product_image ? (
-                                      <img 
-                                        src={item.product_image} 
+                                      <img
+                                        src={item.product_image}
                                         alt={item.product_name}
-                                        className="w-16 h-16 object-cover rounded-md border"
+                                        className="w-14 h-14 sm:w-16 sm:h-16 object-cover rounded-md border"
                                         onError={(e) => {
                                           e.currentTarget.src = '/placeholder-product.png';
                                         }}
                                       />
                                     ) : (
-                                      <div className="w-16 h-16 bg-gray-200 rounded-md flex items-center justify-center">
-                                        <Package className="w-6 h-6 text-gray-400" />
+                                      <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gray-200 rounded-md flex items-center justify-center">
+                                        <Package className="w-5 h-5 sm:w-6 sm:h-6 text-gray-400" />
                                       </div>
                                     )}
                                   </div>
 
                                   {/* Product Info */}
-                                  <div className="flex-1 min-w-0">
+                                  <div className="flex-1 min-w-0 space-y-2">
                                     <h4 className="font-medium text-gray-900 truncate">{item.product_name}</h4>
                                     
                                     {/* Product Variations */}
@@ -695,14 +774,14 @@ const Orders = () => {
                                     </div>
                                     
                                     {/* Pricing Info */}
-                                    <div className="flex items-center gap-3 mt-2">
+                                    <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                                       <span className="text-sm text-gray-600">Qty: {item.quantity}</span>
                                       {hasDiscount ? (
-                                        <div className="flex items-center gap-2">
-                                          <span className="text-sm line-through text-gray-400">
+                                        <div className="flex flex-wrap items-center gap-1 sm:gap-2">
+                                          <span className="text-xs sm:text-sm line-through text-gray-400">
                                             {(adminOrderView.order as any).currency?.symbol || '$'}{Number(originalPrice).toFixed(2)}
                                           </span>
-                                          <span className="text-sm font-medium text-green-600">
+                                          <span className="text-xs sm:text-sm font-medium text-green-600">
                                             {(adminOrderView.order as any).currency?.symbol || '$'}{Number(item.selling_price).toFixed(2)}
                                           </span>
                                           <Badge className="bg-green-100 text-green-800 text-xs">
@@ -718,9 +797,12 @@ const Orders = () => {
                                   </div>
 
                                   {/* Total */}
-                                  <div className="text-right">
-                                    <div className="font-semibold text-gray-900">
-                                      {(adminOrderView.order as any).currency?.symbol || '$'}{Number(item.final_total || item.subtotal || (item.selling_price * item.quantity)).toFixed(2)}
+                                  <div className="sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 mt-2 sm:mt-0">
+                                    <div className="flex sm:block justify-between items-center">
+                                      <span className="text-sm sm:hidden text-gray-600">Total:</span>
+                                      <div className="font-semibold text-gray-900">
+                                        {(adminOrderView.order as any).currency?.symbol || '$'}{Number(item.final_total || item.subtotal || (item.selling_price * item.quantity)).toFixed(2)}
+                                      </div>
                                     </div>
                                     {hasDiscount && (
                                       <div className="text-xs text-green-600 mt-1">
@@ -731,8 +813,7 @@ const Orders = () => {
                                 </div>
                               );
                             })}
-                          </div>
-                        </ScrollArea>
+                        </div>
                       </CardContent>
                     </Card>
 
@@ -834,6 +915,17 @@ const Orders = () => {
                 )}
                 </div>
               </ScrollArea>
+
+              {/* Mobile Close Button - Sticky at bottom */}
+              <div className="sm:hidden sticky bottom-0 left-0 right-0 p-4 bg-white border-t shadow-lg">
+                <Button
+                  onClick={() => setViewOrderId(null)}
+                  className="w-full bg-gray-600 hover:bg-gray-700"
+                  size="lg"
+                >
+                  Close
+                </Button>
+              </div>
             </DialogContent>
           </Dialog>
 

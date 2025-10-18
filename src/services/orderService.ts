@@ -204,6 +204,8 @@ export interface AdminOrderItemView {
 export interface AdminOrderView {
   id: string;
   user: string;
+  user_email?: string;
+  user_phone?: string;
   user_address: string;
   total_price: string;
   subtotal: string;
