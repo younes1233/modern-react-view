@@ -961,25 +961,15 @@ const ProductDetail = () => {
                   <div
                     ref={imageContainerRef}
                     className="relative aspect-square bg-gray-50 rounded-2xl group flex items-center justify-center"
-                    onTouchStart={handleTouchStart}
-                    onTouchEnd={handleTouchEnd}
-                    onMouseEnter={() => handleImageInteraction()}
                   >
                     {/* Desktop: Use InnerImageZoom */}
-                    <div className="hidden md:flex w-full h-full items-center justify-center overflow-hidden rounded-2xl">
+                    <div className="hidden md:flex w-full h-full items-center justify-center rounded-2xl overflow-hidden">
                       <InnerImageZoom
                         src={currentImage?.url}
-                        zoomSrc={currentImage?.url}
+                        zoomSrc={currentImage?.zoomUrl || currentImage?.url}
                         zoomType="click"
-                        className="max-w-full max-h-full"
-                        imgAttributes={{
-                          alt: currentImage?.alt,
-                          style: {
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            objectFit: 'contain',
-                          },
-                        }}
+                        hasSpacer={true}
+                        fullscreenOnMobile={false}
                       />
                     </div>
 

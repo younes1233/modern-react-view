@@ -5,23 +5,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/components/ui/sonner';
-import { Eye, EyeOff, LogIn, Shield } from 'lucide-react';
+import { Eye, EyeOff, LogIn, Shield, Mail, Phone } from 'lucide-react';
+
+type LoginMethod = 'email' | 'phone';
 
 const RoleLogin = () => {
-  const [email, setEmail] = useState('');
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>('email');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const { user, login, isLoading } = useAuth();
   const navigate = useNavigate();
-  
+
 
   // Redirect if user is already signed in
   useEffect(() => {
     if (user) {
       // Redirect based on user role
-      if (user.role === 'customer') {
+      if (user.role === 'user') {
         navigate('/', { replace: true });
       } else {
         navigate('/dashboard', { replace: true });
@@ -30,22 +34,75 @@ const RoleLogin = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
+  // Phone formatting functions (same as AuthModal)
+  const formatPhoneNumber = (value: string) => {
+    let digits = value.replace(/\D/g, '');
+    if (!digits.startsWith('961')) {
+      if (digits.length > 0) {
+        digits = '961' + digits;
+      }
+    }
+    digits = digits.slice(0, 11);
+    return digits;
+  };
+
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPhoneNumber(e.target.value);
+    setIdentifier(formatted);
+  };
+
+  const displayPhone = (phone: string) => {
+    if (!phone) return '';
+    const digits = phone.replace(/\D/g, '');
+    if (digits.startsWith('961') && digits.length >= 4) {
+      const prefix = '+961';
+      const rest = digits.slice(3);
+      if (rest.length <= 2) return `${prefix} ${rest}`;
+      if (rest.length <= 5) return `${prefix} ${rest.slice(0, 2)} ${rest.slice(2)}`;
+      return `${prefix} ${rest.slice(0, 2)} ${rest.slice(2, 5)} ${rest.slice(5)}`;
+    }
+    return digits ? `+${digits}` : '';
+  };
+
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    return digits.startsWith('961') && digits.length === 11;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email || !password) {
+    if (!identifier || !password) {
       toast.error('Please fill in all fields');
       return;
     }
 
-    const success = await login(email, password);
+    // Validate based on login method
+    if (loginMethod === 'email' && !validateEmail(identifier)) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+
+    if (loginMethod === 'phone' && !validatePhone(identifier)) {
+      toast.error('Please enter a valid Lebanese phone number');
+      return;
+    }
+
+    // Format identifier for login
+    const loginIdentifier = loginMethod === 'phone' ? `+${identifier}` : identifier;
+    const success = await login(loginIdentifier, password);
 
     if (success) {
       toast.success('Login successful!');
       // Navigation will be handled automatically by the useEffect hook
       // when the user state updates after login
     } else {
-      toast.error('Invalid credentials. Please check your email and password.');
+      toast.error('Invalid credentials. Please check your credentials and try again.');
     }
   };
 
@@ -77,19 +134,66 @@ const RoleLogin = () => {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Login Method Tabs */}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+              <Label className="text-sm">Sign in with</Label>
+              <Tabs
+                value={loginMethod}
+                onValueChange={(v) => {
+                  setLoginMethod(v as LoginMethod);
+                  setIdentifier('');
+                }}
+                className="w-full"
+              >
+                <TabsList className="grid w-full grid-cols-2 h-10">
+                  <TabsTrigger value="email" className="text-sm">
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email
+                  </TabsTrigger>
+                  <TabsTrigger value="phone" className="text-sm">
+                    <Phone className="w-4 h-4 mr-2" />
+                    Phone
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="email" className="mt-4 space-y-2">
+                  <Label htmlFor="email" className="text-sm">Email Address</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      className="pl-10 h-11"
+                      required
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="phone" className="mt-4 space-y-2">
+                  <Label htmlFor="phone" className="text-sm">Lebanese Mobile Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="70 123 456"
+                      value={displayPhone(identifier)}
+                      onChange={handlePhoneInput}
+                      className="pl-10 h-11 font-mono"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500">Format: +961 XX XXX XXX</p>
+                </TabsContent>
+              </Tabs>
             </div>
+
+            {/* Password Input */}
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password" className="text-sm">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
@@ -97,6 +201,7 @@ const RoleLogin = () => {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className="h-11 pr-10"
                   required
                 />
                 <Button
@@ -114,7 +219,9 @@ const RoleLogin = () => {
                 </Button>
               </div>
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+
+            {/* Submit Button */}
+            <Button type="submit" className="w-full h-11" disabled={isLoading}>
               {isLoading ? (
                 'Signing in...'
               ) : (
@@ -125,11 +232,11 @@ const RoleLogin = () => {
               )}
             </Button>
           </form>
-          
+
           <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-950 rounded-lg">
             <p className="text-sm text-blue-700 dark:text-blue-300">
-              <strong>API Connected:</strong><br />
-              Using live authentication API<br />
+              <strong>Dashboard Access:</strong><br />
+              For admins, managers, and sellers<br />
               Contact admin for account credentials
             </p>
           </div>

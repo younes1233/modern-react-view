@@ -38,8 +38,8 @@ const Index = () => {
     return <Navigate to="/role-login" replace />;
   }
 
-  // Redirect customers to the store
-  if (user.role === 'customer') {
+  // Redirect regular users to the store
+  if (user.role === 'user') {
     return <Navigate to="/" replace />;
   }
 
