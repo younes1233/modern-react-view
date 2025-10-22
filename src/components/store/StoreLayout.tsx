@@ -503,7 +503,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
           {/* Store-style sidebar */}
           <div
-            className={`absolute right-0 top-0 h-full w-[90%] max-w-sm bg-white shadow-2xl transform transition-all ${
+            className={`absolute right-0 top-0 h-full w-[90%] max-w-sm bg-white shadow-2xl transform transition-all flex flex-col ${
               isMobileMenuClosing
                 ? 'duration-200 ease-in translate-x-full'
                 : isMobileMenuOpen
@@ -600,10 +600,12 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Store Navigation */}
             <div
-              className="flex-1 overflow-y-auto p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400"
+              className="flex-1 overflow-y-auto overscroll-contain p-4 scrollbar-thin scrollbar-track-gray-100 scrollbar-thumb-gray-300 hover:scrollbar-thumb-gray-400"
               style={{
                 scrollbarWidth: 'thin',
                 msOverflowStyle: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                minHeight: '0',
               }}
             >
               <div className="space-y-1">
@@ -984,7 +986,7 @@ export function StoreLayout({ children }: StoreLayoutProps) {
 
             {/* Store Footer */}
             <div
-              className={`p-4 bg-gray-50 ${
+              className={`flex-shrink-0 p-4 bg-gray-50 border-t border-gray-200 ${
                 isMobileMenuClosing
                   ? 'animate-fade-out-fast'
                   : isMobileMenuOpen
